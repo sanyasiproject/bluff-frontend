@@ -1,0 +1,11 @@
+{
+  "name": "Bluff",
+  "short_name": "Bluff",
+  "description": "Bluff card game for friends",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#062a1d",
+  "theme_color": "#062a1d",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
