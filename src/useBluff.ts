@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { inviteCode } from './lib/invite';
 import { request, ServerError, socket } from './lib/socket';
 import { speak } from './lib/speech';
 import { clearSession, loadSavedSession, loadTabSession, saveName, saveSession, type Session } from './lib/storage';
@@ -17,13 +18,20 @@ type Entered = { code: string; token: string };
 
 let noteSeq = 0;
 
+/** an invite link to a different room wins over this tab's old seat */
+function startSession(): Session | null {
+  const s = loadTabSession();
+  const invite = inviteCode();
+  return s && invite && s.code !== invite ? null : s;
+}
+
 /** Connection, room state and every player action in one place */
 export function useBluff() {
   const [status, setStatus] = useState<ConnStatus>(socket.connected ? 'online' : 'connecting');
   const [view, setView] = useState<RoomView | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [replaced, setReplaced] = useState(false);
-  const session = useRef<Session | null>(loadTabSession());
+  const session = useRef<Session | null>(startSession());
   const replacedRef = useRef(false);
 
   const pushNote = useCallback((kind: Note['kind'], text: string) => {

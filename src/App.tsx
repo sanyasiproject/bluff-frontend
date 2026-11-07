@@ -1,11 +1,19 @@
+import { useEffect } from 'react';
 import { Home } from './components/Home';
 import { Lobby } from './components/Lobby';
 import { Table } from './components/Table';
 import { Toasts } from './components/Toasts';
+import { clearInvite } from './lib/invite';
 import { useBluff } from './useBluff';
 
 export default function App() {
   const { status, view, notes, replaced, actions } = useBluff();
+  const inRoom = view !== null;
+
+  // once inside a room the invite link has done its job
+  useEffect(() => {
+    if (inRoom) clearInvite();
+  }, [inRoom]);
 
   let screen;
   if (replaced) {

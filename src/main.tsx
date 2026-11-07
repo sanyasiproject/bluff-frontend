@@ -8,6 +8,13 @@ for (const type of ['click', 'touchend'] as const) {
   window.addEventListener(type, unlockSpeech, { once: true, capture: true });
 }
 
+// service worker only in production builds so it never caches the dev server
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

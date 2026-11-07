@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Source for the PNG app icons; full-bleed so phones can apply their own mask -->
+  <defs>
+    <radialGradient id="felt" cx="50%" cy="40%" r="75%">
+      <stop offset="0" stop-color="#1b8a5c"/>
+      <stop offset="0.55" stop-color="#0e4d35"/>
+      <stop offset="1" stop-color="#05261a"/>
+    </radialGradient>
+    <pattern id="stripes" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="16" height="16" fill="#a11f35"/>
+      <rect width="8" height="16" fill="#c7384f"/>
+    </pattern>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" fill="url(#felt)"/>
+  <g filter="url(#shadow)">
+    <g transform="rotate(-14 206 270)">
+      <rect x="131" y="165" width="150" height="210" rx="16" fill="url(#stripes)" stroke="#fff" stroke-width="9"/>
+    </g>
+    <g transform="rotate(10 306 262)">
+      <rect x="231" y="157" width="150" height="210" rx="16" fill="#fffdf7"/>
+      <text x="250" y="204" font-family="Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#16171b">A</text>
+      <text x="306" y="318" font-family="Georgia, 'Times New Roman', serif" font-size="124" font-weight="700" fill="#d1253a" text-anchor="middle">?</text>
+    </g>
+  </g>
+</svg>

@@ -28,6 +28,22 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 
 `VITE_SERVER_URL` is baked in at build time, so redeploy the frontend after changing it.
 
+## Invite links
+
+- The lobby has **WhatsApp**, **Share…** (phone share sheet) and **Copy**. They send `Join my Bluff game 🃏 Room code: ABCD` plus `https://<site>/?room=ABCD`.
+- Opening the link joins that room directly: a phone that already had a seat there gets it back, a phone with a saved name joins at once, and a new phone only types a name and taps **Join room ABCD**.
+- The `?room=` part is removed from the address bar once inside, so reloading or leaving never re-joins by itself.
+
+## Install as an app
+
+Bluff is a Progressive Web App: friends install it from the website, free, with no app store.
+
+- **Android (Chrome):** tap **Install** on the home screen card, or browser menu ⋮ → **Install app**.
+- **iPhone (Safari):** Share ⬆ → **Add to Home Screen** → **Add**. The Install card shows these steps.
+- It then opens full screen from its own icon and updates itself after every Vercel deploy.
+- `public/sw.js` loads fresh files first and keeps a copy only so the app can open without internet. `public/icons/app-icon.svg` is the source of the PNG icons.
+- Install **before** joining a game: on iPhone the installed app has its own storage, so a seat taken in Safari isn't carried over.
+
 ## Voice
 
 - Uses the browser's speech feature: no audio files, no paid service.

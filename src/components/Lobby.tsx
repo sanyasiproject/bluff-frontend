@@ -11,6 +11,7 @@ import {
 } from '../lib/speech';
 import type { GameConfig, RoomView } from '../types';
 import type { Actions } from '../useBluff';
+import { InvitePanel } from './InvitePanel';
 
 /** per-phone voice choice; Girl is the default */
 function VoicePicker({ sample }: { sample: string }) {
@@ -70,20 +71,6 @@ export function Lobby({ view, actions }: { view: RoomView; actions: Actions }) {
   const slots = Array.from({ length: 5 }, (_, i) => view.players[i] ?? null);
   const set = (patch: Partial<GameConfig>) => actions.setConfig({ ...view.config, ...patch });
 
-  const invite = async () => {
-    const url = `${location.origin}/?room=${view.code}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: 'Bluff', text: `Join my Bluff game, room code ${view.code}`, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-        actions.toast('Invite link copied');
-      }
-    } catch {
-      // share sheet dismissed
-    }
-  };
-
   return (
     <main className="screen lobby">
       <header className="lobby-head">
@@ -91,10 +78,9 @@ export function Lobby({ view, actions }: { view: RoomView; actions: Actions }) {
           <p className="label">Room code</p>
           <p className="room-code">{view.code}</p>
         </div>
-        <button className="btn small" onClick={invite}>
-          Invite friends
-        </button>
       </header>
+
+      {view.players.length < 5 && <InvitePanel code={view.code} onToast={actions.toast} />}
 
       <section className="panel">
         <h2 className="section-title">
