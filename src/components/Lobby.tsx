@@ -12,6 +12,7 @@ import {
 import type { GameConfig, RoomView } from '../types';
 import type { Actions } from '../useBluff';
 import { InvitePanel } from './InvitePanel';
+import { QuickChat } from './QuickChat';
 
 /** per-phone voice choice; Girl is the default */
 function VoicePicker({ sample }: { sample: string }) {
@@ -65,9 +66,12 @@ function Option({ on, disabled, title, desc, onClick }: OptionProps) {
   );
 }
 
+/** 5 players + 7 watchers, same limit as the server */
+const ROOM_LIMIT = 12;
+
 export function Lobby({ view, actions }: { view: RoomView; actions: Actions }) {
   const isHost = view.hostId === view.meId;
-  const me = view.players.find((p) => p.id === view.meId);
+  const me = [...view.players, ...view.watchers].find((p) => p.id === view.meId);
   const slots = Array.from({ length: 5 }, (_, i) => view.players[i] ?? null);
   const set = (patch: Partial<GameConfig>) => actions.setConfig({ ...view.config, ...patch });
 
@@ -78,9 +82,12 @@ export function Lobby({ view, actions }: { view: RoomView; actions: Actions }) {
           <p className="label">Room code</p>
           <p className="room-code">{view.code}</p>
         </div>
+        <QuickChat onSend={actions.chat} />
       </header>
 
-      {view.players.length < 5 && <InvitePanel code={view.code} onToast={actions.toast} />}
+      {view.players.length + view.watchers.length < ROOM_LIMIT && (
+        <InvitePanel code={view.code} onToast={actions.toast} />
+      )}
 
       <section className="panel">
         <h2 className="section-title">
@@ -108,6 +115,29 @@ export function Lobby({ view, actions }: { view: RoomView; actions: Actions }) {
           )}
         </ul>
       </section>
+
+      {view.watchers.length > 0 && (
+        <section className="panel">
+          <h2 className="section-title">
+            Watching <span className="muted">{view.watchers.length}</span>
+          </h2>
+          <p className="muted small watch-note">All 5 seats are taken. Watchers get a seat as soon as one frees up.</p>
+          <ul className="player-list">
+            {view.watchers.map((w) => (
+              <li key={w.id} className={cx('player-row', !w.connected && 'offline')}>
+                <span className="avatar sm" style={{ background: avatarColor(w.name) }}>
+                  {w.name[0]?.toUpperCase()}
+                </span>
+                <span className="grow">
+                  {w.name}
+                  {w.id === view.meId && <span className="muted"> (you)</span>}
+                </span>
+                <span className="tag dim">👀</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="panel">
         <h2 className="section-title">
@@ -140,11 +170,12 @@ export function Lobby({ view, actions }: { view: RoomView; actions: Actions }) {
       <details className="panel rules">
         <summary>How to play</summary>
         <ul>
-          <li>On your turn put 1–{view.config.decks * 4} cards face down and call a rank. You can lie.</li>
+          <li>On your turn put one or more cards face down and call a rank. You can lie.</li>
           <li>Everyone after you must call the same rank, or pass.</li>
           <li>Anyone can shout Bluff on the last play. Liar picks up the whole pile; if it was true, the caller does.</li>
           <li>If everyone passes, the pile is cleared and the last player starts a new round.</li>
           <li>Empty your hand first to win. The last player holding cards loses.</li>
+          <li>Friends who join mid-game, or when 5 are playing, watch and get a seat in the next game.</li>
         </ul>
       </details>
 

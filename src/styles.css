@@ -687,6 +687,23 @@ a.btn {
   filter: brightness(0.95);
 }
 
+.card .order-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--gold-ink);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
 /* ---------- table ---------- */
 
 .table {
@@ -1025,11 +1042,16 @@ a.btn {
   border-radius: 22px 22px 0 0;
   background: var(--sheet);
   animation: rise 0.2s ease-out;
+  /* a big play can have many cards */
+  max-height: 88dvh;
+  overflow-y: auto;
 }
 
 .modal {
   width: 100%;
   max-width: 420px;
+  max-height: 92dvh;
+  overflow-y: auto;
   animation: pop 0.2s ease-out;
 }
 
@@ -1182,6 +1204,181 @@ a.btn {
   text-align: center;
 }
 
+/* ---------- quick chat, reactions, watch mode, awards ---------- */
+
+.reaction-row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+
+.reaction-btn {
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 24px;
+}
+
+.reaction-btn:active {
+  transform: scale(1.2);
+}
+
+.message-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.message-btn {
+  min-height: 46px;
+  padding: 8px 10px;
+  border: 1px solid var(--faint);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.message-btn:active {
+  background: var(--gold);
+  color: var(--gold-ink);
+}
+
+.reactions {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.reaction {
+  position: absolute;
+  bottom: 40%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transform: translateX(-50%);
+  animation: float-up 2.4s ease-out forwards;
+}
+
+.reaction span {
+  font-size: 48px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+.reaction small {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+button.seat {
+  color: inherit;
+  font: inherit;
+}
+
+.seat.viewing {
+  background: rgba(124, 196, 255, 0.16);
+}
+
+.eye-badge {
+  position: absolute;
+  top: -8px;
+  left: -4px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: #7cc4ff;
+  font-size: 11px;
+}
+
+.truth-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+}
+
+.truth-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 4px;
+  padding-left: 16px;
+}
+
+/* cards overlap like a small fan so big plays still fit */
+.truth-card {
+  margin-left: -16px;
+  border-radius: 6px;
+}
+
+.truth-card.match {
+  box-shadow: 0 0 0 2px var(--ok);
+}
+
+.truth-card.miss {
+  box-shadow: 0 0 0 2px var(--danger);
+}
+
+.truth-tag {
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.truth-tag.lie {
+  background: var(--danger);
+  color: #fff;
+}
+
+.truth-tag.true {
+  background: var(--ok);
+  color: #04301a;
+}
+
+.hand-area.hidden {
+  display: none;
+}
+
+.watch-note {
+  margin: -6px 0 10px;
+}
+
+.awards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.award {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(246, 196, 83, 0.1);
+}
+
+.award-emoji {
+  width: 32px;
+  font-size: 26px;
+  text-align: center;
+}
+
 /* ---------- toasts & status ---------- */
 
 .toasts {
@@ -1221,6 +1418,10 @@ a.btn {
 .toast.room,
 .toast.info {
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+.toast.chat {
+  border-color: #9b8cff;
 }
 
 .conn-pill {
@@ -1279,6 +1480,24 @@ a.btn {
   }
   to {
     transform: rotateY(0deg);
+  }
+}
+
+@keyframes float-up {
+  0% {
+    transform: translate(-50%, 30px) scale(0.5);
+    opacity: 0;
+  }
+  15% {
+    transform: translate(-50%, 0) scale(1.15);
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -240px) scale(1);
+    opacity: 0;
   }
 }
 

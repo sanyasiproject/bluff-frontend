@@ -3,14 +3,30 @@ import { inviteCode } from './lib/invite';
 import { request, ServerError, socket } from './lib/socket';
 import { speak } from './lib/speech';
 import { clearSession, loadSavedSession, loadTabSession, saveName, saveSession, type Session } from './lib/storage';
-import type { Announcement, GameConfig, Rank, RoomView } from './types';
+import {
+  QUICK_MESSAGES,
+  REACTIONS,
+  type Announcement,
+  type ChatEvent,
+  type ChatKind,
+  type GameConfig,
+  type Rank,
+  type RoomView,
+} from './types';
 
 export type ConnStatus = 'connecting' | 'online' | 'offline';
 
 export interface Note {
   key: number;
-  kind: Announcement['kind'] | 'error' | 'info';
+  kind: Announcement['kind'] | 'error' | 'info' | 'chat';
   text: string;
+  at: number;
+}
+
+export interface Reaction {
+  key: number;
+  emoji: string;
+  who: string;
   at: number;
 }
 
@@ -28,11 +44,16 @@ function startSession(): Session | null {
 /** Connection, room state and every player action in one place */
 export function useBluff() {
   const [status, setStatus] = useState<ConnStatus>(socket.connected ? 'online' : 'connecting');
+  /** id of the current connection; changes only on a real reconnect, so callers can retry once per connection */
+  const [connectionId, setConnectionId] = useState<string | null>(null);
   const [view, setView] = useState<RoomView | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [reactions, setReactions] = useState<Reaction[]>([]);
   const [replaced, setReplaced] = useState(false);
   const session = useRef<Session | null>(startSession());
   const replacedRef = useRef(false);
+  // latest view for socket handlers, which are registered once
+  const viewRef = useRef<RoomView | null>(null);
 
   const pushNote = useCallback((kind: Note['kind'], text: string) => {
     setNotes((prev) => [...prev.slice(-5), { key: ++noteSeq, kind, text, at: Date.now() }]);
@@ -41,6 +62,7 @@ export function useBluff() {
   useEffect(() => {
     const onConnect = async () => {
       setStatus('online');
+      setConnectionId(socket.id ?? null);
       const s = session.current;
       if (!s) return;
       try {
@@ -56,10 +78,24 @@ export function useBluff() {
       }
     };
     const onDisconnect = () => setStatus('offline');
-    const onState = (v: RoomView) => setView(v);
+    const onState = (v: RoomView) => {
+      viewRef.current = v;
+      setView(v);
+    };
     const onAnnounce = (n: Announcement) => {
       pushNote(n.kind, n.text);
       if (n.kind !== 'room') speak(n.text);
+    };
+    // chat is shown, never spoken, so the voice stays for game moves
+    const onChat = (c: ChatEvent) => {
+      const v = viewRef.current;
+      const who =
+        c.from === v?.meId ? 'You' : ([...(v?.players ?? []), ...(v?.watchers ?? [])].find((p) => p.id === c.from)?.name ?? 'Someone');
+      if (c.kind === 'reaction') {
+        setReactions((prev) => [...prev.slice(-12), { key: ++noteSeq, emoji: REACTIONS[c.index] ?? '❓', who, at: Date.now() }]);
+      } else {
+        pushNote('chat', `${who}: ${QUICK_MESSAGES[c.index] ?? ''}`);
+      }
     };
     const onReplaced = () => {
       replacedRef.current = true;
@@ -74,6 +110,7 @@ export function useBluff() {
     socket.on('disconnect', onDisconnect);
     socket.on('state', onState);
     socket.on('announce', onAnnounce);
+    socket.on('chat', onChat);
     socket.on('session:replaced', onReplaced);
     document.addEventListener('visibilitychange', onVisible);
     if (socket.connected) void onConnect();
@@ -82,6 +119,7 @@ export function useBluff() {
       socket.off('disconnect', onDisconnect);
       socket.off('state', onState);
       socket.off('announce', onAnnounce);
+      socket.off('chat', onChat);
       socket.off('session:replaced', onReplaced);
       document.removeEventListener('visibilitychange', onVisible);
     };
@@ -135,6 +173,7 @@ export function useBluff() {
       play: async (cardIds: string[], rank?: Rank) => (await run(() => request('game:play', { cardIds, rank }))) !== null,
       pass: () => run(() => request('game:pass')),
       bluff: (playId: string, cardIndex?: number) => run(() => request('game:bluff', { playId, cardIndex })),
+      chat: (kind: ChatKind, index: number) => run(() => request('chat:send', { kind, index })),
       reclaim: () => {
         replacedRef.current = false;
         setReplaced(false);
@@ -144,7 +183,7 @@ export function useBluff() {
     };
   }, [run, pushNote]);
 
-  return { status, view, notes, replaced, actions };
+  return { status, connectionId, view, notes, reactions, replaced, actions };
 }
 
 export type Actions = ReturnType<typeof useBluff>['actions'];

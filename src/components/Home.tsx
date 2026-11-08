@@ -5,13 +5,19 @@ import type { Actions, ConnStatus } from '../useBluff';
 import { InstallCard } from './InstallCard';
 import { PlayingCard } from './PlayingCard';
 
-export function Home({ status, actions }: { status: ConnStatus; actions: Actions }) {
+interface HomeProps {
+  status: ConnStatus;
+  connectionId: string | null;
+  actions: Actions;
+}
+
+export function Home({ status, connectionId, actions }: HomeProps) {
   const [name, setName] = useState(loadName);
   const [code, setCode] = useState('');
   const [invite, setInvite] = useState(inviteCode);
   const [busy, setBusy] = useState(false);
   const [slow, setSlow] = useState(false);
-  const autoTried = useRef(false);
+  const autoJoin = useRef<{ connectionId: string | null; tries: number }>({ connectionId: null, tries: 0 });
   const saved = loadSavedSession();
   const online = status === 'online';
   const trimmed = name.trim();
@@ -29,16 +35,19 @@ export function Home({ status, actions }: { status: ConnStatus; actions: Actions
     setBusy(false);
   };
 
-  // invite link: take back this phone's seat if it has one, otherwise join with the saved name
+  // invite link: take back this phone's seat if it has one, otherwise join with the saved name.
+  // One try per fresh connection (max 2), so a drop right after connecting gets a second go.
   useEffect(() => {
-    if (!invite || !online || autoTried.current) return;
-    autoTried.current = true;
+    const auto = autoJoin.current;
+    if (!invite || !online || !connectionId || auto.connectionId === connectionId || auto.tries >= 2) return;
+    auto.connectionId = connectionId;
+    auto.tries++;
     if (loadTabSession()?.code === invite) return; // useBluff already rejoins this tab's seat
     void go(async () => {
       if (saved?.code === invite && (await actions.rejoinSaved()) !== null) return;
       if (trimmed) await actions.join(invite, trimmed);
     });
-  }, [invite, online]);
+  }, [invite, online, connectionId]);
 
   const nameField = (
     <>

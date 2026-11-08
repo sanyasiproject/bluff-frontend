@@ -34,6 +34,15 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 - Opening the link joins that room directly: a phone that already had a seat there gets it back, a phone with a saved name joins at once, and a new phone only types a name and taps **Join room ABCD**.
 - The `?room=` part is removed from the address bar once inside, so reloading or leaving never re-joins by itself.
 
+## Chat, watching and awards
+
+- **💬 Quick chat** (lobby and table): 8 emoji reactions float up on every screen; 26 quick messages appear with the sender's name. Edit the lists in `src/types.ts` (and the same file in the backend).
+- **Watch mode:** joining mid-game, or when 5 are seated, makes you a watcher: you see the table, hear the voice and can chat; you get a seat in the next game.
+  - Watchers see the real cards of each play face up (green = matches the claim, red = bluff).
+  - Watchers see one player's hand at a time: it follows whoever's turn it is, or tap a player to stick to them ("Follow turn" goes back).
+  - Only watchers' phones receive these cards; seated players never get anyone else's hand.
+- **Awards** on the Game over screen: Biggest liar, Smoothest liar, Best detective, Trust issues, Card collector. The voice also announces the Biggest liar.
+
 ## Install as an app
 
 Bluff is a Progressive Web App: friends install it from the website, free, with no app store.

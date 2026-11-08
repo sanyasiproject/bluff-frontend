@@ -7,12 +7,13 @@ const RATIO = 1.4;
 
 interface Props {
   cards: Card[];
-  selected: string[];
-  onToggle: (id: string) => void;
+  selected?: string[];
+  /** omit for a read-only hand (watchers looking at someone's cards) */
+  onToggle?: (id: string) => void;
 }
 
 /** Overlapping rows of cards that fit the screen width; each row shows the card corners */
-export function Hand({ cards, selected, onToggle }: Props) {
+export function Hand({ cards, selected = [], onToggle }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(340);
 
@@ -44,13 +45,15 @@ export function Hand({ cards, selected, onToggle }: Props) {
             style={{ width: slice * (row.length - 1) + cw, height: cw * RATIO + 14 }}
           >
             {row.map((card, i) => {
-              const isSelected = selected.includes(card.id);
+              const pick = selected.indexOf(card.id);
+              const isSelected = pick !== -1;
               return (
                 <PlayingCard
                   key={card.id}
                   card={card}
                   selected={isSelected}
-                  onClick={() => onToggle(card.id)}
+                  order={isSelected ? pick + 1 : undefined}
+                  onClick={onToggle ? () => onToggle(card.id) : undefined}
                   className="in-hand"
                   style={{ left: i * slice, zIndex: isSelected ? 1000 + i : r * 100 + i }}
                 />

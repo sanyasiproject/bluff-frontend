@@ -3,7 +3,7 @@ import { claimText, cx, placeLabel, rankPlural } from '../lib/cards';
 import { RANKS, type Card, type Rank, type RevealView, type RoomView } from '../types';
 import { PlayingCard } from './PlayingCard';
 
-function Backdrop({ center, onClose, children }: { center?: boolean; onClose?: () => void; children: ReactNode }) {
+export function Backdrop({ center, onClose, children }: { center?: boolean; onClose?: () => void; children: ReactNode }) {
   return (
     <div className={cx('backdrop', center && 'center')} onClick={onClose}>
       <div className={center ? 'modal' : 'sheet'} role="dialog" aria-modal onClick={(e) => e.stopPropagation()}>
@@ -61,7 +61,7 @@ export function PickSheet({ count, who, claim, onPick, onClose }: PickSheetProps
       </p>
       <div className="pick-row">
         {Array.from({ length: count }, (_, i) => (
-          <PlayingCard key={i} faceDown size="lg" className="pick-card" onClick={() => onPick(i)} />
+          <PlayingCard key={i} faceDown size={count > 8 ? 'md' : 'lg'} className="pick-card" onClick={() => onPick(i)} />
         ))}
       </div>
       <button className="btn ghost block" onClick={onClose}>
@@ -92,7 +92,12 @@ export function RevealOverlay({ reveal, name, onClose }: RevealProps) {
               key={i}
               className={cx('reveal-slot', c && (c.rank === reveal.rank ? 'match' : 'miss'), reveal.pickedIndex === i && 'picked')}
             >
-              <PlayingCard card={c} size="md" className={c ? 'flip' : undefined} style={{ animationDelay: `${120 + i * 110}ms` }} />
+              <PlayingCard
+                card={c}
+                size={reveal.cards.length > 8 ? 'sm' : 'md'}
+                className={c ? 'flip' : undefined}
+                style={{ animationDelay: `${120 + Math.min(i, 10) * 110}ms` }}
+              />
               {c && <span className="mark">{c.rank === reveal.rank ? '✓' : '✗'}</span>}
             </div>
           ))}
@@ -109,6 +114,7 @@ export function RevealOverlay({ reveal, name, onClose }: RevealProps) {
 export function GameOver({ view, onLobby }: { view: RoomView; onLobby: () => void }) {
   const ranked = [...view.players].sort((a, b) => (a.place ?? 99) - (b.place ?? 99));
   const medal = (place: number | null) => (place ? (['🥇', '🥈', '🥉'][place - 1] ?? placeLabel(place)) : '🙈');
+  const nameOf = (id: string) => (id === view.meId ? 'You' : (view.players.find((p) => p.id === id)?.name ?? 'Someone'));
   return (
     <Backdrop center>
       <div className="reveal gameover">
@@ -125,6 +131,22 @@ export function GameOver({ view, onLobby }: { view: RoomView; onLobby: () => voi
             </li>
           ))}
         </ol>
+        {view.awards.length > 0 && (
+          <div className="awards">
+            <p className="label">Awards</p>
+            {view.awards.map((a) => (
+              <div key={a.title} className="award">
+                <span className="award-emoji">{a.emoji}</span>
+                <div className="grow">
+                  <b>{a.title}</b>
+                  <p className="muted small">
+                    {a.playerIds.map(nameOf).join(' & ')} · {a.detail}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         <button className="btn primary block" onClick={onLobby}>
           Back to lobby
         </button>

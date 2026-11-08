@@ -8,12 +8,14 @@ interface Props {
   /** omit to inherit --cw from the parent (used by the hand) */
   size?: 'sm' | 'md' | 'lg';
   selected?: boolean;
+  /** 1-based tap order, shown as a badge on selected cards */
+  order?: number;
   onClick?: () => void;
   className?: string;
   style?: CSSProperties;
 }
 
-export function PlayingCard({ card, faceDown, size, selected, onClick, className, style }: Props) {
+export function PlayingCard({ card, faceDown, size, selected, order, onClick, className, style }: Props) {
   const shown = faceDown ? null : (card ?? null);
   const classes = cx(
     'card',
@@ -39,6 +41,7 @@ export function PlayingCard({ card, faceDown, size, selected, onClick, className
         <b>{shown.rank}</b>
         <i>{SUIT_SYMBOL[shown.suit]}</i>
       </span>
+      {order !== undefined && <span className="order-badge">{order}</span>}
     </>
   );
 
