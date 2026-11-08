@@ -1,17 +1,84 @@
 import { useEffect, useState } from 'react';
-import { placeLabel } from '../lib/cards';
+import { cx, placeLabel } from '../lib/cards';
+import { formatCoins, signedCoins } from '../lib/coins';
 import type { GameSummary } from '../types';
 import type { Auth } from '../useAuth';
 import { Backdrop } from './Overlays';
 
 function result(g: GameSummary): [string, string] {
-  if (g.status === 'ended_early') return ['⏹', 'ended early'];
-  if (g.won) return ['🥇', 'won'];
-  if (g.lost) return ['🙈', 'lost'];
-  return ['🎖', g.place ? `finished ${placeLabel(g.place)}` : 'played'];
+  if (g.kicked) return ['🚫', 'Removed by host'];
+  if (g.status === 'ended_early') return ['⏹', 'Stopped, no coins moved'];
+  if (g.won) return ['🥇', 'Won'];
+  if (g.lost) return ['🙈', 'Lost'];
+  return ['🎖', g.place ? `Finished ${placeLabel(g.place)}` : 'Played'];
 }
 
-/** lifetime stats, coins and the last 10 games of the logged-in account */
+const minutes = (sec: number) => (sec < 60 ? `${sec}s` : `${Math.round(sec / 60)} min`);
+
+function GameCard({ g }: { g: GameSummary }) {
+  const [icon, text] = result(g);
+  return (
+    <li className="game-card">
+      <div className="game-card-top">
+        <span className="game-icon">{icon}</span>
+        <div className="grow">
+          <b>{text}</b>
+          <p className="muted small">
+            {new Date(g.endedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })} · {minutes(g.durationSec)}
+          </p>
+        </div>
+        {g.stake > 0 && g.status === 'finished' && !g.kicked && (
+          <span className={cx('coin-change', g.coinChange >= 0 ? 'up' : 'down')}>🪙 {signedCoins(g.coinChange)}</span>
+        )}
+      </div>
+      <p className="game-players">
+        {g.players.map((p, i) => (
+          <span key={i}>
+            {p.name}
+            {p.place === 1 ? ' 🥇' : p.loser ? ' 🙈' : p.kicked ? ' 🚫' : p.place ? ` ${placeLabel(p.place)}` : ''}
+            {p.guest ? ' (guest)' : ''}
+            {i < g.players.length - 1 ? ', ' : ''}
+          </span>
+        ))}
+      </p>
+      <p className="game-meta">
+        <span>🎴 {g.decks} deck{g.decks > 1 ? 's' : ''}</span>
+        <span>{g.stake > 0 ? `🪙 ${formatCoins(g.stake)} stake` : 'Free game'}</span>
+        {g.bonus > 0 && <span className="bonus">🎁 +{g.bonus} first game</span>}
+      </p>
+      {g.my && (
+        <div className="mini-stats">
+          <span>
+            <b>{g.my.bluffs}</b> bluffs
+          </span>
+          <span>
+            <b>{g.my.caught}</b> caught
+          </span>
+          <span>
+            <b>{g.my.goodCalls}</b> good calls
+          </span>
+          <span>
+            <b>{g.my.wrongCalls}</b> wrong calls
+          </span>
+          <span>
+            <b>{g.my.pickedUp}</b> picked up
+          </span>
+        </div>
+      )}
+      {g.myAwards.length > 0 && (
+        <p className="game-awards">
+          {g.myAwards.map((a) => (
+            <span key={a.title}>
+              {a.emoji} {a.title}
+            </span>
+          ))}
+        </p>
+      )}
+    </li>
+  );
+}
+
+/** lifetime stats, coins and a detailed card for each of the last 10 games */
 export function ProfileSheet({ auth, onClose }: { auth: Auth; onClose: () => void }) {
   const [games, setGames] = useState<GameSummary[] | null>(null);
   useEffect(() => {
@@ -41,7 +108,8 @@ export function ProfileSheet({ auth, onClose }: { auth: Auth; onClose: () => voi
       <h3>
         {user.displayName} <span className="muted small">@{user.username}</span>
       </h3>
-      <p className="coin-chip big">🪙 {user.coins.toLocaleString()} coins</p>
+      <p className="coin-chip big">🪙 {formatCoins(user.coins)} coins</p>
+      <p className="label">All time</p>
       <div className="stat-grid">
         {stats.map(([label, value]) => (
           <div key={label} className="stat">
@@ -50,25 +118,14 @@ export function ProfileSheet({ auth, onClose }: { auth: Auth; onClose: () => voi
           </div>
         ))}
       </div>
-      <p className="label">Recent games</p>
+      <p className="label">Last 10 games</p>
       {games === null && <p className="muted small">Loading…</p>}
       {games?.length === 0 && <p className="muted small">No games yet. Finish a game while logged in.</p>}
       {games && games.length > 0 && (
         <ul className="game-list">
-          {games.map((g) => {
-            const [icon, text] = result(g);
-            return (
-              <li key={g.id}>
-                <span className="game-icon">{icon}</span>
-                <span className="grow">
-                  {g.players.map((p) => p.name).join(', ')}
-                  <small className="muted">
-                    {new Date(g.endedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })} · {text}
-                  </small>
-                </span>
-              </li>
-            );
-          })}
+          {games.map((g) => (
+            <GameCard key={g.id} g={g} />
+          ))}
         </ul>
       )}
       <button className="btn ghost block" onClick={onClose}>

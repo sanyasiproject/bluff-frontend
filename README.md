@@ -41,6 +41,15 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 - Admins get an **Admin** button: search all users, give or take coins (with a reason), make someone admin.
 - The login token is kept in the browser and sent as `Authorization: Bearer …` to the API and in the socket handshake.
 
+## Coins, friends and hosting
+
+- **Top-right corner:** coins + avatar menu (My stats, Friends, Admin, Log out); guests see **Log in**.
+- **Daily rewards:** a popup shows the +200 login bonus; the Game over screen shows each player's stake result and the +500 first-game bonus.
+- **Stakes:** the host picks Free … 10L in the lobby; the lobby explains it in one line and the Start button says what's blocking (guests, not enough coins).
+- **Friends:** add by username, accept requests, see who's online, and **Invite** online friends from the lobby. They get a popup with a Join button.
+- **Host tools:** ✕ next to a player in the lobby, or 👥 in the game, removes someone.
+- **My stats:** lifetime numbers plus a card for each of the last 10 games (result, coins, players, per-game bluffs and calls, awards).
+
 ## Chat, watching and awards
 
 - **💬 Quick chat** (lobby and table): 8 emoji reactions float up on every screen; 26 quick messages appear with the sender's name. Edit the lists in `src/types.ts` (and the same file in the backend).

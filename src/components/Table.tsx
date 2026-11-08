@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { avatarColor, claimText, cx, placeLabel, rankPlural } from '../lib/cards';
+import { compactCoins } from '../lib/coins';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
 import type { Card, PublicPlayer, Rank, RoomView } from '../types';
 import type { Actions } from '../useBluff';
 import { Hand } from './Hand';
-import { GameOver, PickSheet, RankSheet, RevealOverlay } from './Overlays';
+import { GameOver, PickSheet, PlayersSheet, RankSheet, RevealOverlay } from './Overlays';
 import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
 
@@ -91,6 +92,7 @@ export function Table({ view, actions }: { view: RoomView; actions: Actions }) {
   const [busy, setBusy] = useState(false);
   /** watcher stuck to one player; null follows whoever's turn it is */
   const [pinned, setPinned] = useState<string | null>(null);
+  const [playersOpen, setPlayersOpen] = useState(false);
 
   const me = view.players.find((p) => p.id === view.meId);
   const name = (id: string | null) => (id === view.meId ? 'You' : (view.players.find((p) => p.id === id)?.name ?? 'Someone'));
@@ -169,11 +171,17 @@ export function Table({ view, actions }: { view: RoomView; actions: Actions }) {
       <header className="topbar">
         <span className="code-chip">{view.code}</span>
         <span className="topbar-info">
+          {view.config.stake > 0 && <b className="pot-chip">🪙 Pot {compactCoins(view.config.stake * view.players.length)}</b>}
           {view.config.decks === 2 ? '2 decks' : '1 deck'} · {view.config.bluffRule === 'one' ? 'pick one' : 'show all'}
           {view.watchers.length > 0 && ` · 👀 ${view.watchers.length}`}
         </span>
         <div className="topbar-actions">
           <QuickChat onSend={actions.chat} />
+          {isHost && (
+            <button className="icon-btn" aria-label="Players (remove someone)" onClick={() => setPlayersOpen(true)}>
+              👥
+            </button>
+          )}
           <button
             className="icon-btn"
             aria-label={sound ? 'Mute voice' : 'Turn voice on'}
@@ -189,7 +197,7 @@ export function Table({ view, actions }: { view: RoomView; actions: Actions }) {
             <button
               className="icon-btn"
               aria-label="End game"
-              onClick={() => window.confirm('End this game for everyone?') && actions.toLobby()}
+              onClick={() => window.confirm('Stop this game for everyone? No coins will move.') && actions.toLobby()}
             >
               ✕
             </button>
@@ -318,6 +326,17 @@ export function Table({ view, actions }: { view: RoomView; actions: Actions }) {
         <RevealOverlay reveal={view.reveal} name={name} onClose={() => setShowReveal(false)} />
       )}
       {view.phase === 'over' && !(showReveal && view.reveal) && <GameOver view={view} onLobby={actions.toLobby} />}
+      {playersOpen && (
+        <PlayersSheet
+          view={view}
+          onRemove={(id, name) => {
+            const mid = view.phase === 'playing' && view.players.some((p) => p.id === id);
+            const warn = mid ? ` Their cards leave the game and they won't pay or win coins.` : '';
+            if (window.confirm(`Remove ${name} from the room?${warn}`)) void actions.kick(id);
+          }}
+          onClose={() => setPlayersOpen(false)}
+        />
+      )}
     </main>
   );
 }

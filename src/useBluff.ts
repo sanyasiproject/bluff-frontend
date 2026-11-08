@@ -10,9 +10,14 @@ import {
   type ChatEvent,
   type ChatKind,
   type GameConfig,
+  type InviteEvent,
   type Rank,
   type RoomView,
 } from './types';
+
+export interface Invite extends InviteEvent {
+  key: number;
+}
 
 export type ConnStatus = 'connecting' | 'online' | 'offline';
 
@@ -49,6 +54,7 @@ export function useBluff() {
   const [view, setView] = useState<RoomView | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [reactions, setReactions] = useState<Reaction[]>([]);
+  const [invites, setInvites] = useState<Invite[]>([]);
   const [replaced, setReplaced] = useState(false);
   const session = useRef<Session | null>(startSession());
   const replacedRef = useRef(false);
@@ -101,6 +107,17 @@ export function useBluff() {
       replacedRef.current = true;
       setReplaced(true);
     };
+    const onKicked = ({ code }: { code: string }) => {
+      session.current = null;
+      clearSession();
+      viewRef.current = null;
+      setView(null);
+      pushNote('error', `You were removed from room ${code} by the host`);
+    };
+    // one invite per friend; a newer one replaces the older
+    const onInvite = (i: InviteEvent) => {
+      setInvites((prev) => [...prev.filter((x) => x.fromId !== i.fromId), { ...i, key: ++noteSeq }]);
+    };
     // phones pause sockets in the background; reconnect as soon as the app is visible again
     const onVisible = () => {
       if (document.visibilityState === 'visible' && !socket.connected && !replacedRef.current) socket.connect();
@@ -112,6 +129,8 @@ export function useBluff() {
     socket.on('announce', onAnnounce);
     socket.on('chat', onChat);
     socket.on('session:replaced', onReplaced);
+    socket.on('room:kicked', onKicked);
+    socket.on('invite', onInvite);
     document.addEventListener('visibilitychange', onVisible);
     if (socket.connected) void onConnect();
     return () => {
@@ -120,6 +139,8 @@ export function useBluff() {
       socket.off('state', onState);
       socket.off('announce', onAnnounce);
       socket.off('chat', onChat);
+      socket.off('room:kicked', onKicked);
+      socket.off('invite', onInvite);
       socket.off('session:replaced', onReplaced);
       document.removeEventListener('visibilitychange', onVisible);
     };
@@ -165,7 +186,30 @@ export function useBluff() {
           await request('room:leave');
           session.current = null;
           clearSession();
+          viewRef.current = null;
           setView(null);
+        }),
+      kick: (memberId: string) => run(() => request('room:kick', { memberId })),
+      invite: async (userId: string) => (await run(() => request('friend:invite', { userId }))) !== null,
+      dismissInvite: (key: number) => setInvites((prev) => prev.filter((i) => i.key !== key)),
+      acceptInvite: (inv: Invite, name: string) =>
+        run(async () => {
+          setInvites((prev) => prev.filter((i) => i.key !== inv.key));
+          const current = viewRef.current;
+          if (current?.code === inv.code) return;
+          // leave the current room first; the server refuses mid-game
+          if (current) {
+            try {
+              await request('room:leave');
+            } catch (err) {
+              throw err instanceof ServerError ? new Error('Finish your current game first') : err;
+            }
+            session.current = null;
+            clearSession();
+            viewRef.current = null;
+            setView(null);
+          }
+          enter(await request<Entered>('room:join', { code: inv.code, name }), name);
         }),
       setConfig: (config: GameConfig) => run(() => request('room:config', config)),
       start: () => run(() => request('room:start')),
@@ -183,7 +227,7 @@ export function useBluff() {
     };
   }, [run, pushNote]);
 
-  return { status, connectionId, view, notes, reactions, replaced, actions };
+  return { status, connectionId, view, notes, reactions, invites, replaced, actions };
 }
 
 export type Actions = ReturnType<typeof useBluff>['actions'];

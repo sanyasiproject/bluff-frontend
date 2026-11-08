@@ -12,6 +12,8 @@ export function useAuth() {
   const [checking, setChecking] = useState(() => loadAuthToken() !== null);
   /** null until known; false when the server runs guest-only */
   const [accountsOn, setAccountsOn] = useState<boolean | null>(null);
+  /** daily login bonus just received, shown once as a popup */
+  const [bonus, setBonus] = useState(0);
 
   const refresh = useCallback(async () => {
     const saved = loadAuthToken();
@@ -21,7 +23,9 @@ export function useAuth() {
       return;
     }
     try {
-      setUser((await api<{ user: PublicUser }>('/me', { token: saved })).user);
+      const res = await api<{ user: PublicUser; bonus: number }>('/me', { token: saved });
+      setUser(res.user);
+      if (res.bonus > 0) setBonus(res.bonus);
     } catch (err) {
       // expired or revoked: fall back to guest
       if (err instanceof ApiError && err.status === 401) {
@@ -46,6 +50,7 @@ export function useAuth() {
     saveAuthToken(res.token);
     setToken(res.token);
     setUser(res.user);
+    if (res.bonus > 0) setBonus(res.bonus);
     reconnectSocket();
   };
 
@@ -54,6 +59,8 @@ export function useAuth() {
     token,
     checking,
     accountsOn,
+    bonus,
+    clearBonus: () => setBonus(0),
     refresh,
     login: async (username: string, password: string) =>
       signIn(await api<AuthResponse>('/auth/login', { body: { username, password } })),

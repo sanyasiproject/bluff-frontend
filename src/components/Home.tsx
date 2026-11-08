@@ -3,10 +3,9 @@ import { clearInvite, inviteCode } from '../lib/invite';
 import { loadName, loadSavedSession, loadTabSession } from '../lib/storage';
 import type { Auth } from '../useAuth';
 import type { Actions, ConnStatus } from '../useBluff';
-import { AccountSheet, type AccountMode } from './AccountSheet';
+import { AccountCorner } from './AccountCorner';
 import { InstallCard } from './InstallCard';
 import { PlayingCard } from './PlayingCard';
-import { ProfileSheet } from './ProfileSheet';
 
 interface HomeProps {
   status: ConnStatus;
@@ -22,7 +21,6 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin }: HomeP
   const [invite, setInvite] = useState(inviteCode);
   const [busy, setBusy] = useState(false);
   const [slow, setSlow] = useState(false);
-  const [sheet, setSheet] = useState<AccountMode | 'profile' | null>(null);
   const autoJoin = useRef<{ connectionId: string | null; tries: number }>({ connectionId: null, tries: 0 });
   const saved = loadSavedSession();
   const online = status === 'online';
@@ -78,49 +76,18 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin }: HomeP
     </>
   );
 
-  const accountCard = auth.user ? (
-    <section className="panel account-card">
-      <div className="account-row">
-        <div className="grow">
-          <b>{auth.user.displayName}</b> {auth.user.role === 'admin' && <span className="tag">Admin</span>}
-          <p className="muted small">
-            {auth.user.stats.gamesPlayed} games · {auth.user.stats.wins} wins · {auth.user.stats.losses} losses
-          </p>
-        </div>
-        <span className="coin-chip">🪙 {auth.user.coins.toLocaleString()}</span>
-      </div>
-      <div className="account-actions">
-        <button className="btn small" onClick={() => setSheet('profile')}>
-          My stats
-        </button>
-        {auth.user.role === 'admin' && (
-          <button className="btn small" onClick={onOpenAdmin}>
-            Admin
-          </button>
-        )}
-        <button className="btn small ghost" onClick={() => void auth.logout()}>
-          Log out
-        </button>
-      </div>
-    </section>
-  ) : auth.accountsOn && !auth.checking ? (
-    <section className="panel account-card guest">
-      <p className="small">
-        Playing as a <b>guest</b>. Log in to save your wins, stats and coins.
+  const guestHint =
+    !auth.user && auth.accountsOn && !auth.checking ? (
+      <p className="guest-hint">
+        You're playing as a <b>guest</b>. <b>Log in</b> (top right) to save your wins, earn daily coins and add friends.
       </p>
-      <div className="account-actions">
-        <button className="btn small primary" onClick={() => setSheet('login')}>
-          Log in
-        </button>
-        <button className="btn small" onClick={() => setSheet('register')}>
-          Sign up
-        </button>
-      </div>
-    </section>
-  ) : null;
+    ) : null;
 
   return (
     <main className="screen home">
+      <header className="home-top">
+        <AccountCorner auth={auth} onOpenAdmin={onOpenAdmin} />
+      </header>
       <div className="hero">
         <div className="hero-cards" aria-hidden>
           <PlayingCard card={{ id: 'h1', rank: 'A', suit: 'S' }} size="lg" className="hero-card c1" />
@@ -138,7 +105,7 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin }: HomeP
         </p>
       )}
 
-      {accountCard}
+      {guestHint}
 
       {invite ? (
         <section className="panel stack invite-card">
@@ -215,9 +182,6 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin }: HomeP
       <InstallCard />
 
       <p className="foot muted">2–5 players · 1 or 2 decks · voice announcements</p>
-
-      {(sheet === 'login' || sheet === 'register') && <AccountSheet initial={sheet} auth={auth} onClose={() => setSheet(null)} />}
-      {sheet === 'profile' && <ProfileSheet auth={auth} onClose={() => setSheet(null)} />}
     </main>
   );
 }
