@@ -1,26 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
 import { clearInvite, inviteCode } from '../lib/invite';
 import { loadName, loadSavedSession, loadTabSession } from '../lib/storage';
+import type { Auth } from '../useAuth';
 import type { Actions, ConnStatus } from '../useBluff';
+import { AccountSheet, type AccountMode } from './AccountSheet';
 import { InstallCard } from './InstallCard';
 import { PlayingCard } from './PlayingCard';
+import { ProfileSheet } from './ProfileSheet';
 
 interface HomeProps {
   status: ConnStatus;
   connectionId: string | null;
   actions: Actions;
+  auth: Auth;
+  onOpenAdmin: () => void;
 }
 
-export function Home({ status, connectionId, actions }: HomeProps) {
+export function Home({ status, connectionId, actions, auth, onOpenAdmin }: HomeProps) {
   const [name, setName] = useState(loadName);
   const [code, setCode] = useState('');
   const [invite, setInvite] = useState(inviteCode);
   const [busy, setBusy] = useState(false);
   const [slow, setSlow] = useState(false);
+  const [sheet, setSheet] = useState<AccountMode | 'profile' | null>(null);
   const autoJoin = useRef<{ connectionId: string | null; tries: number }>({ connectionId: null, tries: 0 });
   const saved = loadSavedSession();
   const online = status === 'online';
-  const trimmed = name.trim();
+  // logged-in players always play under their account name
+  const playName = auth.user?.displayName ?? name.trim();
 
   // a sleeping free server needs up to a minute to wake up
   useEffect(() => {
@@ -39,17 +46,21 @@ export function Home({ status, connectionId, actions }: HomeProps) {
   // One try per fresh connection (max 2), so a drop right after connecting gets a second go.
   useEffect(() => {
     const auto = autoJoin.current;
-    if (!invite || !online || !connectionId || auto.connectionId === connectionId || auto.tries >= 2) return;
+    if (!invite || !online || !connectionId || auth.checking || auto.connectionId === connectionId || auto.tries >= 2) return;
     auto.connectionId = connectionId;
     auto.tries++;
     if (loadTabSession()?.code === invite) return; // useBluff already rejoins this tab's seat
     void go(async () => {
       if (saved?.code === invite && (await actions.rejoinSaved()) !== null) return;
-      if (trimmed) await actions.join(invite, trimmed);
+      if (playName) await actions.join(invite, playName);
     });
-  }, [invite, online, connectionId]);
+  }, [invite, online, connectionId, auth.checking]);
 
-  const nameField = (
+  const nameField = auth.user ? (
+    <p className="playing-as">
+      Playing as <b>{auth.user.displayName}</b>
+    </p>
+  ) : (
     <>
       <label className="label" htmlFor="name">
         Your name
@@ -66,6 +77,47 @@ export function Home({ status, connectionId, actions }: HomeProps) {
       />
     </>
   );
+
+  const accountCard = auth.user ? (
+    <section className="panel account-card">
+      <div className="account-row">
+        <div className="grow">
+          <b>{auth.user.displayName}</b> {auth.user.role === 'admin' && <span className="tag">Admin</span>}
+          <p className="muted small">
+            {auth.user.stats.gamesPlayed} games · {auth.user.stats.wins} wins · {auth.user.stats.losses} losses
+          </p>
+        </div>
+        <span className="coin-chip">🪙 {auth.user.coins.toLocaleString()}</span>
+      </div>
+      <div className="account-actions">
+        <button className="btn small" onClick={() => setSheet('profile')}>
+          My stats
+        </button>
+        {auth.user.role === 'admin' && (
+          <button className="btn small" onClick={onOpenAdmin}>
+            Admin
+          </button>
+        )}
+        <button className="btn small ghost" onClick={() => void auth.logout()}>
+          Log out
+        </button>
+      </div>
+    </section>
+  ) : auth.accountsOn && !auth.checking ? (
+    <section className="panel account-card guest">
+      <p className="small">
+        Playing as a <b>guest</b>. Log in to save your wins, stats and coins.
+      </p>
+      <div className="account-actions">
+        <button className="btn small primary" onClick={() => setSheet('login')}>
+          Log in
+        </button>
+        <button className="btn small" onClick={() => setSheet('register')}>
+          Sign up
+        </button>
+      </div>
+    </section>
+  ) : null;
 
   return (
     <main className="screen home">
@@ -86,6 +138,8 @@ export function Home({ status, connectionId, actions }: HomeProps) {
         </p>
       )}
 
+      {accountCard}
+
       {invite ? (
         <section className="panel stack invite-card">
           <p className="label">You're invited</p>
@@ -95,8 +149,8 @@ export function Home({ status, connectionId, actions }: HomeProps) {
           {nameField}
           <button
             className="btn primary block"
-            disabled={!trimmed || !online || busy}
-            onClick={() => go(() => actions.join(invite, trimmed))}
+            disabled={!playName || !online || busy}
+            onClick={() => go(() => actions.join(invite, playName))}
           >
             {busy ? `Joining room ${invite}…` : `Join room ${invite}`}
           </button>
@@ -125,8 +179,8 @@ export function Home({ status, connectionId, actions }: HomeProps) {
             {nameField}
             <button
               className="btn primary block"
-              disabled={!trimmed || !online || busy}
-              onClick={() => go(() => actions.create(trimmed))}
+              disabled={!playName || !online || busy}
+              onClick={() => go(() => actions.create(playName))}
             >
               Create a room
             </button>
@@ -148,8 +202,8 @@ export function Home({ status, connectionId, actions }: HomeProps) {
               />
               <button
                 className="btn"
-                disabled={!trimmed || code.length !== 4 || !online || busy}
-                onClick={() => go(() => actions.join(code, trimmed))}
+                disabled={!playName || code.length !== 4 || !online || busy}
+                onClick={() => go(() => actions.join(code, playName))}
               >
                 Join
               </button>
@@ -161,6 +215,9 @@ export function Home({ status, connectionId, actions }: HomeProps) {
       <InstallCard />
 
       <p className="foot muted">2–5 players · 1 or 2 decks · voice announcements</p>
+
+      {(sheet === 'login' || sheet === 'register') && <AccountSheet initial={sheet} auth={auth} onClose={() => setSheet(null)} />}
+      {sheet === 'profile' && <ProfileSheet auth={auth} onClose={() => setSheet(null)} />}
     </main>
   );
 }

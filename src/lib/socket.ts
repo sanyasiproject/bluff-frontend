@@ -1,10 +1,21 @@
 import { io } from 'socket.io-client';
+import { loadAuthToken } from './storage';
 
 // Locally the server runs on port 3001 of the same machine, which also works from phones on home Wi-Fi
 const envUrl = (import.meta.env.VITE_SERVER_URL as string | undefined)?.trim().replace(/\/$/, '');
 export const SERVER_URL = envUrl || `${location.protocol}//${location.hostname}:3001`;
 
-export const socket = io(SERVER_URL, { reconnectionDelayMax: 4000 });
+// the login token is read on every (re)connect, so the server knows which account this is
+export const socket = io(SERVER_URL, {
+  reconnectionDelayMax: 4000,
+  auth: (cb) => cb({ token: loadAuthToken() ?? '' }),
+});
+
+/** reconnect so the server picks up a login or logout */
+export function reconnectSocket(): void {
+  socket.disconnect();
+  socket.connect();
+}
 
 /** Error message coming from the server's game rules */
 export class ServerError extends Error {}

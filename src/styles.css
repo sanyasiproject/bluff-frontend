@@ -367,6 +367,173 @@ p {
   font-size: 13px;
 }
 
+/* ---------- accounts, profile, admin ---------- */
+
+.account-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.account-card.guest {
+  border-style: dashed;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.account-actions .btn {
+  flex: 1;
+}
+
+.coin-chip {
+  flex: none;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(246, 196, 83, 0.16);
+  color: var(--gold);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.coin-chip.big {
+  align-self: flex-start;
+  font-size: 18px;
+}
+
+.playing-as {
+  font-size: 16px;
+}
+
+.playing-as b {
+  color: var(--gold);
+}
+
+.form-error {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(229, 72, 77, 0.16);
+  color: #ff9a9d;
+  font-size: 14px;
+}
+
+.center-text {
+  text-align: center;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 4px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  text-align: center;
+}
+
+.stat b {
+  font-size: 20px;
+}
+
+.stat span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.game-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.game-list small {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.game-icon {
+  width: 26px;
+  font-size: 20px;
+  text-align: center;
+}
+
+.admin-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-user {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+
+.admin-user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.coin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coin-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
 /* ---------- lobby ---------- */
 
 .lobby-head {

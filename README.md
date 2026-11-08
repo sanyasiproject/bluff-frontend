@@ -34,6 +34,13 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 - Opening the link joins that room directly: a phone that already had a seat there gets it back, a phone with a saved name joins at once, and a new phone only types a name and taps **Join room ABCD**.
 - The `?room=` part is removed from the address bar once inside, so reloading or leaving never re-joins by itself.
 
+## Accounts
+
+- When the backend has a database, the home screen offers **Log in / Sign up**; otherwise only guest play is shown.
+- Logged-in players play under their account name; wins, losses, stats and coins are saved. **My stats** shows lifetime numbers and the last 10 games.
+- Admins get an **Admin** button: search all users, give or take coins (with a reason), make someone admin.
+- The login token is kept in the browser and sent as `Authorization: Bearer …` to the API and in the socket handshake.
+
 ## Chat, watching and awards
 
 - **💬 Quick chat** (lobby and table): 8 emoji reactions float up on every screen; 26 quick messages appear with the sender's name. Edit the lists in `src/types.ts` (and the same file in the backend).

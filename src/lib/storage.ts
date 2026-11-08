@@ -50,6 +50,12 @@ export function clearSession(): void {
   write(() => localStorage, SESSION_KEY, null);
 }
 
+const AUTH_KEY = 'bluff.authToken';
+
+/** bearer token of the logged-in account, if any */
+export const loadAuthToken = () => read(() => localStorage, AUTH_KEY);
+export const saveAuthToken = (token: string | null) => write(() => localStorage, AUTH_KEY, token);
+
 export const loadName = () => read(() => localStorage, NAME_KEY) ?? '';
 export const saveName = (name: string) => write(() => localStorage, NAME_KEY, name);
 export const loadPref = (key: string) => read(() => localStorage, `bluff.${key}`);
