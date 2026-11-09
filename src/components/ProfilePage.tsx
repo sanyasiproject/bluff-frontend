@@ -1,9 +1,9 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { avatarColor, cx } from '../lib/cards';
-import { formatCoins, signedCoins } from '../lib/coins';
+import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
 import { monthYear } from '../lib/dates';
-import { achievementsOf, levelOf, percent, winStreak } from '../lib/progress';
-import { FIRST_GAME_BONUS, LOGIN_BONUS, type GameSummary, type ProfileOverview } from '../types';
+import { achievementsOf, earnedFromGames, levelInfo, nextGameReward, percent, winStreak } from '../lib/progress';
+import { DAILY_GAME_REWARDS, LOGIN_BONUS, MIN_REWARD_GAME_SEC, type GameSummary, type ProfileOverview } from '../types';
 import type { Auth } from '../useAuth';
 import { FriendsSheet } from './FriendsSheet';
 import { FullPage } from './FullPage';
@@ -42,7 +42,9 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite }: 
   const user = auth.user;
   if (!user) return null;
   const s = user.stats;
-  const lvl = levelOf(s);
+  const lvl = levelInfo(s);
+  const gamesToday = overview?.gamesToday ?? 0;
+  const next = nextGameReward(gamesToday);
   const winRate = percent(s.wins, s.gamesPlayed);
   const badges = achievementsOf(s, user.coins);
   const unlocked = badges.filter((b) => b.value >= b.goal).length;
@@ -84,16 +86,40 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite }: 
             </span>
           )}
         </div>
-        <div className="reward-row">
-          <span className={cx('reward', overview?.loginBonusToday && 'done')}>
-            🎁 Daily +{LOGIN_BONUS}
-            <small>{overview?.loginBonusToday ? '✓ received' : 'open the app'}</small>
-          </span>
-          <span className={cx('reward', overview?.gameBonusToday && 'done')}>
-            🃏 First game +{FIRST_GAME_BONUS}
-            <small>{overview?.gameBonusToday ? '✓ received' : 'play today'}</small>
-          </span>
-        </div>
+        <span className={cx('reward', overview?.loginBonusToday && 'done')}>
+          🎁 Daily login +{LOGIN_BONUS}
+          <small>{overview?.loginBonusToday ? '✓ received today' : 'open the app every day'}</small>
+        </span>
+        {overview && (
+          <div className="ladder">
+            <div className="ladder-head">
+              <span>🎯 Daily games</span>
+              <b>
+                {gamesToday} today · +{formatCoins(earnedFromGames(gamesToday))}
+              </b>
+            </div>
+            <p className="ladder-next">
+              {next ? (
+                <>
+                  Play <b>{next.left}</b> more game{next.left > 1 ? 's' : ''} to get <b className="gold-text">+{formatCoins(next.coins)}</b>
+                </>
+              ) : (
+                'All daily game rewards collected 🎉 Come back tomorrow'
+              )}
+            </p>
+            <div className="ladder-steps">
+              {DAILY_GAME_REWARDS.map((r) => (
+                <span key={r.games} className={cx('step', gamesToday >= r.games && 'done', next?.games === r.games && 'next')}>
+                  <b>{gamesToday >= r.games ? '✓' : r.games}</b>
+                  <small>+{compactCoins(r.coins)}</small>
+                </span>
+              ))}
+            </div>
+            <p className="muted small">
+              Games of {MIN_REWARD_GAME_SEC / 60} min or more count, win or lose · starts again at midnight
+            </p>
+          </div>
+        )}
         {games && games.length > 0 && (
           <p className="muted small">
             Last {games.length} games: <b className={net >= 0 ? 'up' : 'down'}>{signedCoins(net)} coins</b>

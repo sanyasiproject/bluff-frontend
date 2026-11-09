@@ -34,6 +34,7 @@ function Seat({ player, turn, passed, viewing, action, bubble, onClick, seatRef 
       {badge && <span className={cx('badge', player.place && 'gold')}>{badge}</span>}
       <span className="avatar" style={{ background: avatarColor(player.name) }}>
         {player.name[0]?.toUpperCase()}
+        {player.level && <span className="seat-lv">{player.level}</span>}
       </span>
       <span className="seat-name">{player.name}</span>
       <span className="seat-count">

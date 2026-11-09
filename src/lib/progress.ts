@@ -1,9 +1,4 @@
-import type { GameSummary, LifetimeStats } from '../types';
-
-/** XP from lifetime numbers; wins and caught bluffs count most */
-export function xpOf(s: LifetimeStats): number {
-  return s.gamesPlayed * 20 + s.wins * 50 + s.goodCalls * 5 + Math.max(0, s.bluffs - s.bluffsCaught) * 3;
-}
+import { DAILY_GAME_REWARDS, levelOf, xpForLevel, xpOf, type GameSummary, type LifetimeStats } from '../types';
 
 const TITLES: [number, string][] = [
   [16, 'Legend'],
@@ -23,16 +18,26 @@ export interface Level {
   toNext: number;
 }
 
-/** each level needs 100 XP more than the last: 0, 100, 300, 600, 1000… */
-export function levelOf(s: LifetimeStats): Level {
+export const levelTitle = (level: number) => TITLES.find(([min]) => level >= min)?.[1] ?? 'Rookie';
+
+/** level, title and progress towards the next level; the level formula is shared with the server */
+export function levelInfo(s: LifetimeStats): Level {
   const xp = xpOf(s);
-  let level = 1;
-  while (xp >= 50 * level * (level + 1)) level++;
-  const from = 50 * (level - 1) * level;
-  const to = 50 * level * (level + 1);
-  const title = TITLES.find(([min]) => level >= min)?.[1] ?? 'Rookie';
-  return { level, title, xp, progress: (xp - from) / (to - from), toNext: to - xp };
+  const level = levelOf(s);
+  const from = xpForLevel(level);
+  const to = xpForLevel(level + 1);
+  return { level, title: levelTitle(level), xp, progress: (xp - from) / (to - from), toNext: to - xp };
 }
+
+/** the next daily games step to reach, or null when every step is done today */
+export function nextGameReward(gamesToday: number): { games: number; coins: number; left: number } | null {
+  const next = DAILY_GAME_REWARDS.find((r) => r.games > gamesToday);
+  return next ? { ...next, left: next.games - gamesToday } : null;
+}
+
+/** coins earned today from the daily games steps already reached */
+export const earnedFromGames = (gamesToday: number) =>
+  DAILY_GAME_REWARDS.filter((r) => r.games <= gamesToday).reduce((sum, r) => sum + r.coins, 0);
 
 export interface Achievement {
   emoji: string;

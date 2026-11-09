@@ -3,6 +3,7 @@ import { api, errorText } from '../lib/api';
 import { avatarColor, cx } from '../lib/cards';
 import type { FriendsResponse, FriendView } from '../types';
 import type { Auth } from '../useAuth';
+import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
 
 interface Props {
@@ -77,7 +78,7 @@ export function FriendsSheet({ auth, roomCode, onInvite, onClose }: Props) {
         {showOnline && <i className={cx('presence', f.online && 'on')} />}
       </span>
       <div className="grow">
-        <b>{f.displayName}</b>
+        <b>{f.displayName}</b> <LevelBadge level={f.level} />
         <p className="muted small">
           @{f.username}
           {showOnline && (f.online ? ' · online' : ' · offline')}

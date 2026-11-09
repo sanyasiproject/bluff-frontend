@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { avatarColor } from '../lib/cards';
 import { compactCoins } from '../lib/coins';
+import { levelOf } from '../types';
 import type { Auth } from '../useAuth';
 import { AccountSheet } from './AccountSheet';
 import { ProfilePage } from './ProfilePage';
@@ -30,6 +31,7 @@ export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite }: Props) 
           <span className="coin-mini">🪙 {compactCoins(user.coins)}</span>
           <span className="avatar sm" style={{ background: avatarColor(user.displayName) }}>
             {user.displayName[0]?.toUpperCase()}
+            <span className="seat-lv">{levelOf(user.stats)}</span>
           </span>
         </button>
       ) : (

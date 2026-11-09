@@ -3,9 +3,10 @@ import { api, errorText } from '../lib/api';
 import { avatarColor } from '../lib/cards';
 import { compactCoins } from '../lib/coins';
 import { timeAgo } from '../lib/dates';
-import type { AdminUser } from '../types';
+import { levelOf, type AdminUser } from '../types';
 import type { Auth } from '../useAuth';
 import { AdminUserPage } from './AdminUserPage';
+import { LevelBadge } from './LevelBadge';
 
 /** admins: search every account and open one to manage it */
 export function AdminPanel({ auth, onBack }: { auth: Auth; onBack: () => void }) {
@@ -64,7 +65,7 @@ export function AdminPanel({ auth, onBack }: { auth: Auth; onBack: () => void })
                 {u.displayName[0]?.toUpperCase()}
               </span>
               <span className="grow">
-                <b>{u.displayName}</b> {u.role === 'admin' && <span className="tag">Admin</span>}
+                <b>{u.displayName}</b> <LevelBadge level={levelOf(u.stats)} /> {u.role === 'admin' && <span className="tag">Admin</span>}
                 {u.blocked && <span className="tag danger-tag">Blocked</span>}
                 <span className="muted small admin-user-sub">
                   @{u.username} · {u.stats.gamesPlayed} games · {u.lastLoginAt ? `last login ${timeAgo(u.lastLoginAt)}` : 'never logged in'}

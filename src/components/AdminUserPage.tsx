@@ -3,10 +3,11 @@ import { api, errorText } from '../lib/api';
 import { avatarColor, cx } from '../lib/cards';
 import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
 import { dateTime, timeAgo } from '../lib/dates';
-import { HISTORY_PAGE_SIZE, type AdminUserDetail, type AuditEntry, type Role } from '../types';
+import { HISTORY_PAGE_SIZE, levelOf, type AdminUserDetail, type AuditEntry, type Role } from '../types';
 import type { Auth } from '../useAuth';
 import { FullPage } from './FullPage';
 import { Backdrop } from './Overlays';
+import { LevelBadge } from './LevelBadge';
 import { GameList, StatGrid } from './ProfileParts';
 
 const QUICK_AMOUNTS = [100, 500, 1_000, 5_000, 10_000];
@@ -167,7 +168,7 @@ export function AdminUserPage({ auth, userId, onBack }: { auth: Auth; userId: st
         </span>
         <div className="grow">
           <h3>
-            {u.displayName} {u.role === 'admin' && <span className="tag">Admin</span>}
+            {u.displayName} <LevelBadge level={levelOf(u.stats)} /> {u.role === 'admin' && <span className="tag">Admin</span>}
             {u.blocked && <span className="tag danger-tag">Blocked</span>}
           </h3>
           <p className="muted small">@{u.username}</p>

@@ -44,7 +44,7 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 ## Coins, friends and hosting
 
 - **Top-right corner:** coins + avatar menu (My stats, Friends, Admin, Log out); guests see **Log in**.
-- **Daily rewards:** a popup shows the +200 login bonus; the Game over screen shows each player's stake result and the +500 first-game bonus.
+- **Daily rewards:** a popup shows the +200 login bonus; the Game over screen shows each player's stake result, the daily games reward they reached, and how many more games until the next one.
 - **Stakes:** the host picks Free … 10L in the lobby; the lobby explains it in one line and the Start button says what's blocking (guests, not enough coins).
 - **Friends:** add by username, accept requests, see who's online, and **Invite** online friends from the lobby. They get a popup with a Join button.
 - **Host tools:** ✕ next to a player in the lobby, or 👥 in the game, removes someone.

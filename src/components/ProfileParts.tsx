@@ -48,7 +48,7 @@ function GameCard({ g }: { g: GameSummary }) {
         <p className="game-meta">
           <span>🎴 {g.decks} deck{g.decks > 1 ? 's' : ''}</span>
           <span>{g.stake > 0 ? `🪙 ${formatCoins(g.stake)} stake` : 'Free game'}</span>
-          {g.bonus > 0 && <span className="bonus">🎁 +{g.bonus} first game</span>}
+          {g.bonus > 0 && <span className="bonus">🎯 +{formatCoins(g.bonus)} daily reward</span>}
         </p>
         {g.my && (
           <div className="mini-stats">

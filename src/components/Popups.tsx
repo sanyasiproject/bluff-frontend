@@ -1,4 +1,4 @@
-import { FIRST_GAME_BONUS } from '../types';
+import { DAILY_GAME_REWARDS } from '../types';
 import type { Invite } from '../useBluff';
 import { Backdrop } from './Overlays';
 
@@ -10,7 +10,10 @@ export function BonusPopup({ amount, onClose }: { amount: number; onClose: () =>
         <span className="popup-emoji">🎁</span>
         <h3 className="reveal-title">+{amount} coins</h3>
         <p>Daily login bonus. Come back tomorrow for more!</p>
-        <p className="muted small">Finish your first game today for another +{FIRST_GAME_BONUS}, win or lose.</p>
+        <p className="muted small">
+          Play games today for more: +{DAILY_GAME_REWARDS[0].coins} after your first game, +{DAILY_GAME_REWARDS[1].coins} at{' '}
+          {DAILY_GAME_REWARDS[1].games} games, and more up to {DAILY_GAME_REWARDS[DAILY_GAME_REWARDS.length - 1].games}.
+        </p>
         <button className="btn primary block" onClick={onClose}>
           Nice!
         </button>

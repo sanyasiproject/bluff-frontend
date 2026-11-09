@@ -2412,12 +2412,6 @@ button.seat {
   font-weight: 700;
 }
 
-.reward-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
 .reward {
   display: flex;
   flex-direction: column;
@@ -2718,6 +2712,123 @@ button.seat {
 .history-icon {
   width: 22px;
   text-align: center;
+}
+
+/* "Lv 3" next to a name */
+.lv {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(246, 196, 83, 0.16);
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 900;
+  vertical-align: 2px;
+  white-space: nowrap;
+}
+
+/* level number on an avatar corner (table seats, account button) */
+.avatar {
+  position: relative;
+}
+
+.seat-lv {
+  position: absolute;
+  right: -5px;
+  bottom: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border: 2px solid var(--felt-deep);
+  border-radius: 9px;
+  background: var(--gold);
+  color: var(--gold-ink);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 14px;
+  text-align: center;
+}
+
+.friend-btn {
+  flex: none;
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.ladder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.ladder-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.ladder-head b {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+.ladder-next {
+  font-size: 15px;
+}
+
+.ladder-steps {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 2px;
+  border: 1px dashed var(--faint);
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.step small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.step.done {
+  border-style: solid;
+  border-color: rgba(60, 207, 145, 0.45);
+  background: rgba(60, 207, 145, 0.14);
+  color: var(--ok);
+}
+
+.step.next {
+  border-style: solid;
+  border-color: var(--gold);
+  background: rgba(246, 196, 83, 0.14);
+  box-shadow: 0 0 0 3px rgba(246, 196, 83, 0.15);
+}
+
+.step.next b {
+  color: var(--gold);
+}
+
+.daily-line {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(246, 196, 83, 0.1);
+  font-size: 14px;
 }
 
 .confirm-box {

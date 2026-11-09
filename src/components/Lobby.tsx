@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { api, errorText } from '../lib/api';
 import { avatarColor, cx } from '../lib/cards';
 import {
   getVoiceGender,
@@ -9,12 +10,13 @@ import {
   type VoiceGender,
 } from '../lib/speech';
 import { formatCoins, compactCoins, stakeLabel } from '../lib/coins';
-import { STAKES, type GameConfig, type PublicPlayer, type RoomView } from '../types';
+import { STAKES, type FriendsResponse, type FriendView, type GameConfig, type PublicPlayer, type RoomView } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions } from '../useBluff';
 import { AccountCorner } from './AccountCorner';
 import { FriendsSheet } from './FriendsSheet';
 import { InvitePanel } from './InvitePanel';
+import { LevelBadge } from './LevelBadge';
 import { QuickChat } from './QuickChat';
 
 /** per-phone voice choice; Girl is the default */
@@ -127,6 +129,71 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           ? `${names(short)} ${short.length > 1 ? "don't" : "doesn't"} have 🪙 ${formatCoins(stake)}`
           : null;
 
+  // friend status of everyone here, so logged-in players can add each other from the lobby
+  const [links, setLinks] = useState<FriendsResponse | null>(null);
+  const loadLinks = useCallback(async () => {
+    if (!auth.user) {
+      setLinks(null);
+      return;
+    }
+    try {
+      setLinks(await api<FriendsResponse>('/friends', { token: auth.token }));
+    } catch {
+      // the buttons just stay hidden
+    }
+  }, [auth.token, auth.user?.id]);
+  const people = view.players.length + view.watchers.length;
+  // a request someone sends while we wait in the lobby shows up within a few seconds
+  useEffect(() => {
+    void loadLinks();
+    const t = setInterval(() => void loadLinks(), 10_000);
+    return () => clearInterval(t);
+  }, [loadLinks, people]);
+
+  const befriend = async (fn: () => Promise<unknown>, done: string) => {
+    try {
+      await fn();
+      actions.toast(done);
+    } catch (err) {
+      actions.toast(errorText(err));
+    }
+    await loadLinks();
+  };
+
+  const friendButton = (memberId: string, username: string | null) => {
+    if (!links || !username || memberId === view.meId) return null;
+    const find = (list: FriendView[]) => list.find((f) => f.username === username);
+    if (find(links.friends)) return <span className="tag dim">👥 Friend</span>;
+    if (find(links.outgoing)) return <span className="tag dim">Requested</span>;
+    const asked = find(links.incoming);
+    if (asked) {
+      return (
+        <button
+          className="btn small primary friend-btn"
+          onClick={() =>
+            void befriend(
+              () => api(`/friends/${asked.id}/accept`, { method: 'POST', token: auth.token }),
+              `You and ${asked.displayName} are now friends 🎉`,
+            )
+          }
+        >
+          Accept
+        </button>
+      );
+    }
+    return (
+      <button
+        className="btn small ghost friend-btn"
+        aria-label={`Add @${username} as a friend`}
+        onClick={() =>
+          void befriend(() => api('/friends/request', { body: { username }, token: auth.token }), `Friend request sent to @${username}`)
+        }
+      >
+        + Add
+      </button>
+    );
+  };
+
   const remove = (id: string, name: string) => {
     if (window.confirm(`Remove ${name} from the room?`)) void actions.kick(id);
   };
@@ -165,7 +232,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               </span>
               <span className="grow">
                 {p.name}
-                {p.id === view.meId && <span className="muted"> (you)</span>}
+                {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} />
                 {coinsOn && (
                   <span className={cx('player-coins', (!p.registered || (p.coins ?? 0) < stake) && stake > 0 && 'warn')}>
                     {p.registered ? `🪙 ${compactCoins(p.coins ?? 0)}` : 'guest'}
@@ -176,6 +243,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               </span>
               {p.id === view.hostId && <span className="tag">Host</span>}
               {!p.connected && <span className="tag dim">offline</span>}
+              {friendButton(p.id, p.username)}
               {removeButton(p.id, p.name)}
             </li>
           ))}
@@ -198,9 +266,10 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                 </span>
                 <span className="grow">
                   {w.name}
-                  {w.id === view.meId && <span className="muted"> (you)</span>}
+                  {w.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={w.level} />
                 </span>
                 <span className="tag dim">👀</span>
+                {friendButton(w.id, w.username)}
                 {removeButton(w.id, w.name)}
               </li>
             ))}
