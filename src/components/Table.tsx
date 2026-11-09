@@ -461,7 +461,9 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
         {!myTurn && (
           <p className="hint">
             {watching
-              ? "👀 Watching · you'll play next game"
+              ? view.watchers.find((w) => w.id === view.meId)?.byChoice
+                ? '👀 Watching · switch to Playing in the lobby'
+                : "👀 Watching · you'll play next game"
               : selected.length > 0
                 ? `${selected.length} selected · play on your turn`
                 : ''}

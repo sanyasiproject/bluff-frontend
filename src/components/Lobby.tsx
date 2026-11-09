@@ -114,6 +114,9 @@ function StakePicker({ stake, players, isHost, onPick }: { stake: number; player
 export function Lobby({ view, actions, auth }: { view: RoomView; actions: Actions; auth: Auth }) {
   const [friendsOpen, setFriendsOpen] = useState(false);
   const isHost = view.hostId === view.meId;
+  // anyone can sit out and watch, or take a free seat again
+  const meWatching = view.watchers.find((w) => w.id === view.meId);
+  const seatsFull = view.players.length >= 5;
   // back from the lobby leaves the room, like the Leave button
   useBack(() => void actions.leave());
   const me = [...view.players, ...view.watchers].find((p) => p.id === view.meId);
@@ -238,6 +241,23 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         />
       )}
 
+      <section className="mode-row">
+        <span className="grow">{meWatching ? "You're watching" : "You're playing"}</span>
+        <div className="mini-seg" role="group" aria-label="Play or watch">
+          <button
+            className={cx(!meWatching && 'on')}
+            aria-pressed={!meWatching}
+            disabled={!!meWatching && seatsFull}
+            onClick={() => meWatching && void actions.setWatching(false)}
+          >
+            🎮 Playing
+          </button>
+          <button className={cx(meWatching && 'on')} aria-pressed={!!meWatching} onClick={() => !meWatching && void actions.setWatching(true)}>
+            👀 Watching
+          </button>
+        </div>
+      </section>
+
       <section className="panel">
         <h2 className="section-title">
           Players <span className="muted">{view.players.length}/5</span>
@@ -279,7 +299,13 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             Watching <span className="muted">{view.watchers.length}</span>
           </h2>
           {view.watchers.some((w) => w.id === view.meId) && (
-            <p className="muted small watch-note">Seats are full · you get the next free one</p>
+            <p className="muted small watch-note">
+              {!meWatching?.byChoice
+                ? 'Seats are full · you get the next free one'
+                : seatsFull
+                  ? 'All 5 seats are taken right now'
+                  : 'Switch to Playing to take a seat'}
+            </p>
           )}
           <ul className="player-list">
             {view.watchers.map((w) => (
@@ -414,6 +440,15 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                     👑 Make {viewing.name} the host
                   </button>
                   {!viewing.connected && <p className="muted small">They're offline, so they can't be the host right now.</p>}
+                  {view.watchers.some((w) => w.id === viewing.id) ? (
+                    <button className="btn block" disabled={seatsFull} onClick={() => void actions.setWatching(false, viewing.id)}>
+                      🎮 Move to playing{seatsFull ? ' · all 5 seats taken' : ''}
+                    </button>
+                  ) : (
+                    <button className="btn block" onClick={() => void actions.setWatching(true, viewing.id)}>
+                      👀 Move to watching
+                    </button>
+                  )}
                   <button
                     className="btn block ghost danger-text"
                     onClick={() => {

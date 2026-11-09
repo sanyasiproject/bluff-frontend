@@ -230,6 +230,8 @@ export function useBluff() {
       rematch: () => run(() => request('room:rematch')),
       endGame: () => run(() => request('room:end')),
       makeHost: (memberId: string) => run(() => request('room:host', { memberId })),
+      // memberId: the host moving someone else; omitted for yourself
+      setWatching: (watching: boolean, memberId?: string) => run(() => request('room:watch', { watching, memberId })),
       play: async (cardIds: string[], rank?: Rank) => (await run(() => request('game:play', { cardIds, rank }))) !== null,
       pass: () => run(() => request('game:pass')),
       bluff: (playId: string, cardIndex?: number) => run(() => request('game:bluff', { playId, cardIndex })),

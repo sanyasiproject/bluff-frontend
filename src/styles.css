@@ -3130,6 +3130,21 @@ button.seat {
   font-size: 15px;
 }
 
+/* lobby: playing or watching */
+.mode-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 14px;
+  background: var(--panel);
+  font-weight: 700;
+}
+
+.mode-row .mini-seg button {
+  padding: 0 12px;
+}
+
 .confirm-box {
   display: flex;
   flex-direction: column;

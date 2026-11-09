@@ -64,7 +64,7 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 ## Chat, watching and awards
 
 - **💬 Quick chat** (lobby and table): 8 emoji reactions float up on every screen; 26 quick messages appear with the sender's name. Edit the lists in `src/types.ts` (and the same file in the backend).
-- **Watch mode:** joining mid-game, or when 5 are seated, makes you a watcher: you see the table, hear the voice and can chat; you get a seat in the next game.
+- **Watch mode:** joining mid-game, or when 5 are seated, makes you a watcher: you see the table, hear the voice and can chat; you get a seat in the next game. In the lobby anyone can switch **🎮 Playing / 👀 Watching**; a chosen watcher keeps watching until they switch back. The host can also move anyone from their player card (Move to watching / playing).
   - Watchers see the real cards of each play face up (green = matches the claim, red = bluff).
   - Watchers see one player's hand at a time: it follows whoever's turn it is, or tap a player to stick to them ("Follow turn" goes back).
   - Only watchers' phones receive these cards; seated players never get anyone else's hand.
