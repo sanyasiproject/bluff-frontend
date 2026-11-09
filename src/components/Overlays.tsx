@@ -45,6 +45,33 @@ export function RankSheet({ hand, selected, busy, onPick, onClose }: RankSheetPr
   );
 }
 
+interface PickSheetProps {
+  count: number;
+  who: string;
+  claim: string;
+  onPick: (index: number) => void;
+  onClose: () => void;
+}
+
+export function PickSheet({ count, who, claim, onPick, onClose }: PickSheetProps) {
+  return (
+    <Backdrop onClose={onClose}>
+      <h3>Pick one card to turn over</h3>
+      <p className="muted small">
+        {who} said {claim}. If your card doesn't match, they pick up the pile. If it matches, you do.
+      </p>
+      <div className="pick-row">
+        {Array.from({ length: count }, (_, i) => (
+          <PlayingCard key={i} faceDown size={count > 8 ? 'md' : 'lg'} className="pick-card" onClick={() => onPick(i)} />
+        ))}
+      </div>
+      <button className="btn ghost block" onClick={onClose}>
+        Cancel
+      </button>
+    </Backdrop>
+  );
+}
+
 interface RevealProps {
   reveal: RevealView;
   name: (id: string) => string;
@@ -59,10 +86,7 @@ export function RevealOverlay({ reveal, name, onClose }: RevealProps) {
           {name(reveal.callerId)} called bluff on {name(reveal.playerId) === 'You' ? 'you' : name(reveal.playerId)}
         </p>
         <h3 className="reveal-title">{reveal.bluff ? 'Caught bluffing!' : 'It was the truth!'}</h3>
-        <p className="small">
-          Claimed {claimText(reveal.cards.length, reveal.rank)}
-          {reveal.pickedIndex !== null && reveal.cards.length > 1 && ' · 1 random card checked'}
-        </p>
+        <p className="small">Claimed {claimText(reveal.cards.length, reveal.rank)}</p>
         <div className="reveal-cards">
           {reveal.cards.map((c, i) => (
             <div

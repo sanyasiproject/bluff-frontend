@@ -214,7 +214,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <div className="summary-chips">
             <span>{stake > 0 ? `🪙 ${formatCoins(stake)} each` : '🆓 Free game'}</span>
             <span>🎴 {view.config.decks === 2 ? '2 decks' : '1 deck'}</span>
-            <span>{view.config.bluffRule === 'one' ? '🎲 1 random card checked' : '🃏 All cards checked'}</span>
+            <span>{view.config.bluffRule === 'one' ? '👆 Pick one card' : '🃏 Show all cards'}</span>
           </div>
           {stake > 0 && <p className="muted small">Winner takes 🪙 {formatCoins(pot)}</p>}
         </section>
@@ -233,15 +233,15 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <Option
             on={view.config.bluffRule === 'all'}
             disabled={!isHost}
-            title="All cards"
-            desc="Every played card is flipped"
+            title="Show all"
+            desc="Every card of that play is turned over"
             onClick={() => set({ bluffRule: 'all' })}
           />
           <Option
             on={view.config.bluffRule === 'one'}
             disabled={!isHost}
-            title="1 random card"
-            desc="The game flips one at random"
+            title="Pick one"
+            desc="Caller picks one card to turn over"
             onClick={() => set({ bluffRule: 'one' })}
           />
         </div>

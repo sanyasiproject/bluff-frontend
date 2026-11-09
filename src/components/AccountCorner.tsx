@@ -1,14 +1,11 @@
 import { useState } from 'react';
 import { avatarColor } from '../lib/cards';
-import { compactCoins, formatCoins } from '../lib/coins';
-import { FIRST_GAME_BONUS, LOGIN_BONUS } from '../types';
+import { compactCoins } from '../lib/coins';
 import type { Auth } from '../useAuth';
 import { AccountSheet } from './AccountSheet';
-import { FriendsSheet } from './FriendsSheet';
-import { Backdrop } from './Overlays';
-import { ProfileSheet } from './ProfileSheet';
+import { ProfilePage } from './ProfilePage';
 
-type Sheet = 'menu' | 'login' | 'register' | 'profile' | 'friends';
+type Sheet = 'login' | 'register' | 'profile';
 
 interface Props {
   auth: Auth;
@@ -19,7 +16,7 @@ interface Props {
   onInvite?: (userId: string) => Promise<boolean>;
 }
 
-/** top-right corner: coins + avatar menu when logged in, a Log in button for guests */
+/** top-right corner: coins + avatar that opens the profile page, or a Log in button for guests */
 export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite }: Props) {
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const close = () => setSheet(null);
@@ -29,7 +26,7 @@ export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite }: Props) 
   return (
     <>
       {user ? (
-        <button className="account-btn" aria-label="Account menu" onClick={() => setSheet('menu')}>
+        <button className="account-btn" aria-label="My profile" onClick={() => setSheet('profile')}>
           <span className="coin-mini">🪙 {compactCoins(user.coins)}</span>
           <span className="avatar sm" style={{ background: avatarColor(user.displayName) }}>
             {user.displayName[0]?.toUpperCase()}
@@ -41,58 +38,10 @@ export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite }: Props) 
         </button>
       )}
 
-      {sheet === 'menu' && user && (
-        <Backdrop onClose={close}>
-          <div className="menu-head">
-            <span className="avatar" style={{ background: avatarColor(user.displayName) }}>
-              {user.displayName[0]?.toUpperCase()}
-            </span>
-            <div className="grow">
-              <b>{user.displayName}</b> {user.role === 'admin' && <span className="tag">Admin</span>}
-              <p className="muted small">@{user.username}</p>
-            </div>
-          </div>
-          <div className="balance-card">
-            <span className="muted small">Your coins</span>
-            <b>🪙 {formatCoins(user.coins)}</b>
-          </div>
-          <ul className="reward-list">
-            <li>🎁 +{LOGIN_BONUS} every day</li>
-            <li>🃏 +{FIRST_GAME_BONUS} for your first game each day</li>
-          </ul>
-          <div className="menu-buttons">
-            <button className="btn block" onClick={() => setSheet('profile')}>
-              📊 My stats
-            </button>
-            <button className="btn block" onClick={() => setSheet('friends')}>
-              👥 Friends
-            </button>
-            {user.role === 'admin' && onOpenAdmin && (
-              <button
-                className="btn block"
-                onClick={() => {
-                  close();
-                  onOpenAdmin();
-                }}
-              >
-                🛠 Admin
-              </button>
-            )}
-            <button
-              className="btn ghost block"
-              onClick={() => {
-                close();
-                void auth.logout();
-              }}
-            >
-              Log out
-            </button>
-          </div>
-        </Backdrop>
-      )}
       {(sheet === 'login' || sheet === 'register') && <AccountSheet initial={sheet} auth={auth} onClose={close} />}
-      {sheet === 'profile' && <ProfileSheet auth={auth} onClose={close} />}
-      {sheet === 'friends' && <FriendsSheet auth={auth} roomCode={roomCode} onInvite={onInvite} onClose={close} />}
+      {sheet === 'profile' && user && (
+        <ProfilePage auth={auth} onClose={close} onOpenAdmin={onOpenAdmin} roomCode={roomCode} onInvite={onInvite} />
+      )}
     </>
   );
 }

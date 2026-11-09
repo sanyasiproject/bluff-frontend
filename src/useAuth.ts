@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { accountsAvailable, api, ApiError } from './lib/api';
 import { reconnectSocket, socket } from './lib/socket';
 import { loadAuthToken, saveAuthToken } from './lib/storage';
-import type { AuthResponse, GameSummary, PublicUser } from './types';
+import type { AuthResponse, GameSummary, ProfileOverview, PublicUser } from './types';
 
 /** the logged-in account (null = guest) and account actions */
 export function useAuth() {
@@ -86,6 +86,7 @@ export function useAuth() {
       if (old) await api('/auth/logout', { method: 'POST', token: old }).catch(() => undefined);
     },
     myGames: async () => (await api<{ games: GameSummary[] }>('/me/games?limit=10', { token })).games,
+    overview: () => api<ProfileOverview>('/me/overview', { token }),
   };
 }
 

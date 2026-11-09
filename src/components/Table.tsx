@@ -7,7 +7,7 @@ import type { Card, PublicPlayer, Rank, RoomView } from '../types';
 import type { Actions, ChatBubble } from '../useBluff';
 import { FlyingCards, type Flight } from './FlyingCards';
 import { Hand } from './Hand';
-import { Backdrop, GameOver, PlayersSheet, RankSheet, RevealOverlay } from './Overlays';
+import { Backdrop, GameOver, PickSheet, PlayersSheet, RankSheet, RevealOverlay } from './Overlays';
 import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
 
@@ -129,7 +129,7 @@ function GameMenu({
     <Backdrop onClose={onClose}>
       <h3>Room {view.code}</h3>
       <p className="game-rules-line">
-        {c.decks === 2 ? '2 decks' : '1 deck'} · {c.bluffRule === 'one' ? '1 random card checked' : 'All cards checked'} ·{' '}
+        {c.decks === 2 ? '2 decks' : '1 deck'} · {c.bluffRule === 'one' ? 'Pick one card' : 'Show all cards'} ·{' '}
         {c.stake > 0 ? `🪙 ${formatCoins(c.stake)} each` : 'Free game'}
         {view.watchers.length > 0 && ` · 👀 ${view.watchers.length} watching`}
       </p>
@@ -172,7 +172,7 @@ const DOUBLE_TAP_MS = 350;
 
 export function Table({ view, actions, bubbles }: { view: RoomView; actions: Actions; bubbles: ChatBubble[] }) {
   const [selected, setSelected] = useState<string[]>([]);
-  const [sheet, setSheet] = useState<'rank' | null>(null);
+  const [sheet, setSheet] = useState<'rank' | 'pick' | null>(null);
   const [showReveal, setShowReveal] = useState(false);
   const [sound, setSound] = useState(isSoundOn);
   const [busy, setBusy] = useState(false);
@@ -238,9 +238,13 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
   }, [view.reveal?.playId]);
 
   useEffect(() => {
+    setSheet((s) => (s === 'pick' ? null : s));
+  }, [lp?.id]);
+
+  useEffect(() => {
     // browsers block vibration until the player has tapped the page once
     if (myTurn && navigator.userActivation?.hasBeenActive) navigator.vibrate?.(120);
-    else setSheet(null);
+    else setSheet((s) => (s === 'rank' ? null : s));
   }, [myTurn]);
 
   // sounds and card motion follow what changed on the table
@@ -295,9 +299,12 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
     setBusy(false);
   };
 
-  // with the one-card rule the server turns over a random card, so there's nothing to choose
   const callBluff = async () => {
     if (!lp || bluffLocked || busy) return;
+    if (view.config.bluffRule === 'one') {
+      setSheet('pick');
+      return;
+    }
     setBusy(true);
     await actions.bluff(lp.id);
     setBusy(false);
@@ -436,6 +443,18 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
 
       {sheet === 'rank' && (
         <RankSheet hand={view.hand} selected={selected} busy={busy} onPick={play} onClose={() => setSheet(null)} />
+      )}
+      {sheet === 'pick' && lp && (
+        <PickSheet
+          count={lp.count}
+          who={name(lp.playerId)}
+          claim={claimText(lp.count, lp.rank)}
+          onPick={(i) => {
+            setSheet(null);
+            void actions.bluff(lp.id, i);
+          }}
+          onClose={() => setSheet(null)}
+        />
       )}
       {showReveal && view.reveal && (
         <RevealOverlay reveal={view.reveal} name={name} onClose={() => setShowReveal(false)} />

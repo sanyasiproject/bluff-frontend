@@ -402,37 +402,6 @@ p {
   color: var(--ink);
 }
 
-.menu-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.balance-card {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 14px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(246, 196, 83, 0.22), rgba(246, 196, 83, 0.06));
-}
-
-.balance-card b {
-  color: var(--gold);
-  font-size: 28px;
-}
-
-.reward-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  color: var(--muted);
-  font-size: 13px;
-  list-style: none;
-}
-
 .menu-buttons {
   display: flex;
   flex-direction: column;
@@ -644,16 +613,6 @@ p {
   color: #ff9a9d;
 }
 
-.game-list .game-card {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 6px;
-  padding: 12px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.05);
-}
-
 .game-card-top {
   display: flex;
   align-items: center;
@@ -703,32 +662,6 @@ p {
 
 /* ---------- accounts, profile, admin ---------- */
 
-.account-card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.account-card.guest {
-  border-style: dashed;
-}
-
-.account-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.account-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.account-actions .btn {
-  flex: 1;
-}
-
 .coin-chip {
   flex: none;
   padding: 5px 10px;
@@ -737,11 +670,6 @@ p {
   color: var(--gold);
   font-size: 14px;
   font-weight: 800;
-}
-
-.coin-chip.big {
-  align-self: flex-start;
-  font-size: 18px;
 }
 
 .playing-as {
@@ -800,23 +728,6 @@ p {
   list-style: none;
 }
 
-.game-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.game-list small {
-  display: block;
-  font-size: 12px;
-  font-weight: 400;
-}
-
 .game-icon {
   width: 26px;
   font-size: 20px;
@@ -838,22 +749,23 @@ p {
   list-style: none;
 }
 
-.admin-user {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-}
-
 .admin-user-row {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  text-align: left;
 }
 
-.admin-actions {
-  display: flex;
-  gap: 8px;
+.admin-user-row:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-user-sub {
+  display: block;
+  margin-top: 2px;
 }
 
 .coin-form {
@@ -1603,6 +1515,18 @@ a.btn {
   color: var(--gold-ink);
 }
 
+.pick-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.pick-card:active {
+  transform: translateY(-6px);
+}
+
 .reveal {
   display: flex;
   flex-direction: column;
@@ -2303,5 +2227,526 @@ button.seat {
   *::after {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* ---------- full pages: profile and admin user ---------- */
+
+.page {
+  position: fixed;
+  inset: 0;
+  z-index: 46;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: radial-gradient(120% 60% at 50% 0%, var(--felt) 0%, var(--felt-deep) 70%) fixed, var(--felt-deep);
+  animation: page-in 0.2s ease-out;
+}
+
+.page-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  background: rgba(5, 38, 26, 0.86);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.page-head h2 {
+  overflow: hidden;
+  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 8px 16px calc(28px + env(safe-area-inset-bottom));
+}
+
+.stack-tight {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.avatar.lg {
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+}
+
+.avatar.xl {
+  width: 84px;
+  height: 84px;
+  font-size: 38px;
+}
+
+.profile-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0 4px;
+  text-align: center;
+}
+
+.profile-hero .tag {
+  margin-left: 6px;
+}
+
+/* gold ring around the avatar fills up towards the next level */
+.level-ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 102px;
+  height: 102px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  background: conic-gradient(var(--gold) calc(var(--p) * 360deg), rgba(255, 255, 255, 0.12) 0);
+}
+
+.level-ring .avatar {
+  box-shadow: 0 0 0 5px var(--felt-deep);
+}
+
+.level-badge {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--gold-ink);
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.profile-name {
+  font-size: 26px;
+}
+
+.level-title {
+  margin-top: 4px;
+  color: var(--gold);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+.xp-bar,
+.meter-bar,
+.badge-progress {
+  overflow: hidden;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.xp-bar {
+  width: min(260px, 80%);
+  margin: 4px 0 2px;
+}
+
+.xp-bar i,
+.meter-bar i,
+.badge-progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gold-deep), var(--gold));
+}
+
+.wallet-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(246, 196, 83, 0.28);
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(246, 196, 83, 0.24), rgba(246, 196, 83, 0.05));
+}
+
+.wallet-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wallet-amount {
+  display: block;
+  color: var(--gold);
+  font-size: 32px;
+  font-weight: 900;
+}
+
+.rank-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--gold);
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.rank-chip small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.reward-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.reward {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px;
+  border: 1px dashed var(--faint);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.reward small {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.reward.done {
+  border-style: solid;
+  border-color: rgba(60, 207, 145, 0.4);
+  background: rgba(60, 207, 145, 0.1);
+}
+
+.reward.done small,
+.wallet-card .up {
+  color: var(--ok);
+}
+
+.wallet-card .down {
+  color: #ff9a9d;
+}
+
+.quick-actions {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 8px;
+}
+
+.record-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* win rate as a filled ring */
+.win-ring {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, var(--sheet) 78%, transparent 80%),
+    conic-gradient(var(--ok) calc(var(--p) * 360deg), rgba(255, 255, 255, 0.12) 0);
+}
+
+.win-ring b {
+  font-size: 22px;
+}
+
+.win-ring span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.record-numbers {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.record-numbers div {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.record-numbers b {
+  font-size: 20px;
+}
+
+.record-numbers span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.form-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.form-dot {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.form-dot.win {
+  background: var(--gold);
+  color: var(--gold-ink);
+}
+
+.form-dot.loss {
+  background: var(--danger);
+  color: #fff;
+}
+
+.form-dot.mid {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.form-dot.stopped {
+  border: 1px dashed var(--faint);
+  color: var(--muted);
+}
+
+.meter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.meter-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.meter-head b {
+  color: var(--gold);
+}
+
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.badge-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  text-align: center;
+  opacity: 0.6;
+}
+
+.badge-tile.done {
+  background: linear-gradient(160deg, rgba(246, 196, 83, 0.26), rgba(246, 196, 83, 0.06));
+  box-shadow: inset 0 0 0 1px rgba(246, 196, 83, 0.4);
+  opacity: 1;
+}
+
+.badge-emoji {
+  font-size: 26px;
+  filter: grayscale(1);
+}
+
+.badge-tile.done .badge-emoji {
+  filter: none;
+}
+
+.badge-tile b {
+  font-size: 13px;
+}
+
+.badge-desc {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.badge-progress {
+  width: 80%;
+  height: 5px;
+  margin-top: 4px;
+}
+
+.game-list > li {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.game-card {
+  padding: 10px 12px;
+}
+
+.game-card > *:not(summary) {
+  margin-top: 8px;
+}
+
+.game-card summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.game-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.chevron {
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.game-card[open] .chevron {
+  transform: rotate(90deg);
+}
+
+.admin-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.admin-hero h3 .tag {
+  margin-left: 4px;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.chip-row span {
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.tag.danger-tag {
+  background: rgba(229, 72, 77, 0.2);
+  color: #ff9a9d;
+}
+
+.quick-amounts {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.access-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-weight: 700;
+}
+
+.form-ok {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(60, 207, 145, 0.14);
+  color: var(--ok);
+  font-size: 14px;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 14px;
+}
+
+.history-icon {
+  width: 22px;
+  text-align: center;
+}
+
+.confirm-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 18px 18px;
+  border: 1px solid var(--faint);
+  border-radius: 20px;
+  background: var(--sheet);
+}
+
+.confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+@keyframes page-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
   }
 }

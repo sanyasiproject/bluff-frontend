@@ -230,7 +230,7 @@ export function useBluff() {
       rematch: () => run(() => request('room:rematch')),
       play: async (cardIds: string[], rank?: Rank) => (await run(() => request('game:play', { cardIds, rank }))) !== null,
       pass: () => run(() => request('game:pass')),
-      bluff: (playId: string) => run(() => request('game:bluff', { playId })),
+      bluff: (playId: string, cardIndex?: number) => run(() => request('game:bluff', { playId, cardIndex })),
       chat: (kind: ChatKind, index: number) => run(() => request('chat:send', { kind, index })),
       reclaim: () => {
         replacedRef.current = false;
