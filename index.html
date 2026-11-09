@@ -15,7 +15,16 @@
     <title>Bluff</title>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- same as components/Splash.tsx, so the intro shows before the app's code has loaded -->
+    <div id="root">
+      <main class="splash">
+        <img class="splash-logo" src="/icon.svg" alt="" />
+        <h1 class="splash-title">Bluff</h1>
+        <p class="splash-tag">Lie with a straight face. Catch your friends.</p>
+        <div class="splash-loader" aria-hidden="true"><i></i><i></i><i></i></div>
+        <p class="splash-status">Shuffling the deck…</p>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

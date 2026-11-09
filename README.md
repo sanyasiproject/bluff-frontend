@@ -43,12 +43,16 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 
 ## Coins, friends and hosting
 
-- **Top-right corner:** coins + avatar menu (My stats, Friends, Admin, Log out); guests see **Log in**.
+- **Top-right corner:** coins + avatar (with level and a red count of friend requests) opens the full **Profile** page: level and XP, coins and rank, daily rewards, record, play style, achievements, recent games, Friends, Admin and Log out. Guests see **Log in**.
 - **Daily rewards:** a popup shows the +200 login bonus; the Game over screen shows each player's stake result, the daily games reward they reached, and how many more games until the next one.
 - **Stakes:** the host picks Free … 10L in the lobby; the lobby explains it in one line and the Start button says what's blocking (guests, not enough coins).
-- **Friends:** add by username, accept requests, see who's online, and **Invite** online friends from the lobby. They get a popup with a Join button.
+- **Friends:** search players by name (shows if they exist, their level and online status) and tap **+ Add**; accept requests (a red count shows new ones live), see who's online, add players straight from the lobby, and **Invite** online friends. They get a popup with a Join button.
 - **Host tools:** ✕ next to a player in the lobby, or 👥 in the game, removes someone.
-- **My stats:** lifetime numbers plus a card for each of the last 10 games (result, coins, players, per-game bluffs and calls, awards).
+- **End game:** once someone finishes 1st, the host can end the game: 1st place wins, everyone else loses.
+- **Player profiles:** tap a player in the lobby or in Friends (list, requests, search) to see their public card: level, record, badges and a friend button. Not during a game.
+- **Make host:** in the lobby the host taps a player → 👑 Make host (asks first).
+- **Phone back button:** closes one step at a time (sheet, page, lobby → home, in a game it opens the menu) and only leaves the app from the home page (`src/lib/back.ts`).
+- **Intro screen** while the app loads and the free server wakes up (`components/Splash.tsx`, with the same markup in `index.html` for the first paint).
 
 ## Game screen
 

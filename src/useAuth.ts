@@ -14,17 +14,21 @@ export function useAuth() {
   const [accountsOn, setAccountsOn] = useState<boolean | null>(null);
   /** daily login bonus just received, shown once as a popup */
   const [bonus, setBonus] = useState(0);
+  /** friend requests waiting for me, shown as a red count */
+  const [friendRequests, setFriendRequests] = useState(0);
 
   const refresh = useCallback(async () => {
     const saved = loadAuthToken();
     if (!saved) {
       setUser(null);
+      setFriendRequests(0);
       setChecking(false);
       return;
     }
     try {
-      const res = await api<{ user: PublicUser; bonus: number }>('/me', { token: saved });
+      const res = await api<{ user: PublicUser; bonus: number; friendRequests?: number }>('/me', { token: saved });
       setUser(res.user);
+      setFriendRequests(res.friendRequests ?? 0);
       if (res.bonus > 0) setBonus(res.bonus);
     } catch (err) {
       // expired or revoked: fall back to guest
@@ -51,9 +55,13 @@ export function useAuth() {
       void check();
       void refresh();
     };
+    // someone sent, accepted or removed a friend request: update the red count right away
+    const onFriends = () => void refresh();
     socket.on('connect', onConnect);
+    socket.on('friends:changed', onFriends);
     return () => {
       socket.off('connect', onConnect);
+      socket.off('friends:changed', onFriends);
     };
   }, [refresh]);
 
@@ -72,6 +80,8 @@ export function useAuth() {
     accountsOn,
     bonus,
     clearBonus: () => setBonus(0),
+    friendRequests,
+    setFriendRequests,
     refresh,
     login: async (username: string, password: string) =>
       signIn(await api<AuthResponse>('/auth/login', { body: { username, password } })),
@@ -82,6 +92,7 @@ export function useAuth() {
       saveAuthToken(null);
       setToken(null);
       setUser(null);
+      setFriendRequests(0);
       reconnectSocket();
       if (old) await api('/auth/logout', { method: 'POST', token: old }).catch(() => undefined);
     },

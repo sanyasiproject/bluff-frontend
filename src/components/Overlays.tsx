@@ -1,12 +1,24 @@
 import { useState, type ReactNode } from 'react';
+import { useBack } from '../lib/back';
 import { avatarColor, claimText, cx, placeLabel, rankPlural } from '../lib/cards';
 import { formatCoins, signedCoins } from '../lib/coins';
-import { nextGameReward } from '../lib/progress';
+import { nextGameReward, titleOf } from '../lib/progress';
 import { LevelBadge } from './LevelBadge';
-import { MIN_REWARD_GAME_SEC, RANKS, type Card, type CoinResult, type Rank, type RevealView, type RoomView } from '../types';
+import {
+  MIN_REWARD_GAME_SEC,
+  RANKS,
+  type Card,
+  type CoinResult,
+  type PublicPlayer,
+  type Rank,
+  type RevealView,
+  type RoomView,
+} from '../types';
 import { PlayingCard } from './PlayingCard';
 
 export function Backdrop({ center, onClose, children }: { center?: boolean; onClose?: () => void; children: ReactNode }) {
+  // the phone's back button closes it too; screens without onClose (game over) stay put
+  useBack(onClose);
   return (
     <div className={cx('backdrop', center && 'center')} onClick={onClose}>
       <div className={center ? 'modal' : 'sheet'} role="dialog" aria-modal onClick={(e) => e.stopPropagation()}>
@@ -118,26 +130,34 @@ interface GameOverProps {
   onLobby: () => void;
   /** host only: deal again with the same players and settings */
   onRematch?: () => Promise<unknown>;
+  /** my level when the game started, to show a level up */
+  startLevel?: number | null;
 }
 
-export function GameOver({ view, onLobby, onRematch }: GameOverProps) {
+export function GameOver({ view, onLobby, onRematch, startLevel }: GameOverProps) {
   const [busy, setBusy] = useState(false);
   const ranked = [...view.players].sort((a, b) => (a.place ?? 99) - (b.place ?? 99));
-  const medal = (place: number | null) => (place ? (['🥇', '🥈', '🥉'][place - 1] ?? placeLabel(place)) : '🙈');
+  const lost = (id: string) => view.loserIds.includes(id);
+  // when the host ended the game only 1st place wins; everyone else lost
+  const medal = (p: PublicPlayer) =>
+    p.place === 1 || (p.place && !view.endedEarly) ? (['🥇', '🥈', '🥉'][p.place - 1] ?? placeLabel(p.place)) : '🙈';
+  const label = (p: PublicPlayer) =>
+    p.place === 1 ? '1st · Winner' : lost(p.id) ? (view.endedEarly ? 'Lost' : 'Loser') : p.place ? placeLabel(p.place) : '';
   const nameOf = (id: string) => (id === view.meId ? 'You' : (view.players.find((p) => p.id === id)?.name ?? 'Someone'));
   return (
     <Backdrop center>
       <div className="reveal gameover">
-        <h3 className="reveal-title">{view.stopped ? 'Game stopped' : 'Game over'}</h3>
+        <h3 className="reveal-title">{view.stopped ? 'Game stopped' : view.endedEarly ? 'Game ended' : 'Game over'}</h3>
+        {view.endedEarly && <p className="muted small">The host ended it: 1st place wins, everyone else loses</p>}
         <ol className="results">
           {ranked.map((p) => (
-            <li key={p.id} className={cx(p.id === view.loserId && 'loser')}>
-              <span className="medal">{medal(p.place)}</span>
+            <li key={p.id} className={cx(lost(p.id) && 'loser')}>
+              <span className="medal">{medal(p)}</span>
               <span className="grow">
                 {p.name}
                 {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} />
               </span>
-              <span className="muted">{p.place ? placeLabel(p.place) : p.id === view.loserId ? 'Loser' : ''}</span>
+              <span className="muted">{label(p)}</span>
             </li>
           ))}
         </ol>
@@ -157,7 +177,7 @@ export function GameOver({ view, onLobby, onRematch }: GameOverProps) {
             ))}
           </div>
         )}
-        <CoinSummary view={view} nameOf={nameOf} />
+        <CoinSummary view={view} nameOf={nameOf} startLevel={startLevel ?? null} />
         {onRematch ? (
           <button
             className="btn primary block"
@@ -178,6 +198,24 @@ export function GameOver({ view, onLobby, onRematch }: GameOverProps) {
         </button>
       </div>
     </Backdrop>
+  );
+}
+
+/** XP this game gave me, and a level up if it happened */
+function XpLine({ result, startLevel }: { result: CoinResult; startLevel: number | null }) {
+  const level = result.level;
+  const levelUp = level !== null && startLevel !== null && level > startLevel;
+  const title = level !== null ? titleOf(level) : null;
+  return (
+    <p className="daily-line xp-line">
+      ⭐ +{result.xp} XP
+      {levelUp && title && (
+        <>
+          {' '}
+          · 🎉 Level up! <b>Lv {level}</b> {title.emoji} {title.title}
+        </>
+      )}
+    </p>
   );
 }
 
@@ -203,7 +241,7 @@ function DailyProgress({ result }: { result: CoinResult }) {
 }
 
 /** who won or paid how many coins, daily game rewards, and your next daily target */
-function CoinSummary({ view, nameOf }: { view: RoomView; nameOf: (id: string) => string }) {
+function CoinSummary({ view, nameOf, startLevel }: { view: RoomView; nameOf: (id: string) => string; startLevel: number | null }) {
   const stake = view.config.stake;
   if (!view.players.some((p) => p.registered)) return null;
   if (view.stopped) {
@@ -217,7 +255,7 @@ function CoinSummary({ view, nameOf }: { view: RoomView; nameOf: (id: string) =>
   if (!showRows && !mine) return null;
   return (
     <div className="coin-results">
-      <p className="label">Coins</p>
+      <p className="label">Rewards</p>
       {stake > 0 && <p className="muted small">Pot 🪙 {formatCoins(stake * view.players.length)} goes to the winner</p>}
       {showRows &&
         rows.map((r) => (
@@ -228,6 +266,7 @@ function CoinSummary({ view, nameOf }: { view: RoomView; nameOf: (id: string) =>
           </div>
         ))}
       {rows.some((r) => r.bonus > 0) && <p className="muted small">🎯 Daily games reward</p>}
+      {mine && mine.xp > 0 && <XpLine result={mine} startLevel={startLevel} />}
       {mine && <DailyProgress result={mine} />}
     </div>
   );

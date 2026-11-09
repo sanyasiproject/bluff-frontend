@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api, errorText } from '../lib/api';
 import { avatarColor, cx } from '../lib/cards';
-import type { FriendsResponse, FriendView } from '../types';
+import type { FriendsResponse, FriendView, PlayerSearchResult } from '../types';
 import type { Auth } from '../useAuth';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
+import { PlayerSheet } from './PlayerSheet';
 
 interface Props {
   auth: Auth;
@@ -13,22 +14,61 @@ interface Props {
   onClose: () => void;
 }
 
-/** add friends by username, accept requests, and invite online friends into your room */
+/** a friend, request or search result; only friends know whether they're in a room */
+type Person = Omit<FriendView, 'inRoom'> & Partial<Pick<FriendView, 'inRoom'>>;
+
+const where = (p: Person) => (p.inRoom === 'here' ? ' · in this room' : p.inRoom === 'other' ? ' · in a room' : '');
+
+/** find players by name and add them, accept requests, and invite online friends into your room */
 export function FriendsSheet({ auth, roomCode, onInvite, onClose }: Props) {
   const [data, setData] = useState<FriendsResponse | null>(null);
-  const [username, setUsername] = useState('');
+  const [query, setQuery] = useState('');
+  /** null while there is nothing to search or a search is running */
+  const [found, setFound] = useState<PlayerSearchResult[] | null>(null);
+  const [searching, setSearching] = useState(false);
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [invited, setInvited] = useState<Set<string>>(new Set());
+  /** a profile opened from this list */
+  const [viewing, setViewing] = useState<Person | null>(null);
 
   const load = useCallback(async () => {
     try {
-      setData(await api<FriendsResponse>('/friends', { token: auth.token }));
+      const res = await api<FriendsResponse>('/friends', { token: auth.token });
+      setData(res);
+      auth.setFriendRequests(res.incoming.length);
     } catch (err) {
       setError(errorText(err));
     }
   }, [auth.token]);
+
+  const search = useCallback(
+    async (q: string) => {
+      if (q.trim().length < 2) {
+        setFound(null);
+        return;
+      }
+      setSearching(true);
+      try {
+        const res = await api<{ players: PlayerSearchResult[] }>(`/friends/search?q=${encodeURIComponent(q.trim())}`, {
+          token: auth.token,
+        });
+        setFound(res.players);
+      } catch (err) {
+        setError(errorText(err));
+      } finally {
+        setSearching(false);
+      }
+    },
+    [auth.token],
+  );
+
+  // search as they type, after a short pause
+  useEffect(() => {
+    const t = setTimeout(() => void search(query), 300);
+    return () => clearTimeout(t);
+  }, [query, search]);
 
   // keep online dots fresh while the sheet is open
   useEffect(() => {
@@ -44,7 +84,7 @@ export function FriendsSheet({ auth, roomCode, onInvite, onClose }: Props) {
     try {
       await fn();
       if (done) setNote(done);
-      await load();
+      await Promise.all([load(), search(query)]);
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -52,15 +92,31 @@ export function FriendsSheet({ auth, roomCode, onInvite, onClose }: Props) {
     }
   };
 
-  const add = (e: FormEvent) => {
-    e.preventDefault();
-    const name = username.trim().toLowerCase();
-    if (!name) return;
+  const add = (p: PlayerSearchResult) =>
     void act(async () => {
-      const res = await api<{ result: 'sent' | 'accepted' }>('/friends/request', { body: { username: name }, token: auth.token });
-      setUsername('');
-      setNote(res.result === 'accepted' ? `You and @${name} are now friends 🎉` : `Request sent to @${name}`);
+      const res = await api<{ result: 'sent' | 'accepted' }>('/friends/request', { body: { username: p.username }, token: auth.token });
+      setNote(res.result === 'accepted' ? `You and ${p.displayName} are now friends 🎉` : `Request sent to ${p.displayName}`);
     });
+
+  const accept = (f: Person) =>
+    void act(() => api(`/friends/${f.id}/accept`, { method: 'POST', token: auth.token }), `You and ${f.displayName} are now friends 🎉`);
+
+  /** what you can do with a player found by search */
+  const foundAction = (p: PlayerSearchResult) => {
+    if (p.status === 'friend') return <span className="tag dim">👥 Friend</span>;
+    if (p.status === 'sent') return <span className="tag dim">Requested</span>;
+    if (p.status === 'incoming') {
+      return (
+        <button className="btn small primary" disabled={busy} onClick={() => accept(p)}>
+          Accept
+        </button>
+      );
+    }
+    return (
+      <button className="btn small primary" disabled={busy} onClick={() => add(p)}>
+        + Add
+      </button>
+    );
   };
 
   const invite = async (f: FriendView) => {
@@ -71,19 +127,22 @@ export function FriendsSheet({ auth, roomCode, onInvite, onClose }: Props) {
     }
   };
 
-  const person = (f: FriendView, actions: React.ReactNode, showOnline = true) => (
+  const person = (f: Person, actions: React.ReactNode, showOnline = true) => (
     <li key={f.id} className="friend-row">
-      <span className="avatar sm" style={{ background: avatarColor(f.displayName) }}>
-        {f.displayName[0]?.toUpperCase()}
-        {showOnline && <i className={cx('presence', f.online && 'on')} />}
-      </span>
-      <div className="grow">
-        <b>{f.displayName}</b> <LevelBadge level={f.level} />
-        <p className="muted small">
-          @{f.username}
-          {showOnline && (f.online ? ' · online' : ' · offline')}
-        </p>
-      </div>
+      <button type="button" className="row-open" aria-label={`${f.displayName}'s profile`} onClick={() => setViewing(f)}>
+        <span className="avatar sm" style={{ background: avatarColor(f.displayName) }}>
+          {f.displayName[0]?.toUpperCase()}
+          {showOnline && <i className={cx('presence', f.online && 'on')} />}
+        </span>
+        <div className="grow">
+          <b>{f.displayName}</b> <LevelBadge level={f.level} />
+          <p className="muted small">
+            @{f.username}
+            {showOnline && (f.online ? ' · online' : ' · offline')}
+            {showOnline && where(f)}
+          </p>
+        </div>
+      </button>
       {actions}
     </li>
   );
@@ -91,33 +150,40 @@ export function FriendsSheet({ auth, roomCode, onInvite, onClose }: Props) {
   return (
     <Backdrop onClose={onClose}>
       <h3>Friends</h3>
-      <form className="add-friend" onSubmit={add}>
-        <input
-          className="input"
-          placeholder="Friend's username"
-          aria-label="Friend's username"
-          autoCapitalize="none"
-          spellCheck={false}
-          maxLength={20}
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <button className="btn primary" disabled={busy || !username.trim()}>
-          Add
-        </button>
-      </form>
+      <input
+        className="input"
+        type="search"
+        placeholder="🔍 Search by username or name"
+        aria-label="Search players"
+        autoCapitalize="none"
+        autoComplete="off"
+        spellCheck={false}
+        maxLength={20}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+      {query.trim().length === 1 && <p className="muted small">Type at least 2 letters</p>}
+      {query.trim().length >= 2 && found === null && searching && <p className="muted small">Searching…</p>}
+      {query.trim().length >= 2 && found?.length === 0 && (
+        <p className="search-empty">No player found for “{query.trim()}”. Check the username and try again.</p>
+      )}
+      {found && found.length > 0 && (
+        <ul className="friend-list search-results">{found.map((p) => person(p, foundAction(p)))}</ul>
+      )}
       {note && <p className="form-note">{note}</p>}
       {error && <p className="form-error">{error}</p>}
 
       {data && data.incoming.length > 0 && (
         <>
-          <p className="label">Friend requests</p>
+          <p className="label">
+            Friend requests <span className="req-pill">{data.incoming.length}</span>
+          </p>
           <ul className="friend-list">
             {data.incoming.map((f) =>
               person(
                 f,
                 <div className="row-actions">
-                  <button className="btn small primary" disabled={busy} onClick={() => void act(() => api(`/friends/${f.id}/accept`, { method: 'POST', token: auth.token }), `You and ${f.displayName} are now friends 🎉`)}>
+                  <button className="btn small primary" disabled={busy} onClick={() => accept(f)}>
                     Accept
                   </button>
                   <button className="btn small ghost" disabled={busy} onClick={() => void act(() => api(`/friends/${f.id}/remove`, { method: 'POST', token: auth.token }))}>
@@ -132,16 +198,18 @@ export function FriendsSheet({ auth, roomCode, onInvite, onClose }: Props) {
       )}
 
       <p className="label">Your friends {data ? `(${data.friends.length})` : ''}</p>
-      {roomCode && <p className="muted small">Online friends get a popup with a Join button for room {roomCode}.</p>}
+      {roomCode && <p className="muted small">Online friends who aren't in a room get a popup to join room {roomCode}.</p>}
       {data === null && <p className="muted small">Loading…</p>}
-      {data?.friends.length === 0 && <p className="muted small">No friends yet. Add someone by their username above.</p>}
+      {data?.friends.length === 0 && <p className="muted small">No friends yet. Search for someone above and tap + Add.</p>}
       {data && data.friends.length > 0 && (
         <ul className="friend-list">
           {data.friends.map((f) =>
             person(
               f,
               <div className="row-actions">
-                {roomCode && onInvite && (
+                {roomCode && onInvite && f.inRoom === 'here' && <span className="tag dim">In this room</span>}
+                {roomCode && onInvite && f.inRoom === 'other' && <span className="tag dim">In a room</span>}
+                {roomCode && onInvite && !f.inRoom && (
                   <button className="btn small primary" disabled={!f.online || invited.has(f.id)} onClick={() => void invite(f)}>
                     {invited.has(f.id) ? 'Invited ✓' : 'Invite'}
                   </button>
@@ -179,6 +247,20 @@ export function FriendsSheet({ auth, roomCode, onInvite, onClose }: Props) {
       <button className="btn ghost block" onClick={onClose}>
         Close
       </button>
+
+      {viewing && (
+        <PlayerSheet
+          auth={auth}
+          name={viewing.displayName}
+          username={viewing.username}
+          level={viewing.level}
+          onClose={() => {
+            setViewing(null);
+            // they may have added or accepted from the profile
+            void Promise.all([load(), search(query)]);
+          }}
+        />
+      )}
     </Backdrop>
   );
 }

@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useBack } from '../lib/back';
 import { QUICK_MESSAGES, REACTIONS, type ChatKind } from '../types';
 
 /** 💬 opens a small tray: one row of emoji, then short message pills; tap outside to close */
 export function QuickChat({ onSend }: { onSend: (kind: ChatKind, index: number) => void }) {
   const [open, setOpen] = useState(false);
+  useBack(open ? () => setOpen(false) : undefined);
 
   const send = (kind: ChatKind, index: number) => {
     onSend(kind, index);

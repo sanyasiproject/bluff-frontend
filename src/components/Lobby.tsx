@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, errorText } from '../lib/api';
+import { useBack } from '../lib/back';
 import { avatarColor, cx } from '../lib/cards';
 import {
   getVoiceGender,
@@ -17,6 +18,7 @@ import { AccountCorner } from './AccountCorner';
 import { FriendsSheet } from './FriendsSheet';
 import { InvitePanel } from './InvitePanel';
 import { LevelBadge } from './LevelBadge';
+import { PlayerSheet } from './PlayerSheet';
 import { QuickChat } from './QuickChat';
 
 /** per-phone voice choice; Girl is the default */
@@ -112,6 +114,8 @@ function StakePicker({ stake, players, isHost, onPick }: { stake: number; player
 export function Lobby({ view, actions, auth }: { view: RoomView; actions: Actions; auth: Auth }) {
   const [friendsOpen, setFriendsOpen] = useState(false);
   const isHost = view.hostId === view.meId;
+  // back from the lobby leaves the room, like the Leave button
+  useBack(() => void actions.leave());
   const me = [...view.players, ...view.watchers].find((p) => p.id === view.meId);
   const set = (patch: Partial<GameConfig>) => actions.setConfig({ ...view.config, ...patch });
   const coinsOn = auth.accountsOn === true;
@@ -194,6 +198,15 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
     );
   };
 
+  // tapping someone opens their profile; the host also gets Make host and Remove there
+  const [viewingId, setViewingId] = useState<string | null>(null);
+  const [confirmHost, setConfirmHost] = useState(false);
+  const viewing = viewingId ? [...view.players, ...view.watchers].find((p) => p.id === viewingId) : undefined;
+  const openPlayer = (id: string) => {
+    setConfirmHost(false);
+    setViewingId(id);
+  };
+
   const remove = (id: string, name: string) => {
     if (window.confirm(`Remove ${name} from the room?`)) void actions.kick(id);
   };
@@ -217,7 +230,12 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
       </header>
 
       {view.players.length + view.watchers.length < ROOM_LIMIT && (
-        <InvitePanel code={view.code} onToast={actions.toast} onFriends={auth.user ? () => setFriendsOpen(true) : undefined} />
+        <InvitePanel
+          code={view.code}
+          onToast={actions.toast}
+          onFriends={auth.user ? () => setFriendsOpen(true) : undefined}
+          requests={auth.friendRequests}
+        />
       )}
 
       <section className="panel">
@@ -227,20 +245,22 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         <ul className="player-list">
           {view.players.map((p) => (
             <li key={p.id} className={cx('player-row', !p.connected && 'offline')}>
-              <span className="avatar sm" style={{ background: avatarColor(p.name) }}>
-                {p.name[0]?.toUpperCase()}
-              </span>
-              <span className="grow">
-                {p.name}
-                {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} />
-                {coinsOn && (
-                  <span className={cx('player-coins', (!p.registered || (p.coins ?? 0) < stake) && stake > 0 && 'warn')}>
-                    {p.registered ? `🪙 ${compactCoins(p.coins ?? 0)}` : 'guest'}
-                    {stake > 0 && !p.registered && ' · must log in'}
-                    {stake > 0 && p.registered && (p.coins ?? 0) < stake && ' · not enough'}
-                  </span>
-                )}
-              </span>
+              <button type="button" className="row-open" aria-label={`${p.name}'s profile`} onClick={() => openPlayer(p.id)}>
+                <span className="avatar sm" style={{ background: avatarColor(p.name) }}>
+                  {p.name[0]?.toUpperCase()}
+                </span>
+                <span className="grow">
+                  {p.name}
+                  {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} />
+                  {coinsOn && (
+                    <span className={cx('player-coins', (!p.registered || (p.coins ?? 0) < stake) && stake > 0 && 'warn')}>
+                      {p.registered ? `🪙 ${compactCoins(p.coins ?? 0)}` : 'guest'}
+                      {stake > 0 && !p.registered && ' · must log in'}
+                      {stake > 0 && p.registered && (p.coins ?? 0) < stake && ' · not enough'}
+                    </span>
+                  )}
+                </span>
+              </button>
               {p.id === view.hostId && <span className="tag">Host</span>}
               {!p.connected && <span className="tag dim">offline</span>}
               {friendButton(p.id, p.username)}
@@ -248,6 +268,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             </li>
           ))}
         </ul>
+        {isHost && view.players.length + view.watchers.length > 1 && (
+          <p className="muted small tap-hint">Tap a player to see their profile or make them the host</p>
+        )}
       </section>
 
       {view.watchers.length > 0 && (
@@ -261,13 +284,15 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <ul className="player-list">
             {view.watchers.map((w) => (
               <li key={w.id} className={cx('player-row', !w.connected && 'offline')}>
-                <span className="avatar sm" style={{ background: avatarColor(w.name) }}>
-                  {w.name[0]?.toUpperCase()}
-                </span>
-                <span className="grow">
-                  {w.name}
-                  {w.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={w.level} />
-                </span>
+                <button type="button" className="row-open" aria-label={`${w.name}'s profile`} onClick={() => openPlayer(w.id)}>
+                  <span className="avatar sm" style={{ background: avatarColor(w.name) }}>
+                    {w.name[0]?.toUpperCase()}
+                  </span>
+                  <span className="grow">
+                    {w.name}
+                    {w.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={w.level} />
+                  </span>
+                </button>
                 <span className="tag dim">👀</span>
                 {friendButton(w.id, w.username)}
                 {removeButton(w.id, w.name)}
@@ -354,6 +379,56 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         )}
       </div>
 
+      {viewing && (
+        <PlayerSheet
+          auth={auth}
+          name={viewing.name}
+          username={viewing.username}
+          level={viewing.level}
+          onClose={() => setViewingId(null)}
+        >
+          {isHost && viewing.id !== view.meId && (
+            <div className="host-tools">
+              <p className="label">Host tools</p>
+              {confirmHost ? (
+                <div className="confirm-inline">
+                  <p>Make {viewing.name} the host? You'll lose the host controls.</p>
+                  <div className="confirm-actions">
+                    <button className="btn ghost" onClick={() => setConfirmHost(false)}>
+                      Cancel
+                    </button>
+                    <button
+                      className="btn primary"
+                      onClick={() => {
+                        setViewingId(null);
+                        void actions.makeHost(viewing.id);
+                      }}
+                    >
+                      Make host
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="menu-buttons">
+                  <button className="btn block" disabled={!viewing.connected} onClick={() => setConfirmHost(true)}>
+                    👑 Make {viewing.name} the host
+                  </button>
+                  {!viewing.connected && <p className="muted small">They're offline, so they can't be the host right now.</p>}
+                  <button
+                    className="btn block ghost danger-text"
+                    onClick={() => {
+                      setViewingId(null);
+                      remove(viewing.id, viewing.name);
+                    }}
+                  >
+                    Remove from room
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </PlayerSheet>
+      )}
       {friendsOpen && <FriendsSheet auth={auth} roomCode={view.code} onInvite={actions.invite} onClose={() => setFriendsOpen(false)} />}
     </main>
   );

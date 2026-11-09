@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, errorText } from '../lib/api';
 import { avatarColor } from '../lib/cards';
 import { compactCoins } from '../lib/coins';
+import { useBack } from '../lib/back';
 import { timeAgo } from '../lib/dates';
 import { levelOf, type AdminUser } from '../types';
 import type { Auth } from '../useAuth';
 import { AdminUserPage } from './AdminUserPage';
+import { BackButton } from './BackButton';
 import { LevelBadge } from './LevelBadge';
 
 /** admins: search every account and open one to manage it */
@@ -15,6 +17,7 @@ export function AdminPanel({ auth, onBack }: { auth: Auth; onBack: () => void })
   const [total, setTotal] = useState(0);
   const [error, setError] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
+  useBack(onBack);
 
   const load = useCallback(
     async (q: string) => {
@@ -41,9 +44,7 @@ export function AdminPanel({ auth, onBack }: { auth: Auth; onBack: () => void })
   return (
     <main className="screen admin">
       <header className="admin-head">
-        <button className="icon-btn" aria-label="Back" onClick={onBack}>
-          ←
-        </button>
+        <BackButton onClick={onBack} />
         <h2 className="grow">Admin</h2>
         <span className="muted small">{total} users</span>
       </header>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { avatarColor, claimText, cx, placeLabel, rankPlural } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
+import { useBack } from '../lib/back';
 import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
 import type { Card, PublicPlayer, Rank, RoomView } from '../types';
@@ -114,6 +115,7 @@ function GameMenu({
   onToggleSound,
   onPeople,
   onStop,
+  onEnd,
   onLeave,
   onClose,
 }: {
@@ -122,9 +124,12 @@ function GameMenu({
   onToggleSound: () => void;
   onPeople?: () => void;
   onStop?: () => void;
+  /** host, once someone has won */
+  onEnd?: () => void;
   onLeave?: () => void;
   onClose: () => void;
 }) {
+  const winner = view.players.find((p) => p.place === 1);
   const c = view.config;
   return (
     <Backdrop onClose={onClose}>
@@ -141,6 +146,11 @@ function GameMenu({
         {onPeople && (
           <button className="btn block" onClick={onPeople}>
             👥 People in this room
+          </button>
+        )}
+        {onEnd && winner && (
+          <button className="btn block" onClick={onEnd}>
+            🏁 End game · {winner.name} wins
           </button>
         )}
         {onStop && (
@@ -180,12 +190,17 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
   /** watcher stuck to one player; null follows whoever's turn it is */
   const [pinned, setPinned] = useState<string | null>(null);
   const [panel, setPanel] = useState<'menu' | 'people' | null>(null);
+  // there's no page behind a game: back opens the menu (Stop, Leave…) instead of leaving the app
+  useBack(() => setPanel('menu'));
   const [flight, setFlight] = useState<Flight | null>(null);
   const [dealing, setDealing] = useState(false);
+  const [confirmEnd, setConfirmEnd] = useState(false);
   const seatEls = useRef(new Map<string, HTMLElement>());
   const pileRef = useRef<HTMLDivElement>(null);
   const handRef = useRef<HTMLElement>(null);
   const lastTap = useRef<{ id: string; at: number } | null>(null);
+  /** my level when this game started, to show a level up at the end */
+  const startLevel = useRef<number | null>(null);
 
   const me = view.players.find((p) => p.id === view.meId);
   const name = (id: string | null) => (id === view.meId ? 'You' : (view.players.find((p) => p.id === id)?.name ?? 'Someone'));
@@ -195,6 +210,9 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
   const canBluff = playing && !!lp && lp.playerId !== view.meId && (me?.cardCount ?? 0) > 0;
   const bluffLocked = view.bluffCallsLeft === 0;
   const isHost = view.hostId === view.meId;
+  // once someone has finished 1st the host may end the game; everyone else then loses
+  const winner = view.players.find((p) => p.place === 1);
+  const canEnd = isHost && playing && !!winner;
   // joined mid-game or the room was full: see the table, no hand
   const watching = !me;
   const opponents = view.players.filter((p) => p.id !== view.meId);
@@ -248,6 +266,10 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
     else setSheet((s) => (s === 'rank' ? null : s));
   }, [myTurn]);
 
+  useEffect(() => {
+    if (playing) startLevel.current = me?.level ?? null;
+  }, [playing]);
+
   // sounds and card motion follow what changed on the table
   useOnChange(lp?.id ?? null, (id) => {
     if (!id || !lp) return;
@@ -262,7 +284,7 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
   useOnChange(view.reveal?.playId ?? null, (id) => id && view.reveal && (view.reveal.bluff ? sfx.caught() : sfx.truth()));
   useOnChange(myTurn, (mine) => mine && sfx.turn());
   useOnChange(view.phase, (phase) => {
-    if (phase === 'over' && !view.stopped) (view.loserId === view.meId ? sfx.lose : sfx.win)();
+    if (phase === 'over' && !view.stopped) (view.loserIds.includes(view.meId) ? sfx.lose : sfx.win)();
   });
 
   // functional update so quick taps never read a stale selection; tap order is the order others see
@@ -382,6 +404,11 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
             {bluffLocked ? <small>Play or pass first</small> : view.bluffCallsLeft === 1 && <small>1 call left</small>}
           </button>
         )}
+        {canEnd && (
+          <button className="btn small ghost end-btn" onClick={() => setConfirmEnd(true)}>
+            🏁 End game · {winner!.name} wins
+          </button>
+        )}
       </section>
 
       {watching && (
@@ -461,7 +488,12 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
         <RevealOverlay reveal={view.reveal} name={name} onClose={() => setShowReveal(false)} />
       )}
       {view.phase === 'over' && !(showReveal && view.reveal) && (
-        <GameOver view={view} onLobby={actions.toLobby} onRematch={isHost ? actions.rematch : undefined} />
+        <GameOver
+          view={view}
+          onLobby={actions.toLobby}
+          onRematch={isHost ? actions.rematch : undefined}
+          startLevel={startLevel.current}
+        />
       )}
       {flight && (
         <FlyingCards key={flight.key} flight={flight} onDone={() => setFlight((f) => (f?.key === flight.key ? null : f))} />
@@ -480,6 +512,14 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
                 }
               : undefined
           }
+          onEnd={
+            canEnd
+              ? () => {
+                  setPanel(null);
+                  setConfirmEnd(true);
+                }
+              : undefined
+          }
           onLeave={
             watching
               ? () => {
@@ -490,6 +530,31 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
           }
           onClose={() => setPanel(null)}
         />
+      )}
+      {confirmEnd && winner && (
+        <Backdrop center onClose={() => setConfirmEnd(false)}>
+          <div className="confirm-box">
+            <h3>End the game now?</h3>
+            <p className="muted">
+              {winner.name} finished 1st and wins. Everyone else loses
+              {view.config.stake > 0 ? ` and the 🪙 ${formatCoins(view.config.stake * view.players.length)} pot goes to ${winner.name}` : ''}.
+            </p>
+            <div className="confirm-actions">
+              <button className="btn ghost" onClick={() => setConfirmEnd(false)}>
+                Keep playing
+              </button>
+              <button
+                className="btn primary"
+                onClick={() => {
+                  setConfirmEnd(false);
+                  void actions.endGame();
+                }}
+              >
+                End game
+              </button>
+            </div>
+          </div>
+        </Backdrop>
       )}
       {panel === 'people' && (
         <PlayersSheet

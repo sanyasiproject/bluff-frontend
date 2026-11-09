@@ -33,6 +33,11 @@ export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite }: Props) 
             {user.displayName[0]?.toUpperCase()}
             <span className="seat-lv">{levelOf(user.stats)}</span>
           </span>
+          {auth.friendRequests > 0 && (
+            <span className="req-dot" aria-label={`${auth.friendRequests} friend requests`}>
+              {auth.friendRequests}
+            </span>
+          )}
         </button>
       ) : (
         <button className="btn small primary login-pill" onClick={() => setSheet('login')}>

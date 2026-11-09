@@ -4,6 +4,7 @@ import { Home } from './components/Home';
 import { Lobby } from './components/Lobby';
 import { BonusPopup, InvitePopup } from './components/Popups';
 import { Reactions } from './components/Reactions';
+import { Splash } from './components/Splash';
 import { Table } from './components/Table';
 import { Toasts } from './components/Toasts';
 import { clearInvite } from './lib/invite';
@@ -15,9 +16,21 @@ export default function App() {
   const { status, connectionId, view, notes, reactions, bubbles, invites, replaced, actions } = useBluff();
   const auth = useAuth();
   const [adminOpen, setAdminOpen] = useState(false);
+  // the intro stays until the server first answers and a saved login is checked, and at least a moment
+  const [booted, setBooted] = useState(false);
+  const [introShown, setIntroShown] = useState(false);
   const inRoom = view !== null;
   const { refresh } = auth;
   const settled = view?.coinResults != null;
+
+  useEffect(() => {
+    const t = setTimeout(() => setIntroShown(true), 900);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (status === 'online' && !auth.checking && introShown) setBooted(true);
+  }, [status, auth.checking, introShown]);
 
   // once inside a room the invite link has done its job
   useEffect(() => {
@@ -30,7 +43,9 @@ export default function App() {
   }, [settled, refresh]);
 
   let screen;
-  if (replaced) {
+  if (!booted && !replaced) {
+    screen = <Splash status={status} />;
+  } else if (replaced) {
     screen = (
       <main className="screen center-screen">
         <h2>Opened somewhere else</h2>

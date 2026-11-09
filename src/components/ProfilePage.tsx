@@ -7,6 +7,7 @@ import { DAILY_GAME_REWARDS, LOGIN_BONUS, MIN_REWARD_GAME_SEC, type GameSummary,
 import type { Auth } from '../useAuth';
 import { FriendsSheet } from './FriendsSheet';
 import { FullPage } from './FullPage';
+import { XpGuide } from './XpGuide';
 import { FormStrip, GameList, Meter } from './ProfileParts';
 
 interface Props {
@@ -26,6 +27,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite }: 
   const [games, setGames] = useState<GameSummary[] | null>(null);
   const [overview, setOverview] = useState<ProfileOverview | null>(null);
   const [friendsOpen, setFriendsOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   useEffect(() => {
     void auth.refresh();
@@ -64,13 +66,18 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite }: 
           @{user.username} · Joined {monthYear(user.createdAt)}
           {user.role === 'admin' && <span className="tag">Admin</span>}
         </p>
-        <p className="level-title">{lvl.title}</p>
+        <p className="level-title">
+          {lvl.emoji} {lvl.title}
+        </p>
         <div className="xp-bar" aria-label={`${lvl.toNext} XP to level ${lvl.level + 1}`}>
           <i style={{ width: `${Math.round(lvl.progress * 100)}%` }} />
         </div>
         <p className="muted small">
-          {lvl.xp} XP · {lvl.toNext} to level {lvl.level + 1}
+          {formatCoins(lvl.xp)} XP · {formatCoins(lvl.toNext)} to level {lvl.level + 1}
         </p>
+        <button className="link-btn" onClick={() => setGuideOpen(true)}>
+          How to earn XP ›
+        </button>
       </section>
 
       <section className="wallet-card">
@@ -130,6 +137,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite }: 
       <div className="quick-actions">
         <button className="btn" onClick={() => setFriendsOpen(true)}>
           👥 Friends{overview ? ` · ${overview.friends}` : ''}
+          {auth.friendRequests > 0 && <span className="req-pill">{auth.friendRequests} new</span>}
         </button>
         {user.role === 'admin' && onOpenAdmin && (
           <button
@@ -239,6 +247,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite }: 
         Log out
       </button>
 
+      {guideOpen && <XpGuide level={lvl.level} xp={lvl.xp} onClose={() => setGuideOpen(false)} />}
       {friendsOpen && <FriendsSheet auth={auth} roomCode={roomCode} onInvite={onInvite} onClose={() => setFriendsOpen(false)} />}
     </FullPage>
   );
