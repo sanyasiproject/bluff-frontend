@@ -21,7 +21,7 @@ export function InstallCard() {
         <img src="/icons/icon-192.png" alt="" className="install-icon" />
         <div className="grow">
           <b>Get the Bluff app</b>
-          <p className="muted small">Full screen, icon on your home screen. Free, no app store.</p>
+          <p className="muted small">Free · no app store</p>
         </div>
         <button className="btn small primary" onClick={install}>
           Install

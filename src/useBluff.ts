@@ -35,6 +35,14 @@ export interface Reaction {
   at: number;
 }
 
+/** a quick message shown as a speech bubble on the sender's seat during a game */
+export interface ChatBubble {
+  key: number;
+  from: string;
+  text: string;
+  at: number;
+}
+
 type Entered = { code: string; token: string };
 
 let noteSeq = 0;
@@ -54,6 +62,7 @@ export function useBluff() {
   const [view, setView] = useState<RoomView | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [reactions, setReactions] = useState<Reaction[]>([]);
+  const [bubbles, setBubbles] = useState<ChatBubble[]>([]);
   const [invites, setInvites] = useState<Invite[]>([]);
   const [replaced, setReplaced] = useState(false);
   const session = useRef<Session | null>(startSession());
@@ -97,10 +106,14 @@ export function useBluff() {
       const v = viewRef.current;
       const who =
         c.from === v?.meId ? 'You' : ([...(v?.players ?? []), ...(v?.watchers ?? [])].find((p) => p.id === c.from)?.name ?? 'Someone');
+      const text = QUICK_MESSAGES[c.index] ?? '';
       if (c.kind === 'reaction') {
         setReactions((prev) => [...prev.slice(-12), { key: ++noteSeq, emoji: REACTIONS[c.index] ?? '❓', who, at: Date.now() }]);
+      } else if (v && v.phase !== 'lobby') {
+        // at the table messages pop up on the sender's seat instead of the top banner
+        setBubbles((prev) => [...prev.slice(-10), { key: ++noteSeq, from: c.from, text, at: Date.now() }]);
       } else {
-        pushNote('chat', `${who}: ${QUICK_MESSAGES[c.index] ?? ''}`);
+        pushNote('chat', `${who}: ${text}`);
       }
     };
     const onReplaced = () => {
@@ -214,9 +227,10 @@ export function useBluff() {
       setConfig: (config: GameConfig) => run(() => request('room:config', config)),
       start: () => run(() => request('room:start')),
       toLobby: () => run(() => request('room:lobby')),
+      rematch: () => run(() => request('room:rematch')),
       play: async (cardIds: string[], rank?: Rank) => (await run(() => request('game:play', { cardIds, rank }))) !== null,
       pass: () => run(() => request('game:pass')),
-      bluff: (playId: string, cardIndex?: number) => run(() => request('game:bluff', { playId, cardIndex })),
+      bluff: (playId: string) => run(() => request('game:bluff', { playId })),
       chat: (kind: ChatKind, index: number) => run(() => request('chat:send', { kind, index })),
       reclaim: () => {
         replacedRef.current = false;
@@ -227,7 +241,7 @@ export function useBluff() {
     };
   }, [run, pushNote]);
 
-  return { status, connectionId, view, notes, reactions, invites, replaced, actions };
+  return { status, connectionId, view, notes, reactions, bubbles, invites, replaced, actions };
 }
 
 export type Actions = ReturnType<typeof useBluff>['actions'];

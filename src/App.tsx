@@ -12,7 +12,7 @@ import { useAuth } from './useAuth';
 import { useBluff } from './useBluff';
 
 export default function App() {
-  const { status, connectionId, view, notes, reactions, invites, replaced, actions } = useBluff();
+  const { status, connectionId, view, notes, reactions, bubbles, invites, replaced, actions } = useBluff();
   const auth = useAuth();
   const [adminOpen, setAdminOpen] = useState(false);
   const inRoom = view !== null;
@@ -49,7 +49,7 @@ export default function App() {
   } else if (view.phase === 'lobby') {
     screen = <Lobby view={view} actions={actions} auth={auth} />;
   } else {
-    screen = <Table view={view} actions={actions} />;
+    screen = <Table view={view} actions={actions} bubbles={bubbles} />;
   }
 
   const invite = invites[invites.length - 1];

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { accountsAvailable, api, ApiError } from './lib/api';
-import { reconnectSocket } from './lib/socket';
+import { reconnectSocket, socket } from './lib/socket';
 import { loadAuthToken, saveAuthToken } from './lib/storage';
 import type { AuthResponse, GameSummary, PublicUser } from './types';
 
@@ -41,9 +41,20 @@ export function useAuth() {
 
   useEffect(() => {
     void refresh();
-    accountsAvailable()
-      .then(setAccountsOn)
-      .catch(() => setAccountsOn(false));
+    const check = () =>
+      accountsAvailable()
+        .then(setAccountsOn)
+        .catch(() => setAccountsOn(false));
+    void check();
+    // a sleeping or restarting server can fail the first check; look again whenever the game reconnects
+    const onConnect = () => {
+      void check();
+      void refresh();
+    };
+    socket.on('connect', onConnect);
+    return () => {
+      socket.off('connect', onConnect);
+    };
   }, [refresh]);
 
   const signIn = (res: AuthResponse) => {

@@ -50,6 +50,13 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 - **Host tools:** ✕ next to a player in the lobby, or 👥 in the game, removes someone.
 - **My stats:** lifetime numbers plus a card for each of the last 10 games (result, coins, players, per-game bluffs and calls, awards).
 
+## Game screen
+
+- Top bar: room code, pot, 💬 quick chat and ⋯ (voice, people, stop game, leave for watchers).
+- Quick chat is a small tray (emoji row + message pills); messages show as speech bubbles on the sender's seat.
+- Your turn: gold glow and a YOUR TURN bar above your cards. Seats show each player's last move (e.g. 3 × Q).
+- Bluff is limited to 2 calls in a row; the button shows "last call", then "Bluff locked" until you play or pass.
+
 ## Chat, watching and awards
 
 - **💬 Quick chat** (lobby and table): 8 emoji reactions float up on every screen; 26 quick messages appear with the sender's name. Edit the lists in `src/types.ts` (and the same file in the backend).

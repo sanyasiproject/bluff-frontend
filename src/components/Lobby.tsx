@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { avatarColor, cx } from '../lib/cards';
 import {
-  currentVoiceName,
   getVoiceGender,
   onVoicesChanged,
   setVoiceGender,
@@ -48,7 +47,6 @@ function VoicePicker({ sample }: { sample: string }) {
       <button className="btn ghost small" onClick={test}>
         🔊 Test
       </button>
-      <p className="voice-name">On this phone: {currentVoiceName() ?? 'default voice'}</p>
     </section>
   );
 }
@@ -94,14 +92,14 @@ function StakePicker({ stake, players, isHost, onPick }: { stake: number; player
         {stake === 0 ? (
           <>
             <b>Free game</b>
-            <span>No coins involved, just for fun. Guests can play.</span>
+            <span>Just for fun · guests can play</span>
           </>
         ) : (
           <>
             <b>
               Everyone puts in 🪙 {formatCoins(stake)} · Winner takes 🪙 {formatCoins(pot)}
             </b>
-            <span>Coins move only when the game finishes. If it's stopped early, nobody pays. Everyone must be logged in.</span>
+            <span>Paid only when the game finishes · log in needed</span>
           </>
         )}
       </div>
@@ -113,7 +111,6 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   const [friendsOpen, setFriendsOpen] = useState(false);
   const isHost = view.hostId === view.meId;
   const me = [...view.players, ...view.watchers].find((p) => p.id === view.meId);
-  const slots = Array.from({ length: 5 }, (_, i) => view.players[i] ?? null);
   const set = (patch: Partial<GameConfig>) => actions.setConfig({ ...view.config, ...patch });
   const coinsOn = auth.accountsOn === true;
 
@@ -153,14 +150,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
       </header>
 
       {view.players.length + view.watchers.length < ROOM_LIMIT && (
-        <>
-          <InvitePanel code={view.code} onToast={actions.toast} />
-          {auth.user && (
-            <button className="btn block friends-invite" onClick={() => setFriendsOpen(true)}>
-              👥 Invite online friends
-            </button>
-          )}
-        </>
+        <InvitePanel code={view.code} onToast={actions.toast} onFriends={auth.user ? () => setFriendsOpen(true) : undefined} />
       )}
 
       <section className="panel">
@@ -168,35 +158,28 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           Players <span className="muted">{view.players.length}/5</span>
         </h2>
         <ul className="player-list">
-          {slots.map((p, i) =>
-            p ? (
-              <li key={p.id} className={cx('player-row', !p.connected && 'offline')}>
-                <span className="avatar sm" style={{ background: avatarColor(p.name) }}>
-                  {p.name[0]?.toUpperCase()}
-                </span>
-                <span className="grow">
-                  {p.name}
-                  {p.id === view.meId && <span className="muted"> (you)</span>}
-                  {coinsOn && (
-                    <span className={cx('player-coins', (!p.registered || (p.coins ?? 0) < stake) && stake > 0 && 'warn')}>
-                      {p.registered ? `🪙 ${compactCoins(p.coins ?? 0)}` : 'guest'}
-                      {stake > 0 && !p.registered && ' · must log in'}
-                      {stake > 0 && p.registered && (p.coins ?? 0) < stake && ' · not enough'}
-                    </span>
-                  )}
-                </span>
-                {p.id === view.hostId && <span className="tag">Host</span>}
-                {!p.connected && <span className="tag dim">offline</span>}
-                {removeButton(p.id, p.name)}
-              </li>
-            ) : (
-              <li key={`empty-${i}`} className="player-row empty">
-                Waiting for player…
-              </li>
-            ),
-          )}
+          {view.players.map((p) => (
+            <li key={p.id} className={cx('player-row', !p.connected && 'offline')}>
+              <span className="avatar sm" style={{ background: avatarColor(p.name) }}>
+                {p.name[0]?.toUpperCase()}
+              </span>
+              <span className="grow">
+                {p.name}
+                {p.id === view.meId && <span className="muted"> (you)</span>}
+                {coinsOn && (
+                  <span className={cx('player-coins', (!p.registered || (p.coins ?? 0) < stake) && stake > 0 && 'warn')}>
+                    {p.registered ? `🪙 ${compactCoins(p.coins ?? 0)}` : 'guest'}
+                    {stake > 0 && !p.registered && ' · must log in'}
+                    {stake > 0 && p.registered && (p.coins ?? 0) < stake && ' · not enough'}
+                  </span>
+                )}
+              </span>
+              {p.id === view.hostId && <span className="tag">Host</span>}
+              {!p.connected && <span className="tag dim">offline</span>}
+              {removeButton(p.id, p.name)}
+            </li>
+          ))}
         </ul>
-        {isHost && view.players.length > 1 && <p className="muted small host-note">You're the host: tap ✕ to remove someone.</p>}
       </section>
 
       {view.watchers.length > 0 && (
@@ -204,7 +187,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <h2 className="section-title">
             Watching <span className="muted">{view.watchers.length}</span>
           </h2>
-          <p className="muted small watch-note">All 5 seats are taken. Watchers get a seat as soon as one frees up.</p>
+          {view.watchers.some((w) => w.id === view.meId) && (
+            <p className="muted small watch-note">Seats are full · you get the next free one</p>
+          )}
           <ul className="player-list">
             {view.watchers.map((w) => (
               <li key={w.id} className={cx('player-row', !w.connected && 'offline')}>
@@ -223,10 +208,20 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         </section>
       )}
 
-      <section className="panel">
-        <h2 className="section-title">
-          Settings {!isHost && <span className="muted">· host decides</span>}
-        </h2>
+      {!isHost && (
+        <section className="panel settings-summary">
+          <h2 className="section-title">Game settings</h2>
+          <div className="summary-chips">
+            <span>{stake > 0 ? `🪙 ${formatCoins(stake)} each` : '🆓 Free game'}</span>
+            <span>🎴 {view.config.decks === 2 ? '2 decks' : '1 deck'}</span>
+            <span>{view.config.bluffRule === 'one' ? '🎲 1 random card checked' : '🃏 All cards checked'}</span>
+          </div>
+          {stake > 0 && <p className="muted small">Winner takes 🪙 {formatCoins(pot)}</p>}
+        </section>
+      )}
+
+      {isHost && <section className="panel">
+        <h2 className="section-title">Game settings</h2>
         {coinsOn && <StakePicker stake={stake} players={view.players.length} isHost={isHost} onPick={(n) => set({ stake: n })} />}
         <p className="label">Cards</p>
         <div className="seg">
@@ -238,19 +233,19 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <Option
             on={view.config.bluffRule === 'all'}
             disabled={!isHost}
-            title="Show all"
-            desc="Every card of that play is turned over"
+            title="All cards"
+            desc="Every played card is flipped"
             onClick={() => set({ bluffRule: 'all' })}
           />
           <Option
             on={view.config.bluffRule === 'one'}
             disabled={!isHost}
-            title="Pick one"
-            desc="Caller picks one card to turn over"
+            title="1 random card"
+            desc="The game flips one at random"
             onClick={() => set({ bluffRule: 'one' })}
           />
         </div>
-      </section>
+      </section>}
 
       <details className="panel rules">
         <summary>How to play</summary>
@@ -260,8 +255,6 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <li>Anyone can shout Bluff on the last play. Liar picks up the whole pile; if it was true, the caller does.</li>
           <li>If everyone passes, the pile is cleared and the last player starts a new round.</li>
           <li>Empty your hand first to win. The last player holding cards loses.</li>
-          <li>With a coin stake, everyone pays when the game ends and the winner takes the whole pot.</li>
-          <li>Friends who join mid-game, or when 5 are playing, watch and get a seat in the next game.</li>
         </ul>
       </details>
 
@@ -270,22 +263,26 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
       <div className="lobby-actions">
         {isHost ? (
           <>
-            <button className="btn primary block" disabled={startBlock !== null} onClick={actions.start}>
-              {startBlock === null
-                ? `Start game · ${view.players.length} players${stake > 0 ? ` · pot 🪙 ${formatCoins(pot)}` : ''}`
-                : 'Start game'}
-            </button>
             {startBlock && <p className="start-block">{startBlock}</p>}
+            <div className="sticky-row">
+              <button className="btn ghost leave-btn" onClick={actions.leave}>
+                Leave
+              </button>
+              <button className="btn primary grow" disabled={startBlock !== null} onClick={actions.start}>
+                {startBlock === null
+                  ? `Start · ${view.players.length} players${stake > 0 ? ` · 🪙 ${compactCoins(pot)}` : ''}`
+                  : 'Start game'}
+              </button>
+            </div>
           </>
         ) : (
-          <p className="waiting">
-            Waiting for the host to start…
-            {stake > 0 && <span className="muted small"> Stake 🪙 {formatCoins(stake)} each</span>}
-          </p>
+          <div className="sticky-row">
+            <button className="btn ghost leave-btn" onClick={actions.leave}>
+              Leave
+            </button>
+            <p className="waiting grow">⏳ Waiting for the host to start…</p>
+          </div>
         )}
-        <button className="btn ghost block" onClick={actions.leave}>
-          Leave room
-        </button>
       </div>
 
       {friendsOpen && <FriendsSheet auth={auth} roomCode={view.code} onInvite={actions.invite} onClose={() => setFriendsOpen(false)} />}

@@ -10,10 +10,12 @@ interface Props {
   selected?: string[];
   /** omit for a read-only hand (watchers looking at someone's cards) */
   onToggle?: (id: string) => void;
+  /** cards slide in one by one, at the start of a game */
+  deal?: boolean;
 }
 
 /** Overlapping rows of cards that fit the screen width; each row shows the card corners */
-export function Hand({ cards, selected = [], onToggle }: Props) {
+export function Hand({ cards, selected = [], onToggle, deal }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(340);
 
@@ -54,8 +56,12 @@ export function Hand({ cards, selected = [], onToggle }: Props) {
                   selected={isSelected}
                   order={isSelected ? pick + 1 : undefined}
                   onClick={onToggle ? () => onToggle(card.id) : undefined}
-                  className="in-hand"
-                  style={{ left: i * slice, zIndex: isSelected ? 1000 + i : r * 100 + i }}
+                  className={deal ? 'in-hand deal' : 'in-hand'}
+                  style={{
+                    left: i * slice,
+                    zIndex: isSelected ? 1000 + i : r * 100 + i,
+                    animationDelay: deal ? `${(r * perRow + i) * 28}ms` : undefined,
+                  }}
                 />
               );
             })}

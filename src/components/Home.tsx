@@ -79,7 +79,7 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin }: HomeP
   const guestHint =
     !auth.user && auth.accountsOn && !auth.checking ? (
       <p className="guest-hint">
-        You're playing as a <b>guest</b>. <b>Log in</b> (top right) to save your wins, earn daily coins and add friends.
+        Playing as a <b>guest</b> · log in to earn coins and save wins
       </p>
     ) : null;
 
@@ -181,7 +181,6 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin }: HomeP
 
       <InstallCard />
 
-      <p className="foot muted">2–5 players · 1 or 2 decks · voice announcements</p>
     </main>
   );
 }

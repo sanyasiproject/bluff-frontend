@@ -1,7 +1,14 @@
 import { inviteLink, inviteMessage, inviteText, whatsappUrl } from '../lib/invite';
 
-/** WhatsApp / share sheet / copy; the link drops friends straight into this room */
-export function InvitePanel({ code, onToast }: { code: string; onToast: (text: string) => void }) {
+interface Props {
+  code: string;
+  onToast: (text: string) => void;
+  /** logged-in players can also invite online friends directly */
+  onFriends?: () => void;
+}
+
+/** one compact row: WhatsApp, share sheet, copy, friends; the link drops people straight into this room */
+export function InvitePanel({ code, onToast, onFriends }: Props) {
   const link = inviteLink(code);
   const canShare = typeof navigator.share === 'function';
 
@@ -25,23 +32,26 @@ export function InvitePanel({ code, onToast }: { code: string; onToast: (text: s
   };
 
   return (
-    <section className="panel">
-      <h2 className="section-title">Invite friends</h2>
-      <p className="muted small">They tap the link and land straight in room {code}.</p>
+    <section className="invite-bar">
+      <p className="invite-caption">Invite friends</p>
       <div className="share-row">
-        <a className="btn whatsapp" href={whatsappUrl(code)} target="_blank" rel="noopener noreferrer">
-          WhatsApp
+        <a className="share-btn whatsapp" href={whatsappUrl(code)} target="_blank" rel="noopener noreferrer">
+          <span>💬</span>WhatsApp
         </a>
         {canShare && (
-          <button className="btn" onClick={share}>
-            Share…
+          <button className="share-btn" onClick={share}>
+            <span>📤</span>Share
           </button>
         )}
-        <button className="btn" onClick={copy}>
-          Copy
+        <button className="share-btn" onClick={copy}>
+          <span>🔗</span>Copy
         </button>
+        {onFriends && (
+          <button className="share-btn" onClick={onFriends}>
+            <span>👥</span>Friends
+          </button>
+        )}
       </div>
-      <p className="invite-link">{link}</p>
     </section>
   );
 }

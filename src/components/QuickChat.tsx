@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { QUICK_MESSAGES, REACTIONS, type ChatKind } from '../types';
-import { Backdrop } from './Overlays';
 
-/** 💬 button opening reactions and quick messages; everyone in the room sees them */
+/** 💬 opens a small tray: one row of emoji, then short message pills; tap outside to close */
 export function QuickChat({ onSend }: { onSend: (kind: ChatKind, index: number) => void }) {
   const [open, setOpen] = useState(false);
 
@@ -13,30 +12,29 @@ export function QuickChat({ onSend }: { onSend: (kind: ChatKind, index: number) 
 
   return (
     <>
-      <button className="icon-btn" aria-label="Quick chat" onClick={() => setOpen(true)}>
+      <button className="icon-btn" aria-label="Quick chat" aria-expanded={open} onClick={() => setOpen(true)}>
         💬
       </button>
       {open && (
-        <Backdrop onClose={() => setOpen(false)}>
-          <h3>Say something</h3>
-          <div className="reaction-row">
-            {REACTIONS.map((emoji, i) => (
-              <button key={emoji} className="reaction-btn" aria-label={`React ${emoji}`} onClick={() => send('reaction', i)}>
-                {emoji}
-              </button>
-            ))}
+        <div className="tray-backdrop" onClick={() => setOpen(false)}>
+          <div className="chat-tray" role="dialog" aria-label="Quick chat" onClick={(e) => e.stopPropagation()}>
+            <div className="tray-handle" />
+            <div className="reaction-row">
+              {REACTIONS.map((emoji, i) => (
+                <button key={emoji} className="reaction-btn" aria-label={`React ${emoji}`} onClick={() => send('reaction', i)}>
+                  {emoji}
+                </button>
+              ))}
+            </div>
+            <div className="message-pills">
+              {QUICK_MESSAGES.map((text, i) => (
+                <button key={text} className="message-pill" onClick={() => send('message', i)}>
+                  {text}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="message-grid">
-            {QUICK_MESSAGES.map((text, i) => (
-              <button key={text} className="message-btn" onClick={() => send('message', i)}>
-                {text}
-              </button>
-            ))}
-          </div>
-          <button className="btn ghost block" onClick={() => setOpen(false)}>
-            Close
-          </button>
-        </Backdrop>
+        </div>
       )}
     </>
   );

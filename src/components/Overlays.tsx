@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { avatarColor, claimText, cx, placeLabel, rankPlural } from '../lib/cards';
 import { formatCoins, signedCoins } from '../lib/coins';
 import { RANKS, type Card, type Rank, type RevealView, type RoomView } from '../types';
@@ -45,33 +45,6 @@ export function RankSheet({ hand, selected, busy, onPick, onClose }: RankSheetPr
   );
 }
 
-interface PickSheetProps {
-  count: number;
-  who: string;
-  claim: string;
-  onPick: (index: number) => void;
-  onClose: () => void;
-}
-
-export function PickSheet({ count, who, claim, onPick, onClose }: PickSheetProps) {
-  return (
-    <Backdrop onClose={onClose}>
-      <h3>Pick one card to turn over</h3>
-      <p className="muted small">
-        {who} said {claim}. If your card doesn't match, they pick up the pile. If it matches, you do.
-      </p>
-      <div className="pick-row">
-        {Array.from({ length: count }, (_, i) => (
-          <PlayingCard key={i} faceDown size={count > 8 ? 'md' : 'lg'} className="pick-card" onClick={() => onPick(i)} />
-        ))}
-      </div>
-      <button className="btn ghost block" onClick={onClose}>
-        Cancel
-      </button>
-    </Backdrop>
-  );
-}
-
 interface RevealProps {
   reveal: RevealView;
   name: (id: string) => string;
@@ -83,10 +56,13 @@ export function RevealOverlay({ reveal, name, onClose }: RevealProps) {
     <Backdrop center onClose={onClose}>
       <div className={cx('reveal', reveal.bluff ? 'caught' : 'truth')} onClick={onClose}>
         <p className="muted small">
-          {name(reveal.callerId)} called bluff on {name(reveal.playerId)}
+          {name(reveal.callerId)} called bluff on {name(reveal.playerId) === 'You' ? 'you' : name(reveal.playerId)}
         </p>
         <h3 className="reveal-title">{reveal.bluff ? 'Caught bluffing!' : 'It was the truth!'}</h3>
-        <p className="small">Claimed {claimText(reveal.cards.length, reveal.rank)}</p>
+        <p className="small">
+          Claimed {claimText(reveal.cards.length, reveal.rank)}
+          {reveal.pickedIndex !== null && reveal.cards.length > 1 && ' · 1 random card checked'}
+        </p>
         <div className="reveal-cards">
           {reveal.cards.map((c, i) => (
             <div
@@ -106,13 +82,20 @@ export function RevealOverlay({ reveal, name, onClose }: RevealProps) {
         <p className="reveal-result">
           <b>{name(reveal.loserId)}</b> {name(reveal.loserId) === 'You' ? 'pick' : 'picks'} up {reveal.pileCount} cards
         </p>
-        <p className="muted small">Tap to close</p>
       </div>
     </Backdrop>
   );
 }
 
-export function GameOver({ view, onLobby }: { view: RoomView; onLobby: () => void }) {
+interface GameOverProps {
+  view: RoomView;
+  onLobby: () => void;
+  /** host only: deal again with the same players and settings */
+  onRematch?: () => Promise<unknown>;
+}
+
+export function GameOver({ view, onLobby, onRematch }: GameOverProps) {
+  const [busy, setBusy] = useState(false);
   const ranked = [...view.players].sort((a, b) => (a.place ?? 99) - (b.place ?? 99));
   const medal = (place: number | null) => (place ? (['🥇', '🥈', '🥉'][place - 1] ?? placeLabel(place)) : '🙈');
   const nameOf = (id: string) => (id === view.meId ? 'You' : (view.players.find((p) => p.id === id)?.name ?? 'Someone'));
@@ -149,7 +132,22 @@ export function GameOver({ view, onLobby }: { view: RoomView; onLobby: () => voi
           </div>
         )}
         <CoinSummary view={view} nameOf={nameOf} />
-        <button className="btn primary block" onClick={onLobby}>
+        {onRematch ? (
+          <button
+            className="btn primary block"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              await onRematch();
+              setBusy(false);
+            }}
+          >
+            🔁 Play again{view.config.stake > 0 ? ` · 🪙 ${formatCoins(view.config.stake)} each` : ''}
+          </button>
+        ) : (
+          <p className="muted small">Waiting for the host to play again…</p>
+        )}
+        <button className="btn ghost block" onClick={onLobby}>
           Back to lobby
         </button>
       </div>
@@ -159,10 +157,12 @@ export function GameOver({ view, onLobby }: { view: RoomView; onLobby: () => voi
 
 /** who won or paid how many coins, plus first-game-of-the-day bonuses */
 function CoinSummary({ view, nameOf }: { view: RoomView; nameOf: (id: string) => string }) {
-  if (!view.players.some((p) => p.registered)) return null;
   const stake = view.config.stake;
+  if (!view.players.some((p) => p.registered)) return null;
+  // nothing to show for a free game without bonuses
+  if (stake === 0 && (view.stopped || view.coinResults?.every((r) => r.bonus === 0))) return null;
   let body;
-  if (view.stopped) body = <p className="muted small">Game stopped early. No coins moved.</p>;
+  if (view.stopped) body = <p className="muted small">Stopped early · no coins moved</p>;
   else if (!view.coinResults) body = <p className="muted small">Adding up coins…</p>;
   else {
     const rows = view.coinResults.filter((r) => view.players.some((p) => p.id === r.playerId && p.registered));
@@ -176,8 +176,7 @@ function CoinSummary({ view, nameOf }: { view: RoomView; nameOf: (id: string) =>
             {r.bonus > 0 && <span className="bonus-chip">🎁 +{r.bonus}</span>}
           </div>
         ))}
-        {rows.some((r) => r.bonus > 0) && <p className="muted small">🎁 First finished game of the day bonus</p>}
-        {stake === 0 && rows.every((r) => r.bonus === 0) && <p className="muted small">Free game, no coins moved.</p>}
+        {rows.some((r) => r.bonus > 0) && <p className="muted small">🎁 First game of the day bonus</p>}
       </>
     );
   }
@@ -206,9 +205,6 @@ export function PlayersSheet({
   return (
     <Backdrop onClose={onClose}>
       <h3>People in this room</h3>
-      <p className="muted small">
-        Removing a player during the game takes their cards out of the game. They don't pay or win any coins.
-      </p>
       {people.length === 0 && <p className="muted small">Nobody else is here.</p>}
       <ul className="player-list">
         {people.map((p) => (

@@ -57,8 +57,8 @@ export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite }: Props) 
             <b>🪙 {formatCoins(user.coins)}</b>
           </div>
           <ul className="reward-list">
-            <li>🎁 +{LOGIN_BONUS} every day you open the app</li>
-            <li>🃏 +{FIRST_GAME_BONUS} for your first finished game each day, win or lose</li>
+            <li>🎁 +{LOGIN_BONUS} every day</li>
+            <li>🃏 +{FIRST_GAME_BONUS} for your first game each day</li>
           </ul>
           <div className="menu-buttons">
             <button className="btn block" onClick={() => setSheet('profile')}>
