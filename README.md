@@ -51,6 +51,8 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 - **End game:** once someone finishes 1st, the host can end the game: 1st place wins, everyone else loses.
 - **Player profiles:** tap a player in the lobby or in Friends (list, requests, search) to see their public card: level, record, badges and a friend button. Not during a game.
 - **Make host:** in the lobby the host taps a player → 👑 Make host (asks first).
+- **Room extras:** 🔍 Peek power (No / 1–3), 🎲 Bet your call (coin games: one Bet button next to Bluff opens a sheet to pick the amount) and 👥 Teams 2 vs 2 (team slots in the lobby: take an empty slot or ask to 🔄 swap; team colours, 🤝 partner's cards in the game, Shuffle).
+- **Rules & features** (admins only, from the profile): every rule and feature in one page, to explain the app to friends.
 - **Phone back button:** closes one step at a time (sheet, page, lobby → home, in a game it opens the menu) and only leaves the app from the home page (`src/lib/back.ts`).
 - **Intro screen** while the app loads and the free server wakes up (`components/Splash.tsx`, with the same markup in `index.html` for the first paint).
 

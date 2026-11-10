@@ -7,6 +7,7 @@ import { DAILY_GAME_REWARDS, LOGIN_BONUS, MIN_REWARD_GAME_SEC, type GameSummary,
 import type { Auth } from '../useAuth';
 import { FriendsSheet } from './FriendsSheet';
 import { FullPage } from './FullPage';
+import { RulesPage } from './RulesPage';
 import { XpGuide } from './XpGuide';
 import { FormStrip, GameList, Meter } from './ProfileParts';
 
@@ -28,6 +29,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite }: 
   const [overview, setOverview] = useState<ProfileOverview | null>(null);
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   useEffect(() => {
     void auth.refresh();
@@ -151,6 +153,11 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite }: 
           </button>
         )}
       </div>
+      {user.role === 'admin' && (
+        <button className="btn block rules-btn" onClick={() => setRulesOpen(true)}>
+          📖 Rules & features <span className="tag">Admin</span>
+        </button>
+      )}
 
       <section className="panel stack-tight">
         <h3 className="section-title">Record</h3>
@@ -248,6 +255,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite }: 
       </button>
 
       {guideOpen && <XpGuide level={lvl.level} xp={lvl.xp} onClose={() => setGuideOpen(false)} />}
+      {rulesOpen && <RulesPage onClose={() => setRulesOpen(false)} />}
       {friendsOpen && <FriendsSheet auth={auth} roomCode={roomCode} onInvite={onInvite} onClose={() => setFriendsOpen(false)} />}
     </FullPage>
   );

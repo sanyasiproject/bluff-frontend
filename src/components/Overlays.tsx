@@ -1,10 +1,11 @@
 import { useState, type ReactNode } from 'react';
 import { useBack } from '../lib/back';
 import { avatarColor, claimText, cx, placeLabel, rankPlural } from '../lib/cards';
-import { formatCoins, signedCoins } from '../lib/coins';
+import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
 import { nextGameReward, titleOf } from '../lib/progress';
 import { LevelBadge } from './LevelBadge';
 import {
+  BET_STEPS,
   MIN_REWARD_GAME_SEC,
   RANKS,
   type Card,
@@ -86,6 +87,84 @@ export function PickSheet({ count, who, claim, onPick, onClose }: PickSheetProps
   );
 }
 
+interface PeekSheetProps {
+  count: number;
+  /** cards already peeked at in this play */
+  peeked: { index: number; card: Card }[];
+  left: number;
+  onPeek: (index: number) => Promise<void>;
+  onClose: () => void;
+}
+
+/** tap a face-down card of the last play to see it; only you see it */
+export function PeekSheet({ count, peeked, left, onPeek, onClose }: PeekSheetProps) {
+  const [busy, setBusy] = useState(false);
+  const seen = new Map(peeked.map((p) => [p.index, p.card]));
+  return (
+    <Backdrop onClose={onClose}>
+      <h3>🔍 Peek at a card</h3>
+      <p className="muted small">
+        Tap a card to see it secretly. Others only see that you peeked. {left} peek{left === 1 ? '' : 's'} left this game.
+      </p>
+      <div className="pick-row">
+        {Array.from({ length: count }, (_, i) => {
+          const card = seen.get(i);
+          return card ? (
+            <PlayingCard key={i} card={card} size={count > 8 ? 'md' : 'lg'} className="flip" />
+          ) : (
+            <PlayingCard
+              key={i}
+              faceDown
+              size={count > 8 ? 'md' : 'lg'}
+              className={cx('pick-card', (left === 0 || busy) && 'disabled')}
+              onClick={
+                left > 0 && !busy
+                  ? async () => {
+                      setBusy(true);
+                      await onPeek(i);
+                      setBusy(false);
+                    }
+                  : undefined
+              }
+            />
+          );
+        })}
+      </div>
+      <button className="btn ghost block" onClick={onClose}>
+        Done
+      </button>
+    </Backdrop>
+  );
+}
+
+/** pick how many coins to bet on the next Bluff call, before tapping Bluff */
+export function BetSheet({ limit, value, onPick, onClose }: { limit: number; value: number; onPick: (n: number) => void; onClose: () => void }) {
+  const steps = BET_STEPS.filter((n) => n <= limit);
+  return (
+    <Backdrop onClose={onClose}>
+      <h3>🎲 Bet on your Bluff call</h3>
+      <p className="bet-note">
+        Pick your bet <b>first</b>, then tap <b>Bluff!</b> Right call: you win it from them. Wrong call: you pay it. Coins move when the
+        game ends.
+      </p>
+      <div className="stake-grid">
+        <button className={cx('stake-chip', value === 0 && 'on')} onClick={() => onPick(0)}>
+          No bet
+        </button>
+        {steps.map((n) => (
+          <button key={n} className={cx('stake-chip', value === n && 'on')} onClick={() => onPick(n)}>
+            {compactCoins(n)}
+          </button>
+        ))}
+      </div>
+      <p className="muted small">You can bet up to {formatCoins(limit)} right now (never more than the stake).</p>
+      <button className="btn ghost block" onClick={onClose}>
+        Close
+      </button>
+    </Backdrop>
+  );
+}
+
 interface RevealProps {
   reveal: RevealView;
   name: (id: string) => string;
@@ -120,6 +199,12 @@ export function RevealOverlay({ reveal, name, onClose }: RevealProps) {
         <p className="reveal-result">
           <b>{name(reveal.loserId)}</b> {name(reveal.loserId) === 'You' ? 'pick' : 'picks'} up {reveal.pileCount} cards
         </p>
+        {reveal.bet > 0 && (
+          <p className="reveal-bet">
+            🎲 {name(reveal.loserId)} {name(reveal.loserId) === 'You' ? 'lose' : 'loses'} the 🪙 {formatCoins(reveal.bet)} bet to{' '}
+            {name(reveal.loserId === reveal.callerId ? reveal.playerId : reveal.callerId)}
+          </p>
+        )}
       </div>
     </Backdrop>
   );
@@ -138,17 +223,37 @@ export function GameOver({ view, onLobby, onRematch, startLevel }: GameOverProps
   const [busy, setBusy] = useState(false);
   const ranked = [...view.players].sort((a, b) => (a.place ?? 99) - (b.place ?? 99));
   const lost = (id: string) => view.loserIds.includes(id);
-  // when the host ended the game only 1st place wins; everyone else lost
+  const won = (id: string) => view.winnerIds.includes(id);
+  // teams, or the host ending early: only the winners win and everyone else lost
+  const winnersOnly = view.endedEarly || !!view.teams;
   const medal = (p: PublicPlayer) =>
-    p.place === 1 || (p.place && !view.endedEarly) ? (['🥇', '🥈', '🥉'][p.place - 1] ?? placeLabel(p.place)) : '🙈';
+    won(p.id) ? '🥇' : p.place && !winnersOnly ? (['🥇', '🥈', '🥉'][p.place - 1] ?? placeLabel(p.place)) : '🙈';
   const label = (p: PublicPlayer) =>
-    p.place === 1 ? '1st · Winner' : lost(p.id) ? (view.endedEarly ? 'Lost' : 'Loser') : p.place ? placeLabel(p.place) : '';
+    won(p.id)
+      ? `${p.place ? `${placeLabel(p.place)} · ` : ''}Winner`
+      : lost(p.id)
+        ? winnersOnly
+          ? 'Lost'
+          : 'Loser'
+        : p.place
+          ? placeLabel(p.place)
+          : '';
+  const winningTeam = view.teams && view.winnerIds.length > 0 ? (view.teams[0].includes(view.winnerIds[0]) ? '🔵' : '🟠') : null;
   const nameOf = (id: string) => (id === view.meId ? 'You' : (view.players.find((p) => p.id === id)?.name ?? 'Someone'));
   return (
     <Backdrop center>
       <div className="reveal gameover">
         <h3 className="reveal-title">{view.stopped ? 'Game stopped' : view.endedEarly ? 'Game ended' : 'Game over'}</h3>
-        {view.endedEarly && <p className="muted small">The host ended it: 1st place wins, everyone else loses</p>}
+        {winningTeam && (
+          <p className="team-win">
+            {winningTeam} Team {view.winnerIds.map(nameOf).join(' & ')} {view.winnerIds.includes(view.meId) ? 'win! 🎉' : 'win'}
+          </p>
+        )}
+        {view.endedEarly && (
+          <p className="muted small">
+            The host ended it: {view.teams ? "1st place's team wins" : '1st place wins'}, everyone else loses
+          </p>
+        )}
         <ol className="results">
           {ranked.map((p) => (
             <li key={p.id} className={cx(lost(p.id) && 'loser')}>
@@ -251,17 +356,22 @@ function CoinSummary({ view, nameOf, startLevel }: { view: RoomView; nameOf: (id
 
   const rows = view.coinResults.filter((r) => view.players.some((p) => p.id === r.playerId && p.registered));
   const mine = view.coinResults.find((r) => r.playerId === view.meId && r.gamesToday !== null);
-  const showRows = stake > 0 || rows.some((r) => r.bonus > 0);
+  const showRows = stake > 0 || rows.some((r) => r.bonus > 0 || r.bets !== 0);
   if (!showRows && !mine) return null;
   return (
     <div className="coin-results">
       <p className="label">Rewards</p>
-      {stake > 0 && <p className="muted small">Pot 🪙 {formatCoins(stake * view.players.length)} goes to the winner</p>}
+      {stake > 0 && (
+        <p className="muted small">
+          Pot 🪙 {formatCoins(stake * view.players.length)} {view.teams ? 'split by the winning team' : 'goes to the winner'}
+        </p>
+      )}
       {showRows &&
         rows.map((r) => (
           <div key={r.playerId} className="coin-row">
             <span className="grow">{nameOf(r.playerId)}</span>
             {stake > 0 && <span className={cx('coin-change', r.change >= 0 ? 'up' : 'down')}>🪙 {signedCoins(r.change)}</span>}
+            {r.bets !== 0 && <span className={cx('coin-change', r.bets > 0 ? 'up' : 'down')}>🎲 {signedCoins(r.bets)}</span>}
             {r.bonus > 0 && <span className="bonus-chip">🎯 +{formatCoins(r.bonus)}</span>}
           </div>
         ))}

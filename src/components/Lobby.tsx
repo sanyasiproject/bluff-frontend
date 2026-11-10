@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { api, errorText } from '../lib/api';
 import { useBack } from '../lib/back';
 import { avatarColor, cx } from '../lib/cards';
@@ -18,6 +18,7 @@ import { AccountCorner } from './AccountCorner';
 import { FriendsSheet } from './FriendsSheet';
 import { InvitePanel } from './InvitePanel';
 import { LevelBadge } from './LevelBadge';
+import { Backdrop } from './Overlays';
 import { PlayerSheet } from './PlayerSheet';
 import { QuickChat } from './QuickChat';
 
@@ -63,12 +64,134 @@ interface OptionProps {
   onClick: () => void;
 }
 
+/** a newer setting: title, a few words on what it does, and its switch on the right */
+function SettingRow({ title, desc, children }: { title: string; desc: string; children: ReactNode }) {
+  return (
+    <div className="setting-row">
+      <div className="grow">
+        <b>{title}</b>
+        <span>{desc}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/** two or more small choices side by side */
+function Choice<T>({ value, options, onPick }: { value: T; options: [T, string][]; onPick: (v: T) => void }) {
+  return (
+    <div className="mini-seg" role="group">
+      {options.map(([v, label]) => (
+        <button key={label} className={cx(v === value && 'on')} aria-pressed={v === value} onClick={() => v !== value && onPick(v)}>
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Option({ on, disabled, title, desc, onClick }: OptionProps) {
   return (
     <button type="button" className={cx('option', on && 'on')} disabled={disabled} aria-pressed={on} onClick={onClick}>
       <b>{title}</b>
       <span>{desc}</span>
     </button>
+  );
+}
+
+const TEAM_SLOTS: { team: 'a' | 'b'; label: string; slots: [number, number] }[] = [
+  { team: 'a', label: '🔵 Team blue', slots: [0, 2] },
+  { team: 'b', label: '🟠 Team orange', slots: [1, 3] },
+];
+
+/** 2v2: two teams of two slots; take an empty slot, or ask someone to swap with you */
+function TeamSlots({ view, actions, isHost }: { view: RoomView; actions: Actions; isHost: boolean }) {
+  const slots = view.slots ?? [null, null, null, null];
+  const iPlay = view.players.some((p) => p.id === view.meId);
+  const name = (id: string) => view.players.find((p) => p.id === id)?.name ?? '?';
+  const asked = (id: string) => view.swapAsks.some((a) => a.fromId === view.meId && a.toId === id);
+
+  const slot = (s: number) => {
+    const id = slots[s];
+    if (!id) {
+      return (
+        <li key={s} className="team-slot empty">
+          {iPlay ? (
+            <button className="link-btn" onClick={() => void actions.moveToSlot(s)}>
+              + Take this slot
+            </button>
+          ) : (
+            <span className="muted small">Empty</span>
+          )}
+        </li>
+      );
+    }
+    const me = id === view.meId;
+    return (
+      <li key={s} className={cx('team-slot', me && 'mine')}>
+        <span className="grow">
+          {name(id)}
+          {me && <span className="muted"> (you)</span>}
+        </span>
+        {!me && iPlay && (
+          <button className="btn small ghost" disabled={asked(id)} onClick={() => void actions.askSwap(id)}>
+            {asked(id) ? 'Asked…' : '🔄 Swap'}
+          </button>
+        )}
+      </li>
+    );
+  };
+
+  return (
+    <section className="panel">
+      <h2 className="section-title">
+        Teams <span className="muted">2 vs 2</span>
+      </h2>
+      <div className="team-columns">
+        {TEAM_SLOTS.map((t) => (
+          <div key={t.team} className={cx('team-col', `team-${t.team}`)}>
+            <p className="team-col-title">{t.label}</p>
+            <ul className="team-slot-list">{t.slots.map(slot)}</ul>
+          </div>
+        ))}
+      </div>
+      <p className="muted small">Tap an empty slot to join that team, or 🔄 Swap to ask someone to trade places.</p>
+      {isHost && slots.every(Boolean) && (
+        <button className="btn small ghost" onClick={() => void actions.shuffleTeams()}>
+          🔀 Shuffle teams
+        </button>
+      )}
+    </section>
+  );
+}
+
+/** someone asked to swap places with me: accept or say no */
+function SwapPopup({ view, actions }: { view: RoomView; actions: Actions }) {
+  const ask = view.swapAsks.find((a) => a.toId === view.meId);
+  if (!ask || !view.slots) return null;
+  const name = (id: string | null) => view.players.find((p) => p.id === id)?.name ?? '?';
+  const theirSlot = view.slots.indexOf(ask.fromId);
+  // after the swap I sit in their slot; my partner is whoever holds the slot opposite it
+  const partner = view.slots[(theirSlot + 2) % 4];
+  const team = theirSlot % 2 === 0 ? '🔵 blue' : '🟠 orange';
+  return (
+    <Backdrop center onClose={() => void actions.answerSwap(ask.fromId, false)}>
+      <div className="confirm-box">
+        <h3>🔄 {name(ask.fromId)} wants to swap places</h3>
+        <p className="muted">
+          You'd join team {team}
+          {partner && partner !== view.meId ? ` with ${name(partner)}` : ''}.
+        </p>
+        <div className="confirm-actions">
+          <button className="btn ghost" onClick={() => void actions.answerSwap(ask.fromId, false)}>
+            No thanks
+          </button>
+          <button className="btn primary" onClick={() => void actions.answerSwap(ask.fromId, true)}>
+            Swap
+          </button>
+        </div>
+      </div>
+    </Backdrop>
   );
 }
 
@@ -130,7 +253,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   const startBlock =
     view.players.length < 2
       ? 'Need at least 2 players'
-      : guests.length > 0
+      : view.config.teams && view.players.length !== 4
+        ? 'Teams need exactly 4 players'
+        : guests.length > 0
         ? `${names(guests)} must log in to play for coins`
         : short.length > 0
           ? `${names(short)} ${short.length > 1 ? "don't" : "doesn't"} have 🪙 ${formatCoins(stake)}`
@@ -293,6 +418,8 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         )}
       </section>
 
+      {view.config.teams && <TeamSlots view={view} actions={actions} isHost={isHost} />}
+
       {view.watchers.length > 0 && (
         <section className="panel">
           <h2 className="section-title">
@@ -335,6 +462,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             <span>{stake > 0 ? `🪙 ${formatCoins(stake)} each` : '🆓 Free game'}</span>
             <span>🎴 {view.config.decks === 2 ? '2 decks' : '1 deck'}</span>
             <span>{view.config.bluffRule === 'one' ? '👆 Pick one card' : '🃏 Show all cards'}</span>
+            {view.config.peeks > 0 && <span>🔍 {view.config.peeks} peek{view.config.peeks > 1 ? 's' : ''}</span>}
+            {view.config.bets && <span>🎲 Bets on calls</span>}
+            {view.config.teams && <span>👥 2 vs 2</span>}
           </div>
           {stake > 0 && <p className="muted small">Winner takes 🪙 {formatCoins(pot)}</p>}
         </section>
@@ -365,6 +495,23 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             onClick={() => set({ bluffRule: 'one' })}
           />
         </div>
+        <p className="label">Extras</p>
+        <SettingRow title="🔍 Peek power" desc="Secretly see one played card before calling">
+          <Choice value={view.config.peeks > 0} options={[[false, 'No'], [true, 'Yes']]} onPick={(on) => set({ peeks: on ? 1 : 0 })} />
+        </SettingRow>
+        {view.config.peeks > 0 && (
+          <SettingRow title="Peeks per player" desc="How many each player gets per game">
+            <Choice value={view.config.peeks} options={[[1, '1'], [2, '2'], [3, '3']]} onPick={(n) => set({ peeks: n })} />
+          </SettingRow>
+        )}
+        {coinsOn && stake > 0 && (
+          <SettingRow title="🎲 Bet your call" desc="Bet coins on your Bluff calls">
+            <Choice value={view.config.bets} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ bets: on })} />
+          </SettingRow>
+        )}
+        <SettingRow title="👥 Teams" desc="Partners play together, both must finish">
+          <Choice value={view.config.teams} options={[[false, 'Off'], [true, '2 vs 2']]} onPick={(on) => set({ teams: on })} />
+        </SettingRow>
       </section>}
 
       <details className="panel rules">
@@ -464,6 +611,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           )}
         </PlayerSheet>
       )}
+      <SwapPopup view={view} actions={actions} />
       {friendsOpen && <FriendsSheet auth={auth} roomCode={view.code} onInvite={actions.invite} onClose={() => setFriendsOpen(false)} />}
     </main>
   );

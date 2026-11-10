@@ -8,6 +8,7 @@ import {
   REACTIONS,
   type Announcement,
   type ChatEvent,
+  type Card,
   type ChatKind,
   type GameConfig,
   type InviteEvent,
@@ -234,7 +235,14 @@ export function useBluff() {
       setWatching: (watching: boolean, memberId?: string) => run(() => request('room:watch', { watching, memberId })),
       play: async (cardIds: string[], rank?: Rank) => (await run(() => request('game:play', { cardIds, rank }))) !== null,
       pass: () => run(() => request('game:pass')),
-      bluff: (playId: string, cardIndex?: number) => run(() => request('game:bluff', { playId, cardIndex })),
+      bluff: (playId: string, cardIndex?: number, bet = 0) => run(() => request('game:bluff', { playId, cardIndex, bet })),
+      /** the card comes back only to me; null if the peek was refused */
+      peek: async (playId: string, cardIndex: number) =>
+        (await run(() => request<{ card: Card }>('game:peek', { playId, cardIndex })))?.card ?? null,
+      shuffleTeams: () => run(() => request('room:teams')),
+      moveToSlot: (slot: number) => run(() => request('room:slot', { slot })),
+      askSwap: (memberId: string) => run(() => request('room:swap', { memberId })),
+      answerSwap: (memberId: string, accept: boolean) => run(() => request('room:swapAnswer', { memberId, accept })),
       chat: (kind: ChatKind, index: number) => run(() => request('chat:send', { kind, index })),
       reclaim: () => {
         replacedRef.current = false;

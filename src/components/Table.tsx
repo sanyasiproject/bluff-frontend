@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import { avatarColor, claimText, cx, placeLabel, rankPlural } from '../lib/cards';
+import { avatarColor, claimText, cx, placeLabel, rankPlural, SUIT_SYMBOL } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
 import { sfx } from '../lib/sounds';
@@ -8,7 +8,7 @@ import type { Card, PublicPlayer, Rank, RoomView } from '../types';
 import type { Actions, ChatBubble } from '../useBluff';
 import { FlyingCards, type Flight } from './FlyingCards';
 import { Hand } from './Hand';
-import { Backdrop, GameOver, PickSheet, PlayersSheet, RankSheet, RevealOverlay } from './Overlays';
+import { Backdrop, BetSheet, GameOver, PeekSheet, PickSheet, PlayersSheet, RankSheet, RevealOverlay } from './Overlays';
 import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
 
@@ -24,11 +24,21 @@ interface SeatProps {
   onClick?: () => void;
   /** where played cards fly from */
   seatRef?: (el: HTMLElement | null) => void;
+  /** 2v2: which team, and whether they're my partner */
+  team?: 'a' | 'b' | null;
+  partner?: boolean;
 }
 
-function Seat({ player, turn, passed, viewing, action, bubble, onClick, seatRef }: SeatProps) {
+function Seat({ player, turn, passed, viewing, action, bubble, onClick, seatRef, team, partner }: SeatProps) {
   const badge = player.place ? placeLabel(player.place) : !player.connected ? 'offline' : passed ? 'pass' : null;
-  const className = cx('seat', turn && 'turn', viewing && 'viewing', !player.connected && 'offline', player.place && 'done');
+  const className = cx(
+    'seat',
+    turn && 'turn',
+    viewing && 'viewing',
+    !player.connected && 'offline',
+    player.place && 'done',
+    team && `team-${team}`,
+  );
   const body = (
     <>
       {viewing && <span className="eye-badge">👁</span>}
@@ -37,7 +47,10 @@ function Seat({ player, turn, passed, viewing, action, bubble, onClick, seatRef 
         {player.name[0]?.toUpperCase()}
         {player.level && <span className="seat-lv">{player.level}</span>}
       </span>
-      <span className="seat-name">{player.name}</span>
+      <span className="seat-name">
+        {partner && '🤝 '}
+        {player.name}
+      </span>
       <span className="seat-count">
         <i className="mini-back" />
         {player.cardCount}
@@ -150,7 +163,7 @@ function GameMenu({
         )}
         {onEnd && winner && (
           <button className="btn block" onClick={onEnd}>
-            🏁 End game · {winner.name} wins
+            🏁 End game · {view.teams ? `${winner.name}'s team` : winner.name} wins
           </button>
         )}
         {onStop && (
@@ -183,7 +196,11 @@ const DOUBLE_TAP_MS = 350;
 
 export function Table({ view, actions, bubbles }: { view: RoomView; actions: Actions; bubbles: ChatBubble[] }) {
   const [selected, setSelected] = useState<string[]>([]);
-  const [sheet, setSheet] = useState<'rank' | 'pick' | null>(null);
+  const [sheet, setSheet] = useState<'rank' | 'pick' | 'peek' | 'bet' | 'partner' | null>(null);
+  /** coins to bet on my next bluff call (0 = none) */
+  const [bet, setBet] = useState(0);
+  /** cards I peeked at, kept for the play they belong to */
+  const [peeked, setPeeked] = useState<{ playId: string; index: number; card: Card }[]>([]);
   const [showReveal, setShowReveal] = useState(false);
   const [sound, setSound] = useState(isSoundOn);
   const [busy, setBusy] = useState(false);
@@ -207,7 +224,15 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
   const playing = view.phase === 'playing';
   const myTurn = playing && view.turnId === view.meId;
   const lp = view.lastPlay;
-  const canBluff = playing && !!lp && lp.playerId !== view.meId && (me?.cardCount ?? 0) > 0;
+  // 2v2: my partner's play can't be challenged
+  const teamOf = (id: string): 'a' | 'b' | null =>
+    view.teams?.[0].includes(id) ? 'a' : view.teams?.[1].includes(id) ? 'b' : null;
+  const myTeam = view.teams?.find((t) => t.includes(view.meId));
+  const partnerId = myTeam?.find((id) => id !== view.meId) ?? null;
+  const canBluff = playing && !!lp && lp.playerId !== view.meId && lp.playerId !== partnerId && (me?.cardCount ?? 0) > 0;
+  // a bet only counts while I can still afford it
+  const betNow = bet <= view.betLimit ? bet : 0;
+  const peekedNow = lp ? peeked.filter((p) => p.playId === lp.id) : [];
   const bluffLocked = view.bluffCallsLeft === 0;
   const isHost = view.hostId === view.meId;
   // once someone has finished 1st the host may end the game; everyone else then loses
@@ -257,7 +282,7 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
   }, [view.reveal?.playId]);
 
   useEffect(() => {
-    setSheet((s) => (s === 'pick' ? null : s));
+    setSheet((s) => (s === 'pick' || s === 'peek' ? null : s));
   }, [lp?.id]);
 
   useEffect(() => {
@@ -329,8 +354,14 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
       return;
     }
     setBusy(true);
-    await actions.bluff(lp.id);
+    if ((await actions.bluff(lp.id, undefined, betNow)) !== null) setBet(0);
     setBusy(false);
+  };
+
+  const peekAt = async (index: number) => {
+    if (!lp) return;
+    const card = await actions.peek(lp.id, index);
+    if (card) setPeeked((prev) => [...prev, { playId: lp.id, index, card }]);
   };
 
   const toggleSound = () => {
@@ -348,6 +379,11 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
     <main className="table">
       <header className="topbar">
         <span className="code-chip">{view.code}</span>
+        {partnerId && (
+          <span className={cx('team-chip', `team-${teamOf(view.meId)}`)}>
+            {teamOf(view.meId) === 'a' ? '🔵' : '🟠'} with {name(partnerId)}
+          </span>
+        )}
         {view.config.stake > 0 && <span className="pot-chip">🪙 Pot {compactCoins(view.config.stake * view.players.length)}</span>}
         <span className="grow" />
         <div className="topbar-actions">
@@ -369,6 +405,8 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
             action={lp?.playerId === p.id ? `${lp.count} × ${lp.rank}` : null}
             bubble={bubbleOf(p.id)}
             onClick={watching ? () => setPinned(pinnedId === p.id ? null : p.id) : undefined}
+            team={teamOf(p.id)}
+            partner={p.id === partnerId}
             seatRef={(el) => {
               if (el) seatEls.current.set(p.id, el);
               else seatEls.current.delete(p.id);
@@ -401,12 +439,44 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
             onClick={callBluff}
           >
             {bluffLocked ? 'Bluff locked' : 'Bluff!'}
-            {bluffLocked ? <small>Play or pass first</small> : view.bluffCallsLeft === 1 && <small>1 call left</small>}
+            {bluffLocked ? (
+              <small>Play or pass first</small>
+            ) : (
+              (betNow > 0 || view.bluffCallsLeft === 1) && (
+                <small>
+                  {[betNow > 0 && `🪙 ${compactCoins(betNow)} bet`, view.bluffCallsLeft === 1 && '1 call left'].filter(Boolean).join(' · ')}
+                </small>
+              )
+            )}
           </button>
+        )}
+        {canBluff && lp && !bluffLocked && (view.peeksLeft > 0 || view.betLimit >= 50) && (
+          <div className="bluff-tools">
+            {view.peeksLeft > 0 && (
+              <button className="btn small" onClick={() => setSheet('peek')}>
+                🔍 Peek · {view.peeksLeft}
+              </button>
+            )}
+            {view.betLimit >= 50 && (
+              <button className={cx('btn small', betNow > 0 && 'primary')} onClick={() => setSheet('bet')}>
+                🪙 {betNow > 0 ? `Bet ${compactCoins(betNow)}` : 'Bet'}
+              </button>
+            )}
+          </div>
+        )}
+        {canBluff && peekedNow.length > 0 && (
+          <p className="peeked-line">
+            {peekedNow.map((p) => (
+              <span key={p.index}>
+                🔍 Card {p.index + 1}: <b>{p.card.rank}</b>
+                {SUIT_SYMBOL[p.card.suit]}
+              </span>
+            ))}
+          </p>
         )}
         {canEnd && (
           <button className="btn small ghost end-btn" onClick={() => setConfirmEnd(true)}>
-            🏁 End game · {winner!.name} wins
+            🏁 End game · {view.teams ? `${winner!.name}'s team` : winner!.name} wins
           </button>
         )}
       </section>
@@ -428,6 +498,11 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
       )}
 
       <section ref={handRef} className={cx('hand-area', watching && 'hidden', myTurn && 'my-turn')}>
+        {view.partnerHand && partnerId && (
+          <button className={cx('partner-btn', `team-${teamOf(view.meId)}`)} onClick={() => setSheet('partner')}>
+            🤝 {name(partnerId)}'s cards · {view.partnerHand.length}
+          </button>
+        )}
         <div className="hand-head">
           {myTurn ? <span className="your-turn">YOUR TURN</span> : <span>Your cards · {view.hand.length}</span>}
           {myTurn && <span className="turn-hint">{status}</span>}
@@ -479,9 +554,41 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
           count={lp.count}
           who={name(lp.playerId)}
           claim={claimText(lp.count, lp.rank)}
-          onPick={(i) => {
+          onPick={async (i) => {
             setSheet(null);
-            void actions.bluff(lp.id, i);
+            if ((await actions.bluff(lp.id, i, betNow)) !== null) setBet(0);
+          }}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet === 'peek' && lp && (
+        <PeekSheet
+          count={lp.count}
+          peeked={peekedNow}
+          left={view.peeksLeft}
+          onPeek={peekAt}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet === 'partner' && view.partnerHand && partnerId && (
+        <Backdrop onClose={() => setSheet(null)}>
+          <h3>
+            🤝 {name(partnerId)}'s cards · {view.partnerHand.length}
+          </h3>
+          <p className="muted small">Only you and {name(partnerId)} see these. Plan together, the other team can't.</p>
+          <Hand cards={view.partnerHand} />
+          <button className="btn ghost block" onClick={() => setSheet(null)}>
+            Close
+          </button>
+        </Backdrop>
+      )}
+      {sheet === 'bet' && (
+        <BetSheet
+          limit={view.betLimit}
+          value={betNow}
+          onPick={(n) => {
+            setBet(n);
+            setSheet(null);
           }}
           onClose={() => setSheet(null)}
         />
@@ -538,8 +645,13 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
           <div className="confirm-box">
             <h3>End the game now?</h3>
             <p className="muted">
-              {winner.name} finished 1st and wins. Everyone else loses
-              {view.config.stake > 0 ? ` and the 🪙 ${formatCoins(view.config.stake * view.players.length)} pot goes to ${winner.name}` : ''}.
+              {view.teams
+                ? `${winner.name} finished 1st, so their team wins. The other team loses`
+                : `${winner.name} finished 1st and wins. Everyone else loses`}
+              {view.config.stake > 0
+                ? ` and the 🪙 ${formatCoins(view.config.stake * view.players.length)} pot ${view.teams ? 'is split by their team' : `goes to ${winner.name}`}`
+                : ''}
+              .
             </p>
             <div className="confirm-actions">
               <button className="btn ghost" onClick={() => setConfirmEnd(false)}>
