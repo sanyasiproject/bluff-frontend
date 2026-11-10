@@ -37,10 +37,11 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
 }
 
 /** true when the server has a database, i.e. accounts are available */
-export async function accountsAvailable(): Promise<boolean> {
+/** whether the server has accounts, and whether guests may play right now */
+export async function serverStatus(): Promise<{ accountsOn: boolean; guestsAllowed: boolean }> {
   const res = await fetch(`${SERVER_URL}/health`);
-  const data = (await res.json()) as { accounts?: string };
-  return data.accounts === 'on';
+  const data = (await res.json()) as { accounts?: string; guests?: boolean };
+  return { accountsOn: data.accounts === 'on', guestsAllowed: data.guests !== false };
 }
 
 export const errorText = (err: unknown) => (err instanceof Error ? err.message : 'Something went wrong');

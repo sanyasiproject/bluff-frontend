@@ -40,7 +40,7 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 
 - When the backend has a database, the home screen offers **Log in / Sign up**; otherwise only guest play is shown.
 - Logged-in players play under their account name; wins, losses, stats and coins are saved. **My stats** shows lifetime numbers and the last 10 games.
-- Admins get an **Admin** button: search all users, give or take coins (with a reason), make someone admin.
+- Admins get an **Admin** button: a **Guest play** On/Off switch (asks first; when off, guests see "Log in to play" instead of Create/Join), search all users, give or take coins (with a reason), make someone admin.
 - The login token is kept in the browser and sent as `Authorization: Bearer …` to the API and in the socket handshake.
 
 ## Coins, friends and hosting

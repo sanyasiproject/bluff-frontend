@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { accountsAvailable, api, ApiError } from './lib/api';
+import { api, ApiError, serverStatus } from './lib/api';
 import { reconnectSocket, socket } from './lib/socket';
 import { loadAuthToken, saveAuthToken } from './lib/storage';
 import type { AuthResponse, GameSummary, ProfileOverview, PublicUser } from './types';
@@ -12,6 +12,8 @@ export function useAuth() {
   const [checking, setChecking] = useState(() => loadAuthToken() !== null);
   /** null until known; false when the server runs guest-only */
   const [accountsOn, setAccountsOn] = useState<boolean | null>(null);
+  /** an admin can turn guest play off: then everyone must log in to play */
+  const [guestsAllowed, setGuestsAllowed] = useState(true);
   /** daily login bonus just received, shown once as a popup */
   const [bonus, setBonus] = useState(0);
   /** friend requests waiting for me, shown as a red count */
@@ -46,8 +48,11 @@ export function useAuth() {
   useEffect(() => {
     void refresh();
     const check = () =>
-      accountsAvailable()
-        .then(setAccountsOn)
+      serverStatus()
+        .then((s) => {
+          setAccountsOn(s.accountsOn);
+          setGuestsAllowed(s.guestsAllowed);
+        })
         .catch(() => setAccountsOn(false));
     void check();
     // a sleeping or restarting server can fail the first check; look again whenever the game reconnects
@@ -61,10 +66,14 @@ export function useAuth() {
     socket.on('friends:changed', onFriends);
     // a friend sent me coins
     socket.on('gift:received', onFriends);
+    // an admin turned guest play on or off
+    const onSettings = (s: { guestsAllowed: boolean }) => setGuestsAllowed(s.guestsAllowed);
+    socket.on('settings:changed', onSettings);
     return () => {
       socket.off('connect', onConnect);
       socket.off('friends:changed', onFriends);
       socket.off('gift:received', onFriends);
+      socket.off('settings:changed', onSettings);
     };
   }, [refresh]);
 
@@ -81,6 +90,7 @@ export function useAuth() {
     token,
     checking,
     accountsOn,
+    guestsAllowed,
     bonus,
     clearBonus: () => setBonus(0),
     friendRequests,

@@ -218,6 +218,10 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>On a user's page: give or take coins with a reason, rename, make admin or player, block or unblock, reset password.</li>
           <li>Block and role changes ask first. Every change is kept in the admin history (10 per page).</li>
           <li>You can't change your own role or block yourself.</li>
+          <li>
+            Guest play (top of the Admin page): turn it off and everyone must log in to create or join a room. Guests already in a room can
+            finish their game. It asks first, and open apps update straight away.
+          </li>
         </ul>
       </Section>
 

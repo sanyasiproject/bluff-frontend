@@ -4,6 +4,7 @@ import { loadName, loadSavedSession, loadTabSession } from '../lib/storage';
 import type { Auth } from '../useAuth';
 import type { Actions, ConnStatus, PendingWatch } from '../useBluff';
 import { AccountCorner } from './AccountCorner';
+import { AccountSheet } from './AccountSheet';
 import { HeroFan, ShineTitle, SuitDrift } from './Ambient';
 import { InstallCard } from './InstallCard';
 
@@ -23,6 +24,7 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
   const [invite, setInvite] = useState(inviteCode);
   const [busy, setBusy] = useState(false);
   const [slow, setSlow] = useState(false);
+  const [accountSheet, setAccountSheet] = useState<'login' | 'register' | null>(null);
   const autoJoin = useRef<{ connectionId: string | null; tries: number }>({ connectionId: null, tries: 0 });
   const saved = loadSavedSession();
   const online = status === 'online';
@@ -52,7 +54,8 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
     if (loadTabSession()?.code === invite) return; // useBluff already rejoins this tab's seat
     void go(async () => {
       if (saved?.code === invite && (await actions.rejoinSaved()) !== null) return;
-      if (playName) await actions.join(invite, playName);
+      // guests can't join while guest play is off; the home screen asks them to log in
+      if (playName && !locked) await actions.join(invite, playName);
     });
   }, [invite, online, connectionId, auth.checking]);
 
@@ -78,8 +81,11 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
     </>
   );
 
+  // an admin turned guest play off: guests must log in before they can create or join a room
+  const locked = !auth.user && auth.accountsOn === true && !auth.guestsAllowed && !auth.checking;
+
   const guestHint =
-    !auth.user && auth.accountsOn && !auth.checking ? (
+    !auth.user && auth.accountsOn && !auth.checking && !locked ? (
       <p className="guest-hint">
         Playing as a <b>guest</b> · log in to earn coins and save wins
       </p>
@@ -121,6 +127,29 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
             Cancel
           </button>
         </section>
+      ) : locked ? (
+        <>
+          {saved && (
+            <button className="panel rejoin" disabled={!online || busy} onClick={() => go(actions.rejoinSaved)}>
+              <span>
+                Rejoin room <b>{saved.code}</b> as {saved.name}
+              </span>
+              <span aria-hidden>→</span>
+            </button>
+          )}
+          <section className="panel stack guest-locked">
+            <p className="lock-title">🔒 Log in to play</p>
+            <p className="muted small">
+              Guest play is off right now. Log in or make a free account to {invite ? `join room ${invite}` : 'create or join a room'}.
+            </p>
+            <button className="btn primary block shine" onClick={() => setAccountSheet('login')}>
+              Log in
+            </button>
+            <button className="btn ghost block" onClick={() => setAccountSheet('register')}>
+              Sign up
+            </button>
+          </section>
+        </>
       ) : invite ? (
         <section className="panel stack invite-card">
           <p className="label">You're invited</p>
@@ -194,6 +223,7 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
       )}
 
       <InstallCard />
+      {accountSheet && <AccountSheet initial={accountSheet} auth={auth} onClose={() => setAccountSheet(null)} />}
 
     </main>
   );

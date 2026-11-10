@@ -4242,3 +4242,27 @@ body::after {
   font-weight: 900;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
 }
+
+/* ---------- admin: guest play switch; home: log-in card when guests can't play ---------- */
+
+.guest-switch {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setting-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.guest-locked {
+  border-color: rgba(246, 196, 83, 0.45);
+  text-align: center;
+}
+
+.lock-title {
+  font-size: 20px;
+  font-weight: 900;
+}
