@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AdminPanel } from './components/AdminPanel';
+import { Flyers } from './components/Flyers';
 import { Home } from './components/Home';
 import { Lobby } from './components/Lobby';
 import { BonusPopup, InvitePopup } from './components/Popups';
@@ -13,7 +14,7 @@ import { useAuth } from './useAuth';
 import { useBluff } from './useBluff';
 
 export default function App() {
-  const { status, connectionId, view, notes, reactions, bubbles, invites, replaced, pendingWatch, actions } = useBluff();
+  const { status, connectionId, view, notes, reactions, bubbles, flyers, invites, replaced, pendingWatch, actions } = useBluff();
   const auth = useAuth();
   const [adminOpen, setAdminOpen] = useState(false);
   // the intro stays until the server first answers and a saved login is checked, and at least a moment
@@ -71,7 +72,7 @@ export default function App() {
   } else if (view.phase === 'lobby') {
     screen = <Lobby view={view} actions={actions} auth={auth} />;
   } else {
-    screen = <Table view={view} actions={actions} bubbles={bubbles} />;
+    screen = <Table view={view} actions={actions} bubbles={bubbles} auth={auth} />;
   }
 
   const invite = invites[invites.length - 1];
@@ -83,6 +84,7 @@ export default function App() {
       {view && !replaced && status !== 'online' && <div className="conn-pill">Reconnecting…</div>}
       <Toasts notes={notes} />
       <Reactions items={reactions} />
+      <Flyers items={flyers} onDone={actions.dropFlyer} />
       {invite && (
         <InvitePopup
           invite={invite}

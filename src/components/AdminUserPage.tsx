@@ -16,6 +16,7 @@ function historyText(h: AuditEntry): [string, string] {
   if (h.action === 'coins') return ['🪙', `${signedCoins(h.amount ?? 0)} coins${h.reason ? ` · ${h.reason}` : ''}`];
   if (h.action === 'make_admin') return ['🛡', 'Made admin'];
   if (h.action === 'password') return ['🔑', h.detail ?? 'Password reset'];
+  if (h.action === 'gift') return ['🎁', `${signedCoins(h.amount ?? 0)} coins${h.detail ? ` · ${h.detail}` : ''}`];
   return ['✏️', h.detail ?? 'Account changed'];
 }
 

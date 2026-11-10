@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
+import { api } from '../lib/api';
 import { avatarColor, claimText, cx, placeLabel, rankPlural, SUIT_SYMBOL } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
 import { confettiAt } from '../lib/motion';
 import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
-import type { Card, PublicPlayer, Rank, RoomView } from '../types';
+import type { Card, FriendsResponse, PublicPlayer, Rank, RoomView } from '../types';
+import type { Auth } from '../useAuth';
 import type { Actions, ChatBubble } from '../useBluff';
 import { FlyingCards, type Flight } from './FlyingCards';
 import { Hand } from './Hand';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop, BetSheet, GameOver, PeekSheet, PickSheet, PlayersSheet, RankSheet, RevealOverlay } from './Overlays';
+import { GiftRow, ThrowRow } from './PlayerActions';
 import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
 
@@ -24,6 +27,8 @@ interface SeatProps {
   action?: string | null;
   bubble?: ChatBubble | null;
   onClick?: () => void;
+  /** what tapping the seat does, for screen readers */
+  label?: string;
   /** where played cards fly from */
   seatRef?: (el: HTMLElement | null) => void;
   /** 2v2: which team, and whether they're my partner */
@@ -31,7 +36,7 @@ interface SeatProps {
   partner?: boolean;
 }
 
-function Seat({ player, turn, passed, viewing, action, bubble, onClick, seatRef, team, partner }: SeatProps) {
+function Seat({ player, turn, passed, viewing, action, bubble, onClick, label, seatRef, team, partner }: SeatProps) {
   const badge = player.place ? placeLabel(player.place) : !player.connected ? 'offline' : passed ? 'pass' : null;
   const className = cx(
     'seat',
@@ -69,20 +74,42 @@ function Seat({ player, turn, passed, viewing, action, bubble, onClick, seatRef,
     </>
   );
   return onClick ? (
-    <button
-      ref={seatRef}
-      type="button"
-      className={className}
-      aria-pressed={viewing}
-      aria-label={`See ${player.name}'s cards`}
-      onClick={onClick}
-    >
+    <button ref={seatRef} type="button" className={className} data-member={player.id} aria-pressed={viewing} aria-label={label} onClick={onClick}>
       {body}
     </button>
   ) : (
-    <div ref={seatRef} className={className}>
+    <div ref={seatRef} className={className} data-member={player.id}>
       {body}
     </div>
+  );
+}
+
+/** tapping someone's seat: throw an emoji, or send coins if they're a friend */
+function SeatSheet({ player, auth, onThrow, onClose }: { player: PublicPlayer; auth: Auth; onThrow: (index: number) => void; onClose: () => void }) {
+  const [friend, setFriend] = useState(false);
+  useEffect(() => {
+    if (!auth.user || !player.username) return;
+    api<FriendsResponse>('/friends', { token: auth.token })
+      .then((r) => setFriend(r.friends.some((f) => f.username === player.username)))
+      .catch(() => setFriend(false));
+  }, [player.username]);
+  return (
+    <Backdrop onClose={onClose}>
+      <h3>
+        {player.name} <LevelBadge level={player.level} />
+      </h3>
+      <ThrowRow
+        onThrow={(i) => {
+          onThrow(i);
+          // close so the flight is visible
+          onClose();
+        }}
+      />
+      {friend && <GiftRow auth={auth} name={player.name} target={{ memberId: player.id }} />}
+      <button className="btn ghost block" onClick={onClose}>
+        Close
+      </button>
+    </Backdrop>
   );
 }
 
@@ -204,7 +231,7 @@ function useOnChange<T>(value: T, fn: (next: T) => void) {
 const BUBBLE_MS = 4000;
 const DOUBLE_TAP_MS = 350;
 
-export function Table({ view, actions, bubbles }: { view: RoomView; actions: Actions; bubbles: ChatBubble[] }) {
+export function Table({ view, actions, bubbles, auth }: { view: RoomView; actions: Actions; bubbles: ChatBubble[]; auth: Auth }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [sheet, setSheet] = useState<'rank' | 'pick' | 'peek' | 'bet' | 'partner' | null>(null);
   /** coins to bet on my next bluff call (0 = none) */
@@ -274,11 +301,12 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
   const perPlayer = (view.config.decks * 52) / Math.max(view.players.length, 1);
   const freshDeal = playing && !lp && view.pileCount === 0 && view.players.every((p) => Math.abs(p.cardCount - perPlayer) < 1);
 
-  // quick messages: on the sender's seat, or as a line in the middle for me and watchers
+  // quick messages also show on the sender's seat (they float up the screen for everyone)
   const fresh = bubbles.filter((b) => Date.now() - b.at < BUBBLE_MS);
   const bubbleOf = (id: string) => [...fresh].reverse().find((b) => b.from === id) ?? null;
-  const seatIds = new Set(opponents.map((p) => p.id));
-  const middleChats = fresh.filter((b) => !seatIds.has(b.from)).slice(-2);
+  /** whose seat I tapped, to throw an emoji or send coins */
+  const [target, setTarget] = useState<string | null>(null);
+  const targetPlayer = view.players.find((p) => p.id === target && p.id !== view.meId);
 
   // drop selected cards that left the hand
   useEffect(() => {
@@ -505,7 +533,8 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
             viewing={watching && p.id === followId}
             action={lp?.playerId === p.id ? `${lp.count} × ${lp.rank}` : null}
             bubble={bubbleOf(p.id)}
-            onClick={watching ? () => setPinned(pinnedId === p.id ? null : p.id) : undefined}
+            onClick={watching ? () => setPinned(pinnedId === p.id ? null : p.id) : () => setTarget(p.id)}
+            label={watching ? `See ${p.name}'s cards` : `Throw an emoji at ${p.name}`}
             team={teamOf(p.id)}
             partner={p.id === partnerId}
             seatRef={(el) => {
@@ -528,11 +557,6 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
         )}
         {watching && lp && view.watch?.lastPlayCards && <TruthRow cards={view.watch.lastPlayCards} claim={lp.rank} />}
         {!myTurn && status && <p className="turn-status">{status}</p>}
-        {middleChats.map((b) => (
-          <p key={b.key} className="chat-line">
-            <b>{name(b.from) === 'Someone' ? (view.watchers.find((w) => w.id === b.from)?.name ?? 'Someone') : name(b.from)}:</b> {b.text}
-          </p>
-        ))}
         {canBluff && lp && (
           <button
             className={cx('btn danger bluff-btn', bluffLocked && 'locked')}
@@ -598,7 +622,11 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
         </section>
       )}
 
-      <section ref={handRef} className={cx('hand-area', watching && 'hidden', myTurn && 'my-turn')}>
+      <section
+        ref={handRef}
+        className={cx('hand-area', watching && 'hidden', myTurn && 'my-turn')}
+        data-member={watching ? undefined : view.meId}
+      >
         {view.partnerHand && partnerId && (
           <button className={cx('partner-btn', `team-${teamOf(view.meId)}`)} onClick={() => setSheet('partner')}>
             🤝 {name(partnerId)}'s cards · {view.partnerHand.length}
@@ -704,6 +732,9 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
           onRematch={isHost ? actions.rematch : undefined}
           startLevel={startLevel.current}
         />
+      )}
+      {targetPlayer && (
+        <SeatSheet player={targetPlayer} auth={auth} onThrow={(i) => void actions.throwAt(targetPlayer.id, i)} onClose={() => setTarget(null)} />
       )}
       {flights.map((f) => (
         <FlyingCards key={f.key} flight={f} onDone={() => setFlights((all) => all.filter((x) => x.key !== f.key))} />

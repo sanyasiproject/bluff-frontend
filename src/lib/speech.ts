@@ -45,12 +45,12 @@ function pickVoice(): void {
   voice = voices[0] ?? null;
 }
 
-/** nudges pitch when no voice of the wanted gender exists on this phone */
+/** many Android phones have one voice per language, so without a matching voice the pitch alone makes Boy and Girl clearly different */
 function pitch(): number {
   const g = voice ? genderOf(voice) : null;
   if (g === gender) return 1;
-  if (g === null) return gender === 'female' ? 1.1 : 0.9;
-  return gender === 'female' ? 1.3 : 0.75;
+  if (g === null) return gender === 'female' ? 1.15 : 0.6;
+  return gender === 'female' ? 1.35 : 0.55;
 }
 
 if (synth) {
@@ -108,7 +108,7 @@ export function speak(text: string, force = false): void {
   if (voice) u.voice = voice;
   u.lang = voice?.lang ?? 'en-IN';
   u.pitch = pitch();
-  u.rate = 1.05;
+  u.rate = gender === 'male' ? 0.98 : 1.05;
   u.onend = u.onerror = () => {
     queued = Math.max(0, queued - 1);
   };

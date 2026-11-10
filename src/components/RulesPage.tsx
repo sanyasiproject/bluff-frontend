@@ -225,7 +225,10 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         <ul>
           <li>Install from the home screen card (Android: Install; iPhone: Share → Add to Home Screen).</li>
           <li>Invite with the WhatsApp, Share or Copy buttons; the link drops friends straight into the room.</li>
-          <li>💬 quick chat: emoji reactions and short messages. 🔊 sound and voice can be muted from the ⋯ menu.</li>
+          <li>💬 quick chat: emoji and short messages float up the screen (messages wait a second at the top). 🔊 sound and voice can be muted from the ⋯ menu.</li>
+          <li>Voice: Girl or Boy in the lobby. Phones without a male voice get a deeper version of the same voice.</li>
+          <li>Throw an emoji 🌹🍅💣 at someone: tap their seat in a game, or their name in the lobby. Everyone sees it fly and land: the bomb explodes, tomato and egg splat, kiss and rose pulse, clap claps, laugh rocks, party pops.</li>
+          <li>🎁 Gift coins to a friend (10, 25, 50 or 100) from the same places or their card in Friends. Up to 100 coins a day in total; in a room everyone sees the coins fly.</li>
           <li>The phone's back button closes one step at a time and only leaves the app from the home page.</li>
           <li>Tap the cards on the home screen to peek at the middle one. Animations follow the phone's reduce-motion setting.</li>
           <li>If the free server is asleep, the intro screen waits until it wakes (up to about a minute).</li>

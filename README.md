@@ -64,13 +64,14 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 ## Game screen
 
 - Top bar: room code, pot, 👀 join requests (host, only when someone is waiting), 💬 quick chat and ⋯ (voice, people, stop game, leave).
-- Quick chat is a small tray (emoji row + message pills); messages show as speech bubbles on the sender's seat.
+- Quick chat is a small tray (emoji row + message pills); messages float up like emoji, wait a second at the top, and also show on the sender's seat.
+- Tap an opponent's seat to throw an emoji at them (🌹💋👏🎉😂🍅🥚💣) or, for friends, send 🎁 coins. Everyone sees it fly and land with its own effect (`components/Flyers.tsx`): 💣 explodes and shakes the seat, 🍅 and 🥚 splat and drip, 💋 beats with hearts, 🌹 sways with petals, 👏 claps, 😂 rocks with HA HA, 🎉 pops confetti.
 - Your turn: gold glow and a YOUR TURN bar above your cards. Seats show each player's last move (e.g. 3 × Q).
 - Bluff is limited to 2 calls in a row; the button shows "last call", then "Bluff locked" until you play or pass.
 
 ## Chat, watching and awards
 
-- **💬 Quick chat** (lobby and table): 8 emoji reactions float up on every screen; 26 quick messages appear with the sender's name. Edit the lists in `src/types.ts` (and the same file in the backend).
+- **💬 Quick chat** (lobby and table): 8 emoji reactions and 26 quick messages float up on every screen with the sender's name (never the top banner). Edit the lists in `src/types.ts` (and the same file in the backend).
 - **Watch mode:** joining when 5 are seated, or mid-game once the host lets you in, makes you a watcher: you see the table, hear the voice and can chat; you get a seat in the next game. In the lobby anyone can switch **🎮 Playing / 👀 Watching**; a chosen watcher keeps watching until they switch back. The host can also move anyone from their player card (Move to watching / playing).
   - Watchers see the real cards of each play face up (green = matches the claim, red = bluff).
   - Watchers see one player's hand at a time: it follows whoever's turn it is, or tap a player to stick to them ("Follow turn" goes back).

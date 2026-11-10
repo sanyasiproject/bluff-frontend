@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { cx } from '../lib/cards';
+import { reducedMotion } from '../lib/motion';
 import { sfx } from '../lib/sounds';
-import type { Card } from '../types';
+import { RANKS, SUITS as CARD_SUITS, type Card } from '../types';
 import { PlayingCard } from './PlayingCard';
 
 // fixed positions so the background looks the same on every render
@@ -33,46 +34,65 @@ export function SuitDrift() {
   );
 }
 
-const PEEKS: Card[] = [
-  { id: 'p1', rank: 'K', suit: 'C' },
-  { id: 'p2', rank: '7', suit: 'D' },
-  { id: 'p3', rank: 'J', suit: 'H' },
-  { id: 'p4', rank: '3', suit: 'S' },
-  { id: 'p5', rank: 'A', suit: 'H' },
-  { id: 'p6', rank: '9', suit: 'C' },
-];
+const FLIP_EVERY_MS = 3200;
 
-/** the home screen's card fan: deals in, sways, and the middle card flips when tapped */
+/** three different random cards for the fan */
+function freshCards(round: number): Card[] {
+  const picked: Card[] = [];
+  while (picked.length < 3) {
+    const rank = RANKS[Math.floor(Math.random() * RANKS.length)];
+    const suit = CARD_SUITS[Math.floor(Math.random() * CARD_SUITS.length)];
+    if (!picked.some((c) => c.rank === rank && c.suit === suit)) picked.push({ id: `${rank}${suit}-${round}`, rank, suit });
+  }
+  return picked;
+}
+
+/** the home screen's card fan: deals in, sways, and all three cards flip to new ones every few seconds (or on a tap) */
 export function HeroFan() {
-  const [peek, setPeek] = useState<Card | null>(null);
-  const next = useRef(0);
+  const [round, setRound] = useState(0);
+  const [cards, setCards] = useState<Card[]>(() => [
+    { id: 'h1', rank: 'A', suit: 'S' },
+    { id: 'h2', rank: 'K', suit: 'C' },
+    { id: 'h3', rank: 'Q', suit: 'H' },
+  ]);
+  const flip = () => {
+    setRound((r) => r + 1);
+    setCards(freshCards(Date.now()));
+  };
 
+  // each flip restarts the timer, so a tap never gets a second flip right after it
   useEffect(() => {
-    if (!peek) return;
-    const t = setTimeout(() => setPeek(null), 1400);
+    if (reducedMotion()) return;
+    const t = setTimeout(flip, round === 0 ? FLIP_EVERY_MS + 800 : FLIP_EVERY_MS);
     return () => clearTimeout(t);
-  }, [peek]);
+  }, [round]);
 
+  // the middle card and the two side cards take turns: one side of the fan is always hidden, like in Bluff
+  const middleDown = round % 2 === 0;
+  const isDown = (i: number) => (i === 1 ? middleDown : !middleDown);
   return (
     <button
       type="button"
       className="hero-cards"
-      aria-label="Peek at the middle card"
+      aria-label="Flip the cards"
       onClick={() => {
         sfx.play(1);
-        setPeek(PEEKS[next.current++ % PEEKS.length]);
+        flip();
       }}
     >
-      <span className="hero-slot c1">
-        <PlayingCard card={{ id: 'h1', rank: 'A', suit: 'S' }} size="lg" />
-      </span>
-      <span className="hero-slot c2">
-        {/* re-keyed so each peek flips the card */}
-        <PlayingCard key={peek?.id ?? 'back'} card={peek} faceDown={!peek} size="lg" className="hero-flip" />
-      </span>
-      <span className="hero-slot c3">
-        <PlayingCard card={{ id: 'h3', rank: 'Q', suit: 'H' }} size="lg" />
-      </span>
+      {cards.map((card, i) => (
+        <span key={i} className={`hero-slot c${i + 1}`}>
+          {/* re-keyed so every round flips the card, one after another */}
+          <PlayingCard
+            key={isDown(i) ? `back-${round}-${i}` : card.id}
+            card={card}
+            faceDown={isDown(i)}
+            size="lg"
+            className="hero-flip"
+            style={{ animationDelay: `${i * 130}ms` }}
+          />
+        </span>
+      ))}
     </button>
   );
 }

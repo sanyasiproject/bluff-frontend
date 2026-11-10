@@ -6,14 +6,18 @@ import { clearSession, loadSavedSession, loadTabSession, saveName, saveSession, 
 import {
   QUICK_MESSAGES,
   REACTIONS,
+  THROWS,
   type Announcement,
   type ChatEvent,
   type Card,
   type ChatKind,
   type GameConfig,
+  type GiftEvent,
+  type GiftReceived,
   type InviteEvent,
   type Rank,
   type RoomView,
+  type ThrowEvent,
 } from './types';
 
 export interface Invite extends InviteEvent {
@@ -29,11 +33,25 @@ export interface Note {
   at: number;
 }
 
+/** an emoji, or a quick message, floating up the screen */
 export interface Reaction {
   key: number;
   emoji: string;
+  /** set for a quick message instead of an emoji */
+  text?: string;
   who: string;
   at: number;
+}
+
+/** something flying from one person to another: a thrown emoji or gifted coins (member ids) */
+export interface Flyer {
+  key: number;
+  from: string;
+  to: string;
+  emoji: string;
+  count: number;
+  /** shown where it lands, e.g. +🪙 50 */
+  label?: string;
 }
 
 /** a quick message shown as a speech bubble on the sender's seat during a game */
@@ -72,6 +90,7 @@ export function useBluff() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const [bubbles, setBubbles] = useState<ChatBubble[]>([]);
+  const [flyers, setFlyers] = useState<Flyer[]>([]);
   const [invites, setInvites] = useState<Invite[]>([]);
   const [replaced, setReplaced] = useState(false);
   const [pendingWatch, setPendingWatch] = useState<PendingWatch | null>(null);
@@ -146,13 +165,19 @@ export function useBluff() {
       const text = QUICK_MESSAGES[c.index] ?? '';
       if (c.kind === 'reaction') {
         setReactions((prev) => [...prev.slice(-12), { key: ++noteSeq, emoji: REACTIONS[c.index] ?? '❓', who, at: Date.now() }]);
-      } else if (v && v.phase !== 'lobby') {
-        // at the table messages pop up on the sender's seat instead of the top banner
-        setBubbles((prev) => [...prev.slice(-10), { key: ++noteSeq, from: c.from, text, at: Date.now() }]);
-      } else {
-        pushNote('chat', `${who}: ${text}`);
+        return;
       }
+      // messages float up like emoji (never the top banner); at the table the sender's seat shows them too
+      setReactions((prev) => [...prev.slice(-12), { key: ++noteSeq, emoji: '', text, who, at: Date.now() }]);
+      if (v && v.phase !== 'lobby') setBubbles((prev) => [...prev.slice(-10), { key: ++noteSeq, from: c.from, text, at: Date.now() }]);
     };
+    const onThrow = (t: ThrowEvent) => {
+      setFlyers((prev) => [...prev.slice(-8), { key: ++noteSeq, from: t.from, to: t.to, emoji: THROWS[t.index] ?? '❓', count: 1 }]);
+    };
+    const onGift = (g: GiftEvent) => {
+      setFlyers((prev) => [...prev.slice(-8), { key: ++noteSeq, from: g.from, to: g.to, emoji: '🪙', count: 5, label: `+🪙 ${g.amount}` }]);
+    };
+    const onGiftReceived = (g: GiftReceived) => pushNote('info', `🎁 ${g.fromName} sent you 🪙 ${g.amount}`);
     const onReplaced = () => {
       replacedRef.current = true;
       setReplaced(true);
@@ -178,6 +203,9 @@ export function useBluff() {
     socket.on('state', onState);
     socket.on('announce', onAnnounce);
     socket.on('chat', onChat);
+    socket.on('throw', onThrow);
+    socket.on('gift', onGift);
+    socket.on('gift:received', onGiftReceived);
     socket.on('session:replaced', onReplaced);
     socket.on('room:kicked', onKicked);
     socket.on('invite', onInvite);
@@ -191,6 +219,9 @@ export function useBluff() {
       socket.off('state', onState);
       socket.off('announce', onAnnounce);
       socket.off('chat', onChat);
+      socket.off('throw', onThrow);
+      socket.off('gift', onGift);
+      socket.off('gift:received', onGiftReceived);
       socket.off('room:kicked', onKicked);
       socket.off('invite', onInvite);
       socket.off('watch:admitted', onAdmitted);
@@ -295,6 +326,9 @@ export function useBluff() {
       askSwap: (memberId: string) => run(() => request('room:swap', { memberId })),
       answerSwap: (memberId: string, accept: boolean) => run(() => request('room:swapAnswer', { memberId, accept })),
       chat: (kind: ChatKind, index: number) => run(() => request('chat:send', { kind, index })),
+      /** throw an emoji at someone in the room; everyone sees it fly */
+      throwAt: (memberId: string, index: number) => run(() => request('chat:throw', { to: memberId, index })),
+      dropFlyer: (key: number) => setFlyers((prev) => prev.filter((f) => f.key !== key)),
       reclaim: () => {
         replacedRef.current = false;
         setReplaced(false);
@@ -304,7 +338,7 @@ export function useBluff() {
     };
   }, [run, pushNote]);
 
-  return { status, connectionId, view, notes, reactions, bubbles, invites, replaced, pendingWatch, actions };
+  return { status, connectionId, view, notes, reactions, bubbles, flyers, invites, replaced, pendingWatch, actions };
 }
 
 export type Actions = ReturnType<typeof useBluff>['actions'];

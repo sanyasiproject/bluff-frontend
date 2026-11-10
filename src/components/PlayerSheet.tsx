@@ -7,6 +7,7 @@ import type { PublicProfile } from '../types';
 import type { Auth } from '../useAuth';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
+import { GiftRow, ThrowRow } from './PlayerActions';
 
 const pct = (n: number | null) => (n === null ? '–' : `${n}%`);
 
@@ -18,11 +19,15 @@ interface Props {
   level?: number | null;
   /** host tools for this player (lobby only), shown under the card */
   children?: ReactNode;
+  /** in a room: their member id, so gifts fly across the room */
+  memberId?: string;
+  /** in a room, someone else: throw an emoji at them */
+  onThrow?: (index: number) => void;
   onClose: () => void;
 }
 
 /** someone's public card: name, level, record and badges, plus a friend button; nothing private */
-export function PlayerSheet({ auth, name, username, level, children, onClose }: Props) {
+export function PlayerSheet({ auth, name, username, level, children, memberId, onThrow, onClose }: Props) {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -142,6 +147,18 @@ export function PlayerSheet({ auth, name, username, level, children, onClose }: 
           )}
           {friend}
         </>
+      )}
+      {onThrow && (
+        <ThrowRow
+          onThrow={(i) => {
+            onThrow(i);
+            // close so the flight is visible
+            onClose();
+          }}
+        />
+      )}
+      {p?.status === 'friend' && (
+        <GiftRow auth={auth} name={p.displayName} target={memberId ? { memberId } : { userId: p.id }} />
       )}
       {error && <p className="form-error">{error}</p>}
       {children}

@@ -59,9 +59,12 @@ export function useAuth() {
     const onFriends = () => void refresh();
     socket.on('connect', onConnect);
     socket.on('friends:changed', onFriends);
+    // a friend sent me coins
+    socket.on('gift:received', onFriends);
     return () => {
       socket.off('connect', onConnect);
       socket.off('friends:changed', onFriends);
+      socket.off('gift:received', onFriends);
     };
   }, [refresh]);
 

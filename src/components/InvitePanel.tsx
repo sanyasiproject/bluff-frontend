@@ -1,4 +1,5 @@
 import { inviteLink, inviteMessage, inviteText, whatsappUrl } from '../lib/invite';
+import { WhatsAppIcon } from './Icons';
 
 interface Props {
   code: string;
@@ -38,7 +39,10 @@ export function InvitePanel({ code, onToast, onFriends, requests = 0 }: Props) {
       <p className="invite-caption">Invite friends</p>
       <div className="share-row">
         <a className="share-btn whatsapp" href={whatsappUrl(code)} target="_blank" rel="noopener noreferrer">
-          <span>💬</span>WhatsApp
+          <span>
+            <WhatsAppIcon />
+          </span>
+          WhatsApp
         </a>
         {canShare && (
           <button className="share-btn" onClick={share}>

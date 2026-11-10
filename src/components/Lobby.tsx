@@ -402,7 +402,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           {view.players.map((p) => (
             <li key={p.id} className={cx('player-row', !p.connected && 'offline')}>
               <button type="button" className="row-open" aria-label={`${p.name}'s profile`} onClick={() => openPlayer(p.id)}>
-                <span className="avatar sm" style={{ background: avatarColor(p.name) }}>
+                <span className="avatar sm" data-member={p.id} style={{ background: avatarColor(p.name) }}>
                   {p.name[0]?.toUpperCase()}
                 </span>
                 <span className="grow">
@@ -449,7 +449,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             {view.watchers.map((w) => (
               <li key={w.id} className={cx('player-row', !w.connected && 'offline')}>
                 <button type="button" className="row-open" aria-label={`${w.name}'s profile`} onClick={() => openPlayer(w.id)}>
-                  <span className="avatar sm" style={{ background: avatarColor(w.name) }}>
+                  <span className="avatar sm" data-member={w.id} style={{ background: avatarColor(w.name) }}>
                     {w.name[0]?.toUpperCase()}
                   </span>
                   <span className="grow">
@@ -576,6 +576,8 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           name={viewing.name}
           username={viewing.username}
           level={viewing.level}
+          memberId={viewing.id}
+          onThrow={viewing.id !== view.meId ? (i) => void actions.throwAt(viewing.id, i) : undefined}
           onClose={() => setViewingId(null)}
         >
           {isHost && viewing.id !== view.meId && (
