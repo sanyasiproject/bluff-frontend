@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { clearInvite, inviteCode } from '../lib/invite';
 import { loadName, loadSavedSession, loadTabSession } from '../lib/storage';
 import type { Auth } from '../useAuth';
-import type { Actions, ConnStatus } from '../useBluff';
+import type { Actions, ConnStatus, PendingWatch } from '../useBluff';
 import { AccountCorner } from './AccountCorner';
+import { HeroFan, ShineTitle, SuitDrift } from './Ambient';
 import { InstallCard } from './InstallCard';
-import { PlayingCard } from './PlayingCard';
 
 interface HomeProps {
   status: ConnStatus;
@@ -13,9 +13,11 @@ interface HomeProps {
   actions: Actions;
   auth: Auth;
   onOpenAdmin: () => void;
+  /** asked to watch a game in progress; waiting for the host */
+  pendingWatch: PendingWatch | null;
 }
 
-export function Home({ status, connectionId, actions, auth, onOpenAdmin }: HomeProps) {
+export function Home({ status, connectionId, actions, auth, onOpenAdmin, pendingWatch }: HomeProps) {
   const [name, setName] = useState(loadName);
   const [code, setCode] = useState('');
   const [invite, setInvite] = useState(inviteCode);
@@ -85,16 +87,13 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin }: HomeP
 
   return (
     <main className="screen home">
+      <SuitDrift />
       <header className="home-top">
         <AccountCorner auth={auth} onOpenAdmin={onOpenAdmin} />
       </header>
       <div className="hero">
-        <div className="hero-cards" aria-hidden>
-          <PlayingCard card={{ id: 'h1', rank: 'A', suit: 'S' }} size="lg" className="hero-card c1" />
-          <PlayingCard faceDown size="lg" className="hero-card c2" />
-          <PlayingCard card={{ id: 'h3', rank: 'Q', suit: 'H' }} size="lg" className="hero-card c3" />
-        </div>
-        <h1>Bluff</h1>
+        <HeroFan />
+        <ShineTitle text="Bluff" />
         <p className="muted">Lie with a straight face. Catch your friends.</p>
       </div>
 
@@ -107,7 +106,22 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin }: HomeP
 
       {guestHint}
 
-      {invite ? (
+      {pendingWatch ? (
+        <section className="panel stack invite-card">
+          <p className="label">Game in progress</p>
+          <p className="invite-room">
+            Room <b>{pendingWatch.code}</b>
+          </p>
+          <p className="waiting-host">
+            <span className="dot" />
+            Waiting for the host to let you watch…
+          </p>
+          <p className="muted small">You'll go straight in when they say yes.</p>
+          <button className="btn ghost block" onClick={actions.cancelWatch}>
+            Cancel
+          </button>
+        </section>
+      ) : invite ? (
         <section className="panel stack invite-card">
           <p className="label">You're invited</p>
           <p className="invite-room">
@@ -115,7 +129,7 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin }: HomeP
           </p>
           {nameField}
           <button
-            className="btn primary block"
+            className="btn primary block shine"
             disabled={!playName || !online || busy}
             onClick={() => go(() => actions.join(invite, playName))}
           >
@@ -145,7 +159,7 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin }: HomeP
           <section className="panel stack">
             {nameField}
             <button
-              className="btn primary block"
+              className="btn primary block shine"
               disabled={!playName || !online || busy}
               onClick={() => go(() => actions.create(playName))}
             >

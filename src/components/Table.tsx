@@ -2,12 +2,14 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 import { avatarColor, claimText, cx, placeLabel, rankPlural, SUIT_SYMBOL } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
+import { confettiAt } from '../lib/motion';
 import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
 import type { Card, PublicPlayer, Rank, RoomView } from '../types';
 import type { Actions, ChatBubble } from '../useBluff';
 import { FlyingCards, type Flight } from './FlyingCards';
 import { Hand } from './Hand';
+import { LevelBadge } from './LevelBadge';
 import { Backdrop, BetSheet, GameOver, PeekSheet, PickSheet, PlayersSheet, RankSheet, RevealOverlay } from './Overlays';
 import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
@@ -53,7 +55,10 @@ function Seat({ player, turn, passed, viewing, action, bubble, onClick, seatRef,
       </span>
       <span className="seat-count">
         <i className="mini-back" />
-        {player.cardCount}
+        {/* re-keyed so the number bumps when it changes */}
+        <b key={player.cardCount} className="bump">
+          {player.cardCount}
+        </b>
       </span>
       {action && <span className="seat-action">{action}</span>}
       {bubble && (
@@ -98,7 +103,7 @@ function TruthRow({ cards, claim }: { cards: Card[]; claim: Rank }) {
   );
 }
 
-function Pile({ count, boxRef }: { count: number; boxRef: RefObject<HTMLDivElement> }) {
+function Pile({ count, boxRef, playKey }: { count: number; boxRef: RefObject<HTMLDivElement>; playKey: string | null }) {
   const shown = Math.min(count, 7);
   return (
     <div className="pile" ref={boxRef} aria-label={`${count} cards in the pile`}>
@@ -116,7 +121,12 @@ function Pile({ count, boxRef }: { count: number; boxRef: RefObject<HTMLDivEleme
           />
         );
       })}
-      {count > 0 && <span className="pile-count">{count}</span>}
+      {playKey && count > 0 && <span key={playKey} className="pile-ripple" />}
+      {count > 0 && (
+        <span key={count} className="pile-count bump">
+          {count}
+        </span>
+      )}
     </div>
   );
 }
@@ -172,8 +182,8 @@ function GameMenu({
           </button>
         )}
         {onLeave && (
-          <button className="btn block ghost" onClick={onLeave}>
-            🚪 Leave room
+          <button className="btn block ghost danger-text" onClick={onLeave}>
+            🚪 {view.players.some((p) => p.id === view.meId) && view.phase === 'playing' ? 'Leave game' : 'Leave room'}
           </button>
         )}
       </div>
@@ -206,12 +216,25 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
   const [busy, setBusy] = useState(false);
   /** watcher stuck to one player; null follows whoever's turn it is */
   const [pinned, setPinned] = useState<string | null>(null);
-  const [panel, setPanel] = useState<'menu' | 'people' | null>(null);
+  const [panel, setPanel] = useState<'menu' | 'people' | 'requests' | null>(null);
   // there's no page behind a game: back opens the menu (Stop, Leave…) instead of leaving the app
   useBack(() => setPanel('menu'));
-  const [flight, setFlight] = useState<Flight | null>(null);
+  const [flights, setFlights] = useState<Flight[]>([]);
+  const fly = (f: Flight) => setFlights((all) => [...all, f]);
+  /** cards that just came into my hand, glowing for a moment */
+  const [freshIds, setFreshIds] = useState<string[]>([]);
+  const handIds = useRef<string[] | null>(null);
+  const freshTimer = useRef<number>();
+  /** who already got their finish confetti this game */
+  const finished = useRef(new Set(view.players.filter((p) => p.place).map((p) => p.id)));
+  /** the reveal on screen, and the one whose pile already flew to the loser */
+  const shownReveal = useRef<string | null>(null);
+  const swept = useRef<string | null>(null);
+  /** picked-up cards wait for the reveal to close before they glow */
+  const pendingFresh = useRef<string[]>([]);
   const [dealing, setDealing] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
   const seatEls = useRef(new Map<string, HTMLElement>());
   const pileRef = useRef<HTMLDivElement>(null);
   const handRef = useRef<HTMLElement>(null);
@@ -220,7 +243,10 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
   const startLevel = useRef<number | null>(null);
 
   const me = view.players.find((p) => p.id === view.meId);
-  const name = (id: string | null) => (id === view.meId ? 'You' : (view.players.find((p) => p.id === id)?.name ?? 'Someone'));
+  // players who left mid-game still count for names and the pot
+  const name = (id: string | null) =>
+    id === view.meId ? 'You' : ([...view.players, ...view.leftPlayers].find((p) => p.id === id)?.name ?? 'Someone');
+  const pot = view.config.stake * (view.players.length + view.leftPlayers.length);
   const playing = view.phase === 'playing';
   const myTurn = playing && view.turnId === view.meId;
   const lp = view.lastPlay;
@@ -264,11 +290,75 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
   useEffect(() => {
     setSelected([]);
     if (!freshDeal) return;
+    finished.current = new Set();
     setDealing(true);
     sfx.deal();
+    // a few face-down cards fly from the middle to every seat and to my hand
+    const frame = requestAnimationFrame(() => {
+      const pile = pileRef.current?.getBoundingClientRect();
+      if (!pile) return;
+      const targets = [...opponents.map((p) => seatEls.current.get(p.id)), watching ? null : handRef.current];
+      targets.forEach((el, i) => {
+        if (el) fly({ key: `deal-${i}-${Date.now()}`, count: 4, from: pile, to: el.getBoundingClientRect(), delay: i * 140, vanish: true });
+      });
+    });
     const t = setTimeout(() => setDealing(false), 1600);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      cancelAnimationFrame(frame);
+    };
   }, [view.phase]);
+
+  // after a reveal closes, the pile flies to whoever picked it up
+  useEffect(() => {
+    const r = view.reveal;
+    if (!r) return;
+    if (showReveal) {
+      shownReveal.current = r.playId;
+      return;
+    }
+    if (shownReveal.current !== r.playId || swept.current === r.playId) return;
+    swept.current = r.playId;
+    const from = pileRef.current?.getBoundingClientRect();
+    const target = r.loserId === view.meId ? handRef.current : seatEls.current.get(r.loserId);
+    if (from && target && r.pileCount > 0) {
+      fly({ key: `sweep-${r.playId}`, count: Math.min(r.pileCount, 8), from, to: target.getBoundingClientRect(), vanish: true });
+    }
+  }, [showReveal, view.reveal?.playId]);
+
+  // confetti on a seat (or my hand) when that player empties their hand
+  useEffect(() => {
+    if (!playing) return;
+    for (const p of view.players) {
+      if (!p.place || finished.current.has(p.id)) continue;
+      finished.current.add(p.id);
+      const mine = p.id === view.meId;
+      confettiAt(mine ? handRef.current : seatEls.current.get(p.id), mine ? { count: 50, spread: 1.2 } : { count: 26, spread: 0.7 });
+    }
+  });
+
+  // cards that arrive in my hand (picking up the pile) glow for a moment
+  useEffect(() => {
+    const prev = handIds.current;
+    handIds.current = view.hand.map((c) => c.id);
+    if (!prev || prev.length === 0 || freshDeal) return;
+    const had = new Set(prev);
+    const added = view.hand.filter((c) => !had.has(c.id)).map((c) => c.id);
+    if (added.length > 0) pendingFresh.current = [...pendingFresh.current, ...added];
+  }, [view.hand]);
+  // ...once no reveal is waiting to close, timed with the pile landing in my hand
+  useEffect(() => {
+    const revealOpen = !!view.reveal && swept.current !== view.reveal.playId;
+    if (revealOpen || pendingFresh.current.length === 0) return;
+    const ids = pendingFresh.current;
+    pendingFresh.current = [];
+    window.clearTimeout(freshTimer.current);
+    freshTimer.current = window.setTimeout(() => {
+      setFreshIds(ids);
+      freshTimer.current = window.setTimeout(() => setFreshIds([]), 1600);
+    }, 350);
+  });
+  useEffect(() => () => window.clearTimeout(freshTimer.current), []);
 
   useEffect(() => {
     // a quick next play clears the reveal before its timer ends, so close it here too
@@ -302,11 +392,16 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
     const from = lp.playerId === view.meId ? handRef.current : seatEls.current.get(lp.playerId);
     const to = pileRef.current;
     if (from && to) {
-      setFlight({ key: id, count: Math.min(lp.count, 6), from: from.getBoundingClientRect(), to: to.getBoundingClientRect() });
+      fly({ key: id, count: Math.min(lp.count, 6), from: from.getBoundingClientRect(), to: to.getBoundingClientRect() });
     }
   });
   useOnChange(view.passedIds.length, (n) => n > 0 && sfx.pass());
-  useOnChange(view.reveal?.playId ?? null, (id) => id && view.reveal && (view.reveal.bluff ? sfx.caught() : sfx.truth()));
+  useOnChange(view.reveal?.playId ?? null, (id) => {
+    if (!id || !view.reveal) return;
+    (view.reveal.bluff ? sfx.caught : sfx.truth)();
+    // I caught a liar: a small burst in the middle
+    if (view.reveal.bluff && view.reveal.callerId === view.meId) confettiAt(pileRef.current, { count: 30, spread: 0.9 });
+  });
   useOnChange(myTurn, (mine) => mine && sfx.turn());
   useOnChange(view.phase, (phase) => {
     if (phase === 'over' && !view.stopped) (view.loserIds.includes(view.meId) ? sfx.lose : sfx.win)();
@@ -384,9 +479,15 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
             {teamOf(view.meId) === 'a' ? '🔵' : '🟠'} with {name(partnerId)}
           </span>
         )}
-        {view.config.stake > 0 && <span className="pot-chip">🪙 Pot {compactCoins(view.config.stake * view.players.length)}</span>}
+        {view.config.stake > 0 && <span className="pot-chip">🪙 Pot {compactCoins(pot)}</span>}
         <span className="grow" />
         <div className="topbar-actions">
+          {/* host only: people waiting to watch; the count grows quietly instead of popping up */}
+          {isHost && view.watchRequests.length > 0 && (
+            <button className="icon-btn req-btn" aria-label={`${view.watchRequests.length} people want to watch`} onClick={() => setPanel('requests')}>
+              👀<span className="req-dot">{view.watchRequests.length}</span>
+            </button>
+          )}
           <QuickChat onSend={actions.chat} />
           <button className="icon-btn" aria-label="Game menu" onClick={() => setPanel('menu')}>
             ⋯
@@ -419,7 +520,7 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
         <div className={cx('round-chip', view.roundRank ? 'set' : 'blank')} aria-hidden={!view.roundRank}>
           Round <b>{view.roundRank ? rankPlural(view.roundRank) : '–'}</b>
         </div>
-        <Pile count={view.pileCount} boxRef={pileRef} />
+        <Pile count={view.pileCount} boxRef={pileRef} playKey={lp?.id ?? null} />
         {lp && (
           <p className="last-play">
             <b>{name(lp.playerId)}</b> put down <b>{claimText(lp.count, lp.rank)}</b>
@@ -514,7 +615,7 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
             !myTurn && view.hand.length > 1 && <span className="tap-tip">Double-tap = all of a rank</span>
           )}
         </div>
-        <Hand cards={view.hand} selected={selected} onToggle={tapCard} deal={dealing} />
+        <Hand cards={view.hand} selected={selected} onToggle={tapCard} deal={dealing} fresh={freshIds} />
       </section>
 
       <footer className="action-bar">
@@ -604,9 +705,9 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
           startLevel={startLevel.current}
         />
       )}
-      {flight && (
-        <FlyingCards key={flight.key} flight={flight} onDone={() => setFlight((f) => (f?.key === flight.key ? null : f))} />
-      )}
+      {flights.map((f) => (
+        <FlyingCards key={f.key} flight={f} onDone={() => setFlights((all) => all.filter((x) => x.key !== f.key))} />
+      ))}
       {panel === 'menu' && (
         <GameMenu
           view={view}
@@ -635,7 +736,12 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
                   setPanel(null);
                   void actions.leave();
                 }
-              : undefined
+              : playing && me
+                ? () => {
+                    setPanel(null);
+                    setConfirmLeave(true);
+                  }
+                : undefined
           }
           onClose={() => setPanel(null)}
         />
@@ -649,7 +755,7 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
                 ? `${winner.name} finished 1st, so their team wins. The other team loses`
                 : `${winner.name} finished 1st and wins. Everyone else loses`}
               {view.config.stake > 0
-                ? ` and the 🪙 ${formatCoins(view.config.stake * view.players.length)} pot ${view.teams ? 'is split by their team' : `goes to ${winner.name}`}`
+                ? ` and the 🪙 ${formatCoins(pot)} pot ${view.teams ? 'is split by their team' : `goes to ${winner.name}`}`
                 : ''}
               .
             </p>
@@ -668,6 +774,65 @@ export function Table({ view, actions, bubbles }: { view: RoomView; actions: Act
               </button>
             </div>
           </div>
+        </Backdrop>
+      )}
+      {confirmLeave && playing && (
+        <Backdrop center onClose={() => setConfirmLeave(false)}>
+          <div className="confirm-box">
+            <h3>Leave this game?</h3>
+            <p className="muted">
+              It counts as a loss
+              {view.config.stake > 0 ? ` and you still pay your 🪙 ${formatCoins(view.config.stake)} stake` : ''}
+              {view.teams ? '. Your team loses the game' : ''}.
+            </p>
+            <div className="confirm-actions">
+              <button className="btn ghost" onClick={() => setConfirmLeave(false)}>
+                Stay
+              </button>
+              <button
+                className="btn danger"
+                onClick={() => {
+                  setConfirmLeave(false);
+                  void actions.leave();
+                }}
+              >
+                Leave game
+              </button>
+            </div>
+          </div>
+        </Backdrop>
+      )}
+      {panel === 'requests' && (
+        <Backdrop onClose={() => setPanel(null)}>
+          <h3>👀 Want to watch</h3>
+          <p className="muted small">They joined after the game started. Let them in to watch; they play from the next game.</p>
+          {view.watchRequests.length === 0 && <p className="muted small">No one is waiting.</p>}
+          <ul className="player-list">
+            {view.watchRequests.map((r) => (
+              <li key={r.id} className="player-row">
+                <span className="avatar sm" style={{ background: avatarColor(r.name) }}>
+                  {r.name[0]?.toUpperCase()}
+                </span>
+                <span className="grow">
+                  {r.name} {r.registered ? <LevelBadge level={r.level} /> : <span className="muted small">guest</span>}
+                </span>
+                <button className="btn small ghost" onClick={() => void actions.admit(r.id, false)}>
+                  No
+                </button>
+                <button className="btn small primary" onClick={() => void actions.admit(r.id, true)}>
+                  Let in
+                </button>
+              </li>
+            ))}
+          </ul>
+          {view.watchRequests.length > 1 && (
+            <button className="btn block" onClick={() => view.watchRequests.forEach((r) => void actions.admit(r.id, true))}>
+              Let everyone in
+            </button>
+          )}
+          <button className="btn ghost block" onClick={() => setPanel(null)}>
+            Close
+          </button>
         </Backdrop>
       )}
       {panel === 'people' && (

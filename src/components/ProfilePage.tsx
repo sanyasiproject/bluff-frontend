@@ -10,6 +10,7 @@ import { FullPage } from './FullPage';
 import { RulesPage } from './RulesPage';
 import { XpGuide } from './XpGuide';
 import { FormStrip, GameList, Meter } from './ProfileParts';
+import { Rolling } from './Rolling';
 
 interface Props {
   auth: Auth;
@@ -86,7 +87,9 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite }: 
         <div className="wallet-top">
           <div>
             <span className="label">Coins</span>
-            <b className="wallet-amount">🪙 {formatCoins(user.coins)}</b>
+            <b className="wallet-amount">
+              🪙 <Rolling value={user.coins} format={formatCoins} />
+            </b>
           </div>
           {overview && (
             <span className="rank-chip">
@@ -221,10 +224,10 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite }: 
           </span>
         </h3>
         <div className="badge-grid">
-          {badges.map((b) => {
+          {badges.map((b, i) => {
             const done = b.value >= b.goal;
             return (
-              <div key={b.title} className={cx('badge-tile', done && 'done')}>
+              <div key={b.title} className={cx('badge-tile', done && 'done')} style={{ '--i': i } as CSSProperties}>
                 <span className="badge-emoji">{b.emoji}</span>
                 <b>{b.title}</b>
                 <span className="badge-desc">{b.desc}</span>

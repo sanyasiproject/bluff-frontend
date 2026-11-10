@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { cx, placeLabel } from '../lib/cards';
 import { formatCoins, signedCoins } from '../lib/coins';
 import { dateTime } from '../lib/dates';
@@ -145,8 +146,8 @@ export function StatGrid({ stats }: { stats: LifetimeStats }) {
   ];
   return (
     <div className="stat-grid">
-      {items.map(([label, value]) => (
-        <div key={label} className="stat">
+      {items.map(([label, value], i) => (
+        <div key={label} className="stat" style={{ '--i': i } as CSSProperties}>
           <b>{value}</b>
           <span>{label}</span>
         </div>

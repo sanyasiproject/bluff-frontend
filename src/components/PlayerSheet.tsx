@@ -91,14 +91,15 @@ export function PlayerSheet({ auth, name, username, level, children, onClose }: 
       <div className="player-card">
         <span className="avatar lg" style={{ background: avatarColor(p?.displayName ?? name) }}>
           {(p?.displayName ?? name)[0]?.toUpperCase()}
-          {p && <i className={cx('presence', p.online && 'on')} />}
+          {p && p.online !== null && <i className={cx('presence', p.online && 'on')} />}
         </span>
         <h3>
           {p?.displayName ?? name} <LevelBadge level={shownLevel} />
         </h3>
         {p && (
           <p className="muted small">
-            @{p.username} · {p.online ? 'online' : 'offline'} · joined {monthYear(p.joinedAt)}
+            @{p.username}
+            {p.online !== null && (p.online ? ' · online' : ' · offline')} · joined {monthYear(p.joinedAt)}
           </p>
         )}
         {title && (

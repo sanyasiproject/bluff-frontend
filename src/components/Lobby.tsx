@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { api, errorText } from '../lib/api';
 import { useBack } from '../lib/back';
 import { avatarColor, cx } from '../lib/cards';
@@ -15,6 +15,7 @@ import { STAKES, type FriendsResponse, type FriendView, type GameConfig, type Pu
 import type { Auth } from '../useAuth';
 import type { Actions } from '../useBluff';
 import { AccountCorner } from './AccountCorner';
+import { SuitDrift } from './Ambient';
 import { FriendsSheet } from './FriendsSheet';
 import { InvitePanel } from './InvitePanel';
 import { LevelBadge } from './LevelBadge';
@@ -348,10 +349,17 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
 
   return (
     <main className="screen lobby">
+      <SuitDrift />
       <header className="lobby-head">
         <div className="grow">
           <p className="label">Room code</p>
-          <p className="room-code">{view.code}</p>
+          <p className="room-code" aria-label={view.code}>
+            {[...view.code].map((ch, i) => (
+              <span key={i} aria-hidden style={{ '--i': i } as CSSProperties}>
+                {ch}
+              </span>
+            ))}
+          </p>
         </div>
         <QuickChat onSend={actions.chat} />
         <AccountCorner auth={auth} roomCode={view.code} onInvite={actions.invite} />
@@ -385,7 +393,10 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
 
       <section className="panel">
         <h2 className="section-title">
-          Players <span className="muted">{view.players.length}/5</span>
+          Players{' '}
+          <span key={view.players.length} className="muted bump">
+            {view.players.length}/5
+          </span>
         </h2>
         <ul className="player-list">
           {view.players.map((p) => (
@@ -535,7 +546,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               <button className="btn ghost leave-btn" onClick={actions.leave}>
                 Leave
               </button>
-              <button className="btn primary grow" disabled={startBlock !== null} onClick={actions.start}>
+              <button className="btn primary grow shine" disabled={startBlock !== null} onClick={actions.start}>
                 {startBlock === null
                   ? `Start · ${view.players.length} players${stake > 0 ? ` · 🪙 ${compactCoins(pot)}` : ''}`
                   : 'Start game'}
@@ -547,7 +558,14 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             <button className="btn ghost leave-btn" onClick={actions.leave}>
               Leave
             </button>
-            <p className="waiting grow">⏳ Waiting for the host to start…</p>
+            <p className="waiting grow">
+              ⏳ Waiting for the host to start
+              <span className="dots" aria-hidden>
+                <i>.</i>
+                <i>.</i>
+                <i>.</i>
+              </span>
+            </p>
           </div>
         )}
       </div>

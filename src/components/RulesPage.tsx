@@ -126,6 +126,10 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>
             <b>Play again</b> (host, end screen): deals the same table again with the same settings.
           </li>
+          <li>
+            <b>Leave game</b> (any player, ⋯ menu, asks first): counts as a loss and you still pay the stake. In 2 vs 2 your team loses;
+            if only one player is left, they win. Leavers show as 🚪 Left · Lost on the end screen.
+          </li>
         </ul>
       </Section>
 
@@ -134,13 +138,18 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>Tap a player in the lobby to open their card. The host also gets: Make host, Move to watching/playing, Remove from room.</li>
           <li>The host can remove people during a game (People in the ⋯ menu); their cards leave the game and they pay or win nothing.</li>
           <li>If the host leaves, the next player becomes the host.</li>
+          <li>
+            Join requests: once a game has started, newcomers must ask. Nothing pops up; a 👀 button with a count appears at the top. Open it to
+            Let in, No, or Let everyone in. Anyone still waiting gets in when the room goes back to the lobby.
+          </li>
         </ul>
       </Section>
 
       <Section icon="👀" title="Watch mode">
         <ul>
           <li>Up to 5 play and 7 more can watch (12 per room).</li>
-          <li>People who join mid-game, or when 5 are seated, watch and get the next free seat.</li>
+          <li>When 5 are seated, newcomers watch and get the next free seat.</li>
+          <li>After a game has started, newcomers wait until the host lets them in, then watch and play the next game.</li>
           <li>Anyone can switch 🎮 Playing / 👀 Watching in the lobby; a chosen watcher stays watching until they switch back.</li>
           <li>Watchers see the real cards of each play and one player's hand (following the turn, or a player they tap).</li>
         </ul>
@@ -194,6 +203,15 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         </ul>
       </Section>
 
+      <Section icon="🛡" title="Safety & limits">
+        <ul>
+          <li>One room per account: joining a new room leaves your old one. Not allowed while you still have cards there, or it's open on another device.</li>
+          <li>Search, profile cards and friend actions: up to 20 a minute per player.</li>
+          <li>Online status is shown only to friends.</li>
+          <li>Each network can open about 10 rooms in 10 minutes and keep 5 open at once, so nobody can flood the server.</li>
+        </ul>
+      </Section>
+
       <Section icon="🛠" title="Admin tools">
         <ul>
           <li>Admin (from your profile): search every account and open one.</li>
@@ -209,6 +227,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>Invite with the WhatsApp, Share or Copy buttons; the link drops friends straight into the room.</li>
           <li>💬 quick chat: emoji reactions and short messages. 🔊 sound and voice can be muted from the ⋯ menu.</li>
           <li>The phone's back button closes one step at a time and only leaves the app from the home page.</li>
+          <li>Tap the cards on the home screen to peek at the middle one. Animations follow the phone's reduce-motion setting.</li>
           <li>If the free server is asleep, the intro screen waits until it wakes (up to about a minute).</li>
         </ul>
       </Section>

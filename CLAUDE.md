@@ -7,7 +7,7 @@ guide, the feature list and the owner's working preferences. Read it first.
 
 ## Stack
 
-React 18 + Vite 5 + TypeScript, socket.io-client, no UI library. All styles are in `src/styles.css` (colour tokens in
+React 18 + Vite 8 + TypeScript, socket.io-client, no UI library. All styles are in `src/styles.css` (colour tokens in
 `:root`, green felt theme). Voice: Web Speech API (`lib/speech.ts`); sounds: Web Audio (`lib/sounds.ts`); PWA via
 `public/manifest.webmanifest` and `public/sw.js`.
 
@@ -29,12 +29,16 @@ React 18 + Vite 5 + TypeScript, socket.io-client, no UI library. All styles are 
 | `components/RulesPage.tsx` | Admin-only "📖 Rules & features": **update it whenever a rule or feature changes** |
 | `lib/back.ts` | `useBack(handler)`: the phone back button closes one step at a time |
 | `lib/progress.ts` | Titles, level info, achievements, daily-ladder helpers |
+| `lib/motion.ts` | `confetti` / `confettiAt`, `useCountUp`, `reducedMotion` |
+| `components/Ambient.tsx`, `Rolling.tsx`, `FlyingCards.tsx` | Home card fan (tap to peek), shining title, floating suits; counting numbers; cards flying to the pile, seats and hand |
 
 ## Patterns to reuse
 
 - Sheets and popups: `Backdrop` (bottom sheet, or `center` for a modal). Full-screen pages: `FullPage`. Both handle the phone back button.
 - Risky actions get an in-app confirm popup (see `confirm-box` in Table / AdminUserPage), not `window.confirm`.
 - Keep screens simple: few words, one button that opens a sheet rather than many inline controls, mobile width first (375px).
+- `vercel.json` sets security headers. Its CSP `connect-src` lists the Render backend (https + wss): update it if the backend URL changes. No inline scripts (CSP `script-src 'self'`).
+- Motion: animate only `transform` / `opacity` (the "motion pass" section at the end of `styles.css`). Containers that may hold fixed sheets use `backwards` fill so no transform is left behind. Everything stops under the phone's reduced-motion setting; JS motion checks `reducedMotion()`.
 - `cx(...)` joins class names; coins are shown with `formatCoins` / `compactCoins` (Indian grouping).
 
 ## Commands

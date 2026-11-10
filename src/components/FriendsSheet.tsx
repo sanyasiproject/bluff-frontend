@@ -15,7 +15,7 @@ interface Props {
 }
 
 /** a friend, request or search result; only friends know whether they're in a room */
-type Person = Omit<FriendView, 'inRoom'> & Partial<Pick<FriendView, 'inRoom'>>;
+type Person = Omit<FriendView, 'inRoom' | 'online'> & Partial<Pick<FriendView, 'inRoom'>> & { online: boolean | null };
 
 const where = (p: Person) => (p.inRoom === 'here' ? ' · in this room' : p.inRoom === 'other' ? ' · in a room' : '');
 
@@ -132,13 +132,13 @@ export function FriendsSheet({ auth, roomCode, onInvite, onClose }: Props) {
       <button type="button" className="row-open" aria-label={`${f.displayName}'s profile`} onClick={() => setViewing(f)}>
         <span className="avatar sm" style={{ background: avatarColor(f.displayName) }}>
           {f.displayName[0]?.toUpperCase()}
-          {showOnline && <i className={cx('presence', f.online && 'on')} />}
+          {showOnline && f.online !== null && <i className={cx('presence', f.online && 'on')} />}
         </span>
         <div className="grow">
           <b>{f.displayName}</b> <LevelBadge level={f.level} />
           <p className="muted small">
             @{f.username}
-            {showOnline && (f.online ? ' · online' : ' · offline')}
+            {showOnline && f.online !== null && (f.online ? ' · online' : ' · offline')}
             {showOnline && where(f)}
           </p>
         </div>

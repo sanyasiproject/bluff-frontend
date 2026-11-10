@@ -1,7 +1,8 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useBack } from '../lib/back';
 import { avatarColor, claimText, cx, placeLabel, rankPlural } from '../lib/cards';
 import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
+import { confettiAt } from '../lib/motion';
 import { nextGameReward, titleOf } from '../lib/progress';
 import { LevelBadge } from './LevelBadge';
 import {
@@ -16,6 +17,7 @@ import {
   type RoomView,
 } from '../types';
 import { PlayingCard } from './PlayingCard';
+import { Rolling } from './Rolling';
 
 export function Backdrop({ center, onClose, children }: { center?: boolean; onClose?: () => void; children: ReactNode }) {
   // the phone's back button closes it too; screens without onClose (game over) stay put
@@ -221,6 +223,13 @@ interface GameOverProps {
 
 export function GameOver({ view, onLobby, onRematch, startLevel }: GameOverProps) {
   const [busy, setBusy] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  // winners (and watchers) get confetti; losers don't need it
+  useEffect(() => {
+    if (view.stopped || view.winnerIds.length === 0) return;
+    if (view.winnerIds.includes(view.meId)) confettiAt(box.current, { count: 80, spread: 1.5 });
+    else if (!view.players.some((p) => p.id === view.meId)) confettiAt(box.current, { count: 36, spread: 1 });
+  }, []);
   const ranked = [...view.players].sort((a, b) => (a.place ?? 99) - (b.place ?? 99));
   const lost = (id: string) => view.loserIds.includes(id);
   const won = (id: string) => view.winnerIds.includes(id);
@@ -239,10 +248,12 @@ export function GameOver({ view, onLobby, onRematch, startLevel }: GameOverProps
           ? placeLabel(p.place)
           : '';
   const winningTeam = view.teams && view.winnerIds.length > 0 ? (view.teams[0].includes(view.winnerIds[0]) ? '🔵' : '🟠') : null;
-  const nameOf = (id: string) => (id === view.meId ? 'You' : (view.players.find((p) => p.id === id)?.name ?? 'Someone'));
+  // players who used Leave game are still part of this game's result
+  const nameOf = (id: string) =>
+    id === view.meId ? 'You' : ([...view.players, ...view.leftPlayers].find((p) => p.id === id)?.name ?? 'Someone');
   return (
     <Backdrop center>
-      <div className="reveal gameover">
+      <div className="reveal gameover" ref={box}>
         <h3 className="reveal-title">{view.stopped ? 'Game stopped' : view.endedEarly ? 'Game ended' : 'Game over'}</h3>
         {winningTeam && (
           <p className="team-win">
@@ -255,14 +266,23 @@ export function GameOver({ view, onLobby, onRematch, startLevel }: GameOverProps
           </p>
         )}
         <ol className="results">
-          {ranked.map((p) => (
-            <li key={p.id} className={cx(lost(p.id) && 'loser')}>
+          {ranked.map((p, i) => (
+            <li key={p.id} className={cx(lost(p.id) && 'loser', won(p.id) && 'winner')} style={{ '--i': i } as CSSProperties}>
               <span className="medal">{medal(p)}</span>
               <span className="grow">
                 {p.name}
                 {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} />
               </span>
               <span className="muted">{label(p)}</span>
+            </li>
+          ))}
+          {view.leftPlayers.map((p, i) => (
+            <li key={p.id} className="loser" style={{ '--i': ranked.length + i } as CSSProperties}>
+              <span className="medal">🚪</span>
+              <span className="grow">
+                {p.name} <LevelBadge level={p.level} />
+              </span>
+              <span className="muted">Left · Lost</span>
             </li>
           ))}
         </ol>
@@ -285,7 +305,7 @@ export function GameOver({ view, onLobby, onRematch, startLevel }: GameOverProps
         <CoinSummary view={view} nameOf={nameOf} startLevel={startLevel ?? null} />
         {onRematch ? (
           <button
-            className="btn primary block"
+            className="btn primary block shine"
             disabled={busy}
             onClick={async () => {
               setBusy(true);
@@ -312,8 +332,8 @@ function XpLine({ result, startLevel }: { result: CoinResult; startLevel: number
   const levelUp = level !== null && startLevel !== null && level > startLevel;
   const title = level !== null ? titleOf(level) : null;
   return (
-    <p className="daily-line xp-line">
-      ⭐ +{result.xp} XP
+    <p className={cx('daily-line xp-line', levelUp && 'level-up')}>
+      ⭐ +<Rolling value={result.xp} /> XP
       {levelUp && title && (
         <>
           {' '}
@@ -348,13 +368,14 @@ function DailyProgress({ result }: { result: CoinResult }) {
 /** who won or paid how many coins, daily game rewards, and your next daily target */
 function CoinSummary({ view, nameOf, startLevel }: { view: RoomView; nameOf: (id: string) => string; startLevel: number | null }) {
   const stake = view.config.stake;
-  if (!view.players.some((p) => p.registered)) return null;
+  const everyone = [...view.players, ...view.leftPlayers];
+  if (!everyone.some((p) => p.registered)) return null;
   if (view.stopped) {
     return stake > 0 ? <p className="muted small">Stopped early · no coins moved</p> : null;
   }
   if (!view.coinResults) return <p className="muted small">Adding up coins…</p>;
 
-  const rows = view.coinResults.filter((r) => view.players.some((p) => p.id === r.playerId && p.registered));
+  const rows = view.coinResults.filter((r) => everyone.some((p) => p.id === r.playerId && p.registered));
   const mine = view.coinResults.find((r) => r.playerId === view.meId && r.gamesToday !== null);
   const showRows = stake > 0 || rows.some((r) => r.bonus > 0 || r.bets !== 0);
   if (!showRows && !mine) return null;
@@ -363,15 +384,23 @@ function CoinSummary({ view, nameOf, startLevel }: { view: RoomView; nameOf: (id
       <p className="label">Rewards</p>
       {stake > 0 && (
         <p className="muted small">
-          Pot 🪙 {formatCoins(stake * view.players.length)} {view.teams ? 'split by the winning team' : 'goes to the winner'}
+          Pot 🪙 {formatCoins(stake * everyone.length)} {view.teams ? 'split by the winning team' : 'goes to the winner'}
         </p>
       )}
       {showRows &&
         rows.map((r) => (
           <div key={r.playerId} className="coin-row">
             <span className="grow">{nameOf(r.playerId)}</span>
-            {stake > 0 && <span className={cx('coin-change', r.change >= 0 ? 'up' : 'down')}>🪙 {signedCoins(r.change)}</span>}
-            {r.bets !== 0 && <span className={cx('coin-change', r.bets > 0 ? 'up' : 'down')}>🎲 {signedCoins(r.bets)}</span>}
+            {stake > 0 && (
+              <span className={cx('coin-change', r.change >= 0 ? 'up' : 'down')}>
+                🪙 <Rolling value={r.change} format={signedCoins} />
+              </span>
+            )}
+            {r.bets !== 0 && (
+              <span className={cx('coin-change', r.bets > 0 ? 'up' : 'down')}>
+                🎲 <Rolling value={r.bets} format={signedCoins} />
+              </span>
+            )}
             {r.bonus > 0 && <span className="bonus-chip">🎯 +{formatCoins(r.bonus)}</span>}
           </div>
         ))}

@@ -13,7 +13,7 @@ import { useAuth } from './useAuth';
 import { useBluff } from './useBluff';
 
 export default function App() {
-  const { status, connectionId, view, notes, reactions, bubbles, invites, replaced, actions } = useBluff();
+  const { status, connectionId, view, notes, reactions, bubbles, invites, replaced, pendingWatch, actions } = useBluff();
   const auth = useAuth();
   const [adminOpen, setAdminOpen] = useState(false);
   // the intro stays until the server first answers and a saved login is checked, and at least a moment
@@ -59,7 +59,14 @@ export default function App() {
     screen = <AdminPanel auth={auth} onBack={() => setAdminOpen(false)} />;
   } else if (!view) {
     screen = (
-      <Home status={status} connectionId={connectionId} actions={actions} auth={auth} onOpenAdmin={() => setAdminOpen(true)} />
+      <Home
+        status={status}
+        connectionId={connectionId}
+        actions={actions}
+        auth={auth}
+        onOpenAdmin={() => setAdminOpen(true)}
+        pendingWatch={pendingWatch}
+      />
     );
   } else if (view.phase === 'lobby') {
     screen = <Lobby view={view} actions={actions} auth={auth} />;

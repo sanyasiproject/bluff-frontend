@@ -45,6 +45,14 @@ export interface ChatBubble {
 }
 
 type Entered = { code: string; token: string };
+/** room:join answers pending when a game is running and the host has to say yes */
+type JoinReply = { code: string; token?: string; pending?: boolean };
+
+/** waiting for the host to let me watch a game in progress */
+export interface PendingWatch {
+  code: string;
+  name: string;
+}
 
 let noteSeq = 0;
 
@@ -66,6 +74,12 @@ export function useBluff() {
   const [bubbles, setBubbles] = useState<ChatBubble[]>([]);
   const [invites, setInvites] = useState<Invite[]>([]);
   const [replaced, setReplaced] = useState(false);
+  const [pendingWatch, setPendingWatch] = useState<PendingWatch | null>(null);
+  const pendingRef = useRef<PendingWatch | null>(null);
+  const setPending = (p: PendingWatch | null) => {
+    pendingRef.current = p;
+    setPendingWatch(p);
+  };
   const session = useRef<Session | null>(startSession());
   const replacedRef = useRef(false);
   // latest view for socket handlers, which are registered once
@@ -93,7 +107,29 @@ export function useBluff() {
         }
       }
     };
-    const onDisconnect = () => setStatus('offline');
+    const onDisconnect = () => {
+      setStatus('offline');
+      // the server forgets a request when the connection drops
+      if (pendingRef.current) {
+        pushNote('error', 'Connection dropped. Ask to join again');
+        setPending(null);
+      }
+    };
+    // the host said yes: take the seat they made for me
+    const onAdmitted = async ({ code, token, name }: { code: string; token: string; name: string }) => {
+      setPending(null);
+      session.current = { code, token, name };
+      saveSession(session.current);
+      try {
+        await request('room:rejoin', { code, token });
+      } catch (err) {
+        pushNote('error', err instanceof Error ? err.message : 'Could not join');
+      }
+    };
+    const onDenied = ({ code, reason }: { code: string; reason?: string }) => {
+      setPending(null);
+      pushNote('error', reason ?? `The host didn't let you into room ${code} this time`);
+    };
     const onState = (v: RoomView) => {
       viewRef.current = v;
       setView(v);
@@ -145,6 +181,8 @@ export function useBluff() {
     socket.on('session:replaced', onReplaced);
     socket.on('room:kicked', onKicked);
     socket.on('invite', onInvite);
+    socket.on('watch:admitted', onAdmitted);
+    socket.on('watch:denied', onDenied);
     document.addEventListener('visibilitychange', onVisible);
     if (socket.connected) void onConnect();
     return () => {
@@ -155,6 +193,8 @@ export function useBluff() {
       socket.off('chat', onChat);
       socket.off('room:kicked', onKicked);
       socket.off('invite', onInvite);
+      socket.off('watch:admitted', onAdmitted);
+      socket.off('watch:denied', onDenied);
       socket.off('session:replaced', onReplaced);
       document.removeEventListener('visibilitychange', onVisible);
     };
@@ -181,7 +221,16 @@ export function useBluff() {
     return {
       create: (name: string) => run(async () => enter(await request<Entered>('room:create', { name }), name)),
       join: (code: string, name: string) =>
-        run(async () => enter(await request<Entered>('room:join', { code, name }), name)),
+        run(async () => {
+          const res = await request<JoinReply>('room:join', { code, name });
+          if (res.pending) setPending({ code: res.code, name });
+          else enter({ code: res.code, token: res.token! }, name);
+        }),
+      cancelWatch: () => {
+        setPending(null);
+        void request('room:cancelRequest').catch(() => undefined);
+      },
+      admit: (requestId: string, accept: boolean) => run(() => request('room:admit', { requestId, accept })),
       rejoinSaved: () =>
         run(async () => {
           const s = loadSavedSession();
@@ -223,7 +272,9 @@ export function useBluff() {
             viewRef.current = null;
             setView(null);
           }
-          enter(await request<Entered>('room:join', { code: inv.code, name }), name);
+          const res = await request<JoinReply>('room:join', { code: inv.code, name });
+          if (res.pending) setPending({ code: res.code, name });
+          else enter({ code: res.code, token: res.token! }, name);
         }),
       setConfig: (config: GameConfig) => run(() => request('room:config', config)),
       start: () => run(() => request('room:start')),
@@ -253,7 +304,7 @@ export function useBluff() {
     };
   }, [run, pushNote]);
 
-  return { status, connectionId, view, notes, reactions, bubbles, invites, replaced, actions };
+  return { status, connectionId, view, notes, reactions, bubbles, invites, replaced, pendingWatch, actions };
 }
 
 export type Actions = ReturnType<typeof useBluff>['actions'];
