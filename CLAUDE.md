@@ -19,17 +19,18 @@ React 18 + Vite 8 + TypeScript, socket.io-client, no UI library. All styles are 
 | `src/App.tsx` | Picks the screen: intro (`Splash`) → admin → Home → Lobby → Table; popups |
 | `src/useBluff.ts` | Socket connection, room state, every game/room action |
 | `src/useAuth.ts` | Login state, coins, friend-request count, profile data |
-| `components/Lobby.tsx` | Players, settings (incl. Extras: Peek, Bet, Teams), 2v2 slots and swap popup, host tools via `PlayerSheet` |
+| `components/Lobby.tsx` | Players (bots get a 🤖 row and 🤖 Add a bot), settings (incl. Extras: Peek, Bet, Teams; stake capped with bots), 2v2 slots and swap popup, host tools via `PlayerSheet` |
+| `components/FriendsSheet.tsx` | Search, requests, friends, invites; Join / 👀 Watch / Ask to watch a friend's room (`actions.joinFriend`) |
 | `components/Table.tsx` | The game: seats, pile, Bluff / Peek / Bet, partner cards, hand, menus, end game |
 | `components/Overlays.tsx` | `Backdrop` (every sheet/modal), rank/pick/peek/bet sheets, reveal, game over, people list |
 | `components/ProfilePage.tsx`, `ProfileParts.tsx`, `XpGuide.tsx` | Your profile, levels, achievements, games |
 | `components/PlayerSheet.tsx` | Public card for any player (no private data) |
-| `components/FriendsSheet.tsx` | Search, requests, friends, invites |
 | `components/AdminPanel.tsx`, `AdminUserPage.tsx` | Admin user list and user page |
 | `components/RulesPage.tsx` | Admin-only "📖 Rules & features": **update it whenever a rule or feature changes** |
 | `lib/back.ts` | `useBack(handler)`: the phone back button closes one step at a time |
 | `lib/progress.ts` | Titles, level info, achievements, daily-ladder helpers |
 | `lib/motion.ts` | `confetti` / `confettiAt`, `useCountUp`, `reducedMotion` |
+| `components/Flyers.tsx`, `components/fx/`, `lib/throwSounds.ts`, `styles/throws.css`, `public/fx/` | Emoji throws and coin gifts: lazy-loaded effects engine, Noto animated emoji (Lottie, CC BY 4.0: keep the credit under the throw buttons) played by `lottie-web` light |
 | `components/Ambient.tsx`, `Rolling.tsx`, `FlyingCards.tsx` | Home card fan (tap to peek), shining title, floating suits; counting numbers; cards flying to the pile, seats and hand |
 
 ## Patterns to reuse

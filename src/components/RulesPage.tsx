@@ -3,18 +3,20 @@ import { compactCoins, formatCoins, stakeLabel } from '../lib/coins';
 import { achievementsOf, TITLES } from '../lib/progress';
 import {
   BET_STEPS,
+  BOT_MAX_STAKE,
   DAILY_GAME_REWARDS,
   LOGIN_BONUS,
   MAX_BLUFF_CALLS_IN_A_ROW,
   MAX_PEEKS,
   MIN_REWARD_GAME_SEC,
   STAKES,
+  THROWS,
   XP_RULES,
   xpForLevel,
 } from '../types';
 import { FullPage } from './FullPage';
 
-const ZERO = { gamesPlayed: 0, wins: 0, losses: 0, bluffs: 0, bluffsCaught: 0, goodCalls: 0, wrongCalls: 0, cardsPickedUp: 0 };
+const ZERO = { gamesPlayed: 0, wins: 0, losses: 0, bluffs: 0, bluffsCaught: 0, goodCalls: 0, wrongCalls: 0, cardsPickedUp: 0, plays: 0, chances: 0 };
 
 function Section({ icon, title, open, children }: { icon: string; title: string; open?: boolean; children: ReactNode }) {
   return (
@@ -61,7 +63,8 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
       <Section icon="⚙️" title="Room settings (host)">
         <ul>
           <li>
-            <b>Coins at stake</b> per player: {STAKES.map(stakeLabel).join(', ')}. Coin games need everyone logged in.
+            <b>Coins at stake</b> per player: {STAKES.map(stakeLabel).join(', ')}. Coin games need everyone logged in. With bots at the
+            table the stake goes up to {BOT_MAX_STAKE}.
           </li>
           <li>
             <b>Cards</b>: 1 deck (52, default) or 2 decks (104).
@@ -113,6 +116,35 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         </ul>
       </Section>
 
+      <Section icon="🤖" title="Bots">
+        <ul>
+          <li>The host taps 🤖 Add a bot in the lobby; each tap seats one bot in a free seat. Remove one with ✕. A person must always be playing.</li>
+          <li>
+            Every bot gets its own style (careful, wild liar, detective, sneaky, gambler…) with its own random numbers, and its mood shifts
+            from game to game, so no two bots play alike and their moves can't be guessed.
+          </li>
+          <li>
+            Bots only know what a seated player could know: their own cards, the claims, cards turned over, and their own cards in a pile
+            someone picked up. They never see anyone's hand.
+          </li>
+          <li>
+            Every player has a lie rate and a call rate. Bots read them from your saved record when you join, then keep watching you at the
+            table, and lie or call against you to match. Nothing is looked up during the game.
+          </li>
+          <li>Bots take a human-like moment to think, and the pause doesn't depend on whether they're lying. They can peek and chat, but never bet.</li>
+          <li>
+            Coins: with bots the stake is at most 🪙 {BOT_MAX_STAKE}. Bots put in nothing. If a person wins, they take the stake for every seat,
+            bots' seats included. Coins a person loses to a bot (stake or bet) are simply gone; a bet won from a bot is paid in full.
+          </li>
+          <li>Games with bots count for XP, stats and the daily games reward like any other game.</li>
+          <li>
+            A room is never left to bots: when the last person leaves, the room closes. Once no person holds cards, the game ends straight
+            away (except 2 vs 2, which plays on to find the winning team).
+          </li>
+          <li>Bots wait while no person is connected. They can't be the host or sit out to watch; in 2 vs 2 they swap places at once.</li>
+        </ul>
+      </Section>
+
       <Section icon="🏁" title="Ending a game">
         <ul>
           <li>Normal end: when only one player (or one team) is left, the game is over.</li>
@@ -139,8 +171,9 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>The host can remove people during a game (People in the ⋯ menu); their cards leave the game and they pay or win nothing.</li>
           <li>If the host leaves, the next player becomes the host.</li>
           <li>
-            Join requests: once a game has started, newcomers must ask. Nothing pops up; a 👀 button with a count appears at the top. Open it to
-            Let in, No, or Let everyone in. Anyone still waiting gets in when the room goes back to the lobby.
+            Join requests: once a game has started, newcomers must ask. Nothing blocks the game: the host hears a knock, sees a short note, and a
+            pulsing 👀 button with a count appears at the top. Open it to Let in, No, or Let everyone in. Anyone still waiting gets in when the
+            room goes back to the lobby.
           </li>
         </ul>
       </Section>
@@ -150,6 +183,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>Up to 5 play and 7 more can watch (12 per room).</li>
           <li>When 5 are seated, newcomers watch and get the next free seat.</li>
           <li>After a game has started, newcomers wait until the host lets them in, then watch and play the next game.</li>
+          <li>After asking to watch, or being told no, a player waits 10 seconds before they can ask again.</li>
           <li>Anyone can switch 🎮 Playing / 👀 Watching in the lobby; a chosen watcher stays watching until they switch back.</li>
           <li>Watchers see the real cards of each play and one player's hand (following the turn, or a player they tap).</li>
         </ul>
@@ -198,6 +232,10 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         <ul>
           <li>Friends: search by username or name, then + Add. Requests show as a red number on the avatar and Friends button.</li>
           <li>Add friends straight from the lobby, and invite online friends who aren't in a room (they get a Join popup).</li>
+          <li>
+            Join a friend from Friends: while they're in a lobby, tap Join (take a seat) or 👀 Watch. Once their game has started, tap 👀 Ask
+            to watch and the host decides.
+          </li>
           <li>Tap anyone in the lobby or Friends to see their public card: level, record and badges. Never coins or private data.</li>
           <li>Your own Profile: level ring, coins and rank, rewards, record, play style, achievements and the last 10 games.</li>
         </ul>
@@ -231,7 +269,19 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>Invite with the WhatsApp, Share or Copy buttons; the link drops friends straight into the room.</li>
           <li>💬 quick chat: emoji and short messages float up the screen (messages wait a second at the top). 🔊 sound and voice can be muted from the ⋯ menu.</li>
           <li>Voice: Girl or Boy in the lobby. Phones without a male voice get a deeper version of the same voice.</li>
-          <li>Throw an emoji 🌹🍅💣 at someone: tap their seat in a game, or their name in the lobby. Everyone sees it fly and land: the bomb explodes, tomato and egg splat, kiss and rose pulse, clap claps, laugh rocks, party pops.</li>
+          <li>
+            Throw an emoji at someone ({THROWS.length} to pick from: {THROWS.join(' ')}): tap their seat in a game, or their name in the lobby.
+            Everyone sees it wind up, arc across and land with its own animated hit and sound: the bomb's fuse burns then blows up the seat,
+            the tomato squashes into a splat, the egg cracks, lips stamp a kiss, the rose drops petals, hands clap, the laughing face cries
+            tears, the popper bursts confetti, the angry face boils red with steam, the axe thunks in and sticks, the chappal lands a THAPP!
+            slap, the punch goes DHISHOOM! with dizzy stars, the poop splats with flies, the cake smashes into frosting, the mugs clink
+            CHEERS!, the scared face screams AAAA! with its hair on end, the puppy eyes beg Pleaseee, the folded hands bow with Plz yaar!,
+            the teasing face sticks its tongue out with both hands on its head (BLEHH!), and the joker honks JOKER!. Hard hits on your own
+            seat give a small buzz on Android.
+          </li>
+          <li>
+            Animated emoji: Noto Animated Emoji by Google, licensed CC BY 4.0 (credited under the throw buttons). Player: lottie-web (MIT).
+          </li>
           <li>🎁 Gift coins to a friend (10, 25, 50 or 100) from the same places or their card in Friends. Up to 100 coins a day in total; in a room everyone sees the coins fly.</li>
           <li>The phone's back button closes one step at a time and only leaves the app from the home page.</li>
           <li>Tap the cards on the home screen to peek at the middle one. Animations follow the phone's reduce-motion setting.</li>

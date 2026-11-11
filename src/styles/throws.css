@@ -1,0 +1,188 @@
+/* ---------- emoji throws and coin gifts (Flyers.tsx, components/fx): script moves everything with transform/opacity ---------- */
+
+.tf-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 72;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.tf {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tf-glyph {
+  font-size: 40px;
+  line-height: 1;
+  filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.45));
+  will-change: transform, opacity;
+}
+
+.tf-glyph.tf-drawn {
+  width: 44px;
+  height: 46px;
+}
+
+.tf-coin {
+  font-size: 30px;
+}
+
+/* trail copies: no shadow, they are faint anyway */
+.tf-ghost {
+  filter: none;
+}
+
+.tf-shadow {
+  width: 38px;
+  height: 13px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0));
+}
+
+/* the emoji where it lands: the animated one (clip) or a big plain one (hero) */
+.tf-hero {
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  font-size: 70px;
+  line-height: 1;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+  will-change: transform, opacity;
+}
+
+.tf-clip {
+  will-change: transform, opacity;
+}
+
+.tf svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.tf-bit,
+.tf-flash {
+  border-radius: 50%;
+}
+
+/* glows and marks left on the seat sit behind the emoji and bits */
+.tf-flash,
+.tf-decal {
+  z-index: -1;
+}
+
+.tf-ring {
+  width: 64px;
+  height: 64px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+}
+
+.tf-line {
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+.tf-screen {
+  width: 100%;
+  height: 100%;
+}
+
+.tf-smoke {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(95, 95, 95, 0.85), rgba(70, 70, 70, 0.5) 55%, rgba(60, 60, 60, 0));
+}
+
+.tf-scorch {
+  width: 100px;
+  height: 84px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(20, 12, 6, 0.8), rgba(40, 25, 10, 0.45) 55%, rgba(40, 25, 10, 0));
+}
+
+.tf-steam {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.95), rgba(235, 235, 235, 0.6) 55%, rgba(255, 255, 255, 0));
+}
+
+/* slow golden rays behind folded hands */
+.tf-rays {
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(rgba(255, 220, 120, 0.55) 0 10deg, rgba(255, 220, 120, 0) 10deg 30deg);
+  -webkit-mask-image: radial-gradient(circle, #000 30%, transparent 70%);
+  mask-image: radial-gradient(circle, #000 30%, transparent 70%);
+}
+
+.tf-bubble {
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* comic words: THAPP!, DHISHOOM!, CHEERS! (the colour and drop shadow come from script) */
+.tf-word {
+  color: #fff;
+  font-size: 30px;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  -webkit-text-stroke: 2px #2a0a00;
+}
+
+.tf-ha {
+  color: #ffd84d;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  -webkit-text-stroke: 1.5px #7a3e00;
+  text-shadow: 0 3px 0 #7a3e00, 0 5px 10px rgba(0, 0, 0, 0.4);
+}
+
+.tf-label {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--gold-ink);
+  font-size: 16px;
+  font-weight: 900;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+/* less motion: shown in place, fading in and out (stays still if animations are off) */
+.tf-calm {
+  position: absolute;
+  font-size: 40px;
+  line-height: 1;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  animation: tf-calm 1.6s ease both;
+}
+
+@keyframes tf-calm {
+  0% {
+    opacity: 0;
+  }
+  15%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

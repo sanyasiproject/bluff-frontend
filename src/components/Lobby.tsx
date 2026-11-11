@@ -11,7 +11,7 @@ import {
   type VoiceGender,
 } from '../lib/speech';
 import { formatCoins, compactCoins, stakeLabel } from '../lib/coins';
-import { STAKES, type FriendsResponse, type FriendView, type GameConfig, type PublicPlayer, type RoomView } from '../types';
+import { BOT_MAX_STAKE, STAKES, type FriendsResponse, type FriendView, type GameConfig, type PublicPlayer, type RoomView } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions } from '../useBluff';
 import { AccountCorner } from './AccountCorner';
@@ -201,8 +201,8 @@ const ROOM_LIMIT = 12;
 
 const names = (players: PublicPlayer[]) => players.map((p) => p.name).join(', ');
 
-/** host picks how many coins each player puts in; everyone sees what it means */
-function StakePicker({ stake, players, isHost, onPick }: { stake: number; players: number; isHost: boolean; onPick: (n: number) => void }) {
+/** host picks how many coins each player puts in; everyone sees what it means. Bots cap it and put in nothing */
+function StakePicker({ stake, players, bots, isHost, onPick }: { stake: number; players: number; bots: boolean; isHost: boolean; onPick: (n: number) => void }) {
   const pot = stake * Math.max(players, 2);
   return (
     <>
@@ -210,12 +210,20 @@ function StakePicker({ stake, players, isHost, onPick }: { stake: number; player
       {isHost && (
         <div className="stake-grid">
           {STAKES.map((s) => (
-            <button key={s} type="button" className={cx('stake-chip', s === stake && 'on')} aria-pressed={s === stake} onClick={() => onPick(s)}>
+            <button
+              key={s}
+              type="button"
+              className={cx('stake-chip', s === stake && 'on')}
+              aria-pressed={s === stake}
+              disabled={bots && s > BOT_MAX_STAKE}
+              onClick={() => onPick(s)}
+            >
               {stakeLabel(s)}
             </button>
           ))}
         </div>
       )}
+      {isHost && bots && <p className="muted small">🤖 With bots the stake goes up to 🪙 {BOT_MAX_STAKE}</p>}
       <div className={cx('stake-explain', stake > 0 && 'live')}>
         {stake === 0 ? (
           <>
@@ -227,7 +235,9 @@ function StakePicker({ stake, players, isHost, onPick }: { stake: number; player
             <b>
               Everyone puts in 🪙 {formatCoins(stake)} · Winner takes 🪙 {formatCoins(pot)}
             </b>
-            <span>Paid only when the game finishes · log in needed</span>
+            <span>
+              {bots ? 'Bots put in nothing · coins lost to a bot are gone' : 'Paid only when the game finishes · log in needed'}
+            </span>
           </>
         )}
       </div>
@@ -249,11 +259,14 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
 
   const stake = view.config.stake;
   const pot = stake * view.players.length;
-  const guests = stake > 0 ? view.players.filter((p) => !p.registered) : [];
+  const bots = view.players.filter((p) => p.bot);
+  const guests = stake > 0 ? view.players.filter((p) => !p.registered && !p.bot) : [];
   const short = stake > 0 ? view.players.filter((p) => p.registered && (p.coins ?? 0) < stake) : [];
   const startBlock =
     view.players.length < 2
       ? 'Need at least 2 players'
+      : bots.length === view.players.length
+        ? 'Someone has to play with the bots'
       : view.config.teams && view.players.length !== 4
         ? 'Teams need exactly 4 players'
         : guests.length > 0
@@ -336,6 +349,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
     setViewingId(id);
   };
 
+  // joining a friend's room gives up this one
+  const joinFriend = (userId: string, watch: boolean) => actions.joinFriend(userId, watch, me?.name ?? '');
+
   const remove = (id: string, name: string) => {
     if (window.confirm(`Remove ${name} from the room?`)) void actions.kick(id);
   };
@@ -362,7 +378,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           </p>
         </div>
         <QuickChat onSend={actions.chat} />
-        <AccountCorner auth={auth} roomCode={view.code} onInvite={actions.invite} />
+        <AccountCorner auth={auth} roomCode={view.code} onInvite={actions.invite} onJoin={joinFriend} />
       </header>
 
       {view.players.length + view.watchers.length < ROOM_LIMIT && (
@@ -399,7 +415,19 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           </span>
         </h2>
         <ul className="player-list">
-          {view.players.map((p) => (
+          {view.players.map((p) =>
+            p.bot ? (
+              <li key={p.id} className="player-row bot-row">
+                <span className="row-open">
+                  <span className="avatar sm bot-avatar" data-member={p.id} aria-hidden>
+                    🤖
+                  </span>
+                  <span className="grow">{p.name}</span>
+                </span>
+                <span className="tag dim">Bot</span>
+                {removeButton(p.id, p.name)}
+              </li>
+            ) : (
             <li key={p.id} className={cx('player-row', !p.connected && 'offline')}>
               <button type="button" className="row-open" aria-label={`${p.name}'s profile`} onClick={() => openPlayer(p.id)}>
                 <span className="avatar sm" data-member={p.id} style={{ background: avatarColor(p.name) }}>
@@ -422,8 +450,14 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               {friendButton(p.id, p.username)}
               {removeButton(p.id, p.name)}
             </li>
-          ))}
+            ),
+          )}
         </ul>
+        {isHost && !seatsFull && people < ROOM_LIMIT && (
+          <button className="btn block add-bot" onClick={() => void actions.addBot()}>
+            🤖 Add a bot
+          </button>
+        )}
         {isHost && view.players.length + view.watchers.length > 1 && (
           <p className="muted small tap-hint">Tap a player to see their profile or make them the host</p>
         )}
@@ -478,12 +512,13 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             {view.config.teams && <span>👥 2 vs 2</span>}
           </div>
           {stake > 0 && <p className="muted small">Winner takes 🪙 {formatCoins(pot)}</p>}
+          {bots.length > 0 && <p className="muted small">🤖 Bots put in nothing · coins lost to a bot are gone</p>}
         </section>
       )}
 
       {isHost && <section className="panel">
         <h2 className="section-title">Game settings</h2>
-        {coinsOn && <StakePicker stake={stake} players={view.players.length} isHost={isHost} onPick={(n) => set({ stake: n })} />}
+        {coinsOn && <StakePicker stake={stake} players={view.players.length} bots={bots.length > 0} isHost={isHost} onPick={(n) => set({ stake: n })} />}
         <p className="label">Cards</p>
         <div className="seg">
           <Option on={view.config.decks === 1} disabled={!isHost} title="1 deck" desc="52 cards" onClick={() => set({ decks: 1 })} />
@@ -632,7 +667,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         </PlayerSheet>
       )}
       <SwapPopup view={view} actions={actions} />
-      {friendsOpen && <FriendsSheet auth={auth} roomCode={view.code} onInvite={actions.invite} onClose={() => setFriendsOpen(false)} />}
+      {friendsOpen && (
+        <FriendsSheet auth={auth} roomCode={view.code} onInvite={actions.invite} onJoin={joinFriend} onClose={() => setFriendsOpen(false)} />
+      )}
     </main>
   );
 }

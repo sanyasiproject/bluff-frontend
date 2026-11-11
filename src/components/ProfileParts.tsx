@@ -42,6 +42,7 @@ function GameCard({ g }: { g: GameSummary }) {
               {p.name}
               {p.place === 1 ? ' 🥇' : p.loser ? ' 🙈' : p.kicked ? ' 🚫' : p.place ? ` ${placeLabel(p.place)}` : ''}
               {p.guest ? ' (guest)' : ''}
+              {p.bot ? ' 🤖' : ''}
               {i < g.players.length - 1 ? ', ' : ''}
             </span>
           ))}

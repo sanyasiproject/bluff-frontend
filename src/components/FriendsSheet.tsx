@@ -11,16 +11,22 @@ interface Props {
   auth: Auth;
   roomCode?: string;
   onInvite?: (userId: string) => Promise<boolean>;
+  /** join or watch a friend's room; true once in, or once the host has the request */
+  onJoin?: (userId: string, watch: boolean) => Promise<boolean>;
   onClose: () => void;
 }
 
 /** a friend, request or search result; only friends know whether they're in a room */
-type Person = Omit<FriendView, 'inRoom' | 'online'> & Partial<Pick<FriendView, 'inRoom'>> & { online: boolean | null };
+type Person = Omit<FriendView, 'inRoom' | 'online' | 'roomPhase'> & Partial<Pick<FriendView, 'inRoom' | 'roomPhase'>> & { online: boolean | null };
 
-const where = (p: Person) => (p.inRoom === 'here' ? ' · in this room' : p.inRoom === 'other' ? ' · in a room' : '');
+const where = (p: Person) =>
+  p.inRoom === 'here' ? ' · in this room' : p.inRoom === 'other' ? (p.roomPhase === 'playing' ? ' · in a game' : ' · in a lobby') : '';
+
+/** after asking to watch, the server wants a short wait before asking again */
+const ASK_AGAIN_MS = 10_000;
 
 /** find players by name and add them, accept requests, and invite online friends into your room */
-export function FriendsSheet({ auth, roomCode, onInvite, onClose }: Props) {
+export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Props) {
   const [data, setData] = useState<FriendsResponse | null>(null);
   const [query, setQuery] = useState('');
   /** null while there is nothing to search or a search is running */
@@ -30,6 +36,8 @@ export function FriendsSheet({ auth, roomCode, onInvite, onClose }: Props) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [invited, setInvited] = useState<Set<string>>(new Set());
+  /** friends whose game I just asked to watch */
+  const [asked, setAsked] = useState<Set<string>>(new Set());
   /** a profile opened from this list */
   const [viewing, setViewing] = useState<Person | null>(null);
 
@@ -127,6 +135,40 @@ export function FriendsSheet({ auth, roomCode, onInvite, onClose }: Props) {
     }
   };
 
+  const join = async (f: FriendView, watch: boolean) => {
+    if (!onJoin) return;
+    setError('');
+    setNote('');
+    const playing = f.roomPhase === 'playing';
+    if (!(await onJoin(f.id, watch))) return;
+    if (!playing) return;
+    setNote(`Asked to watch ${f.displayName}'s game. You'll get in when the host says yes.`);
+    setAsked((prev) => new Set(prev).add(f.id));
+    setTimeout(() => setAsked((prev) => new Set([...prev].filter((id) => id !== f.id))), ASK_AGAIN_MS);
+  };
+
+  /** join or watch a friend's room: both in a lobby, only a request to watch once their game is on */
+  const joinActions = (f: FriendView) => {
+    if (!onJoin || !f.online || f.inRoom !== 'other') return null;
+    if (f.roomPhase === 'playing') {
+      return (
+        <button className="btn small" disabled={asked.has(f.id)} onClick={() => void join(f, true)}>
+          {asked.has(f.id) ? 'Asked ✓' : '👀 Ask to watch'}
+        </button>
+      );
+    }
+    return (
+      <>
+        <button className="btn small primary" onClick={() => void join(f, false)}>
+          Join
+        </button>
+        <button className="btn small" onClick={() => void join(f, true)}>
+          👀 Watch
+        </button>
+      </>
+    );
+  };
+
   const person = (f: Person, actions: React.ReactNode, showOnline = true) => (
     <li key={f.id} className="friend-row">
       <button type="button" className="row-open" aria-label={`${f.displayName}'s profile`} onClick={() => setViewing(f)}>
@@ -208,7 +250,8 @@ export function FriendsSheet({ auth, roomCode, onInvite, onClose }: Props) {
               f,
               <div className="row-actions">
                 {roomCode && onInvite && f.inRoom === 'here' && <span className="tag dim">In this room</span>}
-                {roomCode && onInvite && f.inRoom === 'other' && <span className="tag dim">In a room</span>}
+                {joinActions(f)}
+                {roomCode && onInvite && !onJoin && f.inRoom === 'other' && <span className="tag dim">In a room</span>}
                 {roomCode && onInvite && !f.inRoom && (
                   <button className="btn small primary" disabled={!f.online || invited.has(f.id)} onClick={() => void invite(f)}>
                     {invited.has(f.id) ? 'Invited ✓' : 'Invite'}

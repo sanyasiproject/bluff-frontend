@@ -20,12 +20,13 @@ interface Props {
   /** when in a room, friends can be invited to it */
   roomCode?: string;
   onInvite?: (userId: string) => Promise<boolean>;
+  onJoin?: (userId: string, watch: boolean) => Promise<boolean>;
 }
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 /** the player's own page: level, coins, record, play style, achievements and recent games */
-export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite }: Props) {
+export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, onJoin }: Props) {
   const [games, setGames] = useState<GameSummary[] | null>(null);
   const [overview, setOverview] = useState<ProfileOverview | null>(null);
   const [friendsOpen, setFriendsOpen] = useState(false);
@@ -259,7 +260,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite }: 
 
       {guideOpen && <XpGuide level={lvl.level} xp={lvl.xp} onClose={() => setGuideOpen(false)} />}
       {rulesOpen && <RulesPage onClose={() => setRulesOpen(false)} />}
-      {friendsOpen && <FriendsSheet auth={auth} roomCode={roomCode} onInvite={onInvite} onClose={() => setFriendsOpen(false)} />}
+      {friendsOpen && <FriendsSheet auth={auth} roomCode={roomCode} onInvite={onInvite} onJoin={onJoin} onClose={() => setFriendsOpen(false)} />}
     </FullPage>
   );
 }

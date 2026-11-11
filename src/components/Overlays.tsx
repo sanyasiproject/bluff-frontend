@@ -385,6 +385,7 @@ function CoinSummary({ view, nameOf, startLevel }: { view: RoomView; nameOf: (id
       {stake > 0 && (
         <p className="muted small">
           Pot 🪙 {formatCoins(stake * everyone.length)} {view.teams ? 'split by the winning team' : 'goes to the winner'}
+          {view.players.some((p) => p.bot) && ' · bots win nothing, coins lost to them are gone'}
         </p>
       )}
       {showRows &&
@@ -422,8 +423,8 @@ export function PlayersSheet({
   onClose: () => void;
 }) {
   const people = [
-    ...view.players.map((p) => ({ id: p.id, name: p.name, level: p.level, watching: false })),
-    ...view.watchers.map((w) => ({ id: w.id, name: w.name, level: w.level, watching: true })),
+    ...view.players.map((p) => ({ id: p.id, name: p.name, level: p.level, watching: false, bot: p.bot })),
+    ...view.watchers.map((w) => ({ id: w.id, name: w.name, level: w.level, watching: true, bot: false })),
   ].filter((p) => p.id !== view.meId);
   return (
     <Backdrop onClose={onClose}>
@@ -432,12 +433,13 @@ export function PlayersSheet({
       <ul className="player-list">
         {people.map((p) => (
           <li key={p.id} className="player-row">
-            <span className="avatar sm" style={{ background: avatarColor(p.name) }}>
-              {p.name[0]?.toUpperCase()}
+            <span className={cx('avatar sm', p.bot && 'bot-avatar')} style={p.bot ? undefined : { background: avatarColor(p.name) }}>
+              {p.bot ? '🤖' : p.name[0]?.toUpperCase()}
             </span>
             <span className="grow">
               {p.name}
               <LevelBadge level={p.level} />
+              {p.bot && <span className="muted"> · bot</span>}
               {p.watching && <span className="muted"> · watching</span>}
             </span>
             <button className="btn small ghost danger-text" onClick={() => onRemove(p.id, p.name)}>

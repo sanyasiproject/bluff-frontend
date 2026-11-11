@@ -284,6 +284,22 @@ export function useBluff() {
           setView(null);
         }),
       kick: (memberId: string) => run(() => request('room:kick', { memberId })),
+      /** host: a bot takes a free seat */
+      addBot: () => run(() => request('room:addBot')),
+      /** join or watch a friend's room from the Friends list; once their game is on it's a request to the host */
+      joinFriend: async (userId: string, watch: boolean, name: string) =>
+        (await run(async () => {
+          const res = await request<JoinReply>('friend:join', { userId, watch });
+          // the server gave up my old seat to take this one
+          if (viewRef.current && viewRef.current.code !== res.code) {
+            session.current = null;
+            clearSession();
+            viewRef.current = null;
+            setView(null);
+          }
+          if (res.pending) setPending({ code: res.code, name });
+          else enter({ code: res.code, token: res.token! }, name);
+        })) !== null,
       invite: async (userId: string) => (await run(() => request('friend:invite', { userId }))) !== null,
       dismissInvite: (key: number) => setInvites((prev) => prev.filter((i) => i.key !== key)),
       acceptInvite: (inv: Invite, name: string) =>

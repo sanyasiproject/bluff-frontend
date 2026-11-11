@@ -99,4 +99,9 @@ export const sfx = {
     const c = audio();
     if (c) notes(c, [392, 330, 262], 0.18, 0.4, { type: 'triangle', gain: 0.12 });
   },
+  /** host only: someone is at the door asking to watch */
+  knock() {
+    const c = audio();
+    if (c) notes(c, [988, 1319, 988], 0.12, 0.18, { type: 'sine', gain: 0.1 });
+  },
 };

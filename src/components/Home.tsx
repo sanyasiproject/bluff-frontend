@@ -95,7 +95,7 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
     <main className="screen home">
       <SuitDrift />
       <header className="home-top">
-        <AccountCorner auth={auth} onOpenAdmin={onOpenAdmin} />
+        <AccountCorner auth={auth} onOpenAdmin={onOpenAdmin} onJoin={(userId, watch) => actions.joinFriend(userId, watch, auth.user?.displayName ?? name)} />
       </header>
       <div className="hero">
         <HeroFan />

@@ -15,10 +15,11 @@ interface Props {
   /** when in a room, friends can be invited to it */
   roomCode?: string;
   onInvite?: (userId: string) => Promise<boolean>;
+  onJoin?: (userId: string, watch: boolean) => Promise<boolean>;
 }
 
 /** top-right corner: coins + avatar that opens the profile page, or a Log in button for guests */
-export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite }: Props) {
+export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite, onJoin }: Props) {
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const close = () => setSheet(null);
   if (!auth.accountsOn || auth.checking) return null;
@@ -47,7 +48,7 @@ export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite }: Props) 
 
       {(sheet === 'login' || sheet === 'register') && <AccountSheet initial={sheet} auth={auth} onClose={close} />}
       {sheet === 'profile' && user && (
-        <ProfilePage auth={auth} onClose={close} onOpenAdmin={onOpenAdmin} roomCode={roomCode} onInvite={onInvite} />
+        <ProfilePage auth={auth} onClose={close} onOpenAdmin={onOpenAdmin} roomCode={roomCode} onInvite={onInvite} onJoin={onJoin} />
       )}
     </>
   );

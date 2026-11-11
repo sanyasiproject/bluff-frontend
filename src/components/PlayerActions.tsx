@@ -15,6 +15,14 @@ export function ThrowRow({ onThrow }: { onThrow: (index: number) => void }) {
           </button>
         ))}
       </div>
+      {/* the animated emoji are CC BY 4.0, which asks for credit where they're used */}
+      <p className="muted throw-credit">
+        Animated emoji:{' '}
+        <a href="https://googlefonts.github.io/noto-emoji-animation/" target="_blank" rel="noreferrer">
+          Noto by Google
+        </a>
+        , <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>
+      </p>
     </div>
   );
 }

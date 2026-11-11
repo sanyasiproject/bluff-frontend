@@ -50,8 +50,8 @@ function Seat({ player, turn, passed, viewing, action, bubble, onClick, label, s
     <>
       {viewing && <span className="eye-badge">👁</span>}
       {badge && <span className={cx('badge', player.place && 'gold')}>{badge}</span>}
-      <span className="avatar" style={{ background: avatarColor(player.name) }}>
-        {player.name[0]?.toUpperCase()}
+      <span className={cx('avatar', player.bot && 'bot-avatar')} style={player.bot ? undefined : { background: avatarColor(player.name) }}>
+        {player.bot ? '🤖' : player.name[0]?.toUpperCase()}
         {player.level && <span className="seat-lv">{player.level}</span>}
       </span>
       <span className="seat-name">
@@ -96,6 +96,7 @@ function SeatSheet({ player, auth, onThrow, onClose }: { player: PublicPlayer; a
   return (
     <Backdrop onClose={onClose}>
       <h3>
+        {player.bot && '🤖 '}
         {player.name} <LevelBadge level={player.level} />
       </h3>
       <ThrowRow
@@ -304,6 +305,16 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
   // quick messages also show on the sender's seat (they float up the screen for everyone)
   const fresh = bubbles.filter((b) => Date.now() - b.at < BUBBLE_MS);
   const bubbleOf = (id: string) => [...fresh].reverse().find((b) => b.from === id) ?? null;
+  // someone new asks to watch: the host hears a knock and sees a note, and the game goes on
+  const seenRequests = useRef(new Set(view.watchRequests.map((r) => r.id)));
+  useEffect(() => {
+    const added = view.watchRequests.filter((r) => !seenRequests.current.has(r.id));
+    seenRequests.current = new Set(view.watchRequests.map((r) => r.id));
+    if (added.length === 0) return;
+    sfx.knock();
+    actions.toast(added.length === 1 ? `👀 ${added[0].name} wants to watch · tap 👀 to answer` : `👀 ${added.length} people want to watch`);
+  }, [view.watchRequests]);
+
   /** whose seat I tapped, to throw an emoji or send coins */
   const [target, setTarget] = useState<string | null>(null);
   const targetPlayer = view.players.find((p) => p.id === target && p.id !== view.meId);
@@ -510,9 +521,11 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
         {view.config.stake > 0 && <span className="pot-chip">🪙 Pot {compactCoins(pot)}</span>}
         <span className="grow" />
         <div className="topbar-actions">
-          {/* host only: people waiting to watch; the count grows quietly instead of popping up */}
+          {/* host only: people waiting to watch; it pulses and knocks, but never pops up over the game */}
           {isHost && view.watchRequests.length > 0 && (
             <button className="icon-btn req-btn" aria-label={`${view.watchRequests.length} people want to watch`} onClick={() => setPanel('requests')}>
+              {/* re-keyed so each new request rings it again */}
+              <span key={view.watchRequests.length} className="req-ring" aria-hidden />
               👀<span className="req-dot">{view.watchRequests.length}</span>
             </button>
           )}
