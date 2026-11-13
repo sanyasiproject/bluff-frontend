@@ -14,6 +14,8 @@
   --danger: #e5484d;
   --danger-deep: #9c1f26;
   --ok: #3ccf91;
+  /* cards that just came into my hand */
+  --new-card: #4dc3ff;
   --suit-red: #d1253a;
   --suit-black: #16171b;
   --card-face: #fffdf7;
@@ -447,6 +449,13 @@ p {
   border-color: var(--gold);
   background: rgba(246, 196, 83, 0.2);
   color: var(--gold);
+}
+
+/* a stake the table can't use right now (bots cap it at 100): faded and struck through */
+.stake-chip:disabled {
+  opacity: 0.3;
+  text-decoration: line-through;
+  cursor: not-allowed;
 }
 
 .stake-explain {
@@ -962,6 +971,11 @@ a.btn {
 .mini-seg button.on {
   background: var(--gold);
   color: var(--gold-ink);
+}
+
+.mini-seg button:disabled:not(.on) {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .lobby-actions {
@@ -3707,9 +3721,46 @@ body::after {
   animation: pop-big 0.4s ease-out, pulse-soft 1.6s ease-in-out 0.4s infinite;
 }
 
-/* cards that just came into my hand drop in with a blue glow */
+/* cards that just came into my hand: they drop in, then keep a blue ring and a NEW tag for a few seconds */
 .card.in-hand.fresh {
-  animation: fresh-in 0.5s var(--spring) both, fresh-glow 1.6s ease-out;
+  translate: 0 -6px;
+  outline: 3px solid var(--new-card);
+  outline-offset: 1px;
+  animation: fresh-in 0.5s var(--spring) both;
+}
+
+.card.in-hand.fresh::before {
+  content: 'NEW';
+  position: absolute;
+  /* inside the card's left edge, the part that shows when cards overlap */
+  bottom: 6px;
+  left: 2px;
+  z-index: 2;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--new-card);
+  color: #04263a;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  pointer-events: none;
+  animation: new-tag 0.8s ease-in-out infinite alternate;
+}
+
+/* on my Crazy 7 turn a new card stays easy to see even when it can't be played */
+.card.in-hand.fresh.dim {
+  filter: brightness(0.85);
+}
+
+.new-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--new-card);
+  color: #04263a;
+  font-size: 12px;
+  font-weight: 800;
+  animation: pop-big 0.35s ease-out;
 }
 
 /* reveal: the verdict lands like a stamp */
@@ -3963,10 +4014,9 @@ body::after {
   }
 }
 
-@keyframes fresh-glow {
-  0%,
-  40% {
-    box-shadow: 0 0 0 3px #7cc4ff, 0 0 18px rgba(124, 196, 255, 0.8);
+@keyframes new-tag {
+  to {
+    opacity: 0.55;
   }
 }
 
@@ -4475,6 +4525,28 @@ body::after {
   color: #e3c8ff;
 }
 
+/* the seat that plays after me */
+.c7-tag.next {
+  margin-left: 4px;
+  background: rgba(124, 196, 255, 0.22);
+  color: #bfe3ff;
+}
+
+/* under the pile: who put the top card down */
+.c7-played {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.c7-played b {
+  color: var(--ink);
+}
+
+.c7-played b.red {
+  color: #ff8a96;
+}
+
 .seat.c7-one {
   border-color: var(--danger);
 }
@@ -4483,9 +4555,9 @@ body::after {
   background: rgba(229, 72, 77, 0.2);
 }
 
-/* my hand: playable cards lift and glow green, the rest fade back */
+/* my hand: playable cards lift and glow green, the rest fade back (dimming is instant: only movement animates) */
 .card.in-hand {
-  transition: transform 0.14s ease, box-shadow 0.14s ease, translate 0.18s var(--spring), filter 0.2s ease;
+  transition: transform 0.14s ease, translate 0.18s var(--spring);
 }
 
 .card.in-hand.playable {
@@ -4536,13 +4608,14 @@ body::after {
   }
 }
 
+/* bob, throb and alarm move the individual translate/scale/rotate, so transform stays free for the press */
 @keyframes c7-deck-bob {
   0%,
   100% {
-    transform: translateY(0);
+    translate: 0 0;
   }
   50% {
-    transform: translateY(-4px);
+    translate: 0 -4px;
   }
 }
 
@@ -4567,22 +4640,25 @@ body::after {
 @keyframes c7-throb {
   0%,
   100% {
-    transform: scale(1);
+    scale: 1;
   }
   50% {
-    transform: scale(1.05);
+    scale: 1.05;
   }
 }
 
 @keyframes c7-alarm {
   0%,
   100% {
-    transform: rotate(0) scale(1.02);
+    rotate: 0deg;
+    scale: 1.02;
   }
   25% {
-    transform: rotate(-2deg) scale(1.06);
+    rotate: -2deg;
+    scale: 1.06;
   }
   75% {
-    transform: rotate(2deg) scale(1.06);
+    rotate: 2deg;
+    scale: 1.06;
   }
 }

@@ -4,11 +4,13 @@ import { avatarColor, claimText, cx, placeLabel, rankPlural, SUIT_SYMBOL } from 
 import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
 import { confettiAt } from '../lib/motion';
+import { useNewCards } from '../lib/newCards';
 import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
 import type { Card, FriendsResponse, PublicPlayer, Rank, RoomView } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions, ChatBubble } from '../useBluff';
+import { ConfirmBox } from './ConfirmBox';
 import { FlyingCards, type Flight } from './FlyingCards';
 import { Hand } from './Hand';
 import { LevelBadge } from './LevelBadge';
@@ -261,20 +263,16 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
   useBack(() => setPanel('menu'));
   const [flights, setFlights] = useState<Flight[]>([]);
   const fly = (f: Flight) => setFlights((all) => [...all, f]);
-  /** cards that just came into my hand, glowing for a moment */
-  const [freshIds, setFreshIds] = useState<string[]>([]);
-  const handIds = useRef<string[] | null>(null);
-  const freshTimer = useRef<number>();
   /** who already got their finish confetti this game */
   const finished = useRef(new Set(view.players.filter((p) => p.place).map((p) => p.id)));
   /** the reveal on screen, and the one whose pile already flew to the loser */
   const shownReveal = useRef<string | null>(null);
   const swept = useRef<string | null>(null);
-  /** picked-up cards wait for the reveal to close before they glow */
-  const pendingFresh = useRef<string[]>([]);
   const [dealing, setDealing] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [confirmStop, setConfirmStop] = useState(false);
+  const [confirmKick, setConfirmKick] = useState<{ id: string; name: string } | null>(null);
   const seatEls = useRef(new Map<string, HTMLElement>());
   const pileRef = useRef<HTMLDivElement>(null);
   const handRef = useRef<HTMLElement>(null);
@@ -301,6 +299,8 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
   const peekedNow = lp ? peeked.filter((p) => p.playId === lp.id) : [];
   const bluffLocked = view.bluffCallsLeft === 0;
   const isHost = view.hostId === view.meId;
+  // the server lets anyone stop a game whose host is offline, so it can't hang forever
+  const hostOffline = ![...view.players, ...view.watchers].find((p) => p.id === view.hostId)?.connected;
   // once someone has finished 1st the host may end the game; everyone else then loses
   const winner = view.players.find((p) => p.place === 1);
   const canEnd = isHost && playing && !!winner;
@@ -388,28 +388,8 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
     }
   });
 
-  // cards that arrive in my hand (picking up the pile) glow for a moment
-  useEffect(() => {
-    const prev = handIds.current;
-    handIds.current = view.hand.map((c) => c.id);
-    if (!prev || prev.length === 0 || freshDeal) return;
-    const had = new Set(prev);
-    const added = view.hand.filter((c) => !had.has(c.id)).map((c) => c.id);
-    if (added.length > 0) pendingFresh.current = [...pendingFresh.current, ...added];
-  }, [view.hand]);
-  // ...once no reveal is waiting to close, timed with the pile landing in my hand
-  useEffect(() => {
-    const revealOpen = !!view.reveal && swept.current !== view.reveal.playId;
-    if (revealOpen || pendingFresh.current.length === 0) return;
-    const ids = pendingFresh.current;
-    pendingFresh.current = [];
-    window.clearTimeout(freshTimer.current);
-    freshTimer.current = window.setTimeout(() => {
-      setFreshIds(ids);
-      freshTimer.current = window.setTimeout(() => setFreshIds([]), 1600);
-    }, 350);
-  });
-  useEffect(() => () => window.clearTimeout(freshTimer.current), []);
+  // cards that came into my hand (the pile after a call) are marked for a few seconds, once the reveal has closed
+  const newIds = useNewCards(view.hand, { reset: view.phase, hold: () => !!view.reveal && swept.current !== view.reveal.playId });
 
   useEffect(() => {
     // a quick next play clears the reveal before its timer ends, so close it here too
@@ -660,6 +640,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
         <div className="hand-head">
           {myTurn ? <span className="your-turn">YOUR TURN</span> : <span>Your cards · {view.hand.length}</span>}
           {myTurn && <span className="turn-hint">{status}</span>}
+          {newIds.length > 0 && <span className="new-chip">+{newIds.length} new</span>}
           {selected.length > 0 ? (
             <button className="link-btn" onClick={() => setSelected([])}>
               Clear {selected.length}
@@ -668,7 +649,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
             !myTurn && view.hand.length > 1 && <span className="tap-tip">Double-tap = all of a rank</span>
           )}
         </div>
-        <Hand cards={view.hand} selected={selected} onToggle={tapCard} deal={dealing} fresh={freshIds} />
+        <Hand cards={view.hand} selected={selected} onToggle={tapCard} deal={dealing} fresh={newIds} />
       </section>
 
       <footer className="action-bar">
@@ -771,10 +752,10 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
           onToggleSound={toggleSound}
           onPeople={isHost ? () => setPanel('people') : undefined}
           onStop={
-            isHost && playing
+            (isHost || hostOffline) && playing
               ? () => {
                   setPanel(null);
-                  if (window.confirm('Stop this game for everyone? No coins will move.')) void actions.toLobby();
+                  setConfirmStop(true);
                 }
               : undefined
           }
@@ -895,11 +876,40 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
         <PlayersSheet
           view={view}
           onRemove={(id, who) => {
-            const mid = view.phase === 'playing' && view.players.some((p) => p.id === id);
-            const warn = mid ? ` Their cards leave the game and they won't pay or win coins.` : '';
-            if (window.confirm(`Remove ${who} from the room?${warn}`)) void actions.kick(id);
+            setPanel(null);
+            setConfirmKick({ id, name: who });
           }}
           onClose={() => setPanel(null)}
+        />
+      )}
+      {confirmStop && playing && (
+        <ConfirmBox
+          title="Stop this game for everyone?"
+          body="Nobody wins or loses and no coins move. Everyone goes back to the lobby."
+          action="Stop game"
+          cancel="Keep playing"
+          onCancel={() => setConfirmStop(false)}
+          onConfirm={() => {
+            setConfirmStop(false);
+            void actions.toLobby();
+          }}
+        />
+      )}
+      {confirmKick && (
+        <ConfirmBox
+          title={`Remove ${confirmKick.name}?`}
+          body={
+            playing && view.players.some((p) => p.id === confirmKick.id)
+              ? "Their cards leave the game and they won't pay or win coins."
+              : 'They leave the room.'
+          }
+          action="Remove"
+          onCancel={() => setConfirmKick(null)}
+          onConfirm={() => {
+            const id = confirmKick.id;
+            setConfirmKick(null);
+            void actions.kick(id);
+          }}
         />
       )}
     </main>

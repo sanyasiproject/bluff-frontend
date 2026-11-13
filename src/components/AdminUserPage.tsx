@@ -108,12 +108,17 @@ export function AdminUserPage({ auth, userId, onBack }: { auth: Auth; userId: st
       setError('New password must be at least 8 characters');
       return;
     }
-    if (!window.confirm(`Set a new password for @${data?.user.username}? They will be logged out on every device.`)) return;
-    const ok = await run(
-      () => api(`/admin/users/${userId}/password`, { body: { password }, token: auth.token }),
-      'Password changed. Share it with them privately.',
-    );
-    if (ok) setPassword('');
+    // asks first, in the app, like blocking and role changes
+    setConfirm({
+      title: `Set a new password for @${data?.user.username}?`,
+      body: 'They will be logged out on every device.',
+      action: 'Set password',
+      danger: true,
+      run: () =>
+        void run(() => api(`/admin/users/${userId}/password`, { body: { password }, token: auth.token }), 'Password changed. Share it with them privately.').then(
+          (ok) => ok && setPassword(''),
+        ),
+    });
   };
 
   // blocking and role changes ask first, so they don't happen by a mis-tap

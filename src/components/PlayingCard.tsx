@@ -13,9 +13,11 @@ interface Props {
   onClick?: () => void;
   className?: string;
   style?: CSSProperties;
+  /** added to what a screen reader says, e.g. ", playable" */
+  note?: string;
 }
 
-export function PlayingCard({ card, faceDown, size, selected, order, onClick, className, style }: Props) {
+export function PlayingCard({ card, faceDown, size, selected, order, onClick, className, style, note = '' }: Props) {
   const shown = faceDown ? null : (card ?? null);
   const classes = cx(
     'card',
@@ -25,7 +27,7 @@ export function PlayingCard({ card, faceDown, size, selected, order, onClick, cl
     onClick && 'tappable',
     className,
   );
-  const label = shown ? `${rankName(shown.rank)} of ${SUIT_NAME[shown.suit]}` : 'Face-down card';
+  const label = (shown ? `${rankName(shown.rank)} of ${SUIT_NAME[shown.suit]}` : 'Face-down card') + note;
   const face = shown && ['J', 'Q', 'K'].includes(shown.rank);
   const body = shown && (
     <>

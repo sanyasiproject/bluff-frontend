@@ -3,6 +3,7 @@ import { api, errorText } from '../lib/api';
 import { avatarColor, cx } from '../lib/cards';
 import type { FriendsResponse, FriendView, PlayerSearchResult } from '../types';
 import type { Auth } from '../useAuth';
+import { ConfirmBox } from './ConfirmBox';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
 import { PlayerSheet } from './PlayerSheet';
@@ -40,6 +41,8 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
   const [asked, setAsked] = useState<Set<string>>(new Set());
   /** a profile opened from this list */
   const [viewing, setViewing] = useState<Person | null>(null);
+  /** a friend about to be removed, waiting for a yes */
+  const [unfriend, setUnfriend] = useState<FriendView | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -260,7 +263,7 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
                 <button
                   className="link-btn danger-link"
                   disabled={busy}
-                  onClick={() => window.confirm(`Remove ${f.displayName} from your friends?`) && void act(() => api(`/friends/${f.id}/remove`, { method: 'POST', token: auth.token }))}
+                  onClick={() => setUnfriend(f)}
                 >
                   Remove
                 </button>
@@ -291,6 +294,19 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
         Close
       </button>
 
+      {unfriend && (
+        <ConfirmBox
+          title={`Remove ${unfriend.displayName} from your friends?`}
+          body="You can add each other again later."
+          action="Remove"
+          onCancel={() => setUnfriend(null)}
+          onConfirm={() => {
+            const f = unfriend;
+            setUnfriend(null);
+            void act(() => api(`/friends/${f.id}/remove`, { method: 'POST', token: auth.token }));
+          }}
+        />
+      )}
       {viewing && (
         <PlayerSheet
           auth={auth}

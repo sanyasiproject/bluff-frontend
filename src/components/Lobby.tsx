@@ -15,6 +15,7 @@ import { BOT_MAX_STAKE, CRAZY7_MAX_PICKS, STAKES, type FriendsResponse, type Fri
 import type { Auth } from '../useAuth';
 import type { Actions } from '../useBluff';
 import { AccountCorner } from './AccountCorner';
+import { ConfirmBox } from './ConfirmBox';
 import { SuitDrift } from './Ambient';
 import { FriendsSheet } from './FriendsSheet';
 import { InvitePanel } from './InvitePanel';
@@ -353,9 +354,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   // joining a friend's room gives up this one
   const joinFriend = (userId: string, watch: boolean) => actions.joinFriend(userId, watch, me?.name ?? '');
 
-  const remove = (id: string, name: string) => {
-    if (window.confirm(`Remove ${name} from the room?`)) void actions.kick(id);
-  };
+  // removing someone asks first, in the app
+  const [removing, setRemoving] = useState<{ id: string; name: string } | null>(null);
+  const remove = (id: string, name: string) => setRemoving({ id, name });
 
   const removeButton = (id: string, name: string) =>
     isHost && id !== view.meId ? (
@@ -562,7 +563,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <div className="setting-row stacked">
             <div className="grow">
               <b>🂠 Picks per turn</b>
-              <span>When nothing matches, 1 card is picked for you. You may pick more, up to this many, then pass.</span>
+              <span>When nothing matches, 1 card is picked for you. Above 1 you may pick more or Pass to stop early.</span>
             </div>
             <div className="mini-seg pick-seg" role="group" aria-label="Picks per turn">
               {Array.from({ length: CRAZY7_MAX_PICKS }, (_, i) => i + 1).map((n) => (
@@ -638,14 +639,20 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <ul>
             <li>Play one card that matches the top card's suit or number (on 5♥: any ♥ or any 5).</li>
             <li>
-              Nothing matches? One card is picked for you. You may pick more (up to {view.config.maxPicks} a turn), then play a match or
-              pass.
+              Nothing matches? One card is picked for you, then play it if it fits.
+              {view.config.maxPicks > 1
+                ? ` You may pick more (up to ${view.config.maxPicks} a turn) or Pass to stop early; at the limit you must play a card that fits.`
+                : ' No passing: one pick a turn.'}
             </li>
             <li>
-              A 7 makes the next player pick 2 and miss their turn{view.config.stack7 ? ', unless they answer with their own 7 (then 4, 6…)' : ''}.
+              A 7 makes the next player pick 2 and miss their turn
+              {view.config.stack7 ? ', unless they answer with their own 7 (then 4, 6…). Hit by a 7? Tap Pick 2 (or play a 7)' : ''}.
             </li>
-            <li>Down to one card? Tap 📢 Last card! If you forget, you pick 1 and miss your next turn.</li>
-            <li>The first player to empty their hand wins. Everyone else loses.</li>
+            <li>
+              With 2 cards on your turn, tap 📢 Last card, then play. Forget it and someone moves before you say it: you pick 1 and miss your next
+              turn.
+            </li>
+            <li>The first player to empty their hand wins. Everyone else loses. Stuck with nothing to play or pick: fewest cards wins.</li>
           </ul>
         ) : (
           <ul>
@@ -754,6 +761,19 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         </PlayerSheet>
       )}
       <SwapPopup view={view} actions={actions} />
+      {removing && (
+        <ConfirmBox
+          title={`Remove ${removing.name} from the room?`}
+          body="They can join again with the room code."
+          action="Remove"
+          onCancel={() => setRemoving(null)}
+          onConfirm={() => {
+            const id = removing.id;
+            setRemoving(null);
+            void actions.kick(id);
+          }}
+        />
+      )}
       {friendsOpen && (
         <FriendsSheet auth={auth} roomCode={view.code} onInvite={actions.invite} onJoin={joinFriend} onClose={() => setFriendsOpen(false)} />
       )}

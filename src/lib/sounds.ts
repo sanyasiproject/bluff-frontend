@@ -116,6 +116,11 @@ export const sfx = {
       tone(c, 520, 0.02, 0.1, { type: 'triangle', gain: 0.05, to: 700 });
     }
   },
+  /** Crazy 7: the pile is shuffled back into the deck, a quick riffle */
+  shuffle() {
+    const c = audio();
+    if (c) for (let i = 0; i < 10; i++) slap(c, i * 0.035, 0.22);
+  },
   /** Crazy 7: someone said "last card", a bright bell */
   lastCard() {
     const c = audio();

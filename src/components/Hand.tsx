@@ -63,6 +63,7 @@ export function Hand({ cards, selected = [], onToggle, deal, fresh = [], playabl
                   selected={isSelected}
                   order={isSelected ? pick + 1 : undefined}
                   onClick={onToggle ? () => onToggle(card.id) : undefined}
+                  note={playable?.includes(card.id) ? ', playable' : undefined}
                   className={cx(
                     deal ? 'in-hand deal' : fresh.includes(card.id) ? 'in-hand fresh' : 'in-hand',
                     playable?.includes(card.id) && 'playable',

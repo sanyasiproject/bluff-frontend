@@ -67,10 +67,12 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 
 - **Pick the game:** at the top of the lobby the host chooses 🃏 Bluff (default) or 7️⃣ Crazy 7; the settings below follow the game and everyone else sees them as chips. Rooms, seats (2–5), bots, coins, invites, watching and host tools are shared.
 - **Settings:** coins at stake, cards each (5 or 7), picks per turn (1–7), Stack 7s (On/Off), 1 or 2 decks.
-- **Play:** match the top card's suit or number. Cards you can play lift and glow green, the rest fade; one tap plays a card. The deck glows when you may pick (tap it, or **Pick a card · n left**); **Pass** appears after you've picked. With nothing to match, the first card is picked for you.
-- **7s:** a big red banner shows the waiting pick ("Pick 4 or play a 7!"); only 7s glow; **Pick N** takes it.
-- **📢 Last card!** shows on your turn with 2 cards and right after you're down to 1; it turns red and shakes ("Say LAST CARD now!") while you're at risk. Seats show 📢, a red **1 card!** and 🙊 for a missed call.
-- **Motion and sound:** the played card flies face up to the pile and lands (a 7 sends out a red shock ring and its own sting), picked cards fly from the deck, a bell rings for Last card, and the winner gets confetti.
+- **Play:** match the top card's suit or number. Cards you can play lift and glow green, the rest fade; one tap plays a card. The deck glows when you may pick (tap it, or **Pick a card · n left**); **Pass** appears only when the room allows more than 1 pick a turn, after you've picked: it stops picking early. At the limit you must play a card that fits. With nothing to match, the first card is picked for you.
+- **7s:** a big red banner shows the waiting pick ("Pick 4 or play a 7!"); only 7s glow; **Pick N** (or the deck, whose tip then says Pick N) takes it. With Stack 7s on, everyone hit by a 7 taps Pick N themselves, so nobody can tell who holds a 7; with it off the pick is taken for them.
+- **📢 Last card** shows on your turn with 2 cards ("say it, then play") and right after you're down to 1; it turns red and shakes ("Say LAST CARD now!") while you're at risk. You're caught only when another player plays, picks or passes before you say it; if the turn just comes back to you, you can still say it or play your last card. Caught: next turn you pick 1 (plus any waiting 7) and miss it, and your hand shows 🙊 Missed. Seats show 📢, a red **1 card!** and 🙊. Bots wait at least 3.5 s when a person is at risk, and sometimes forget to say it themselves.
+- **Table:** seats start from the player after you and that seat is tagged **next**; under the pile "Ravi played 7♠"; tapping a card off-turn says "Wait for your turn". A reload or rejoin mid-game doesn't replay the deal. If the host is offline anyone can Stop the game from ⋯.
+- **Motion and sound:** the played card flies face up to the pile and lands (a 7 sends out a red shock ring and its own sting), picked cards fly from the deck, a bell rings for any Last card call, a buzz for a catch, a riffle when the pile is shuffled back in, and the winner gets confetti.
+- If nobody can play and nothing is left to pick, the fewest cards wins. Leaving mid-game is a loss; in a 2-player game the other wins.
 - Game over uses the same screen: the winner wins, everyone else lost (with cards left).
 
 ## Game screen

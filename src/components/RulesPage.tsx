@@ -19,7 +19,7 @@ import {
 } from '../types';
 import { FullPage } from './FullPage';
 
-const ZERO = { gamesPlayed: 0, wins: 0, losses: 0, bluffs: 0, bluffsCaught: 0, goodCalls: 0, wrongCalls: 0, cardsPickedUp: 0, plays: 0, chances: 0 };
+const ZERO = { gamesPlayed: 0, wins: 0, losses: 0, bluffs: 0, bluffsCaught: 0, goodCalls: 0, wrongCalls: 0, cardsPickedUp: 0, plays: 0, chances: 0, crazy7Games: 0 };
 
 function Section({ icon, title, open, children }: { icon: string; title: string; open?: boolean; children: ReactNode }) {
   return (
@@ -72,22 +72,32 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>On your turn play one card that matches the top card's suit or number (on 5♥: any ♥ or any 5). Cards you can play glow.</li>
           <li>
-            <b>Picking</b>: if nothing matches, 1 card is picked for you automatically. After that you may pick more, up to the room's
-            <b> Picks per turn</b> (1 to {CRAZY7_MAX_PICKS}, default 1), then play a match or pass. You can also pick on purpose instead of playing.
-            You can't pass without picking first. Reaching the limit with nothing to play passes your turn for you.
+            <b>Picking</b>: if nothing matches, 1 card is picked for you automatically. With <b>Picks per turn</b> above 1 (1 to{' '}
+            {CRAZY7_MAX_PICKS}, default 1) you may pick more, or <b>Pass</b> to stop picking early. Pass only ever ends picking: you can't pass
+            without picking first, and at the limit you must play a card that fits. With 1 pick a turn there is no Pass. You can also pick on
+            purpose instead of playing. Reaching the limit with nothing to play passes your turn for you.
           </li>
           <li>
             <b>The 7</b>: the next player picks {SEVEN_PENALTY} and misses their turn. With <b>Stack 7s</b> on (default) they can answer with their own 7
-            instead, and the next player then picks {SEVEN_PENALTY * 2}, then {SEVEN_PENALTY * 3}… While a pick waits, only a 7 can be played.
+            instead, and the next player then picks {SEVEN_PENALTY * 2}, then {SEVEN_PENALTY * 3}… While a pick waits, only a 7 can be played. With
+            stacking on, everyone hit by a 7 taps <b>Pick N</b> themselves (so nobody can tell who holds a 7); with it off, the pick is taken for them.
           </li>
           <li>
-            <b>📢 Last card</b>: when you go down to one card, tap Last card! (on your turn with 2 cards, or right after your play, before the
-            next player moves). Forget it and you pick 1 card and miss your next turn.
+            <b>📢 Last card</b>: say it with the button on your turn while you hold 2 cards (say it, then play), or right after your play. You're
+            caught only if another player makes a move (play, pick or pass) before you say it. If the turn just comes back round to you, you can
+            still say it, or play your last card. Caught: on your next turn you pick 1 (plus any 7 waiting for you) and miss that turn.
           </li>
+          <li>Bots usually say last card, but now and then they forget too, so you can catch them.</li>
           <li>When the deck runs out, the pile (except its top card) is shuffled into a new deck.</li>
           <li>The first player to empty their hand wins at once; everyone else loses. Coins: everyone pays the stake, the winner takes the pot.</li>
+          <li>If nobody can play and nothing is left to pick, the game ends and the player with the fewest cards wins.</li>
+          <li>Leaving mid-game is a loss (you still pay); in a 2-player game the other player wins straight away.</li>
           <li>Host tools: Stop game and Play again work as in Bluff. There's no End game (the first one out already ends it).</li>
-          <li>Awards: 🎯 Sevens master, 🧲 Card collector (most cards picked), 🙊 Forgot to call. XP and daily rewards count like Bluff.</li>
+          <li>
+            Awards: 🎯 Sevens master, 🧲 Card collector (most cards picked), 🙊 Forgot to call. XP and daily rewards count like Bluff. Cards picked
+            in Crazy 7 don't count towards the lifetime 🧲 Collector achievement (that one is for Bluff piles).
+          </li>
+          <li>Peek, Bet and Teams settings are kept when you switch to Crazy 7 and back; Crazy 7 just ignores them.</li>
         </ul>
       </Section>
 
@@ -158,7 +168,8 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>The host taps 🤖 Add a bot in the lobby; each tap seats one bot in a free seat. Remove one with ✕. A person must always be playing.</li>
           <li>
             Bots play Crazy 7 too: they keep track of the cards played and of who had nothing to match, think ahead before each move, and
-            say Last card. Like a person, they only know their own cards.
+            usually say Last card (now and then they forget). Like a person, they only know their own cards. When a person has just gone down to
+            one card without saying it, bots wait at least 3.5 seconds before their move, so there's time to tap the button.
           </li>
           <li>
             Every bot gets its own style (careful, wild liar, detective, sneaky, gambler…) with its own random numbers, and its mood shifts

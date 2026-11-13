@@ -3,6 +3,7 @@ import { avatarColor, cx, isRed, SUIT_SYMBOL } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
 import { confettiAt } from '../lib/motion';
+import { useNewCards } from '../lib/newCards';
 import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
 import type { Card, Crazy7View, RoomView } from '../types';
@@ -22,15 +23,17 @@ const BUBBLE_MS = 4000;
 const short = (c: Card) => `${c.rank}${SUIT_SYMBOL[c.suit]}`;
 
 /** the face-down deck; tap it to pick when you may */
-function Deck({ count, live, boxRef, onPick }: { count: number; live: boolean; boxRef: RefObject<HTMLButtonElement>; onPick: () => void }) {
+function Deck({ count, live, penalty, boxRef, onPick }: { count: number; live: boolean; penalty: number; boxRef: RefObject<HTMLButtonElement>; onPick: () => void }) {
   const layers = Math.min(3, Math.max(count, 0));
+  // while a 7's pick waits, tapping takes all of it
+  const tip = penalty > 0 ? `Pick ${penalty}` : 'Pick';
   return (
     <button
       ref={boxRef}
       type="button"
       className={cx('c7-deck', live && 'live')}
       disabled={!live}
-      aria-label={live ? `Pick a card, ${count} left in the deck` : `${count} cards in the deck`}
+      aria-label={live ? (penalty > 0 ? `Pick ${penalty} cards, ${count} left in the deck` : `Pick a card, ${count} left in the deck`) : `${count} cards in the deck`}
       onClick={onPick}
     >
       {count === 0 && <span className="c7-empty">Empty</span>}
@@ -40,7 +43,7 @@ function Deck({ count, live, boxRef, onPick }: { count: number; live: boolean; b
       <span key={count} className="c7-count bump">
         {count}
       </span>
-      {live && <span className="c7-deck-tip">Pick</span>}
+      {live && <span className="c7-deck-tip">{tip}</span>}
     </button>
   );
 }
@@ -107,8 +110,6 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
   const [flights, setFlights] = useState<Flight[]>([]);
   const fly = (f: Flight) => setFlights((all) => [...all, f]);
   const [dealing, setDealing] = useState(false);
-  const [freshIds, setFreshIds] = useState<string[]>([]);
-  const freshTimer = useRef<number>();
   /** what each player did last, shown on their seat */
   const [acts, setActs] = useState<Record<string, string>>({});
   const [confirmLeave, setConfirmLeave] = useState(false);
@@ -120,6 +121,12 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
   const [target, setTarget] = useState<string | null>(null);
   /** I tapped Pick myself this turn (so an automatic pick can be told apart) */
   const tappedPick = useRef(false);
+  /** my "last card" request is on its way */
+  const [calling, setCalling] = useState(false);
+  /** when "Wait for your turn" was last shown */
+  const waitNote = useRef(0);
+  /** who had said last card or been caught, and the deck size, in the last view */
+  const prevMarks = useRef<{ called: string[]; missed: string[]; deck: number } | null>(null);
   const seatEls = useRef(new Map<string, HTMLElement>());
   const pileRef = useRef<HTMLDivElement>(null);
   const deckRef = useRef<HTMLButtonElement>(null);
@@ -128,14 +135,19 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
   const startLevel = useRef<number | null>(null);
   const prevCounts = useRef<Map<string, number> | null>(null);
   const prevTop = useRef<{ id: string | null; pile: number } | null>(null);
-  const prevHand = useRef<string[] | null>(null);
 
   const me = view.players.find((p) => p.id === view.meId);
   const watching = !me;
   const playing = view.phase === 'playing';
   const myTurn = playing && !!c7 && view.turnId === view.meId;
   const isHost = view.hostId === view.meId;
-  const opponents = view.players.filter((p) => p.id !== view.meId);
+  // the server lets anyone stop a game whose host is offline, so it can't hang forever
+  const hostOffline = ![...view.players, ...view.watchers].find((p) => p.id === view.hostId)?.connected;
+  // seats start from the player after me, so the order round the table reads left to right
+  const myIndex = view.players.findIndex((p) => p.id === view.meId);
+  const opponents = myIndex < 0 ? view.players : [...view.players.slice(myIndex + 1), ...view.players.slice(0, myIndex)];
+  /** who plays after me: my 7 hits them, and their move closes my last-card window */
+  const nextId = myIndex < 0 ? null : (opponents.find((p) => p.cardCount > 0)?.id ?? null);
   // players who left mid-game still count for names and the pot
   const name = (id: string | null) =>
     id === view.meId ? 'You' : ([...view.players, ...view.leftPlayers].find((p) => p.id === id)?.name ?? 'Someone');
@@ -163,11 +175,14 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
   useEffect(() => {
     if (!playing) return;
     prevCounts.current = null;
-    prevHand.current = null;
+    prevMarks.current = null;
     setActs({});
+    startLevel.current = me?.level ?? null;
+    // a reload or rejoin mid-game shows the table as it is
+    const freshDeal = !!c7 && c7.pileCount === 1 && view.players.every((p) => p.cardCount <= view.config.handSize + 1);
+    if (!freshDeal) return;
     setDealing(true);
     sfx.deal();
-    startLevel.current = me?.level ?? null;
     const frame = requestAnimationFrame(() => {
       const from = deckRef.current?.getBoundingClientRect();
       if (!from) return;
@@ -229,34 +244,24 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
     if (Object.keys(next).length > 0) setActs((prev) => ({ ...prev, ...next }));
   }, [view]);
 
-  // cards that arrive in my hand glow for a moment
+  // cards that came into my hand (picked, or a 7's penalty) are marked for a few seconds
+  const newIds = useNewCards(view.hand, { reset: view.phase });
+
+  // someone said last card (bell), someone was caught (buzz), the pile was shuffled into the deck
   useEffect(() => {
-    const ids = view.hand.map((c) => c.id);
-    const prev = prevHand.current;
-    prevHand.current = ids;
-    if (!prev) return;
-    const had = new Set(prev);
-    const added = ids.filter((id) => !had.has(id));
-    if (added.length === 0) return;
-    window.clearTimeout(freshTimer.current);
-    freshTimer.current = window.setTimeout(() => {
-      setFreshIds(added);
-      freshTimer.current = window.setTimeout(() => setFreshIds([]), 1600);
-    }, 300);
-  }, [view.hand]);
-  useEffect(() => () => window.clearTimeout(freshTimer.current), []);
+    if (!c7) return;
+    const before = prevMarks.current;
+    prevMarks.current = { called: c7.called, missed: c7.missed, deck: c7.deckCount };
+    if (!before) return;
+    if (c7.missed.some((id) => !before.missed.includes(id))) sfx.caught();
+    else if (c7.called.some((id) => !before.called.includes(id))) sfx.lastCard();
+    if (c7.deckCount > before.deck) sfx.shuffle();
+  }, [view]);
 
-  // last card calls ring a bell; a missed call buzzes
-  useOnChange(c7?.last?.id ?? null, () => {
-    const last = c7?.last;
-    if (last?.kind === 'call') sfx.lastCard();
-    else if (last?.kind === 'missed') sfx.caught();
-    else if (last?.kind === 'shuffle') sfx.deal();
-  });
-
-  useOnChange(myTurn, (mine) => {
+  // each new turn of mine, even one that comes straight back to me
+  useOnChange(myTurn ? (c7?.turn ?? null) : null, (turn) => {
     tappedPick.current = false;
-    if (!mine) return;
+    if (turn === null) return;
     sfx.turn();
     // browsers block vibration until the player has tapped the page once
     if (navigator.userActivation?.hasBeenActive) navigator.vibrate?.(120);
@@ -278,7 +283,14 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
 
   // one tap plays a glowing card; a card that doesn't fit says why
   const tapCard = (id: string) => {
-    if (!c7 || !myTurn) return;
+    if (!c7) return;
+    if (!myTurn) {
+      if (playing && Date.now() - waitNote.current > 2500) {
+        waitNote.current = Date.now();
+        actions.toast('Wait for your turn');
+      }
+      return;
+    }
     if (!c7.playable.includes(id)) {
       const top = c7.top;
       actions.toast(
@@ -300,9 +312,12 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
     void act(() => actions.c7Pick());
   };
   const pass = () => void act(() => actions.c7Pass());
-  const call = () => {
+  const call = async () => {
+    if (calling) return;
     unlockSpeech();
-    void actions.c7Call();
+    setCalling(true);
+    await actions.c7Call();
+    setCalling(false);
   };
   const toggleSound = () => {
     unlockSpeech();
@@ -316,7 +331,9 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
       if (c7.penalty > 0) status = c7.playable.length > 0 ? `Pick ${c7.penalty} or play a 7` : `Pick ${c7.penalty}`;
       else if (c7.picks > 0) {
         const head = c7.picks === 1 && !tappedPick.current ? 'No match, we picked one for you' : `Picked ${c7.picks} of ${view.config.maxPicks}`;
-        status = `${head} · ${c7.playable.length > 0 ? 'play a glowing card or pass' : c7.canPick ? 'pick again or pass' : 'pass'}`;
+        // Pass only stops picking early; at the limit a card that fits must be played
+        const choices = [c7.playable.length > 0 && 'play a glowing card', c7.canPick && 'pick again', c7.canPass && 'pass'].filter(Boolean);
+        status = `${head} · ${choices.join(' or ') || 'play a glowing card'}`;
       } else status = c7.playable.length > 0 ? 'Play a glowing card' : 'Pick a card';
     } else {
       status = `${name(view.turnId)}'s turn`;
@@ -369,7 +386,12 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
             bubble={bubbleOf(p.id)}
             onClick={watching ? () => setPinned(pinnedId === p.id ? null : p.id) : () => setTarget(p.id)}
             label={watching ? `See ${p.name}'s cards` : `Throw an emoji at ${p.name}`}
-            tag={seatTag(c7, p.id, p.cardCount)}
+            tag={
+              <>
+                {seatTag(c7, p.id, p.cardCount)}
+                {playing && p.id === nextId && <span className="c7-tag next">next</span>}
+              </>
+            }
             extra={cx(playing && p.cardCount === 1 && 'c7-one', playing && c7.penalty > 0 && p.id === view.turnId && 'c7-hit')}
             seatRef={(el) => {
               if (el) seatEls.current.set(p.id, el);
@@ -394,9 +416,14 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
           </div>
         )}
         <div className="c7-board">
-          <Deck count={c7.deckCount} live={myTurn && c7.canPick && !busy} boxRef={deckRef} onPick={pick} />
+          <Deck count={c7.deckCount} live={myTurn && c7.canPick && !busy} penalty={c7.penalty} boxRef={deckRef} onPick={pick} />
           <Pile c7={c7} boxRef={pileRef} />
         </div>
+        {c7.top && c7.topBy && (
+          <p className="c7-played">
+            <b>{name(c7.topBy)}</b> played <b className={cx(isRed(c7.top.suit) && 'red')}>{short(c7.top)}</b>
+          </p>
+        )}
         {playing && <MatchHint c7={c7} />}
         {!myTurn && status && <p className="turn-status">{status}</p>}
       </section>
@@ -425,7 +452,9 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
         <div className="hand-head">
           {myTurn ? <span className="your-turn">YOUR TURN</span> : <span>Your cards · {view.hand.length}</span>}
           {myTurn && <span className="turn-hint">{status}</span>}
+          {newIds.length > 0 && <span className="new-chip">+{newIds.length} new</span>}
           {!myTurn && c7.called.includes(view.meId) && view.hand.length === 1 && <span className="c7-tag call">📢 Said it</span>}
+          {c7.missed.includes(view.meId) && <span className="c7-tag miss">🙊 Missed · you pick 1 and skip your next turn</span>}
         </div>
         <Hand
           cards={view.hand}
@@ -434,14 +463,14 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
           // always tappable so cards don't remount each turn; taps count only on my turn
           onToggle={watching ? undefined : tapCard}
           deal={dealing}
-          fresh={freshIds}
+          fresh={newIds}
         />
       </section>
 
       <footer className="action-bar c7-actions">
         {c7.canCall && (
-          <button className={cx('btn c7-call', urgent && 'urgent', !myTurn && 'grow')} onClick={call}>
-            📢 {urgent ? 'Say LAST CARD now!' : 'Last card!'}
+          <button className={cx('btn c7-call', urgent && 'urgent', !myTurn && 'grow')} disabled={calling} onClick={() => void call()}>
+            📢 {urgent ? 'Say LAST CARD now!' : view.hand.length === 2 ? 'Last card (say it, then play)' : 'Last card!'}
           </button>
         )}
         {myTurn && c7.penalty > 0 && (
@@ -491,7 +520,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
           onToggleSound={toggleSound}
           onPeople={isHost ? () => setPanel('people') : undefined}
           onStop={
-            isHost && playing
+            (isHost || hostOffline) && playing
               ? () => {
                   setPanel(null);
                   setConfirmStop(true);
