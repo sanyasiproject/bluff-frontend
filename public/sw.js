@@ -38,3 +38,41 @@ self.addEventListener('fetch', (event) => {
       }),
   );
 });
+
+// Friend invites arrive as push messages, even when Bluff is closed
+self.addEventListener('push', (event) => {
+  let msg = null;
+  try {
+    msg = event.data ? event.data.json() : null;
+  } catch {
+    msg = null;
+  }
+  const ok = msg && typeof msg.title === 'string';
+  const tag = ok && typeof msg.tag === 'string' ? msg.tag : undefined;
+  const url = ok && typeof msg.url === 'string' && msg.url.startsWith('/') ? msg.url : '/';
+  // every push must show something, or the phone may stop delivering them
+  event.waitUntil(
+    self.registration.showNotification(ok ? msg.title : 'Bluff', {
+      body: ok && typeof msg.body === 'string' ? msg.body : 'Open Bluff',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag,
+      renotify: Boolean(tag),
+      data: { url },
+    }),
+  );
+});
+
+// Tapping it opens Bluff on the invite; an open Bluff window is reused
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (wins) => {
+      const win = wins.find((w) => new URL(w.url).origin === self.location.origin);
+      if (!win) return self.clients.openWindow(url);
+      await win.focus();
+      return win.navigate(url).catch(() => self.clients.openWindow(url));
+    }),
+  );
+});

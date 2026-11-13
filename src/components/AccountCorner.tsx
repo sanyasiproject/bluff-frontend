@@ -3,6 +3,7 @@ import { avatarColor } from '../lib/cards';
 import { compactCoins } from '../lib/coins';
 import { levelOf } from '../types';
 import type { Auth } from '../useAuth';
+import type { InviteAck } from '../useBluff';
 import { AccountSheet } from './AccountSheet';
 import { ProfilePage } from './ProfilePage';
 
@@ -14,7 +15,7 @@ interface Props {
   onOpenAdmin?: () => void;
   /** when in a room, friends can be invited to it */
   roomCode?: string;
-  onInvite?: (userId: string) => Promise<boolean>;
+  onInvite?: (userId: string) => Promise<InviteAck | null>;
   onJoin?: (userId: string, watch: boolean) => Promise<boolean>;
 }
 

@@ -4662,3 +4662,20 @@ body::after {
     scale: 1.06;
   }
 }
+
+/* ---------- invite notifications: admin switch and profile row ---------- */
+
+.guest-switch .setting-head + .setting-head {
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.notify-row .setting-row {
+  padding: 0;
+  background: none;
+}
+
+/* switched off by the admin: shown, but quiet */
+.notify-row.off {
+  opacity: 0.7;
+}

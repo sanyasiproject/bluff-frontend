@@ -283,7 +283,11 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
       <Section icon="🤝" title="Friends & profiles">
         <ul>
           <li>Friends: search by username or name, then + Add. Requests show as a red number on the avatar and Friends button.</li>
-          <li>Add friends straight from the lobby, and invite online friends who aren't in a room (they get a Join popup).</li>
+          <li>Add friends straight from the lobby, and invite friends who aren't in a room (they get a Join popup).</li>
+          <li>
+            🔔 Invite notifications (Profile, per phone): an invite reaches a friend whose Bluff is closed as a phone notification, and tapping
+            it opens the room. Works in Android browsers and the installed app; on iPhone only in the app added to the Home Screen.
+          </li>
           <li>
             Join a friend from Friends: while they're in a lobby, tap Join (take a seat) or 👀 Watch. Once their game has started, tap 👀 Ask
             to watch and the host decides.
@@ -311,6 +315,10 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>
             Guest play (top of the Admin page): turn it off and everyone must log in to create or join a room. Guests already in a room can
             finish their game. It asks first, and open apps update straight away.
+          </li>
+          <li>
+            Invite notifications (under Guest play on the Admin page): turn them off and invites only reach friends who have Bluff open. It
+            asks first, and open apps update straight away. Shows "Not set up on the server" until the push keys are set.
           </li>
         </ul>
       </Section>

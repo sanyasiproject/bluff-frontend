@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, ApiError, serverStatus } from './lib/api';
+import { disablePush } from './lib/push';
 import { reconnectSocket, socket } from './lib/socket';
 import { loadAuthToken, saveAuthToken } from './lib/storage';
 import type { AuthResponse, GameSummary, ProfileOverview, PublicUser, ServerInfo } from './types';
@@ -14,6 +15,8 @@ export function useAuth() {
   const [accountsOn, setAccountsOn] = useState<boolean | null>(null);
   /** an admin can turn guest play off: then everyone must log in to play */
   const [guestsAllowed, setGuestsAllowed] = useState(true);
+  /** friend invites reach offline phones (keys on the server and the admin switch on); null until the server says */
+  const [pushInvites, setPushInvites] = useState<boolean | null>(null);
   /** daily login bonus just received, shown once as a popup */
   const [bonus, setBonus] = useState(0);
   /** friend requests waiting for me, shown as a red count */
@@ -67,13 +70,17 @@ export function useAuth() {
     socket.on('friends:changed', onFriends);
     // a friend sent me coins
     socket.on('gift:received', onFriends);
-    // an admin turned guest play on or off
-    const onSettings = (s: { guestsAllowed: boolean }) => setGuestsAllowed(s.guestsAllowed);
+    // an admin turned guest play or invite notifications on or off
+    const onSettings = (s: { guestsAllowed: boolean; pushInvites?: boolean }) => {
+      setGuestsAllowed(s.guestsAllowed);
+      if (typeof s.pushInvites === 'boolean') setPushInvites(s.pushInvites);
+    };
     socket.on('settings:changed', onSettings);
     // sent on every connection and when a guest is turned away, so Log in and the guest lock show even if /health is blocked
     const onInfo = (s: ServerInfo) => {
       setAccountsOn(s.accounts);
       setGuestsAllowed(s.guestsAllowed);
+      setPushInvites(s.pushInvites ?? false);
     };
     socket.on('server:info', onInfo);
     return () => {
@@ -99,6 +106,7 @@ export function useAuth() {
     checking,
     accountsOn,
     guestsAllowed,
+    pushInvites,
     bonus,
     clearBonus: () => setBonus(0),
     friendRequests,
@@ -115,7 +123,10 @@ export function useAuth() {
       setUser(null);
       setFriendRequests(0);
       reconnectSocket();
-      if (old) await api('/auth/logout', { method: 'POST', token: old }).catch(() => undefined);
+      if (!old) return;
+      // this phone stops getting the old account's invites before the login is dropped
+      await disablePush(old).catch(() => undefined);
+      await api('/auth/logout', { method: 'POST', token: old }).catch(() => undefined);
     },
     myGames: async () => (await api<{ games: GameSummary[] }>('/me/games?limit=10', { token })).games,
     overview: () => api<ProfileOverview>('/me/overview', { token }),

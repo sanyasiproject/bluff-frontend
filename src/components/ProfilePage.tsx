@@ -5,8 +5,10 @@ import { monthYear } from '../lib/dates';
 import { achievementsOf, earnedFromGames, levelInfo, nextGameReward, percent, winStreak } from '../lib/progress';
 import { DAILY_GAME_REWARDS, LOGIN_BONUS, MIN_REWARD_GAME_SEC, type GameSummary, type ProfileOverview } from '../types';
 import type { Auth } from '../useAuth';
+import type { InviteAck } from '../useBluff';
 import { FriendsSheet } from './FriendsSheet';
 import { FullPage } from './FullPage';
+import { NotifyRow } from './NotifyRow';
 import { RulesPage } from './RulesPage';
 import { XpGuide } from './XpGuide';
 import { FormStrip, GameList, Meter } from './ProfileParts';
@@ -19,7 +21,7 @@ interface Props {
   onOpenAdmin?: () => void;
   /** when in a room, friends can be invited to it */
   roomCode?: string;
-  onInvite?: (userId: string) => Promise<boolean>;
+  onInvite?: (userId: string) => Promise<InviteAck | null>;
   onJoin?: (userId: string, watch: boolean) => Promise<boolean>;
 }
 
@@ -162,6 +164,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
           📖 Rules & features <span className="tag">Admin</span>
         </button>
       )}
+      <NotifyRow auth={auth} />
 
       <section className="panel stack-tight">
         <h3 className="section-title">Record</h3>

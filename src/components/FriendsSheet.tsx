@@ -3,6 +3,7 @@ import { api, errorText } from '../lib/api';
 import { avatarColor, cx } from '../lib/cards';
 import type { FriendsResponse, FriendView, PlayerSearchResult } from '../types';
 import type { Auth } from '../useAuth';
+import type { InviteAck } from '../useBluff';
 import { ConfirmBox } from './ConfirmBox';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
@@ -11,7 +12,7 @@ import { PlayerSheet } from './PlayerSheet';
 interface Props {
   auth: Auth;
   roomCode?: string;
-  onInvite?: (userId: string) => Promise<boolean>;
+  onInvite?: (userId: string) => Promise<InviteAck | null>;
   /** join or watch a friend's room; true once in, or once the host has the request */
   onJoin?: (userId: string, watch: boolean) => Promise<boolean>;
   onClose: () => void;
@@ -132,10 +133,10 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
 
   const invite = async (f: FriendView) => {
     if (!onInvite) return;
-    if (await onInvite(f.id)) {
-      setInvited((prev) => new Set(prev).add(f.id));
-      setNote(`Invite sent to ${f.displayName}. They'll see a Join button.`);
-    }
+    const res = await onInvite(f.id);
+    if (!res) return;
+    setInvited((prev) => new Set(prev).add(f.id));
+    setNote(res.pushed ? `${f.displayName} is offline, so we sent a notification to their phone` : `Invite sent to ${f.displayName}. They'll see a Join button.`);
   };
 
   const join = async (f: FriendView, watch: boolean) => {
@@ -243,7 +244,12 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
       )}
 
       <p className="label">Your friends {data ? `(${data.friends.length})` : ''}</p>
-      {roomCode && <p className="muted small">Online friends who aren't in a room get a popup to join room {roomCode}.</p>}
+      {roomCode && (
+        <p className="muted small">
+          Friends who aren't in a room get a popup to join room {roomCode}
+          {auth.pushInvites ? ', or a phone notification if they are offline and turned them on.' : '.'}
+        </p>
+      )}
       {data === null && <p className="muted small">Loading…</p>}
       {data?.friends.length === 0 && <p className="muted small">No friends yet. Search for someone above and tap + Add.</p>}
       {data && data.friends.length > 0 && (
@@ -256,8 +262,13 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
                 {joinActions(f)}
                 {roomCode && onInvite && !onJoin && f.inRoom === 'other' && <span className="tag dim">In a room</span>}
                 {roomCode && onInvite && !f.inRoom && (
-                  <button className="btn small primary" disabled={!f.online || invited.has(f.id)} onClick={() => void invite(f)}>
-                    {invited.has(f.id) ? 'Invited ✓' : 'Invite'}
+                  // offline friends can still be invited when invite notifications are on
+                  <button
+                    className="btn small primary"
+                    disabled={(!f.online && auth.pushInvites !== true) || invited.has(f.id)}
+                    onClick={() => void invite(f)}
+                  >
+                    {invited.has(f.id) ? 'Invited ✓' : f.online ? 'Invite' : '🔔 Invite'}
                   </button>
                 )}
                 <button

@@ -300,7 +300,8 @@ export function useBluff() {
           if (res.pending) setPending({ code: res.code, name });
           else enter({ code: res.code, token: res.token! }, name);
         })) !== null,
-      invite: async (userId: string) => (await run(() => request('friend:invite', { userId }))) !== null,
+      /** the server's answer (pushed: the friend was offline and got a phone notification), or null if it failed */
+      invite: (userId: string) => run(() => request<InviteAck>('friend:invite', { userId })),
       dismissInvite: (key: number) => setInvites((prev) => prev.filter((i) => i.key !== key)),
       acceptInvite: (inv: Invite, name: string) =>
         run(async () => {
@@ -365,3 +366,9 @@ export function useBluff() {
 }
 
 export type Actions = ReturnType<typeof useBluff>['actions'];
+
+/** friend:invite's answer */
+export interface InviteAck {
+  /** the friend was offline: a notification went to their phone */
+  pushed?: boolean;
+}

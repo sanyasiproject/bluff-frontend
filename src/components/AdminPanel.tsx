@@ -11,11 +11,37 @@ import { BackButton } from './BackButton';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
 
-/** guest play on or off for the whole app, one tap plus a confirm */
-function GuestPlaySwitch({ auth }: { auth: Auth }) {
+type SwitchKey = 'guestsAllowed' | 'pushInvites';
+
+/** what each app-wide switch says, and what its confirm popup asks */
+const SWITCHES: Record<SwitchKey, { title: string; on: string; off: string; askOn: string; askOff: string; sayOn: string; sayOff: string }> = {
+  guestsAllowed: {
+    title: 'Guest play',
+    on: 'Anyone can play free games without an account',
+    off: 'Everyone must log in to create or join a room',
+    askOn: 'Turn guest play on?',
+    askOff: 'Turn guest play off?',
+    sayOn: 'Anyone can play free games again without logging in.',
+    sayOff: "Players who aren't logged in won't be able to create or join rooms until you turn it back on. Guests already in a room can finish their game.",
+  },
+  pushInvites: {
+    title: 'Invite notifications',
+    on: 'Offline friends get invites as phone notifications',
+    off: 'Invites only reach friends who have Bluff open',
+    askOn: 'Turn invite notifications on?',
+    askOff: 'Turn invite notifications off?',
+    sayOn: 'Friends who are offline get invites on their phones again (if they turned notifications on).',
+    sayOff: "Friends who are offline won't get invites on their phones until you turn it back on.",
+  },
+};
+
+/** app-wide switches (guest play, invite notifications), one tap plus a confirm */
+function AppSwitches({ auth }: { auth: Auth }) {
   const [settings, setSettings] = useState<AppSettings | null>(null);
-  /** the value waiting for the admin to confirm */
-  const [asking, setAsking] = useState<boolean | null>(null);
+  /** false: the server has no push keys, so the notifications switch can't do anything */
+  const [pushReady, setPushReady] = useState<boolean | null>(null);
+  /** the change waiting for the admin to confirm */
+  const [asking, setAsking] = useState<{ key: SwitchKey; on: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -23,13 +49,16 @@ function GuestPlaySwitch({ auth }: { auth: Auth }) {
     api<{ settings: AppSettings }>('/admin/settings', { token: auth.token })
       .then((r) => setSettings(r.settings))
       .catch((err) => setError(errorText(err)));
+    api<{ publicKey: string | null }>('/push/key')
+      .then((r) => setPushReady(r.publicKey !== null))
+      .catch(() => setPushReady(false));
   }, [auth.token]);
 
-  const apply = async (on: boolean) => {
+  const apply = async (key: SwitchKey, on: boolean) => {
     setBusy(true);
     setError('');
     try {
-      setSettings((await api<{ settings: AppSettings }>('/admin/settings', { body: { guestsAllowed: on }, token: auth.token })).settings);
+      setSettings((await api<{ settings: AppSettings }>('/admin/settings', { body: { [key]: on }, token: auth.token })).settings);
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -37,51 +66,59 @@ function GuestPlaySwitch({ auth }: { auth: Auth }) {
     }
   };
 
-  const on = settings?.guestsAllowed ?? true;
+  const row = (key: SwitchKey) => {
+    const text = SWITCHES[key];
+    const on = settings?.[key] ?? true;
+    const notSetUp = key === 'pushInvites' && pushReady === false;
+    return (
+      <div className="setting-head" key={key}>
+        <div className="grow">
+          <b>{text.title}</b>
+          <p className="muted small">{notSetUp ? 'Not set up on the server (push keys missing)' : on ? text.on : text.off}</p>
+        </div>
+        {!notSetUp && (
+          <div className="mini-seg" role="group" aria-label={text.title}>
+            <button className={cx(on && 'on')} aria-pressed={on} disabled={!settings || busy} onClick={() => !on && setAsking({ key, on: true })}>
+              On
+            </button>
+            <button className={cx(!on && 'on')} aria-pressed={!on} disabled={!settings || busy} onClick={() => on && setAsking({ key, on: false })}>
+              Off
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const ask = asking ? SWITCHES[asking.key] : null;
   return (
     <section className="panel guest-switch">
-      <div className="setting-head">
-        <div className="grow">
-          <b>Guest play</b>
-          <p className="muted small">{on ? 'Anyone can play free games without an account' : 'Everyone must log in to create or join a room'}</p>
-        </div>
-        <div className="mini-seg" role="group" aria-label="Guest play">
-          <button className={cx(on && 'on')} aria-pressed={on} disabled={!settings || busy} onClick={() => !on && setAsking(true)}>
-            On
-          </button>
-          <button className={cx(!on && 'on')} aria-pressed={!on} disabled={!settings || busy} onClick={() => on && setAsking(false)}>
-            Off
-          </button>
-        </div>
-      </div>
+      {row('guestsAllowed')}
+      {row('pushInvites')}
       {settings?.updatedAt && (
         <p className="muted small">
           Last changed by {settings.updatedBy ?? 'an admin'} · {timeAgo(settings.updatedAt)}
         </p>
       )}
       {error && <p className="form-error">{error}</p>}
-      {asking !== null && (
+      {asking && ask && (
         <Backdrop center onClose={() => setAsking(null)}>
           <div className="confirm-box">
-            <h3>{asking ? 'Turn guest play on?' : 'Turn guest play off?'}</h3>
-            <p className="muted">
-              {asking
-                ? 'Anyone can play free games again without logging in.'
-                : "Players who aren't logged in won't be able to create or join rooms until you turn it back on. Guests already in a room can finish their game."}
-            </p>
+            <h3>{asking.on ? ask.askOn : ask.askOff}</h3>
+            <p className="muted">{asking.on ? ask.sayOn : ask.sayOff}</p>
             <div className="confirm-actions">
               <button className="btn ghost" onClick={() => setAsking(null)}>
                 Cancel
               </button>
               <button
-                className={cx('btn', asking ? 'primary' : 'danger')}
+                className={cx('btn', asking.on ? 'primary' : 'danger')}
                 onClick={() => {
                   const next = asking;
                   setAsking(null);
-                  void apply(next);
+                  void apply(next.key, next.on);
                 }}
               >
-                {asking ? 'Turn on' : 'Turn off'}
+                {asking.on ? 'Turn on' : 'Turn off'}
               </button>
             </div>
           </div>
@@ -130,7 +167,7 @@ export function AdminPanel({ auth, onBack }: { auth: Auth; onBack: () => void })
         <span className="muted small">{total} users</span>
       </header>
 
-      <GuestPlaySwitch auth={auth} />
+      <AppSwitches auth={auth} />
 
       <input
         className="input"
