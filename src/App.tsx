@@ -10,6 +10,7 @@ import { Splash } from './components/Splash';
 import { Table } from './components/Table';
 import { Toasts } from './components/Toasts';
 import { clearInvite } from './lib/invite';
+import { autoPush } from './lib/push';
 import { loadName } from './lib/storage';
 import { useAuth } from './useAuth';
 import { useBluff } from './useBluff';
@@ -38,6 +39,12 @@ export default function App() {
   useEffect(() => {
     if (inRoom) clearInvite();
   }, [inRoom]);
+
+  // invite notifications are on by default: a phone that already allows them is signed up without asking
+  const userId = auth.user?.id ?? null;
+  useEffect(() => {
+    if (userId && auth.pushInvites === true) void autoPush(auth.token, userId);
+  }, [userId, auth.pushInvites, auth.token]);
 
   // coins and stats change when a game is settled; show the new numbers
   useEffect(() => {

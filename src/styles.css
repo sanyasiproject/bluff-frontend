@@ -4679,3 +4679,15 @@ body::after {
 .notify-row.off {
   opacity: 0.7;
 }
+
+/* home: one-time card asking to turn on invite notifications */
+.notify-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid rgba(246, 196, 83, 0.35);
+}
+
+.notify-card-title {
+  font-weight: 800;
+}

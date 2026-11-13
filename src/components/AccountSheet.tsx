@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { errorText } from '../lib/api';
+import { askPermission, autoPush } from '../lib/push';
 import { cx } from '../lib/cards';
 import type { Auth } from '../useAuth';
 import { Backdrop } from './Overlays';
@@ -17,11 +18,13 @@ export function AccountSheet({ initial, auth, onClose }: { initial: AccountMode;
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    // invite notifications are on by default: the phone asks now, while this tap still counts
+    const permission = auth.pushInvites === true ? askPermission() : null;
     setBusy(true);
     setError('');
     try {
-      if (mode === 'login') await auth.login(username, password);
-      else await auth.register(username, password, displayName.trim());
+      const res = mode === 'login' ? await auth.login(username, password) : await auth.register(username, password, displayName.trim());
+      void autoPush(res.token, res.user.id, permission);
       onClose();
     } catch (err) {
       setError(errorText(err));

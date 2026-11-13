@@ -285,8 +285,10 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>Friends: search by username or name, then + Add. Requests show as a red number on the avatar and Friends button.</li>
           <li>Add friends straight from the lobby, and invite friends who aren't in a room (they get a Join popup).</li>
           <li>
-            🔔 Invite notifications (Profile, per phone): an invite reaches a friend whose Bluff is closed as a phone notification, and tapping
-            it opens the room. Works in Android browsers and the installed app; on iPhone only in the app added to the Home Screen.
+            🔔 Invite notifications are on by default: an invite reaches a friend whose Bluff is closed as a phone notification, and tapping it
+            opens the room. The phone asks "Allow notifications?" when a player logs in or signs up (players already logged in see a one-time
+            card on Home), and a phone that allowed it before is signed up by itself. Each player can switch it off in Profile; it then stays off
+            on that phone. Works in Android browsers and the installed app; on iPhone only in the app added to the Home Screen.
           </li>
           <li>
             Join a friend from Friends: while they're in a lobby, tap Join (take a seat) or 👀 Watch. Once their game has started, tap 👀 Ask

@@ -7,6 +7,7 @@ import { AccountCorner } from './AccountCorner';
 import { AccountSheet } from './AccountSheet';
 import { HeroFan, ShineTitle, SuitDrift } from './Ambient';
 import { InstallCard } from './InstallCard';
+import { NotifyCard } from './NotifyCard';
 
 interface HomeProps {
   status: ConnStatus;
@@ -222,6 +223,7 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
         </>
       )}
 
+      <NotifyCard auth={auth} />
       <InstallCard />
       {accountSheet && <AccountSheet initial={accountSheet} auth={auth} onClose={() => setAccountSheet(null)} />}
 

@@ -92,12 +92,13 @@ export function useAuth() {
     };
   }, [refresh]);
 
-  const signIn = (res: AuthResponse) => {
+  const signIn = (res: AuthResponse): AuthResponse => {
     saveAuthToken(res.token);
     setToken(res.token);
     setUser(res.user);
     if (res.bonus > 0) setBonus(res.bonus);
     reconnectSocket();
+    return res;
   };
 
   return {

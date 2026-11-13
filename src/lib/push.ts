@@ -1,6 +1,7 @@
 // Friend-invite notifications (Web Push): they reach the phone even when Bluff is closed
 import { api } from './api';
 import { isInstalled, isIos } from './install';
+import { loadPref, savePref } from './storage';
 
 /** what the Profile switch shows */
 export type PushState = 'unsupported' | 'unavailable' | 'install' | 'denied' | 'off' | 'on';
@@ -66,6 +67,36 @@ export async function enablePush(token: string | null): Promise<void> {
   if (permission !== 'granted') {
     throw new Error(permission === 'denied' ? "Notifications are blocked for Bluff in your phone's settings" : 'Notifications were not allowed');
   }
+  await subscribeThisPhone(token);
+}
+
+/** invites are on by default: only a player who switched them off in Profile keeps them off on this phone */
+const offPref = (userId: string) => `pushOff.${userId}`;
+export const pushTurnedOff = (userId: string) => loadPref(offPref(userId)) === '1';
+export const rememberPushOff = (userId: string, off: boolean) => savePref(offPref(userId), off ? '1' : '0');
+
+/** starts the phone's prompt from a tap (login, sign-up) without waiting on anything; null where it can't work */
+export function askPermission(): Promise<NotificationPermission> | null {
+  if (!supported() || (isIos() && !isInstalled())) return null;
+  if (Notification.permission !== 'default') return Promise.resolve(Notification.permission);
+  return Notification.requestPermission();
+}
+
+/** turns invites on for this phone when it allows notifications (asked just now, or earlier), unless the player switched them off */
+export async function autoPush(token: string | null, userId: string, permission?: Promise<NotificationPermission> | null): Promise<boolean> {
+  if (!token || !supported() || pushTurnedOff(userId)) return false;
+  const answer = permission ? await permission.catch(() => 'denied' as const) : Notification.permission;
+  if (answer !== 'granted') return false;
+  try {
+    await subscribeThisPhone(token);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** subscribes (or re-subscribes with a new server key) and tells the server this phone is this account's */
+async function subscribeThisPhone(token: string): Promise<void> {
   const key = await pushKey();
   if (!key) throw new Error('Notifications are not set up on this server');
   const reg = await worker();

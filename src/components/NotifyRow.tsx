@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { errorText } from '../lib/api';
 import { cx } from '../lib/cards';
-import { disablePush, enablePush, pushState, syncPush, type PushState } from '../lib/push';
+import { disablePush, enablePush, pushState, rememberPushOff, syncPush, type PushState } from '../lib/push';
 import type { Auth } from '../useAuth';
 
 const HELP: Partial<Record<PushState, string>> = {
@@ -40,6 +40,8 @@ export function NotifyRow({ auth }: { auth: Auth }) {
     try {
       if (on) await enablePush(auth.token);
       else await disablePush(auth.token);
+      // a player's own Off stays off on this phone; nothing turns it back on by itself
+      if (auth.user) rememberPushOff(auth.user.id, !on);
     } catch (err) {
       setError(errorText(err));
     }
