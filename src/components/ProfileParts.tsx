@@ -18,6 +18,8 @@ const minutes = (sec: number) => (sec < 60 ? `${sec}s` : `${Math.round(sec / 60)
 /** one past game; tap to see the players' details */
 function GameCard({ g }: { g: GameSummary }) {
   const [icon, text] = result(g);
+  // older games have no game name: they're Bluff
+  const crazy7 = g.game === 'crazy7';
   return (
     <li>
       <details className="game-card">
@@ -26,7 +28,7 @@ function GameCard({ g }: { g: GameSummary }) {
           <div className="grow">
             <b>{text}</b>
             <p className="muted small">
-              {dateTime(g.endedAt)} · {minutes(g.durationSec)}
+              {crazy7 ? '7️⃣ Crazy 7' : '🃏 Bluff'} · {dateTime(g.endedAt)} · {minutes(g.durationSec)}
             </p>
           </div>
           {g.stake > 0 && g.status === 'finished' && !g.kicked && (
@@ -52,7 +54,14 @@ function GameCard({ g }: { g: GameSummary }) {
           <span>{g.stake > 0 ? `🪙 ${formatCoins(g.stake)} stake` : 'Free game'}</span>
           {g.bonus > 0 && <span className="bonus">🎯 +{formatCoins(g.bonus)} daily reward</span>}
         </p>
-        {g.my && (
+        {g.my && crazy7 && (
+          <div className="mini-stats">
+            <span>
+              <b>{g.my.pickedUp}</b> cards picked
+            </span>
+          </div>
+        )}
+        {g.my && !crazy7 && (
           <div className="mini-stats">
             <span>
               <b>{g.my.bluffs}</b> bluffs

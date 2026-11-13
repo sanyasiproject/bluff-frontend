@@ -337,6 +337,13 @@ export function useBluff() {
       /** the card comes back only to me; null if the peek was refused */
       peek: async (playId: string, cardIndex: number) =>
         (await run(() => request<{ card: Card }>('game:peek', { playId, cardIndex })))?.card ?? null,
+      /** Crazy 7: put one card on the pile */
+      c7Play: async (cardId: string) => (await run(() => request('c7:play', { cardId }))) !== null,
+      /** Crazy 7: pick a card, or take the 7 penalty when one waits */
+      c7Pick: () => run(() => request('c7:pick')),
+      c7Pass: () => run(() => request('c7:pass')),
+      /** Crazy 7: say "last card" */
+      c7Call: () => run(() => request('c7:call')),
       shuffleTeams: () => run(() => request('room:teams')),
       moveToSlot: (slot: number) => run(() => request('room:slot', { slot })),
       askSwap: (memberId: string) => run(() => request('room:swap', { memberId })),

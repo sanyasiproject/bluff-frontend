@@ -4,11 +4,14 @@ import { achievementsOf, TITLES } from '../lib/progress';
 import {
   BET_STEPS,
   BOT_MAX_STAKE,
+  CRAZY7_HAND_SIZES,
+  CRAZY7_MAX_PICKS,
   DAILY_GAME_REWARDS,
   LOGIN_BONUS,
   MAX_BLUFF_CALLS_IN_A_ROW,
   MAX_PEEKS,
   MIN_REWARD_GAME_SEC,
+  SEVEN_PENALTY,
   STAKES,
   THROWS,
   XP_RULES,
@@ -60,8 +63,42 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         </ul>
       </Section>
 
+      <Section icon="7️⃣" title="Crazy 7 (second game)">
+        <ul>
+          <li>The host picks the game at the top of the lobby: 🃏 Bluff (default) or 7️⃣ Crazy 7. Same rooms, seats (2–5), bots, coins and tools.</li>
+          <li>
+            Everyone gets {CRAZY7_HAND_SIZES.join(' or ')} cards (host's choice, 7 by default). The rest is the deck; its top card starts the pile.
+            A 7 is never the starting card.
+          </li>
+          <li>On your turn play one card that matches the top card's suit or number (on 5♥: any ♥ or any 5). Cards you can play glow.</li>
+          <li>
+            <b>Picking</b>: if nothing matches, 1 card is picked for you automatically. After that you may pick more, up to the room's
+            <b> Picks per turn</b> (1 to {CRAZY7_MAX_PICKS}, default 1), then play a match or pass. You can also pick on purpose instead of playing.
+            You can't pass without picking first. Reaching the limit with nothing to play passes your turn for you.
+          </li>
+          <li>
+            <b>The 7</b>: the next player picks {SEVEN_PENALTY} and misses their turn. With <b>Stack 7s</b> on (default) they can answer with their own 7
+            instead, and the next player then picks {SEVEN_PENALTY * 2}, then {SEVEN_PENALTY * 3}… While a pick waits, only a 7 can be played.
+          </li>
+          <li>
+            <b>📢 Last card</b>: when you go down to one card, tap Last card! (on your turn with 2 cards, or right after your play, before the
+            next player moves). Forget it and you pick 1 card and miss your next turn.
+          </li>
+          <li>When the deck runs out, the pile (except its top card) is shuffled into a new deck.</li>
+          <li>The first player to empty their hand wins at once; everyone else loses. Coins: everyone pays the stake, the winner takes the pot.</li>
+          <li>Host tools: Stop game and Play again work as in Bluff. There's no End game (the first one out already ends it).</li>
+          <li>Awards: 🎯 Sevens master, 🧲 Card collector (most cards picked), 🙊 Forgot to call. XP and daily rewards count like Bluff.</li>
+        </ul>
+      </Section>
+
       <Section icon="⚙️" title="Room settings (host)">
         <ul>
+          <li>
+            <b>Game</b>: 🃏 Bluff or 7️⃣ Crazy 7, picked at the top of the lobby. The settings below follow the game.
+          </li>
+          <li>
+            <b>Crazy 7</b>: cards each (5 or 7), picks per turn (1–{CRAZY7_MAX_PICKS}), Stack 7s (On/Off), 1 or 2 decks, coins at stake.
+          </li>
           <li>
             <b>Coins at stake</b> per player: {STAKES.map(stakeLabel).join(', ')}. Coin games need everyone logged in. With bots at the
             table the stake goes up to {BOT_MAX_STAKE}.
@@ -119,6 +156,10 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
       <Section icon="🤖" title="Bots">
         <ul>
           <li>The host taps 🤖 Add a bot in the lobby; each tap seats one bot in a free seat. Remove one with ✕. A person must always be playing.</li>
+          <li>
+            Bots play Crazy 7 too: they keep track of the cards played and of who had nothing to match, think ahead before each move, and
+            say Last card. Like a person, they only know their own cards.
+          </li>
           <li>
             Every bot gets its own style (careful, wild liar, detective, sneaky, gambler…) with its own random numbers, and its mood shifts
             from game to game, so no two bots play alike and their moves can't be guessed.

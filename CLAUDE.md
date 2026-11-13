@@ -19,9 +19,10 @@ React 18 + Vite 8 + TypeScript, socket.io-client, no UI library. All styles are 
 | `src/App.tsx` | Picks the screen: intro (`Splash`) → admin → Home → Lobby → Table; popups |
 | `src/useBluff.ts` | Socket connection, room state, every game/room action |
 | `src/useAuth.ts` | Login state, coins, friend-request count, profile data |
-| `components/Lobby.tsx` | Players (bots get a 🤖 row and 🤖 Add a bot), settings (incl. Extras: Peek, Bet, Teams; stake capped with bots), 2v2 slots and swap popup, host tools via `PlayerSheet` |
+| `components/Lobby.tsx` | Game picker (🃏 Bluff / 7️⃣ Crazy 7, host), players (bots get a 🤖 row and 🤖 Add a bot), settings per game (Bluff extras: Peek, Bet, Teams; Crazy 7: cards each, picks per turn, Stack 7s; stake capped with bots), 2v2 slots and swap popup, host tools via `PlayerSheet` |
 | `components/FriendsSheet.tsx` | Search, requests, friends, invites; Join / 👀 Watch / Ask to watch a friend's room (`actions.joinFriend`) |
-| `components/Table.tsx` | The game: seats, pile, Bluff / Peek / Bet, partner cards, hand, menus, end game |
+| `components/Table.tsx` | The Bluff game: seats, pile, Bluff / Peek / Bet, partner cards, hand, menus, end game. Exports `Seat`, `SeatSheet`, `GameMenu`, `useOnChange` for Crazy 7 |
+| `components/Crazy7Table.tsx` | The Crazy 7 game (`App` picks it when `view.config.game === 'crazy7'`): deck, pile, 7 penalty banner, playable cards glow (`Hand` `playable`/`dimRest`), Pick / Pass / 📢 Last card, move animations from view diffs |
 | `components/Overlays.tsx` | `Backdrop` (every sheet/modal), rank/pick/peek/bet sheets, reveal, game over, people list |
 | `components/ProfilePage.tsx`, `ProfileParts.tsx`, `XpGuide.tsx` | Your profile, levels, achievements, games |
 | `components/PlayerSheet.tsx` | Public card for any player (no private data) |

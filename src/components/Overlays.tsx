@@ -230,11 +230,13 @@ export function GameOver({ view, onLobby, onRematch, startLevel }: GameOverProps
     if (view.winnerIds.includes(view.meId)) confettiAt(box.current, { count: 80, spread: 1.5 });
     else if (!view.players.some((p) => p.id === view.meId)) confettiAt(box.current, { count: 36, spread: 1 });
   }, []);
-  const ranked = [...view.players].sort((a, b) => (a.place ?? 99) - (b.place ?? 99));
+  // Crazy 7: everyone but the winner, fewest cards left first
+  const ranked = [...view.players].sort((a, b) => (a.place ?? 99) - (b.place ?? 99) || (view.crazy7 ? a.cardCount - b.cardCount : 0));
   const lost = (id: string) => view.loserIds.includes(id);
   const won = (id: string) => view.winnerIds.includes(id);
   // teams, or the host ending early: only the winners win and everyone else lost
-  const winnersOnly = view.endedEarly || !!view.teams;
+  // Crazy 7 too: the first player out wins and everyone else loses
+  const winnersOnly = view.endedEarly || !!view.teams || view.config.game === 'crazy7';
   const medal = (p: PublicPlayer) =>
     won(p.id) ? '🥇' : p.place && !winnersOnly ? (['🥇', '🥈', '🥉'][p.place - 1] ?? placeLabel(p.place)) : '🙈';
   const label = (p: PublicPlayer) =>
@@ -242,7 +244,9 @@ export function GameOver({ view, onLobby, onRematch, startLevel }: GameOverProps
       ? `${p.place ? `${placeLabel(p.place)} · ` : ''}Winner`
       : lost(p.id)
         ? winnersOnly
-          ? 'Lost'
+          ? view.crazy7
+            ? `Lost · ${p.cardCount} left`
+            : 'Lost'
           : 'Loser'
         : p.place
           ? placeLabel(p.place)

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { api } from '../lib/api';
 import { avatarColor, claimText, cx, placeLabel, rankPlural, SUIT_SYMBOL } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
@@ -34,9 +34,13 @@ interface SeatProps {
   /** 2v2: which team, and whether they're my partner */
   team?: 'a' | 'b' | null;
   partner?: boolean;
+  /** extra line under the card count (Crazy 7: last card, missed call) */
+  tag?: ReactNode;
+  /** extra class names for the seat */
+  extra?: string;
 }
 
-function Seat({ player, turn, passed, viewing, action, bubble, onClick, label, seatRef, team, partner }: SeatProps) {
+export function Seat({ player, turn, passed, viewing, action, bubble, onClick, label, seatRef, team, partner, tag, extra }: SeatProps) {
   const badge = player.place ? placeLabel(player.place) : !player.connected ? 'offline' : passed ? 'pass' : null;
   const className = cx(
     'seat',
@@ -45,6 +49,7 @@ function Seat({ player, turn, passed, viewing, action, bubble, onClick, label, s
     !player.connected && 'offline',
     player.place && 'done',
     team && `team-${team}`,
+    extra,
   );
   const body = (
     <>
@@ -66,6 +71,7 @@ function Seat({ player, turn, passed, viewing, action, bubble, onClick, label, s
         </b>
       </span>
       {action && <span className="seat-action">{action}</span>}
+      {tag}
       {bubble && (
         <span key={bubble.key} className="seat-bubble">
           {bubble.text}
@@ -85,7 +91,7 @@ function Seat({ player, turn, passed, viewing, action, bubble, onClick, label, s
 }
 
 /** tapping someone's seat: throw an emoji, or send coins if they're a friend */
-function SeatSheet({ player, auth, onThrow, onClose }: { player: PublicPlayer; auth: Auth; onThrow: (index: number) => void; onClose: () => void }) {
+export function SeatSheet({ player, auth, onThrow, onClose }: { player: PublicPlayer; auth: Auth; onThrow: (index: number) => void; onClose: () => void }) {
   const [friend, setFriend] = useState(false);
   useEffect(() => {
     if (!auth.user || !player.username) return;
@@ -160,7 +166,7 @@ function Pile({ count, boxRef, playKey }: { count: number; boxRef: RefObject<HTM
 }
 
 /** ⋯ menu: game info, sound, and host or watcher actions, kept out of the crowded top bar */
-function GameMenu({
+export function GameMenu({
   view,
   sound,
   onToggleSound,
@@ -186,7 +192,13 @@ function GameMenu({
     <Backdrop onClose={onClose}>
       <h3>Room {view.code}</h3>
       <p className="game-rules-line">
-        {c.decks === 2 ? '2 decks' : '1 deck'} · {c.bluffRule === 'one' ? 'Pick one card' : 'Show all cards'} ·{' '}
+        {c.decks === 2 ? '2 decks' : '1 deck'} ·{' '}
+        {c.game === 'crazy7'
+          ? `Crazy 7 · ${c.handSize} cards each · up to ${c.maxPicks} pick${c.maxPicks > 1 ? 's' : ''}${c.stack7 ? ' · 7s stack' : ''}`
+          : c.bluffRule === 'one'
+            ? 'Pick one card'
+            : 'Show all cards'}{' '}
+        ·{' '}
         {c.stake > 0 ? `🪙 ${formatCoins(c.stake)} each` : 'Free game'}
         {view.watchers.length > 0 && ` · 👀 ${view.watchers.length} watching`}
       </p>
@@ -220,7 +232,7 @@ function GameMenu({
 }
 
 /** calls fn when value changes, never on the first render */
-function useOnChange<T>(value: T, fn: (next: T) => void) {
+export function useOnChange<T>(value: T, fn: (next: T) => void) {
   const prev = useRef(value);
   useEffect(() => {
     if (Object.is(prev.current, value)) return;

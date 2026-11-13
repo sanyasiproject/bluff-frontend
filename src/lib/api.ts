@@ -36,10 +36,9 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
   return data as T;
 }
 
-/** true when the server has a database, i.e. accounts are available */
-/** whether the server has accounts, and whether guests may play right now */
+/** whether the server has accounts, and whether guests may play right now; never from a cache */
 export async function serverStatus(): Promise<{ accountsOn: boolean; guestsAllowed: boolean }> {
-  const res = await fetch(`${SERVER_URL}/health`);
+  const res = await fetch(`${SERVER_URL}/health`, { cache: 'no-store' });
   const data = (await res.json()) as { accounts?: string; guests?: boolean };
   return { accountsOn: data.accounts === 'on', guestsAllowed: data.guests !== false };
 }

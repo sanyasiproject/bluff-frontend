@@ -99,6 +99,28 @@ export const sfx = {
     const c = audio();
     if (c) notes(c, [392, 330, 262], 0.18, 0.4, { type: 'triangle', gain: 0.12 });
   },
+  /** Crazy 7: a 7 hits the pile, a short sting */
+  seven() {
+    const c = audio();
+    if (c) {
+      slap(c, 0, 0.6);
+      notes(c, [784, 1175, 1568], 0.07, 0.22, { type: 'square', gain: 0.07 });
+      tone(c, 220, 0.18, 0.3, { type: 'sawtooth', gain: 0.08, to: 140 });
+    }
+  },
+  /** Crazy 7: a card slides off the deck */
+  draw() {
+    const c = audio();
+    if (c) {
+      slap(c, 0, 0.3);
+      tone(c, 520, 0.02, 0.1, { type: 'triangle', gain: 0.05, to: 700 });
+    }
+  },
+  /** Crazy 7: someone said "last card", a bright bell */
+  lastCard() {
+    const c = audio();
+    if (c) notes(c, [1319, 1760, 2093], 0.09, 0.5, { type: 'sine', gain: 0.11 });
+  },
   /** host only: someone is at the door asking to watch */
   knock() {
     const c = audio();

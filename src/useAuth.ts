@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, ApiError, serverStatus } from './lib/api';
 import { reconnectSocket, socket } from './lib/socket';
 import { loadAuthToken, saveAuthToken } from './lib/storage';
-import type { AuthResponse, GameSummary, ProfileOverview, PublicUser } from './types';
+import type { AuthResponse, GameSummary, ProfileOverview, PublicUser, ServerInfo } from './types';
 
 /** the logged-in account (null = guest) and account actions */
 export function useAuth() {
@@ -53,7 +53,8 @@ export function useAuth() {
           setAccountsOn(s.accountsOn);
           setGuestsAllowed(s.guestsAllowed);
         })
-        .catch(() => setAccountsOn(false));
+        // a failed check (asleep, or blocked by a browser shield) never hides what the game connection already said
+        .catch(() => setAccountsOn((known) => known ?? false));
     void check();
     // a sleeping or restarting server can fail the first check; look again whenever the game reconnects
     const onConnect = () => {
@@ -69,7 +70,14 @@ export function useAuth() {
     // an admin turned guest play on or off
     const onSettings = (s: { guestsAllowed: boolean }) => setGuestsAllowed(s.guestsAllowed);
     socket.on('settings:changed', onSettings);
+    // sent on every connection and when a guest is turned away, so Log in and the guest lock show even if /health is blocked
+    const onInfo = (s: ServerInfo) => {
+      setAccountsOn(s.accounts);
+      setGuestsAllowed(s.guestsAllowed);
+    };
+    socket.on('server:info', onInfo);
     return () => {
+      socket.off('server:info', onInfo);
       socket.off('connect', onConnect);
       socket.off('friends:changed', onFriends);
       socket.off('gift:received', onFriends);

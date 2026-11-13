@@ -11,7 +11,7 @@ import {
   type VoiceGender,
 } from '../lib/speech';
 import { formatCoins, compactCoins, stakeLabel } from '../lib/coins';
-import { BOT_MAX_STAKE, STAKES, type FriendsResponse, type FriendView, type GameConfig, type PublicPlayer, type RoomView } from '../types';
+import { BOT_MAX_STAKE, CRAZY7_MAX_PICKS, STAKES, type FriendsResponse, type FriendView, type GameConfig, type PublicPlayer, type RoomView } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions } from '../useBluff';
 import { AccountCorner } from './AccountCorner';
@@ -256,6 +256,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   const me = [...view.players, ...view.watchers].find((p) => p.id === view.meId);
   const set = (patch: Partial<GameConfig>) => actions.setConfig({ ...view.config, ...patch });
   const coinsOn = auth.accountsOn === true;
+  const crazy7 = view.config.game === 'crazy7';
 
   const stake = view.config.stake;
   const pot = stake * view.players.length;
@@ -267,7 +268,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
       ? 'Need at least 2 players'
       : bots.length === view.players.length
         ? 'Someone has to play with the bots'
-      : view.config.teams && view.players.length !== 4
+      : !crazy7 && view.config.teams && view.players.length !== 4
         ? 'Teams need exactly 4 players'
         : guests.length > 0
         ? `${names(guests)} must log in to play for coins`
@@ -463,7 +464,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         )}
       </section>
 
-      {view.config.teams && <TeamSlots view={view} actions={actions} isHost={isHost} />}
+      {!crazy7 && view.config.teams && <TeamSlots view={view} actions={actions} isHost={isHost} />}
 
       {view.watchers.length > 0 && (
         <section className="panel">
@@ -504,19 +505,90 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         <section className="panel settings-summary">
           <h2 className="section-title">Game settings</h2>
           <div className="summary-chips">
+            <span className="game-chip">{crazy7 ? '7️⃣ Crazy 7' : '🃏 Bluff'}</span>
             <span>{stake > 0 ? `🪙 ${formatCoins(stake)} each` : '🆓 Free game'}</span>
             <span>🎴 {view.config.decks === 2 ? '2 decks' : '1 deck'}</span>
-            <span>{view.config.bluffRule === 'one' ? '👆 Pick one card' : '🃏 Show all cards'}</span>
-            {view.config.peeks > 0 && <span>🔍 {view.config.peeks} peek{view.config.peeks > 1 ? 's' : ''}</span>}
-            {view.config.bets && <span>🎲 Bets on calls</span>}
-            {view.config.teams && <span>👥 2 vs 2</span>}
+            {crazy7 ? (
+              <>
+                <span>🃏 {view.config.handSize} cards each</span>
+                <span>
+                  🂠 Up to {view.config.maxPicks} pick{view.config.maxPicks > 1 ? 's' : ''}
+                </span>
+                <span>{view.config.stack7 ? '7️⃣ 7s stack' : '7️⃣ No stacking'}</span>
+              </>
+            ) : (
+              <>
+                <span>{view.config.bluffRule === 'one' ? '👆 Pick one card' : '🃏 Show all cards'}</span>
+                {view.config.peeks > 0 && <span>🔍 {view.config.peeks} peek{view.config.peeks > 1 ? 's' : ''}</span>}
+                {view.config.bets && <span>🎲 Bets on calls</span>}
+                {view.config.teams && <span>👥 2 vs 2</span>}
+              </>
+            )}
           </div>
           {stake > 0 && <p className="muted small">Winner takes 🪙 {formatCoins(pot)}</p>}
           {bots.length > 0 && <p className="muted small">🤖 Bots put in nothing · coins lost to a bot are gone</p>}
         </section>
       )}
 
-      {isHost && <section className="panel">
+      {isHost && (
+        <section className="panel">
+          <h2 className="section-title">Game</h2>
+          <div className="seg game-seg">
+            <Option
+              on={!crazy7}
+              disabled={false}
+              title="🃏 Bluff"
+              desc="Lie about your cards, catch the liars"
+              onClick={() => set({ game: 'bluff' })}
+            />
+            <Option
+              on={crazy7}
+              disabled={false}
+              title="7️⃣ Crazy 7"
+              desc="Match suit or number; a 7 makes the next player pick 2"
+              onClick={() => set({ game: 'crazy7' })}
+            />
+          </div>
+        </section>
+      )}
+
+      {isHost && crazy7 && (
+        <section className="panel">
+          <h2 className="section-title">Game settings</h2>
+          {coinsOn && <StakePicker stake={stake} players={view.players.length} bots={bots.length > 0} isHost={isHost} onPick={(n) => set({ stake: n })} />}
+          <SettingRow title="🃏 Cards each" desc="Dealt to every player at the start">
+            <Choice<5 | 7> value={view.config.handSize} options={[[5, '5'], [7, '7']]} onPick={(n) => set({ handSize: n })} />
+          </SettingRow>
+          <div className="setting-row stacked">
+            <div className="grow">
+              <b>🂠 Picks per turn</b>
+              <span>When nothing matches, 1 card is picked for you. You may pick more, up to this many, then pass.</span>
+            </div>
+            <div className="mini-seg pick-seg" role="group" aria-label="Picks per turn">
+              {Array.from({ length: CRAZY7_MAX_PICKS }, (_, i) => i + 1).map((n) => (
+                <button
+                  key={n}
+                  className={cx(view.config.maxPicks === n && 'on')}
+                  aria-pressed={view.config.maxPicks === n}
+                  onClick={() => view.config.maxPicks !== n && set({ maxPicks: n })}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+          <SettingRow title="7️⃣ Stack 7s" desc="Answer a 7 with your own 7: the next player picks 4, then 6…">
+            <Choice value={view.config.stack7} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ stack7: on })} />
+          </SettingRow>
+          <p className="label">Cards</p>
+          <div className="seg">
+            <Option on={view.config.decks === 1} disabled={false} title="1 deck" desc="52 cards" onClick={() => set({ decks: 1 })} />
+            <Option on={view.config.decks === 2} disabled={false} title="2 decks" desc="104 cards, more 7s" onClick={() => set({ decks: 2 })} />
+          </div>
+        </section>
+      )}
+
+      {isHost && !crazy7 && <section className="panel">
         <h2 className="section-title">Game settings</h2>
         {coinsOn && <StakePicker stake={stake} players={view.players.length} bots={bots.length > 0} isHost={isHost} onPick={(n) => set({ stake: n })} />}
         <p className="label">Cards</p>
@@ -561,17 +633,32 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
       </section>}
 
       <details className="panel rules">
-        <summary>How to play</summary>
-        <ul>
-          <li>On your turn put one or more cards face down and call a rank. You can lie.</li>
-          <li>Everyone after you must call the same rank, or pass.</li>
-          <li>Anyone can shout Bluff on the last play. Liar picks up the whole pile; if it was true, the caller does.</li>
-          <li>If everyone passes, the pile is cleared and the last player starts a new round.</li>
-          <li>Empty your hand first to win. The last player holding cards loses.</li>
-        </ul>
+        <summary>How to play {crazy7 ? 'Crazy 7' : 'Bluff'}</summary>
+        {crazy7 ? (
+          <ul>
+            <li>Play one card that matches the top card's suit or number (on 5♥: any ♥ or any 5).</li>
+            <li>
+              Nothing matches? One card is picked for you. You may pick more (up to {view.config.maxPicks} a turn), then play a match or
+              pass.
+            </li>
+            <li>
+              A 7 makes the next player pick 2 and miss their turn{view.config.stack7 ? ', unless they answer with their own 7 (then 4, 6…)' : ''}.
+            </li>
+            <li>Down to one card? Tap 📢 Last card! If you forget, you pick 1 and miss your next turn.</li>
+            <li>The first player to empty their hand wins. Everyone else loses.</li>
+          </ul>
+        ) : (
+          <ul>
+            <li>On your turn put one or more cards face down and call a rank. You can lie.</li>
+            <li>Everyone after you must call the same rank, or pass.</li>
+            <li>Anyone can shout Bluff on the last play. Liar picks up the whole pile; if it was true, the caller does.</li>
+            <li>If everyone passes, the pile is cleared and the last player starts a new round.</li>
+            <li>Empty your hand first to win. The last player holding cards loses.</li>
+          </ul>
+        )}
       </details>
 
-      <VoicePicker sample={`${me?.name ?? 'Ravi'} played four Queens`} />
+      <VoicePicker sample={crazy7 ? `${me?.name ?? 'Ravi'} played seven of spades. Priya picks 2` : `${me?.name ?? 'Ravi'} played four Queens`} />
 
       <div className="lobby-actions">
         {isHost ? (

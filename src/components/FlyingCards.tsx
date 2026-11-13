@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 import { reducedMotion } from '../lib/motion';
+import type { Card } from '../types';
 import { PlayingCard } from './PlayingCard';
 
 export interface Flight {
@@ -11,6 +12,10 @@ export interface Flight {
   delay?: number;
   /** cards shrink into a seat or hand (dealing, picking up the pile) instead of landing on the pile */
   vanish?: boolean;
+  /** shown face up (the card played in Crazy 7) instead of face-down backs */
+  card?: Card;
+  /** size of the flying cards */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /** face-down cards sliding from a seat (or your hand) onto the pile, or from the pile to a player */
@@ -64,7 +69,7 @@ export function FlyingCards({ flight, onDone }: { flight: Flight; onDone: () => 
           }}
           className="fly-card"
         >
-          <PlayingCard faceDown size="sm" />
+          {flight.card ? <PlayingCard card={flight.card} size={flight.size ?? 'sm'} /> : <PlayingCard faceDown size={flight.size ?? 'sm'} />}
         </div>
       ))}
     </div>
