@@ -273,8 +273,9 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             Level up: a full-screen "Level up! Lv N" with the title (✨ New title! when it changes) and any table or card back that level unlocks.
           </li>
           <li>
-            🎨 Table &amp; cards (Profile): felt themes unlock at Lv 3, 6, 10, 15, 20, 30 and card backs at Lv 2, 5, 8, 12, 18, 25, 40. Only you see
-            your look.
+            🎨 Table &amp; cards (Profile): felt themes unlock at Lv 3, 6, 10, 15, 20, 30 and card backs at Lv 2, 5, 8, 12, 18, 25, 40. Both are your
+            showpiece: everyone at the table sees your seat box in your table style, and your face-down cards in your card back (the cards you
+            play onto the pile, cards flying to your hand). Your own screen uses your table as the felt.
           </li>
         </ul>
       </Section>

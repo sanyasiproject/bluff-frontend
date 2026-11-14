@@ -66,13 +66,15 @@ export function RankSheet({ hand, selected, busy, onPick, onClose }: RankSheetPr
 
 interface PickSheetProps {
   count: number;
+  /** the back of the player whose cards these are */
+  back: string;
   who: string;
   claim: string;
   onPick: (index: number) => void;
   onClose: () => void;
 }
 
-export function PickSheet({ count, who, claim, onPick, onClose }: PickSheetProps) {
+export function PickSheet({ count, back, who, claim, onPick, onClose }: PickSheetProps) {
   return (
     <Backdrop onClose={onClose}>
       <h3>Pick one card to turn over</h3>
@@ -81,7 +83,7 @@ export function PickSheet({ count, who, claim, onPick, onClose }: PickSheetProps
       </p>
       <div className="pick-row">
         {Array.from({ length: count }, (_, i) => (
-          <PlayingCard key={i} faceDown size={count > 8 ? 'md' : 'lg'} className="pick-card" onClick={() => onPick(i)} />
+          <PlayingCard key={i} faceDown back={back} size={count > 8 ? 'md' : 'lg'} className="pick-card" onClick={() => onPick(i)} />
         ))}
       </div>
       <button className="btn ghost block" onClick={onClose}>
@@ -93,6 +95,8 @@ export function PickSheet({ count, who, claim, onPick, onClose }: PickSheetProps
 
 interface PeekSheetProps {
   count: number;
+  /** the back of the player whose cards these are */
+  back: string;
   /** cards already peeked at in this play */
   peeked: { index: number; card: Card }[];
   left: number;
@@ -101,7 +105,7 @@ interface PeekSheetProps {
 }
 
 /** tap a face-down card of the last play to see it; only you see it */
-export function PeekSheet({ count, peeked, left, onPeek, onClose }: PeekSheetProps) {
+export function PeekSheet({ count, back, peeked, left, onPeek, onClose }: PeekSheetProps) {
   const [busy, setBusy] = useState(false);
   const seen = new Map(peeked.map((p) => [p.index, p.card]));
   return (
@@ -119,6 +123,7 @@ export function PeekSheet({ count, peeked, left, onPeek, onClose }: PeekSheetPro
             <PlayingCard
               key={i}
               faceDown
+              back={back}
               size={count > 8 ? 'md' : 'lg'}
               className={cx('pick-card', (left === 0 || busy) && 'disabled')}
               onClick={
@@ -172,10 +177,12 @@ export function BetSheet({ limit, value, onPick, onClose }: { limit: number; val
 interface RevealProps {
   reveal: RevealView;
   name: (id: string) => string;
+  /** the back of the player who made the play, for cards left face down */
+  back: string;
   onClose: () => void;
 }
 
-export function RevealOverlay({ reveal, name, onClose }: RevealProps) {
+export function RevealOverlay({ reveal, name, back, onClose }: RevealProps) {
   return (
     <Backdrop center onClose={onClose}>
       <div className={cx('reveal', reveal.bluff ? 'caught' : 'truth')} onClick={onClose}>
@@ -192,6 +199,7 @@ export function RevealOverlay({ reveal, name, onClose }: RevealProps) {
             >
               <PlayingCard
                 card={c}
+                back={back}
                 size={reveal.cards.length > 8 ? 'sm' : 'md'}
                 className={c ? 'flip' : undefined}
                 style={{ animationDelay: `${120 + Math.min(i, 10) * 110}ms` }}

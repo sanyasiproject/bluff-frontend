@@ -3,12 +3,13 @@ import { api } from '../lib/api';
 import { claimText, cx, placeLabel, rankPlural, SUIT_SYMBOL } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
+import { backOf } from '../lib/look';
 import { confettiAt } from '../lib/motion';
 import { useNewCards } from '../lib/newCards';
 import { useOneCardAlert } from '../lib/spotlight';
 import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
-import type { Card, FriendsResponse, PublicPlayer, Rank, RoomView } from '../types';
+import { DEFAULT_CARD_BACK, type Card, type FriendsResponse, type PublicPlayer, type Rank, type RoomView } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions, ChatBubble } from '../useBluff';
 import { ConfirmBox } from './ConfirmBox';
@@ -69,7 +70,7 @@ export function Seat({ player, turn, passed, viewing, action, bubble, onClick, l
         {player.name}
       </span>
       <span className="seat-count">
-        <i className="mini-back" />
+        <i className="mini-back" data-back={player.back} />
         {/* re-keyed so the number bumps when it changes */}
         <b key={player.cardCount} className="bump">
           {player.cardCount}
@@ -85,11 +86,21 @@ export function Seat({ player, turn, passed, viewing, action, bubble, onClick, l
     </>
   );
   return onClick ? (
-    <button ref={seatRef} type="button" className={className} data-member={player.id} aria-pressed={viewing} aria-label={label} onClick={onClick}>
+    <button
+      ref={seatRef}
+      type="button"
+      className={className}
+      data-member={player.id}
+      data-table={player.table}
+      aria-pressed={viewing}
+      aria-label={label}
+      onClick={onClick}
+    >
       {body}
     </button>
   ) : (
-    <div ref={seatRef} className={className} data-member={player.id}>
+    // the seat box shows the player's own table style, so everyone sees it
+    <div ref={seatRef} className={className} data-member={player.id} data-table={player.table}>
       {body}
     </div>
   );
@@ -142,8 +153,10 @@ function TruthRow({ cards, claim }: { cards: Card[]; claim: Rank }) {
   );
 }
 
-function Pile({ count, boxRef, playKey }: { count: number; boxRef: RefObject<HTMLDivElement>; playKey: string | null }) {
+function Pile({ count, boxRef, playKey, backs }: { count: number; boxRef: RefObject<HTMLDivElement>; playKey: string | null; backs: string[] }) {
   const shown = Math.min(count, 7);
+  // backs line up with the top cards; any without an owner show the classic back
+  const offset = shown - backs.length;
   return (
     <div className="pile" ref={boxRef} aria-label={`${count} cards in the pile`}>
       {count === 0 && <div className="pile-empty">Pile</div>}
@@ -154,6 +167,7 @@ function Pile({ count, boxRef, playKey }: { count: number; boxRef: RefObject<HTM
           <PlayingCard
             key={n}
             faceDown
+            back={backs[i - offset] ?? DEFAULT_CARD_BACK}
             size="sm"
             className="pile-card"
             style={{ transform: `translate(-50%, -50%) rotate(${((n * 47) % 34) - 17}deg) translate(${((n * 13) % 11) - 5}px, ${-i}px)` }}
@@ -287,6 +301,12 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
   // players who left mid-game still count for names and the pot
   const name = (id: string | null) =>
     id === view.meId ? 'You' : ([...view.players, ...view.leftPlayers].find((p) => p.id === id)?.name ?? 'Someone');
+  // everyone's face-down cards show in their own card back
+  const back = (id: string | null | undefined) => backOf(view.players, id);
+  const pileBacks = view.pileTopBy.map(back);
+  // the pile as it was before a call took it, for the cards flying to whoever picks it up
+  const lastPileBacks = useRef<string[]>([]);
+  if (pileBacks.length) lastPileBacks.current = pileBacks;
   const pot = view.config.stake * (view.players.length + view.leftPlayers.length);
   const playing = view.phase === 'playing';
   // anyone still holding a single card gets a spotlight (and a heartbeat when it starts)
@@ -364,8 +384,9 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
       const pile = pileRef.current?.getBoundingClientRect();
       if (!pile) return;
       const targets = [...opponents.map((p) => seatEls.current.get(p.id)), watching ? null : handRef.current];
+      const owners = [...opponents.map((p) => p.id), view.meId];
       targets.forEach((el, i) => {
-        if (el) fly({ key: `deal-${i}-${Date.now()}`, count: 4, from: pile, to: el.getBoundingClientRect(), delay: i * 140, vanish: true });
+        if (el) fly({ key: `deal-${i}-${Date.now()}`, count: 4, from: pile, to: el.getBoundingClientRect(), delay: i * 140, vanish: true, backs: [back(owners[i])] });
       });
     });
     const t = setTimeout(() => setDealing(false), 1600);
@@ -388,7 +409,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
     const from = pileRef.current?.getBoundingClientRect();
     const target = r.loserId === view.meId ? handRef.current : seatEls.current.get(r.loserId);
     if (from && target && r.pileCount > 0) {
-      fly({ key: `sweep-${r.playId}`, count: Math.min(r.pileCount, 8), from, to: target.getBoundingClientRect(), vanish: true });
+      fly({ key: `sweep-${r.playId}`, count: Math.min(r.pileCount, 8), from, to: target.getBoundingClientRect(), vanish: true, backs: [...lastPileBacks.current].reverse() });
     }
   }, [showReveal, view.reveal?.playId]);
 
@@ -441,7 +462,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
     const from = lp.playerId === view.meId ? handRef.current : seatEls.current.get(lp.playerId);
     const to = pileRef.current;
     if (from && to) {
-      fly({ key: id, count: Math.min(lp.count, 6), from: from.getBoundingClientRect(), to: to.getBoundingClientRect() });
+      fly({ key: id, count: Math.min(lp.count, 6), from: from.getBoundingClientRect(), to: to.getBoundingClientRect(), backs: [back(lp.playerId)] });
     }
   });
   useOnChange(view.passedIds.length, (n) => n > 0 && sfx.pass());
@@ -574,7 +595,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
           Round <b>{view.roundRank ? rankPlural(view.roundRank) : '–'}</b>
         </div>
         <PileReact onReact={(i) => void actions.reactOnPile(i)}>
-          <Pile count={view.pileCount} boxRef={pileRef} playKey={lp?.id ?? null} />
+          <Pile count={view.pileCount} boxRef={pileRef} playKey={lp?.id ?? null} backs={pileBacks} />
         </PileReact>
         {lp && (
           <p className="last-play">
@@ -708,6 +729,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
       {sheet === 'pick' && lp && (
         <PickSheet
           count={lp.count}
+          back={back(lp.playerId)}
           who={name(lp.playerId)}
           claim={claimText(lp.count, lp.rank)}
           onPick={async (i) => {
@@ -720,6 +742,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
       {sheet === 'peek' && lp && (
         <PeekSheet
           count={lp.count}
+          back={back(lp.playerId)}
           peeked={peekedNow}
           left={view.peeksLeft}
           onPeek={peekAt}
@@ -750,7 +773,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
         />
       )}
       {showReveal && view.reveal && (
-        <RevealOverlay reveal={view.reveal} name={name} onClose={() => setShowReveal(false)} />
+        <RevealOverlay reveal={view.reveal} name={name} back={back(view.reveal.playerId)} onClose={() => setShowReveal(false)} />
       )}
       {view.phase === 'over' && !(showReveal && view.reveal) && (
         <GameOver

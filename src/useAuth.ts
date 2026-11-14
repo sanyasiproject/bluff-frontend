@@ -122,6 +122,16 @@ export function useAuth() {
       const res = await api<{ user: PublicUser }>('/me/avatar', { body: { avatar }, token });
       setUser(res.user);
     },
+    /** the table theme: this player's felt, and the seat box everyone else sees round their name */
+    setTableTheme: async (table: string | null) => {
+      const res = await api<{ user: PublicUser }>('/me/table', { body: { table }, token });
+      setUser(res.user);
+    },
+    /** the card back everyone at the table sees on this player's cards */
+    setCardBack: async (back: string | null) => {
+      const res = await api<{ user: PublicUser }>('/me/back', { body: { back }, token });
+      setUser(res.user);
+    },
     /** this account finished or skipped a practice lesson; a local copy covers a failed request */
     markTutorial: async (game: GameKind) => {
       if (!token) return;

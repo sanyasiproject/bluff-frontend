@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type RefObject } from 
 import { cx, isRed, SUIT_SYMBOL } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
+import { backOf } from '../lib/look';
 import { confettiAt } from '../lib/motion';
 import { useNewCards } from '../lib/newCards';
 import { useOneCardAlert } from '../lib/spotlight';
@@ -193,8 +194,10 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
       const from = deckRef.current?.getBoundingClientRect();
       if (!from) return;
       const targets = [...opponents.map((p) => seatEls.current.get(p.id)), watching ? null : handRef.current];
+      const owners = [...opponents.map((p) => p.id), view.meId];
+      // cards going into a hand show in that player's card back
       targets.forEach((el, i) => {
-        if (el) fly({ key: `deal-${i}-${Date.now()}`, count: 4, from, to: el.getBoundingClientRect(), delay: i * 140, vanish: true });
+        if (el) fly({ key: `deal-${i}-${Date.now()}`, count: 4, from, to: el.getBoundingClientRect(), delay: i * 140, vanish: true, backs: [backOf(view.players, owners[i])] });
       });
     });
     const t = setTimeout(() => setDealing(false), 1600);
@@ -240,7 +243,15 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
       const from = deckRef.current;
       const to = spotOf(p.id);
       if (from && to) {
-        fly({ key: `pick-${++flightSeq.current}`, count: Math.min(gained, 6), from: from.getBoundingClientRect(), to: to.getBoundingClientRect(), delay, vanish: true });
+        fly({
+          key: `pick-${++flightSeq.current}`,
+          count: Math.min(gained, 6),
+          from: from.getBoundingClientRect(),
+          to: to.getBoundingClientRect(),
+          delay,
+          vanish: true,
+          backs: [p.back],
+        });
       }
       next[p.id] = `+${gained}`;
     }

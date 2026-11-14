@@ -1,18 +1,34 @@
 import { useState } from 'react';
+import { errorText } from '../lib/api';
 import { cx } from '../lib/cards';
-import { BACKS, currentLook, nextUnlock, setLook, TABLES, type LookChoice } from '../lib/look';
+import { BACKS, currentLook, nextUnlock, TABLES, type LookChoice } from '../lib/look';
 import { levelOf } from '../types';
 import type { Auth } from '../useAuth';
 import { PlayingCard } from './PlayingCard';
 
-/** Profile: pick a table and a card back; higher levels unlock more */
+/** Profile: pick a table (your felt, and your seat box for everyone) and a card back (everyone sees it on your cards); higher levels unlock more */
 export function LookPicker({ auth }: { auth: Auth }) {
   const user = auth.user;
   const level = user ? levelOf(user.stats) : 1;
-  const [pick, setPick] = useState<LookChoice>(() => currentLook(user?.id ?? null, level));
+  // shown at once; put back if the server says no
+  const [trying, setTrying] = useState<Partial<LookChoice>>({});
+  const [error, setError] = useState('');
   if (!user) return null;
 
-  const choose = (change: Partial<LookChoice>) => setPick(setLook(user.id, level, change));
+  const saved = currentLook(level, user.tableTheme, user.cardBack);
+  const pick: LookChoice = { ...saved, ...trying };
+  const choose = async (change: Partial<LookChoice>) => {
+    setTrying(change);
+    setError('');
+    try {
+      if (change.table) await auth.setTableTheme(change.table);
+      if (change.back) await auth.setCardBack(change.back);
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setTrying({});
+    }
+  };
   const next = nextUnlock(level);
 
   return (
@@ -34,7 +50,7 @@ export function LookPicker({ auth }: { auth: Auth }) {
               aria-label={locked ? `${t.name}, unlocks at level ${t.level}` : t.name}
               disabled={locked}
               className={cx('look-swatch', on && 'on', locked && 'locked')}
-              onClick={() => !on && choose({ table: t.id })}
+              onClick={() => !on && void choose({ table: t.id })}
             >
               <span
                 className={cx('look-felt', t.id)}
@@ -64,10 +80,10 @@ export function LookPicker({ auth }: { auth: Auth }) {
               aria-label={locked ? `${b.name}, unlocks at level ${b.level}` : b.name}
               disabled={locked}
               className={cx('look-swatch', on && 'on', locked && 'locked')}
-              onClick={() => !on && choose({ back: b.id })}
+              onClick={() => !on && void choose({ back: b.id })}
             >
               <span className="look-back" data-back={b.id} aria-hidden>
-                <PlayingCard faceDown size="sm" />
+                <PlayingCard faceDown size="sm" back={b.id} />
                 {locked && <span className="look-lock">🔒</span>}
               </span>
               <span className="look-name">{b.name}</span>
@@ -77,8 +93,10 @@ export function LookPicker({ auth }: { auth: Auth }) {
         })}
       </div>
 
+      {error && <p className="form-error">{error}</p>}
       <p className="muted small">
-        {next ? `Reach Lv ${next.level} for ${next.name} ${next.emoji}` : 'Every table and card back is yours 🏆'} · only you see your look
+        Everyone at the table sees your seat in your table style and your cards in your card back.{' '}
+        {next ? `Reach Lv ${next.level} for ${next.name} ${next.emoji}` : 'Every table and card back is yours 🏆'}
       </p>
     </section>
   );

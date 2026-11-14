@@ -15,9 +15,11 @@ interface Props {
   style?: CSSProperties;
   /** added to what a screen reader says, e.g. ", playable" */
   note?: string;
+  /** a face-down card's back (CARD_BACKS id): its owner's; omit for this phone's own back */
+  back?: string;
 }
 
-export function PlayingCard({ card, faceDown, size, selected, order, onClick, className, style, note = '' }: Props) {
+export function PlayingCard({ card, faceDown, size, selected, order, onClick, className, style, note = '', back }: Props) {
   const shown = faceDown ? null : (card ?? null);
   const classes = cx(
     'card',
@@ -47,12 +49,13 @@ export function PlayingCard({ card, faceDown, size, selected, order, onClick, cl
     </>
   );
 
+  const backId = shown ? undefined : back;
   return onClick ? (
-    <button type="button" className={classes} style={style} onClick={onClick} aria-label={label} aria-pressed={selected}>
+    <button type="button" className={classes} style={style} onClick={onClick} aria-label={label} aria-pressed={selected} data-back={backId}>
       {body}
     </button>
   ) : (
-    <div className={classes} style={style} role="img" aria-label={label}>
+    <div className={classes} style={style} role="img" aria-label={label} data-back={backId}>
       {body}
     </div>
   );

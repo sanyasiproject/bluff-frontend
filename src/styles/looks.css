@@ -104,66 +104,106 @@
   background: color-mix(in srgb, var(--felt-deep) 86%, transparent);
 }
 
+/* ---------- seats: each player's box in their own table style, so the whole table sees it ---------- */
+.seat[data-table='classic'] {
+  --seat-bg: radial-gradient(120% 90% at 50% 20%, #177650 0%, #0e4d35 55%, #05261a 100%);
+}
+
+.seat[data-table='royal'] {
+  --seat-bg: radial-gradient(120% 90% at 50% 20%, #2a5bb8 0%, #163a7a 55%, #08183a 100%);
+}
+
+.seat[data-table='wood'] {
+  --seat-bg:
+    repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.1) 0 2px, transparent 2px 13px),
+    radial-gradient(120% 90% at 50% 20%, #9a6a3c 0%, #6b4423 55%, #2b170a 100%);
+}
+
+.seat[data-table='midnight'] {
+  --seat-bg: radial-gradient(120% 90% at 50% 20%, #2c3550 0%, #161b2e 55%, #07090f 100%);
+}
+
+.seat[data-table='maroon'] {
+  --seat-bg: radial-gradient(120% 90% at 50% 20%, #8a1f3a 0%, #5a0f24 55%, #24040e 100%);
+}
+
+/* emerald: the gold weave and a thin gold frame inside the box */
+.seat[data-table='emerald'] {
+  --seat-bg:
+    repeating-linear-gradient(45deg, rgba(246, 196, 83, 0.14) 0 1px, transparent 1px 12px),
+    repeating-linear-gradient(-45deg, rgba(246, 196, 83, 0.14) 0 1px, transparent 1px 12px),
+    radial-gradient(120% 90% at 50% 20%, #12b585 0%, #06664a 55%, #01261c 100%);
+  outline: 1.5px solid rgba(246, 196, 83, 0.75);
+  outline-offset: -5px;
+}
+
+.seat[data-table='galaxy'] {
+  --seat-bg:
+    radial-gradient(1.5px 1.5px at 18% 22%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 16%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 86% 64%, #e8ddff 50%, transparent 51%),
+    radial-gradient(1px 1px at 12% 74%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 52% 90%, #fff 50%, transparent 51%),
+    radial-gradient(70% 50% at 75% 30%, rgba(214, 90, 200, 0.3), transparent 70%),
+    radial-gradient(120% 90% at 50% 20%, #5b3fa8 0%, #2a1b5e 55%, #0a0620 100%);
+}
+
 /* ---------- card backs ---------- */
-/* stripe colours (also the little card next to each seat's count); the preview swatches set their own */
-:root[data-back='ocean'],
-.look-back[data-back='ocean'] {
-  --back-1: #1d4e9e;
-  --back-2: #2f6fd0;
-}
+/* Everyone's face-down cards show in that player's own back: data-back on the card or seat badge, from the server.
+   Cards nobody owns (the Crazy 7 deck, practice, the home screen) use this phone's own back, set on :root */
 
-:root[data-back='paisley'],
-.look-back[data-back='paisley'] {
-  --back-1: #b4532a;
-  --back-2: #2bb3a3;
-}
-
-:root[data-back='neon'],
-.look-back[data-back='neon'] {
-  --back-1: #120320;
-  --back-2: #ff2fd6;
-}
-
-:root[data-back='gold'],
-.look-back[data-back='gold'] {
-  --back-1: #8a6a12;
-  --back-2: #d4a72c;
-}
-
-:root[data-back='mandala'],
-.look-back[data-back='mandala'] {
-  --back-1: #b0123b;
-  --back-2: #3a0a52;
-}
-
-:root[data-back='diamond'],
-.look-back[data-back='diamond'] {
-  --back-1: #3a7bd5;
-  --back-2: #b9f2ff;
-}
-
-:root[data-back='legend'],
-.look-back[data-back='legend'] {
-  --back-1: #2a1c00;
-  --back-2: #f6c453;
-}
-
-.look-back[data-back='classic'] {
+/* stripe colours */
+[data-back='classic'] {
   --back-1: #a11f35;
   --back-2: #c7384f;
 }
 
-/* the picker always shows each back as itself, whatever back is in use */
-.look-picker .look-back[data-back] .card.back {
+[data-back='ocean'] {
+  --back-1: #1d4e9e;
+  --back-2: #2f6fd0;
+}
+
+[data-back='paisley'] {
+  --back-1: #b4532a;
+  --back-2: #2bb3a3;
+}
+
+[data-back='neon'] {
+  --back-1: #120320;
+  --back-2: #ff2fd6;
+}
+
+[data-back='gold'] {
+  --back-1: #8a6a12;
+  --back-2: #d4a72c;
+}
+
+[data-back='mandala'] {
+  --back-1: #b0123b;
+  --back-2: #3a0a52;
+}
+
+[data-back='diamond'] {
+  --back-1: #3a7bd5;
+  --back-2: #b9f2ff;
+}
+
+[data-back='legend'] {
+  --back-1: #2a1c00;
+  --back-2: #f6c453;
+}
+
+/* a card in someone's back starts from the plain stripes, whatever back this phone uses */
+.card.back[data-back] {
   border-color: #fff;
   background:
     radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.22) 0 18%, transparent 19%),
     repeating-linear-gradient(45deg, var(--back-1) 0 5px, var(--back-2) 5px 10px);
 }
 
-/* patterned backs: the whole app, and their own swatch */
-:root[data-back='paisley'] .card.back,
-.look-picker .look-back[data-back='paisley'] .card.back {
+/* patterned backs: this phone's own cards, and anyone's card in that back */
+:root[data-back='paisley'] .card.back:not([data-back]),
+.card.back[data-back='paisley'] {
   background:
     radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.25) 0 16%, transparent 17%),
     radial-gradient(circle at 25% 25%, #ffd27a 0 18%, transparent 20%) 0 0 / 10px 10px,
@@ -171,8 +211,8 @@
     #b4532a;
 }
 
-:root[data-back='neon'] .card.back,
-.look-picker .look-back[data-back='neon'] .card.back {
+:root[data-back='neon'] .card.back:not([data-back]),
+.card.back[data-back='neon'] {
   border-color: #2fe6ff;
   background:
     radial-gradient(circle at 50% 50%, rgba(255, 47, 214, 0.45) 0 16%, transparent 17%),
@@ -181,29 +221,28 @@
     #120320;
 }
 
-:root[data-back='gold'] .card.back,
-.look-picker .look-back[data-back='gold'] .card.back {
+:root[data-back='gold'] .card.back:not([data-back]),
+.card.back[data-back='gold'] {
   border-color: #ffe7a3;
   background:
     radial-gradient(circle at 50% 50%, #fff3c4 0 10%, #8a6a12 11% 16%, transparent 17%),
     repeating-linear-gradient(45deg, #8a6a12 0 5px, #d4a72c 5px 10px);
 }
 
-:root[data-back='mandala'] .card.back,
-.look-picker .look-back[data-back='mandala'] .card.back {
-  background:
-    repeating-radial-gradient(circle at 50% 50%, #ffcf5a 0 2px, #b0123b 2px 6px, #ffcf5a 6px 7px, #3a0a52 7px 11px);
+:root[data-back='mandala'] .card.back:not([data-back]),
+.card.back[data-back='mandala'] {
+  background: repeating-radial-gradient(circle at 50% 50%, #ffcf5a 0 2px, #b0123b 2px 6px, #ffcf5a 6px 7px, #3a0a52 7px 11px);
 }
 
-:root[data-back='diamond'] .card.back,
-.look-picker .look-back[data-back='diamond'] .card.back {
+:root[data-back='diamond'] .card.back:not([data-back]),
+.card.back[data-back='diamond'] {
   background:
     radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.5) 0 14%, transparent 15%),
     conic-gradient(from 45deg, #b9f2ff 25%, #3a7bd5 0 50%, #b9f2ff 0 75%, #3a7bd5 0) 0 0 / 10px 10px;
 }
 
-:root[data-back='legend'] .card.back,
-.look-picker .look-back[data-back='legend'] .card.back {
+:root[data-back='legend'] .card.back:not([data-back]),
+.card.back[data-back='legend'] {
   border-color: var(--gold);
   background:
     radial-gradient(circle at 50% 50%, #f6c453 0 13%, #2a1c00 14% 17%, transparent 18%),

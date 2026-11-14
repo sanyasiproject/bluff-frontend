@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
-import { levelOf } from '../types';
+import { useEffect } from 'react';
+import { CARD_BACKS, cardBackOf, DEFAULT_CARD_BACK, DEFAULT_TABLE_THEME, levelOf, TABLE_THEMES, tableThemeOf } from '../types';
 import type { Auth } from '../useAuth';
 import { loadPref, savePref } from './storage';
 
-// Table themes and card backs: cosmetic only, unlocked by level, chosen per account on this phone
+// Table themes and card backs: cosmetic only, unlocked by level, saved on the account.
+// Everyone at the table sees them: your seat box in your table, your face-down cards in your back.
 
 export interface TableLook {
   id: string;
@@ -24,63 +25,65 @@ export interface BackLook {
   level: number;
 }
 
-export const DEFAULT_TABLE = 'classic';
-export const DEFAULT_BACK = 'classic';
+export const DEFAULT_TABLE = DEFAULT_TABLE_THEME;
+export const DEFAULT_BACK = DEFAULT_CARD_BACK;
 
-export const TABLES: TableLook[] = [
-  { id: 'classic', name: 'Classic green', emoji: '🟢', level: 1, colors: ['#177650', '#0e4d35', '#05261a'], bar: '#062a1d' },
-  { id: 'royal', name: 'Royal blue', emoji: '🔵', level: 3, colors: ['#2a5bb8', '#163a7a', '#08183a'], bar: '#08183a' },
-  { id: 'wood', name: 'Wooden', emoji: '🪵', level: 6, colors: ['#9a6a3c', '#6b4423', '#2b170a'], bar: '#2b170a' },
-  { id: 'midnight', name: 'Midnight', emoji: '🌙', level: 10, colors: ['#2c3550', '#161b2e', '#07090f'], bar: '#07090f' },
-  { id: 'maroon', name: 'Maroon velvet', emoji: '🍷', level: 15, colors: ['#8a1f3a', '#5a0f24', '#24040e'], bar: '#24040e' },
-  { id: 'emerald', name: 'Emerald gold', emoji: '✨', level: 20, colors: ['#12b585', '#06664a', '#01261c'], bar: '#01261c' },
-  { id: 'galaxy', name: 'Galaxy', emoji: '🌌', level: 30, colors: ['#5b3fa8', '#2a1b5e', '#0a0620'], bar: '#0a0620' },
-];
+/** each table's shades: light, felt, deep, then the status bar */
+const TABLE_COLORS: Record<string, [string, string, string, string]> = {
+  classic: ['#177650', '#0e4d35', '#05261a', '#062a1d'],
+  royal: ['#2a5bb8', '#163a7a', '#08183a', '#08183a'],
+  wood: ['#9a6a3c', '#6b4423', '#2b170a', '#2b170a'],
+  midnight: ['#2c3550', '#161b2e', '#07090f', '#07090f'],
+  maroon: ['#8a1f3a', '#5a0f24', '#24040e', '#24040e'],
+  emerald: ['#12b585', '#06664a', '#01261c', '#01261c'],
+  galaxy: ['#5b3fa8', '#2a1b5e', '#0a0620', '#0a0620'],
+};
 
-export const BACKS: BackLook[] = [
-  { id: 'classic', name: 'Classic red', emoji: '🟥', level: 1 },
-  { id: 'ocean', name: 'Ocean blue', emoji: '🌊', level: 2 },
-  { id: 'paisley', name: 'Paisley', emoji: '🌼', level: 5 },
-  { id: 'neon', name: 'Neon', emoji: '💡', level: 8 },
-  { id: 'gold', name: 'Royal gold', emoji: '👑', level: 12 },
-  { id: 'mandala', name: 'Mandala', emoji: '🪷', level: 18 },
-  { id: 'diamond', name: 'Diamond', emoji: '💎', level: 25 },
-  { id: 'legend', name: 'Legend', emoji: '🏆', level: 40 },
-];
+export const TABLES: TableLook[] = TABLE_THEMES.map((t) => {
+  const [light, felt, deep, bar] = TABLE_COLORS[t.id];
+  return { ...t, colors: [light, felt, deep], bar };
+});
+
+export const BACKS: BackLook[] = [...CARD_BACKS];
 
 export interface LookChoice {
   table: string;
   back: string;
 }
 
-const prefKey = (owner: string) => `look.${owner}`;
-const listeners = new Set<() => void>();
+/** this player's look: what the account saved, while their level allows it, otherwise the defaults */
+export function currentLook(level: number, tableTheme: string | null, cardBack: string | null): LookChoice {
+  const table = tableThemeOf(tableTheme);
+  const back = cardBackOf(cardBack);
+  return {
+    table: table && table.level <= level ? table.id : DEFAULT_TABLE,
+    back: back && back.level <= level ? back.id : DEFAULT_BACK,
+  };
+}
 
-function saved(owner: string): Partial<LookChoice> {
+// before looks were saved on the account, each phone kept them here
+const legacyKey = (owner: string) => `look.${owner}`;
+
+/** a look picked on this phone before it was saved on the account, to move over once */
+function legacyLook(owner: string, level: number): Partial<LookChoice> {
+  let old: Partial<LookChoice> = {};
   try {
-    const raw = loadPref(prefKey(owner));
-    return raw ? (JSON.parse(raw) as Partial<LookChoice>) : {};
+    const raw = loadPref(legacyKey(owner));
+    old = raw ? (JSON.parse(raw) as Partial<LookChoice>) : {};
   } catch {
     return {};
   }
+  const table = tableThemeOf(old.table);
+  const back = cardBackOf(old.back);
+  return {
+    table: table && table.level <= level && table.id !== DEFAULT_TABLE ? table.id : undefined,
+    back: back && back.level <= level && back.id !== DEFAULT_BACK ? back.id : undefined,
+  };
 }
 
-/** what this player sees: their saved choice while their level allows it, otherwise the defaults */
-export function currentLook(owner: string | null, level: number): LookChoice {
-  if (!owner) return { table: DEFAULT_TABLE, back: DEFAULT_BACK };
-  const s = saved(owner);
-  const table = TABLES.find((t) => t.id === s.table && t.level <= level)?.id ?? DEFAULT_TABLE;
-  const back = BACKS.find((b) => b.id === s.back && b.level <= level)?.id ?? DEFAULT_BACK;
-  return { table, back };
-}
-
-/** saves a choice for this player on this phone and repaints the app */
-export function setLook(owner: string, level: number, change: Partial<LookChoice>): LookChoice {
-  const next = { ...currentLook(owner, level), ...change };
-  savePref(prefKey(owner), JSON.stringify(next));
-  listeners.forEach((fn) => fn());
-  return currentLook(owner, level);
-}
+/** a player's card back for drawing their cards; the classic one when unknown */
+export const backOf = (players: readonly { id: string; back: string }[], id: string | null | undefined): string =>
+  players.find((p) => p.id === id)?.back ?? DEFAULT_BACK;
 
 /** looks first unlocked at exactly this level (for the level-up screen) */
 export function unlocksAt(level: number): { tables: TableLook[]; backs: BackLook[] } {
@@ -93,27 +96,31 @@ export function nextUnlock(level: number): (TableLook | BackLook) | null {
   return locked[0] ?? null;
 }
 
-/** paints the chosen table and card back on the whole app; guests always see the defaults */
+/** paints this player's table and own card back (deck, practice, home screen) on the app; guests always see the defaults */
 export function useLook(auth: Auth): void {
   const owner = auth.user?.id ?? null;
   const level = auth.user ? levelOf(auth.user.stats) : 1;
-  const [version, setVersion] = useState(0);
+  const tableTheme = auth.user?.tableTheme ?? null;
+  const cardBack = auth.user?.cardBack ?? null;
+  const { setTableTheme, setCardBack } = auth;
+
+  // a look chosen on this phone before it was saved on the account moves over once, so others see it too
+  useEffect(() => {
+    if (!owner) return;
+    const old = legacyLook(owner, level);
+    if (!old.table && !old.back) return;
+    savePref(legacyKey(owner), '{}');
+    if (old.table && tableTheme === null) setTableTheme(old.table).catch(() => {});
+    if (old.back && cardBack === null) setCardBack(old.back).catch(() => {});
+  }, [owner]);
 
   useEffect(() => {
-    const bump = () => setVersion((v) => v + 1);
-    listeners.add(bump);
-    return () => {
-      listeners.delete(bump);
-    };
-  }, []);
-
-  useEffect(() => {
-    const look = currentLook(owner, level);
+    const look = owner ? currentLook(level, tableTheme, cardBack) : { table: DEFAULT_TABLE, back: DEFAULT_BACK };
     const root = document.documentElement;
     root.dataset.table = look.table;
     root.dataset.back = look.back;
     // the phone's status bar follows the table
     const bar = TABLES.find((t) => t.id === look.table)?.bar;
     if (bar) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bar);
-  }, [owner, level, version]);
+  }, [owner, level, tableTheme, cardBack]);
 }

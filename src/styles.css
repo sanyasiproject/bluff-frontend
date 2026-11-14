@@ -1201,7 +1201,8 @@ a.btn {
   padding: 8px 4px 7px;
   border: 2px solid transparent;
   border-radius: 16px;
-  background: var(--panel);
+  /* the player's own table style (styles/looks.css) */
+  background: var(--seat-bg, var(--panel));
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
