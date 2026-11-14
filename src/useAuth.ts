@@ -117,6 +117,11 @@ export function useAuth() {
       signIn(await api<AuthResponse>('/auth/login', { body: { username, password } })),
     register: async (username: string, password: string, displayName: string) =>
       signIn(await api<AuthResponse>('/auth/register', { body: { username, password, displayName } })),
+    /** a new avatar ("face.bg"), or null for the first letter; throws with the server's reason (e.g. a level too low) */
+    setAvatar: async (avatar: string | null) => {
+      const res = await api<{ user: PublicUser }>('/me/avatar', { body: { avatar }, token });
+      setUser(res.user);
+    },
     /** this account finished or skipped a practice lesson; a local copy covers a failed request */
     markTutorial: async (game: GameKind) => {
       if (!token) return;

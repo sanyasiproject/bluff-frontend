@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, errorText } from '../lib/api';
-import { avatarColor, cx } from '../lib/cards';
+import { cx } from '../lib/cards';
 import { compactCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
 import { timeAgo } from '../lib/dates';
@@ -10,6 +10,7 @@ import { AdminUserPage } from './AdminUserPage';
 import { BackButton } from './BackButton';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
+import { Avatar } from './Avatar';
 
 type SwitchKey = 'guestsAllowed' | 'pushInvites';
 
@@ -182,9 +183,7 @@ export function AdminPanel({ auth, onBack }: { auth: Auth; onBack: () => void })
         {users.map((u) => (
           <li key={u.id}>
             <button className="panel admin-user-row" onClick={() => setOpenId(u.id)}>
-              <span className="avatar sm" style={{ background: avatarColor(u.displayName) }}>
-                {u.displayName[0]?.toUpperCase()}
-              </span>
+              <Avatar name={u.displayName} avatar={u.avatar} size="sm" />
               <span className="grow">
                 <b>{u.displayName}</b> <LevelBadge level={levelOf(u.stats)} /> {u.role === 'admin' && <span className="tag">Admin</span>}
                 {u.blocked && <span className="tag danger-tag">Blocked</span>}

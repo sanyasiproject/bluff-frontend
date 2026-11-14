@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { api, errorText } from '../lib/api';
 import { useBack } from '../lib/back';
-import { avatarColor, cx } from '../lib/cards';
+import { cx } from '../lib/cards';
 import {
   getVoiceGender,
   onVoicesChanged,
@@ -26,6 +26,7 @@ import { PlayerSheet } from './PlayerSheet';
 import { QuickChat } from './QuickChat';
 import { LessonOffer } from './tutorial/LessonOffer';
 import { TutorialPage } from './tutorial/TutorialPage';
+import { Avatar } from './Avatar';
 
 /** per-phone voice choice; Girl is the default */
 function VoicePicker({ sample }: { sample: string }) {
@@ -432,9 +433,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             p.bot ? (
               <li key={p.id} className="player-row bot-row">
                 <span className="row-open">
-                  <span className="avatar sm bot-avatar" data-member={p.id} aria-hidden>
-                    🤖
-                  </span>
+                  <Avatar name={p.name} bot size="sm" member={p.id} />
                   <span className="grow">{p.name}</span>
                 </span>
                 <span className="tag dim">Bot</span>
@@ -443,9 +442,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             ) : (
             <li key={p.id} className={cx('player-row', !p.connected && 'offline')}>
               <button type="button" className="row-open" aria-label={`${p.name}'s profile`} onClick={() => openPlayer(p.id)}>
-                <span className="avatar sm" data-member={p.id} style={{ background: avatarColor(p.name) }}>
-                  {p.name[0]?.toUpperCase()}
-                </span>
+                <Avatar name={p.name} avatar={p.avatar} size="sm" member={p.id} />
                 <span className="grow">
                   {p.name}
                   {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} />
@@ -496,9 +493,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             {view.watchers.map((w) => (
               <li key={w.id} className={cx('player-row', !w.connected && 'offline')}>
                 <button type="button" className="row-open" aria-label={`${w.name}'s profile`} onClick={() => openPlayer(w.id)}>
-                  <span className="avatar sm" data-member={w.id} style={{ background: avatarColor(w.name) }}>
-                    {w.name[0]?.toUpperCase()}
-                  </span>
+                  <Avatar name={w.name} avatar={w.avatar} size="sm" member={w.id} />
                   <span className="grow">
                     {w.name}
                     {w.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={w.level} />
@@ -719,6 +714,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           name={viewing.name}
           username={viewing.username}
           level={viewing.level}
+          avatar={viewing.avatar}
           memberId={viewing.id}
           onThrow={viewing.id !== view.meId ? (i) => void actions.throwAt(viewing.id, i) : undefined}
           onClose={() => setViewingId(null)}

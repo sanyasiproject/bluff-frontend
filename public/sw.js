@@ -24,7 +24,10 @@ async function remember(request, response) {
 // Network first so a new deploy shows up right away; the cache is only an offline fallback
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
+  const url = new URL(request.url);
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  // avatar pictures use the browser's own cache, so they never push the app's files out of this one
+  if (url.pathname.startsWith('/avatars/')) return;
   event.respondWith(
     fetch(request)
       .then((response) => {

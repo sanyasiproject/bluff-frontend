@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
-import { avatarColor, cx, isRed, SUIT_SYMBOL } from '../lib/cards';
+import { cx, isRed, SUIT_SYMBOL } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
 import { confettiAt } from '../lib/motion';
@@ -19,6 +19,7 @@ import { Backdrop, GameOver, PlayersSheet } from './Overlays';
 import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
 import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
+import { Avatar } from './Avatar';
 
 const BUBBLE_MS = 4000;
 
@@ -652,9 +653,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
           <ul className="player-list">
             {view.watchRequests.map((r) => (
               <li key={r.id} className="player-row">
-                <span className="avatar sm" style={{ background: avatarColor(r.name) }}>
-                  {r.name[0]?.toUpperCase()}
-                </span>
+                <Avatar name={r.name} size="sm" />
                 <span className="grow">
                   {r.name} {r.registered ? <LevelBadge level={r.level} /> : <span className="muted small">guest</span>}
                 </span>

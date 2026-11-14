@@ -1,11 +1,13 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { avatarColor, cx } from '../lib/cards';
+import { cx } from '../lib/cards';
 import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
 import { monthYear } from '../lib/dates';
 import { achievementsOf, earnedFromGames, levelInfo, nextGameReward, percent, winStreak } from '../lib/progress';
 import { DAILY_GAME_REWARDS, LOGIN_BONUS, MIN_REWARD_GAME_SEC, type GameSummary, type ProfileOverview } from '../types';
 import type { Auth } from '../useAuth';
 import type { InviteAck } from '../useBluff';
+import { Avatar } from './Avatar';
+import { AvatarPicker } from './AvatarPicker';
 import { FriendsSheet } from './FriendsSheet';
 import { FullPage } from './FullPage';
 import { NotifyRow } from './NotifyRow';
@@ -35,6 +37,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [avatarOpen, setAvatarOpen] = useState(false);
 
   useEffect(() => {
     void auth.refresh();
@@ -63,12 +66,21 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
     <FullPage title="Profile" onBack={onClose}>
       <section className="profile-hero">
         <div className="level-ring" style={{ '--p': lvl.progress } as CSSProperties}>
-          <span className="avatar xl" style={{ background: avatarColor(user.displayName) }}>
-            {user.displayName[0]?.toUpperCase()}
-          </span>
+          <button type="button" className="avatar-edit" aria-label="Change your avatar" onClick={() => setAvatarOpen(true)}>
+            <Avatar name={user.displayName} avatar={user.avatar} size="xl">
+              <span className="avatar-pen" aria-hidden>
+                ✏️
+              </span>
+            </Avatar>
+          </button>
           <span className="level-badge">Lv {lvl.level}</span>
         </div>
         <h2 className="profile-name">{user.displayName}</h2>
+        {!user.avatar && (
+          <button className="link-btn avatar-nudge" onClick={() => setAvatarOpen(true)}>
+            Pick your avatar ✨
+          </button>
+        )}
         <p className="muted">
           @{user.username} · Joined {monthYear(user.createdAt)}
           {user.role === 'admin' && <span className="tag">Admin</span>}
@@ -266,6 +278,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
 
       {guideOpen && <XpGuide level={lvl.level} xp={lvl.xp} onClose={() => setGuideOpen(false)} />}
       {rulesOpen && <RulesPage onClose={() => setRulesOpen(false)} />}
+      {avatarOpen && <AvatarPicker auth={auth} onClose={() => setAvatarOpen(false)} />}
       {friendsOpen && <FriendsSheet auth={auth} roomCode={roomCode} onInvite={onInvite} onJoin={onJoin} onClose={() => setFriendsOpen(false)} />}
     </FullPage>
   );

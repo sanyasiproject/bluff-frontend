@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, errorText } from '../lib/api';
-import { avatarColor, cx } from '../lib/cards';
+import { cx } from '../lib/cards';
 import type { FriendsResponse, FriendView, PlayerSearchResult } from '../types';
 import type { Auth } from '../useAuth';
 import type { InviteAck } from '../useBluff';
@@ -8,6 +8,7 @@ import { ConfirmBox } from './ConfirmBox';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
 import { PlayerSheet } from './PlayerSheet';
+import { Avatar } from './Avatar';
 
 interface Props {
   auth: Auth;
@@ -176,10 +177,9 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
   const person = (f: Person, actions: React.ReactNode, showOnline = true) => (
     <li key={f.id} className="friend-row">
       <button type="button" className="row-open" aria-label={`${f.displayName}'s profile`} onClick={() => setViewing(f)}>
-        <span className="avatar sm" style={{ background: avatarColor(f.displayName) }}>
-          {f.displayName[0]?.toUpperCase()}
+        <Avatar name={f.displayName} avatar={f.avatar} size="sm">
           {showOnline && f.online !== null && <i className={cx('presence', f.online && 'on')} />}
-        </span>
+        </Avatar>
         <div className="grow">
           <b>{f.displayName}</b> <LevelBadge level={f.level} />
           <p className="muted small">
@@ -324,6 +324,7 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
           name={viewing.displayName}
           username={viewing.username}
           level={viewing.level}
+          avatar={viewing.avatar}
           onClose={() => {
             setViewing(null);
             // they may have added or accepted from the profile

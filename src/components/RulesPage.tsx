@@ -2,6 +2,9 @@ import type { ReactNode } from 'react';
 import { compactCoins, formatCoins, stakeLabel } from '../lib/coins';
 import { achievementsOf, TITLES } from '../lib/progress';
 import {
+  AVATAR_BACKGROUNDS,
+  AVATAR_CHARACTERS,
+  AVATAR_FACES,
   BET_STEPS,
   BOT_MAX_STAKE,
   CRAZY7_HAND_SIZES,
@@ -302,6 +305,13 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             to watch and the host decides.
           </li>
           <li>Tap anyone in the lobby or Friends to see their public card: level, record and badges. Never coins or private data.</li>
+          <li>
+            🎭 Avatars: tap your picture on the Profile page to pick a girl or boy character ({AVATAR_CHARACTERS.length}, some waving, pointing or
+            on the phone) or an emoji face ({AVATAR_FACES.length}), and a background ({AVATAR_BACKGROUNDS.length}). The rarest unlock with level,
+            up to 👑 at Lv 40 and the rainbow background at Lv 30; gold, galaxy and rainbow shimmer. Everyone sees it on your seat, in lobbies,
+            Friends and profiles. Guests and players who haven't picked one keep their first letter. Character art: Avataaars by Pablo Stanley and
+            Notionists by Zoish.
+          </li>
           <li>Your own Profile: level ring, coins and rank, rewards, record, play style, achievements and the last 10 games.</li>
         </ul>
       </Section>

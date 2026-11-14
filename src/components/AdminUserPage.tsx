@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, errorText } from '../lib/api';
-import { avatarColor, cx } from '../lib/cards';
+import { cx } from '../lib/cards';
 import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
 import { dateTime, timeAgo } from '../lib/dates';
 import { HISTORY_PAGE_SIZE, levelOf, type AdminUserDetail, type AuditEntry, type Role } from '../types';
@@ -9,6 +9,7 @@ import { FullPage } from './FullPage';
 import { Backdrop } from './Overlays';
 import { LevelBadge } from './LevelBadge';
 import { GameList, StatGrid } from './ProfileParts';
+import { Avatar } from './Avatar';
 
 const QUICK_AMOUNTS = [100, 500, 1_000, 5_000, 10_000];
 
@@ -170,9 +171,7 @@ export function AdminUserPage({ auth, userId, onBack }: { auth: Auth; userId: st
   return (
     <FullPage title={u.displayName} onBack={onBack}>
       <section className="panel admin-hero">
-        <span className="avatar lg" style={{ background: avatarColor(u.displayName) }}>
-          {u.displayName[0]?.toUpperCase()}
-        </span>
+        <Avatar name={u.displayName} avatar={u.avatar} size="lg" />
         <div className="grow">
           <h3>
             {u.displayName} <LevelBadge level={levelOf(u.stats)} /> {u.role === 'admin' && <span className="tag">Admin</span>}

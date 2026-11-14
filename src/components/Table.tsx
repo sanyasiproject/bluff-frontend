@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { api } from '../lib/api';
-import { avatarColor, claimText, cx, placeLabel, rankPlural, SUIT_SYMBOL } from '../lib/cards';
+import { claimText, cx, placeLabel, rankPlural, SUIT_SYMBOL } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
 import { confettiAt } from '../lib/motion';
@@ -21,6 +21,7 @@ import { Backdrop, BetSheet, GameOver, PeekSheet, PickSheet, PlayersSheet, RankS
 import { GiftRow, ThrowRow } from './PlayerActions';
 import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
+import { Avatar } from './Avatar';
 
 interface SeatProps {
   player: PublicPlayer;
@@ -60,10 +61,9 @@ export function Seat({ player, turn, passed, viewing, action, bubble, onClick, l
     <>
       {viewing && <span className="eye-badge">👁</span>}
       {badge && <span className={cx('badge', player.place && 'gold')}>{badge}</span>}
-      <span className={cx('avatar', player.bot && 'bot-avatar')} style={player.bot ? undefined : { background: avatarColor(player.name) }}>
-        {player.bot ? '🤖' : player.name[0]?.toUpperCase()}
+      <Avatar name={player.name} avatar={player.avatar} bot={player.bot}>
         {player.level && <span className="seat-lv">{player.level}</span>}
-      </span>
+      </Avatar>
       <span className="seat-name">
         {partner && '🤝 '}
         {player.name}
@@ -871,9 +871,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
           <ul className="player-list">
             {view.watchRequests.map((r) => (
               <li key={r.id} className="player-row">
-                <span className="avatar sm" style={{ background: avatarColor(r.name) }}>
-                  {r.name[0]?.toUpperCase()}
-                </span>
+                <Avatar name={r.name} size="sm" />
                 <span className="grow">
                   {r.name} {r.registered ? <LevelBadge level={r.level} /> : <span className="muted small">guest</span>}
                 </span>

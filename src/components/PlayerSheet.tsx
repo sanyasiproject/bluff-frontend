@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { api, errorText } from '../lib/api';
-import { avatarColor, cx } from '../lib/cards';
+import { cx } from '../lib/cards';
 import { monthYear } from '../lib/dates';
 import { achievementsOf, percent, titleOf } from '../lib/progress';
 import type { PublicProfile } from '../types';
@@ -8,6 +8,7 @@ import type { Auth } from '../useAuth';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
 import { GiftRow, ThrowRow } from './PlayerActions';
+import { Avatar } from './Avatar';
 
 const pct = (n: number | null) => (n === null ? '–' : `${n}%`);
 
@@ -17,6 +18,8 @@ interface Props {
   /** null for guests, who have no profile */
   username: string | null;
   level?: number | null;
+  /** their avatar as known already (room or friends list), until the profile loads */
+  avatar?: string | null;
   /** host tools for this player (lobby only), shown under the card */
   children?: ReactNode;
   /** in a room: their member id, so gifts fly across the room */
@@ -27,7 +30,7 @@ interface Props {
 }
 
 /** someone's public card: name, level, record and badges, plus a friend button; nothing private */
-export function PlayerSheet({ auth, name, username, level, children, memberId, onThrow, onClose }: Props) {
+export function PlayerSheet({ auth, name, username, level, avatar = null, children, memberId, onThrow, onClose }: Props) {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -94,10 +97,9 @@ export function PlayerSheet({ auth, name, username, level, children, memberId, o
   return (
     <Backdrop onClose={onClose}>
       <div className="player-card">
-        <span className="avatar lg" style={{ background: avatarColor(p?.displayName ?? name) }}>
-          {(p?.displayName ?? name)[0]?.toUpperCase()}
+        <Avatar name={p?.displayName ?? name} avatar={p ? p.avatar : avatar} size="lg">
           {p && p.online !== null && <i className={cx('presence', p.online && 'on')} />}
-        </span>
+        </Avatar>
         <h3>
           {p?.displayName ?? name} <LevelBadge level={shownLevel} />
         </h3>

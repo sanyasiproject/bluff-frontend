@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useBack } from '../lib/back';
-import { avatarColor, claimText, cx, placeLabel, rankPlural } from '../lib/cards';
+import { claimText, cx, placeLabel, rankPlural } from '../lib/cards';
 import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
 import { winnerMoment } from '../lib/celebrate';
 import { confettiAt } from '../lib/motion';
@@ -19,6 +19,7 @@ import {
 } from '../types';
 import { PlayingCard } from './PlayingCard';
 import { Rolling } from './Rolling';
+import { Avatar } from './Avatar';
 
 export function Backdrop({ center, onClose, children }: { center?: boolean; onClose?: () => void; children: ReactNode }) {
   // the phone's back button closes it too; screens without onClose (game over) stay put
@@ -430,8 +431,8 @@ export function PlayersSheet({
   onClose: () => void;
 }) {
   const people = [
-    ...view.players.map((p) => ({ id: p.id, name: p.name, level: p.level, watching: false, bot: p.bot })),
-    ...view.watchers.map((w) => ({ id: w.id, name: w.name, level: w.level, watching: true, bot: false })),
+    ...view.players.map((p) => ({ id: p.id, name: p.name, avatar: p.avatar, level: p.level, watching: false, bot: p.bot })),
+    ...view.watchers.map((w) => ({ id: w.id, name: w.name, avatar: w.avatar, level: w.level, watching: true, bot: false })),
   ].filter((p) => p.id !== view.meId);
   return (
     <Backdrop onClose={onClose}>
@@ -440,9 +441,7 @@ export function PlayersSheet({
       <ul className="player-list">
         {people.map((p) => (
           <li key={p.id} className="player-row">
-            <span className={cx('avatar sm', p.bot && 'bot-avatar')} style={p.bot ? undefined : { background: avatarColor(p.name) }}>
-              {p.bot ? '🤖' : p.name[0]?.toUpperCase()}
-            </span>
+            <Avatar name={p.name} avatar={p.avatar} bot={p.bot} size="sm" />
             <span className="grow">
               {p.name}
               <LevelBadge level={p.level} />
