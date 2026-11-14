@@ -75,7 +75,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             <b>Picking</b>: if nothing matches, 1 card is picked for you automatically. With <b>Picks per turn</b> above 1 (1 to{' '}
             {CRAZY7_MAX_PICKS}, default 1) you may pick more, or <b>Pass</b> to stop picking early. Pass only ever ends picking: you can't pass
             without picking first, and at the limit you must play a card that fits. With 1 pick a turn there is no Pass. You can also pick on
-            purpose instead of playing. Reaching the limit with nothing to play passes your turn for you.
+            purpose instead of playing. Reaching the limit with nothing to play passes your turn for you. Automatic picks and passes happen one at a time with a short pause (“Raju has no match · picking a card…”), so everyone can see them.
           </li>
           <li>
             <b>The 7</b>: the next player picks {SEVEN_PENALTY} and misses their turn. With <b>Stack 7s</b> on (default) they can answer with their own 7

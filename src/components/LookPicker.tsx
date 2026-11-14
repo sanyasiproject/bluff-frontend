@@ -37,7 +37,7 @@ export function LookPicker({ auth }: { auth: Auth }) {
               onClick={() => !on && choose({ table: t.id })}
             >
               <span
-                className="look-felt"
+                className={cx('look-felt', t.id)}
                 style={{ background: `radial-gradient(120% 90% at 50% 35%, ${t.colors[0]} 0%, ${t.colors[1]} 50%, ${t.colors[2]} 100%)` }}
                 aria-hidden
               >

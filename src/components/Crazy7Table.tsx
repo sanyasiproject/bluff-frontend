@@ -343,7 +343,14 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
   };
 
   let status = '';
-  if (c7 && playing) {
+  if (c7 && playing && c7.auto && view.turnId) {
+    // the room is about to pick or pass for the player on turn, a moment later so everyone can follow
+    const who = myTurn ? 'You' : name(view.turnId);
+    if (c7.missed.includes(view.turnId)) status = myTurn ? 'Missed last card · picking 1 for you…' : `${who} missed last card · picking 1…`;
+    else if (c7.penalty > 0) status = myTurn ? `Picking ${c7.penalty} for you…` : `${who} picks ${c7.penalty}…`;
+    else if (c7.picks === 0) status = myTurn ? 'No matching card · picking one for you…' : `${who} has no match · picking a card…`;
+    else status = myTurn ? 'Still no match · your turn passes…' : `${who}: still no match · passing…`;
+  } else if (c7 && playing) {
     if (myTurn) {
       if (c7.penalty > 0) status = c7.playable.length > 0 ? `Pick ${c7.penalty} or play a 7` : `Pick ${c7.penalty}`;
       else if (c7.picks > 0) {

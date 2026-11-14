@@ -33,7 +33,7 @@ export const TABLES: TableLook[] = [
   { id: 'wood', name: 'Wooden', emoji: '🪵', level: 6, colors: ['#9a6a3c', '#6b4423', '#2b170a'], bar: '#2b170a' },
   { id: 'midnight', name: 'Midnight', emoji: '🌙', level: 10, colors: ['#2c3550', '#161b2e', '#07090f'], bar: '#07090f' },
   { id: 'maroon', name: 'Maroon velvet', emoji: '🍷', level: 15, colors: ['#8a1f3a', '#5a0f24', '#24040e'], bar: '#24040e' },
-  { id: 'emerald', name: 'Emerald gold', emoji: '✨', level: 20, colors: ['#1f9d6a', '#0b5c3d', '#032116'], bar: '#032116' },
+  { id: 'emerald', name: 'Emerald gold', emoji: '✨', level: 20, colors: ['#12b585', '#06664a', '#01261c'], bar: '#01261c' },
   { id: 'galaxy', name: 'Galaxy', emoji: '🌌', level: 30, colors: ['#5b3fa8', '#2a1b5e', '#0a0620'], bar: '#0a0620' },
 ];
 
