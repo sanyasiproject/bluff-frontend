@@ -55,7 +55,8 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(ok ? msg.title : 'Bluff', {
       body: ok && typeof msg.body === 'string' ? msg.body : 'Open Bluff',
       icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      // the small status-bar icon: Android paints it from the alpha only, so it's white cards on transparent
+      badge: '/icons/badge-96.png',
       tag,
       renotify: Boolean(tag),
       data: { url },

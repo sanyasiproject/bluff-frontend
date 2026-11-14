@@ -102,7 +102,7 @@ Bluff is a Progressive Web App: friends install it from the website, free, with 
 - **Android (Chrome):** tap **Install** on the home screen card, or browser menu ⋮ → **Install app**.
 - **iPhone (Safari):** Share ⬆ → **Add to Home Screen** → **Add**. The Install card shows these steps.
 - It then opens full screen from its own icon and updates itself after every Vercel deploy.
-- `public/sw.js` loads fresh files first and keeps a copy only so the app can open without internet. `public/icons/app-icon.svg` is the source of the PNG icons.
+- `public/sw.js` loads fresh files first and keeps a copy only so the app can open without internet. `public/icons/app-icon.svg` is the source of the PNG icons. `public/icons/badge-96.png` is the notification's status-bar icon: white on transparent, because Android uses only its shape.
 - Install **before** joining a game: on iPhone the installed app has its own storage, so a seat taken in Safari isn't carried over.
 
 ## Voice
