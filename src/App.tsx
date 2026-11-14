@@ -10,6 +10,7 @@ import { Splash } from './components/Splash';
 import { Table } from './components/Table';
 import { Toasts } from './components/Toasts';
 import { clearInvite } from './lib/invite';
+import { useLook } from './lib/look';
 import { autoPush } from './lib/push';
 import { loadName } from './lib/storage';
 import { useAuth } from './useAuth';
@@ -18,6 +19,8 @@ import { useBluff } from './useBluff';
 export default function App() {
   const { status, connectionId, view, notes, reactions, bubbles, flyers, invites, replaced, pendingWatch, actions } = useBluff();
   const auth = useAuth();
+  // the table theme and card back this player picked
+  useLook(auth);
   const [adminOpen, setAdminOpen] = useState(false);
   // the intro stays until the server first answers and a saved login is checked, and at least a moment
   const [booted, setBooted] = useState(false);

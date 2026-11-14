@@ -3,7 +3,7 @@ import { api, ApiError, serverStatus } from './lib/api';
 import { disablePush } from './lib/push';
 import { reconnectSocket, socket } from './lib/socket';
 import { loadAuthToken, saveAuthToken } from './lib/storage';
-import type { AuthResponse, GameSummary, ProfileOverview, PublicUser, ServerInfo } from './types';
+import type { AuthResponse, GameKind, GameSummary, ProfileOverview, PublicUser, ServerInfo } from './types';
 
 /** the logged-in account (null = guest) and account actions */
 export function useAuth() {
@@ -117,6 +117,16 @@ export function useAuth() {
       signIn(await api<AuthResponse>('/auth/login', { body: { username, password } })),
     register: async (username: string, password: string, displayName: string) =>
       signIn(await api<AuthResponse>('/auth/register', { body: { username, password, displayName } })),
+    /** this account finished or skipped a practice lesson; a local copy covers a failed request */
+    markTutorial: async (game: GameKind) => {
+      if (!token) return;
+      try {
+        const res = await api<{ user: PublicUser }>('/me/tutorial', { body: { game }, token });
+        if (res?.user) setUser(res.user);
+      } catch {
+        // lib/tutorial keeps it on this phone
+      }
+    },
     logout: async () => {
       const old = token;
       saveAuthToken(null);

@@ -1,0 +1,278 @@
+/* ---------- looks: table themes and card backs, unlocked by level (lib/look.ts) ---------- */
+/* "classic" has no rules here, so it is exactly the original look */
+
+/* tables: the felt is drawn from these tokens (body::before, .page, sheets) */
+:root[data-table='royal'] {
+  --felt: #163a7a;
+  --felt-deep: #08183a;
+  --felt-light: #2a5bb8;
+  --sheet: #0c1d40;
+}
+
+:root[data-table='wood'] {
+  --felt: #6b4423;
+  --felt-deep: #2b170a;
+  --felt-light: #9a6a3c;
+  --sheet: #2a1a0e;
+}
+
+:root[data-table='midnight'] {
+  --felt: #161b2e;
+  --felt-deep: #07090f;
+  --felt-light: #2c3550;
+  --sheet: #0e1220;
+}
+
+:root[data-table='maroon'] {
+  --felt: #5a0f24;
+  --felt-deep: #24040e;
+  --felt-light: #8a1f3a;
+  --sheet: #2a0912;
+}
+
+:root[data-table='emerald'] {
+  --felt: #0b5c3d;
+  --felt-deep: #032116;
+  --felt-light: #1f9d6a;
+  --sheet: #072a1d;
+}
+
+:root[data-table='galaxy'] {
+  --felt: #2a1b5e;
+  --felt-deep: #0a0620;
+  --felt-light: #5b3fa8;
+  --sheet: #140d33;
+}
+
+/* wood grain over the felt */
+:root[data-table='wood'] body::before {
+  background:
+    repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.09) 0 2px, transparent 2px 23px),
+    repeating-linear-gradient(88deg, rgba(255, 220, 170, 0.04) 0 1px, transparent 1px 9px),
+    radial-gradient(120% 70% at 50% 38%, var(--felt-light) 0%, var(--felt) 48%, var(--felt-deep) 100%);
+}
+
+/* a soft gold ring round the table */
+:root[data-table='emerald'] body::before {
+  background:
+    radial-gradient(130% 85% at 50% 42%, transparent 58%, rgba(246, 196, 83, 0.16) 72%, transparent 86%),
+    radial-gradient(120% 70% at 50% 38%, var(--felt-light) 0%, var(--felt) 48%, var(--felt-deep) 100%);
+}
+
+/* stars and a nebula; still, so nothing moves */
+:root[data-table='galaxy'] body::before {
+  background:
+    radial-gradient(1.5px 1.5px at 12% 18%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 28% 72%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 46% 34%, #e8ddff 50%, transparent 51%),
+    radial-gradient(1px 1px at 63% 12%, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 78% 58%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 26%, #d6e4ff 50%, transparent 51%),
+    radial-gradient(1px 1px at 8% 86%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 55% 90%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 36% 52%, #fff 50%, transparent 51%),
+    radial-gradient(60% 40% at 72% 30%, rgba(214, 90, 200, 0.22), transparent 70%),
+    radial-gradient(50% 35% at 24% 70%, rgba(80, 160, 255, 0.18), transparent 70%),
+    radial-gradient(120% 70% at 50% 38%, var(--felt-light) 0%, var(--felt) 48%, var(--felt-deep) 100%);
+}
+
+/* the two places that draw the green felt with a fixed colour follow the table too */
+:root[data-table]:not([data-table='classic']) .lobby-actions {
+  background: linear-gradient(transparent, color-mix(in srgb, var(--felt-deep) 96%, transparent) 28%);
+}
+
+:root[data-table]:not([data-table='classic']) .page-head {
+  background: color-mix(in srgb, var(--felt-deep) 86%, transparent);
+}
+
+/* ---------- card backs ---------- */
+/* stripe colours (also the little card next to each seat's count); the preview swatches set their own */
+:root[data-back='ocean'],
+.look-back[data-back='ocean'] {
+  --back-1: #1d4e9e;
+  --back-2: #2f6fd0;
+}
+
+:root[data-back='paisley'],
+.look-back[data-back='paisley'] {
+  --back-1: #b4532a;
+  --back-2: #2bb3a3;
+}
+
+:root[data-back='neon'],
+.look-back[data-back='neon'] {
+  --back-1: #120320;
+  --back-2: #ff2fd6;
+}
+
+:root[data-back='gold'],
+.look-back[data-back='gold'] {
+  --back-1: #8a6a12;
+  --back-2: #d4a72c;
+}
+
+:root[data-back='mandala'],
+.look-back[data-back='mandala'] {
+  --back-1: #b0123b;
+  --back-2: #3a0a52;
+}
+
+:root[data-back='diamond'],
+.look-back[data-back='diamond'] {
+  --back-1: #3a7bd5;
+  --back-2: #b9f2ff;
+}
+
+:root[data-back='legend'],
+.look-back[data-back='legend'] {
+  --back-1: #2a1c00;
+  --back-2: #f6c453;
+}
+
+.look-back[data-back='classic'] {
+  --back-1: #a11f35;
+  --back-2: #c7384f;
+}
+
+/* the picker always shows each back as itself, whatever back is in use */
+.look-picker .look-back[data-back] .card.back {
+  border-color: #fff;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.22) 0 18%, transparent 19%),
+    repeating-linear-gradient(45deg, var(--back-1) 0 5px, var(--back-2) 5px 10px);
+}
+
+/* patterned backs: the whole app, and their own swatch */
+:root[data-back='paisley'] .card.back,
+.look-picker .look-back[data-back='paisley'] .card.back {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.25) 0 16%, transparent 17%),
+    radial-gradient(circle at 25% 25%, #ffd27a 0 18%, transparent 20%) 0 0 / 10px 10px,
+    radial-gradient(circle at 75% 75%, #2bb3a3 0 18%, transparent 20%) 0 0 / 10px 10px,
+    #b4532a;
+}
+
+:root[data-back='neon'] .card.back,
+.look-picker .look-back[data-back='neon'] .card.back {
+  border-color: #2fe6ff;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 47, 214, 0.45) 0 16%, transparent 17%),
+    repeating-linear-gradient(135deg, #ff2fd6 0 2px, transparent 2px 8px),
+    repeating-linear-gradient(45deg, #2fe6ff 0 2px, transparent 2px 8px),
+    #120320;
+}
+
+:root[data-back='gold'] .card.back,
+.look-picker .look-back[data-back='gold'] .card.back {
+  border-color: #ffe7a3;
+  background:
+    radial-gradient(circle at 50% 50%, #fff3c4 0 10%, #8a6a12 11% 16%, transparent 17%),
+    repeating-linear-gradient(45deg, #8a6a12 0 5px, #d4a72c 5px 10px);
+}
+
+:root[data-back='mandala'] .card.back,
+.look-picker .look-back[data-back='mandala'] .card.back {
+  background:
+    repeating-radial-gradient(circle at 50% 50%, #ffcf5a 0 2px, #b0123b 2px 6px, #ffcf5a 6px 7px, #3a0a52 7px 11px);
+}
+
+:root[data-back='diamond'] .card.back,
+.look-picker .look-back[data-back='diamond'] .card.back {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.5) 0 14%, transparent 15%),
+    conic-gradient(from 45deg, #b9f2ff 25%, #3a7bd5 0 50%, #b9f2ff 0 75%, #3a7bd5 0) 0 0 / 10px 10px;
+}
+
+:root[data-back='legend'] .card.back,
+.look-picker .look-back[data-back='legend'] .card.back {
+  border-color: var(--gold);
+  background:
+    radial-gradient(circle at 50% 50%, #f6c453 0 13%, #2a1c00 14% 17%, transparent 18%),
+    repeating-conic-gradient(from 0deg at 50% 50%, #f6c453 0 10deg, #2a1c00 10deg 20deg);
+}
+
+/* ---------- the picker on the Profile page ---------- */
+.look-row {
+  display: flex;
+  gap: 8px;
+  margin: 0 -4px 6px;
+  padding: 4px 4px 8px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.look-swatch {
+  position: relative;
+  display: flex;
+  flex: 0 0 78px;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  scroll-snap-align: start;
+}
+
+.look-swatch.on {
+  border-color: var(--gold);
+  background: rgba(246, 196, 83, 0.14);
+  animation: look-pop 0.35s var(--spring);
+}
+
+.look-swatch.locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.look-felt {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 40px;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  font-size: 18px;
+}
+
+.look-back {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 56px;
+}
+
+.look-lock {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+}
+
+.look-name {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.look-lv {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+@keyframes look-pop {
+  0% {
+    scale: 0.9;
+  }
+  60% {
+    scale: 1.06;
+  }
+  100% {
+    scale: 1;
+  }
+}

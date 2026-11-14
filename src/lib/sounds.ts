@@ -126,6 +126,23 @@ export const sfx = {
     const c = audio();
     if (c) notes(c, [1319, 1760, 2093], 0.09, 0.5, { type: 'sine', gain: 0.11 });
   },
+  /** someone is down to one card: two soft heartbeats */
+  heartbeat() {
+    const c = audio();
+    if (!c) return;
+    for (const at of [0, 0.62]) {
+      tone(c, 74, at, 0.13, { type: 'sine', gain: 0.32, to: 52 });
+      tone(c, 62, at + 0.17, 0.15, { type: 'sine', gain: 0.24, to: 44 });
+    }
+  },
+  /** level up: a quick rising fanfare */
+  levelUp() {
+    const c = audio();
+    if (c) {
+      notes(c, [523, 659, 784, 1047, 1319], 0.08, 0.28, { type: 'triangle', gain: 0.12 });
+      tone(c, 1568, 0.42, 0.5, { type: 'sine', gain: 0.09 });
+    }
+  },
   /** host only: someone is at the door asking to watch */
   knock() {
     const c = audio();

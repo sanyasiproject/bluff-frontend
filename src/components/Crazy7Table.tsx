@@ -4,6 +4,7 @@ import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
 import { confettiAt } from '../lib/motion';
 import { useNewCards } from '../lib/newCards';
+import { useOneCardAlert } from '../lib/spotlight';
 import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
 import type { Card, Crazy7View, RoomView } from '../types';
@@ -11,6 +12,8 @@ import type { Auth } from '../useAuth';
 import type { Actions, ChatBubble } from '../useBluff';
 import { FlyingCards, type Flight } from './FlyingCards';
 import { Hand } from './Hand';
+import { LevelUp } from './LevelUp';
+import { PileReact } from './PileReact';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop, GameOver, PlayersSheet } from './Overlays';
 import { PlayingCard } from './PlayingCard';
@@ -133,6 +136,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
   const handRef = useRef<HTMLElement>(null);
   /** my level when this game started, to show a level up at the end */
   const startLevel = useRef<number | null>(null);
+  const levelShown = useRef(false);
   const prevCounts = useRef<Map<string, number> | null>(null);
   const prevTop = useRef<{ id: string | null; pile: number } | null>(null);
 
@@ -178,6 +182,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
     prevMarks.current = null;
     setActs({});
     startLevel.current = me?.level ?? null;
+    levelShown.current = false;
     // a reload or rejoin mid-game shows the table as it is
     const freshDeal = !!c7 && c7.pileCount === 1 && view.players.every((p) => p.cardCount <= view.config.handSize + 1);
     if (!freshDeal) return;
@@ -246,6 +251,18 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
 
   // cards that came into my hand (picked, or a 7's penalty) are marked for a few seconds
   const newIds = useNewCards(view.hand, { reset: view.phase });
+
+  // anyone down to one card gets a spotlight (me too: my hand glows), with a heartbeat when it starts
+  const oneCard = playing ? view.players.filter((p) => p.cardCount === 1).map((p) => p.id) : [];
+  useOneCardAlert(oneCard);
+  /** my new level once a game lifted it; the level-up screen shows over the results */
+  const [levelUp, setLevelUp] = useState<number | null>(null);
+  const myLevel = view.coinResults?.find((r) => r.playerId === view.meId)?.level ?? null;
+  useEffect(() => {
+    if (view.phase !== 'over' || levelShown.current || myLevel === null || startLevel.current === null || myLevel <= startLevel.current) return;
+    levelShown.current = true;
+    setLevelUp(myLevel);
+  }, [view.phase, myLevel]);
 
   // someone said last card (bell), someone was caught (buzz), the pile was shuffled into the deck
   useEffect(() => {
@@ -392,7 +409,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
                 {playing && p.id === nextId && <span className="c7-tag next">next</span>}
               </>
             }
-            extra={cx(playing && p.cardCount === 1 && 'c7-one', playing && c7.penalty > 0 && p.id === view.turnId && 'c7-hit')}
+            extra={cx(playing && p.cardCount === 1 && 'c7-one spot', playing && c7.penalty > 0 && p.id === view.turnId && 'c7-hit')}
             seatRef={(el) => {
               if (el) seatEls.current.set(p.id, el);
               else seatEls.current.delete(p.id);
@@ -417,7 +434,9 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
         )}
         <div className="c7-board">
           <Deck count={c7.deckCount} live={myTurn && c7.canPick && !busy} penalty={c7.penalty} boxRef={deckRef} onPick={pick} />
-          <Pile c7={c7} boxRef={pileRef} />
+          <PileReact onReact={(i) => void actions.reactOnPile(i)}>
+            <Pile c7={c7} boxRef={pileRef} />
+          </PileReact>
         </div>
         {c7.top && c7.topBy && (
           <p className="c7-played">
@@ -446,7 +465,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
 
       <section
         ref={handRef}
-        className={cx('hand-area', watching && 'hidden', myTurn && 'my-turn')}
+        className={cx('hand-area', watching && 'hidden', myTurn && 'my-turn', oneCard.includes(view.meId) && 'spot')}
         data-member={watching ? undefined : view.meId}
       >
         <div className="hand-head">
@@ -507,6 +526,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
       {view.phase === 'over' && (
         <GameOver view={view} onLobby={actions.toLobby} onRematch={isHost ? actions.rematch : undefined} startLevel={startLevel.current} />
       )}
+      {levelUp !== null && <LevelUp level={levelUp} from={startLevel.current} onClose={() => setLevelUp(null)} />}
       {targetPlayer && (
         <SeatSheet player={targetPlayer} auth={auth} onThrow={(i) => void actions.throwAt(targetPlayer.id, i)} onClose={() => setTarget(null)} />
       )}

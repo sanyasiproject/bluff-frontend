@@ -12,6 +12,7 @@ import { NotifyRow } from './NotifyRow';
 import { RulesPage } from './RulesPage';
 import { XpGuide } from './XpGuide';
 import { FormStrip, GameList, Meter } from './ProfileParts';
+import { LookPicker } from './LookPicker';
 import { Rolling } from './Rolling';
 
 interface Props {
@@ -245,6 +246,8 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
           })}
         </div>
       </section>
+
+      <LookPicker auth={auth} />
 
       <section className="stack-tight">
         <h3 className="section-title">Recent games</h3>

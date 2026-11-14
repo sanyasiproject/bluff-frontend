@@ -11,7 +11,8 @@ import {
   type VoiceGender,
 } from '../lib/speech';
 import { formatCoins, compactCoins, stakeLabel } from '../lib/coins';
-import { BOT_MAX_STAKE, CRAZY7_MAX_PICKS, STAKES, type FriendsResponse, type FriendView, type GameConfig, type PublicPlayer, type RoomView } from '../types';
+import { markTutorialSeen, tutorialSeen } from '../lib/tutorial';
+import { BOT_MAX_STAKE, CRAZY7_MAX_PICKS, STAKES, type FriendsResponse, type FriendView, type GameConfig, type GameKind, type PublicPlayer, type RoomView } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions } from '../useBluff';
 import { AccountCorner } from './AccountCorner';
@@ -23,6 +24,8 @@ import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
 import { PlayerSheet } from './PlayerSheet';
 import { QuickChat } from './QuickChat';
+import { LessonOffer } from './tutorial/LessonOffer';
+import { TutorialPage } from './tutorial/TutorialPage';
 
 /** per-phone voice choice; Girl is the default */
 function VoicePicker({ sample }: { sample: string }) {
@@ -258,6 +261,14 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   const set = (patch: Partial<GameConfig>) => actions.setConfig({ ...view.config, ...patch });
   const coinsOn = auth.accountsOn === true;
   const crazy7 = view.config.game === 'crazy7';
+  // practice lessons: offered once the first time someone plays a game, open any time from How to play
+  const [lesson, setLesson] = useState<GameKind | null>(null);
+  const [, setSeenTick] = useState(0);
+  const offerLesson = !auth.checking && !lesson && !tutorialSeen(auth, view.config.game);
+  const lessonSeen = (game: GameKind) => {
+    markTutorialSeen(auth, game);
+    setSeenTick((n) => n + 1);
+  };
 
   const stake = view.config.stake;
   const pot = stake * view.players.length;
@@ -633,6 +644,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         </SettingRow>
       </section>}
 
+      <button className="link-btn tut-link" onClick={() => setLesson(view.config.game)}>
+        📘 How to play: 1-minute practice game
+      </button>
       <details className="panel rules">
         <summary>How to play {crazy7 ? 'Crazy 7' : 'Bluff'}</summary>
         {crazy7 ? (
@@ -776,6 +790,21 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
       )}
       {friendsOpen && (
         <FriendsSheet auth={auth} roomCode={view.code} onInvite={actions.invite} onJoin={joinFriend} onClose={() => setFriendsOpen(false)} />
+      )}
+      {offerLesson && <LessonOffer game={view.config.game} onPractice={() => setLesson(view.config.game)} onSkip={() => lessonSeen(view.config.game)} />}
+      {lesson && (
+        // finishing, skipping or backing out all count as seen; a game starting closes it without counting
+        <TutorialPage
+          game={lesson}
+          onDone={() => {
+            lessonSeen(lesson);
+            setLesson(null);
+          }}
+          onClose={() => {
+            lessonSeen(lesson);
+            setLesson(null);
+          }}
+        />
       )}
     </main>
   );

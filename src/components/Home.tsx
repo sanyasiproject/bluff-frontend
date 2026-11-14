@@ -8,6 +8,10 @@ import { AccountSheet } from './AccountSheet';
 import { HeroFan, ShineTitle, SuitDrift } from './Ambient';
 import { InstallCard } from './InstallCard';
 import { NotifyCard } from './NotifyCard';
+import { LessonChooser } from './tutorial/LessonOffer';
+import { TutorialPage } from './tutorial/TutorialPage';
+import { markTutorialSeen } from '../lib/tutorial';
+import type { GameKind } from '../types';
 
 interface HomeProps {
   status: ConnStatus;
@@ -26,6 +30,9 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
   const [busy, setBusy] = useState(false);
   const [slow, setSlow] = useState(false);
   const [accountSheet, setAccountSheet] = useState<'login' | 'register' | null>(null);
+  /** How to play: choosing a lesson, then the lesson itself */
+  const [chooser, setChooser] = useState(false);
+  const [lesson, setLesson] = useState<GameKind | null>(null);
   const autoJoin = useRef<{ connectionId: string | null; tries: number }>({ connectionId: null, tries: 0 });
   const saved = loadSavedSession();
   const online = status === 'online';
@@ -223,9 +230,35 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
         </>
       )}
 
+      <button className="btn ghost block how-to-btn" onClick={() => setChooser(true)}>
+        📘 How to play
+      </button>
       <NotifyCard auth={auth} />
       <InstallCard />
       {accountSheet && <AccountSheet initial={accountSheet} auth={auth} onClose={() => setAccountSheet(null)} />}
+      {chooser && (
+        <LessonChooser
+          onPick={(game) => {
+            setChooser(false);
+            setLesson(game);
+          }}
+          onClose={() => setChooser(false)}
+        />
+      )}
+      {lesson && (
+        // a lesson done from Home counts too, so the lobby won't offer it again
+        <TutorialPage
+          game={lesson}
+          onDone={() => {
+            markTutorialSeen(auth, lesson);
+            setLesson(null);
+          }}
+          onClose={() => {
+            markTutorialSeen(auth, lesson);
+            setLesson(null);
+          }}
+        />
+      )}
 
     </main>
   );

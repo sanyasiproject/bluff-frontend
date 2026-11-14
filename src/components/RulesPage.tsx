@@ -265,7 +265,14 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             Titles:{' '}
             {TITLES.map((t) => `${t.emoji} ${t.title} (Lv ${t.level}, ${formatCoins(xpForLevel(t.level))} XP)`).join(' · ')}
           </li>
-          <li>Players see their XP and level ups on the end screen, and a full guide under "How to earn XP" on their profile.</li>
+          <li>Players see their XP on the end screen, and a full guide under "How to earn XP" on their profile.</li>
+          <li>
+            Level up: a full-screen "Level up! Lv N" with the title (✨ New title! when it changes) and any table or card back that level unlocks.
+          </li>
+          <li>
+            🎨 Table &amp; cards (Profile): felt themes unlock at Lv 3, 6, 10, 15, 20, 30 and card backs at Lv 2, 5, 8, 12, 18, 25, 40. Only you see
+            your look.
+          </li>
         </ul>
       </Section>
 
@@ -347,6 +354,15 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>🎁 Gift coins to a friend (10, 25, 50 or 100) from the same places or their card in Friends. Up to 100 coins a day in total; in a room everyone sees the coins fly.</li>
           <li>The phone's back button closes one step at a time and only leaves the app from the home page.</li>
           <li>Tap the cards on the home screen to peek at the middle one. Animations follow the phone's reduce-motion setting.</li>
+          <li>
+            📘 Practice tutorial: a 1-minute scripted game against Raju 🤖 for each game, with arrows on what to tap. Every account is offered it
+            once in the lobby before its first game of that kind (Practice now / Skip); it's always open from 📘 How to play on Home and in the lobby.
+          </li>
+          <li>Hold the pile in a game to drop 😂 🤥 👀 🔥 😱 on the last play; everyone sees it pop onto the pile with your name.</li>
+          <li>
+            Down to one card: that seat gets a pulsing gold spotlight with a heartbeat and a buzz. Game over: a 🏆 with fireworks, a 👑 on the
+            winner's seat and 🙈 over the losers.
+          </li>
           <li>If the free server is asleep, the intro screen waits until it wakes (up to about a minute).</li>
         </ul>
       </Section>

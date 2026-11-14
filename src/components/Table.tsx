@@ -5,6 +5,7 @@ import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
 import { confettiAt } from '../lib/motion';
 import { useNewCards } from '../lib/newCards';
+import { useOneCardAlert } from '../lib/spotlight';
 import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
 import type { Card, FriendsResponse, PublicPlayer, Rank, RoomView } from '../types';
@@ -14,6 +15,8 @@ import { ConfirmBox } from './ConfirmBox';
 import { FlyingCards, type Flight } from './FlyingCards';
 import { Hand } from './Hand';
 import { LevelBadge } from './LevelBadge';
+import { LevelUp } from './LevelUp';
+import { PileReact } from './PileReact';
 import { Backdrop, BetSheet, GameOver, PeekSheet, PickSheet, PlayersSheet, RankSheet, RevealOverlay } from './Overlays';
 import { GiftRow, ThrowRow } from './PlayerActions';
 import { PlayingCard } from './PlayingCard';
@@ -286,6 +289,18 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
     id === view.meId ? 'You' : ([...view.players, ...view.leftPlayers].find((p) => p.id === id)?.name ?? 'Someone');
   const pot = view.config.stake * (view.players.length + view.leftPlayers.length);
   const playing = view.phase === 'playing';
+  // anyone still holding a single card gets a spotlight (and a heartbeat when it starts)
+  const oneCard = playing ? view.players.filter((p) => p.cardCount === 1 && !p.place).map((p) => p.id) : [];
+  useOneCardAlert(oneCard);
+  /** my new level once a game lifted it; the level-up screen shows over the results */
+  const [levelUp, setLevelUp] = useState<number | null>(null);
+  const levelShown = useRef(false);
+  const myLevel = view.coinResults?.find((r) => r.playerId === view.meId)?.level ?? null;
+  useEffect(() => {
+    if (view.phase !== 'over' || levelShown.current || myLevel === null || startLevel.current === null || myLevel <= startLevel.current) return;
+    levelShown.current = true;
+    setLevelUp(myLevel);
+  }, [view.phase, myLevel]);
   const myTurn = playing && view.turnId === view.meId;
   const lp = view.lastPlay;
   // 2v2: my partner's play can't be challenged
@@ -413,7 +428,10 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
   }, [myTurn]);
 
   useEffect(() => {
-    if (playing) startLevel.current = me?.level ?? null;
+    if (playing) {
+      startLevel.current = me?.level ?? null;
+      levelShown.current = false;
+    }
   }, [playing]);
 
   // sounds and card motion follow what changed on the table
@@ -542,6 +560,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
             label={watching ? `See ${p.name}'s cards` : `Throw an emoji at ${p.name}`}
             team={teamOf(p.id)}
             partner={p.id === partnerId}
+            extra={cx(oneCard.includes(p.id) && 'spot')}
             seatRef={(el) => {
               if (el) seatEls.current.set(p.id, el);
               else seatEls.current.delete(p.id);
@@ -554,7 +573,9 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
         <div className={cx('round-chip', view.roundRank ? 'set' : 'blank')} aria-hidden={!view.roundRank}>
           Round <b>{view.roundRank ? rankPlural(view.roundRank) : '–'}</b>
         </div>
-        <Pile count={view.pileCount} boxRef={pileRef} playKey={lp?.id ?? null} />
+        <PileReact onReact={(i) => void actions.reactOnPile(i)}>
+          <Pile count={view.pileCount} boxRef={pileRef} playKey={lp?.id ?? null} />
+        </PileReact>
         {lp && (
           <p className="last-play">
             <b>{name(lp.playerId)}</b> put down <b>{claimText(lp.count, lp.rank)}</b>
@@ -738,6 +759,9 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
           onRematch={isHost ? actions.rematch : undefined}
           startLevel={startLevel.current}
         />
+      )}
+      {levelUp !== null && !(showReveal && view.reveal) && (
+        <LevelUp level={levelUp} from={startLevel.current} onClose={() => setLevelUp(null)} />
       )}
       {targetPlayer && (
         <SeatSheet player={targetPlayer} auth={auth} onThrow={(i) => void actions.throwAt(targetPlayer.id, i)} onClose={() => setTarget(null)} />

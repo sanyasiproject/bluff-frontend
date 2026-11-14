@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { inviteCode } from './lib/invite';
+import { pushPileReaction } from './lib/pileReactions';
 import { request, ServerError, socket } from './lib/socket';
 import { speak } from './lib/speech';
 import { clearSession, loadSavedSession, loadTabSession, saveName, saveSession, type Session } from './lib/storage';
@@ -163,6 +164,11 @@ export function useBluff() {
       const who =
         c.from === v?.meId ? 'You' : ([...(v?.players ?? []), ...(v?.watchers ?? [])].find((p) => p.id === c.from)?.name ?? 'Someone');
       const text = QUICK_MESSAGES[c.index] ?? '';
+      // dropped on the last play: it pops onto the pile instead of floating up
+      if (c.kind === 'reaction' && c.on === 'pile') {
+        pushPileReaction(REACTIONS[c.index] ?? '❓', who);
+        return;
+      }
       if (c.kind === 'reaction') {
         setReactions((prev) => [...prev.slice(-12), { key: ++noteSeq, emoji: REACTIONS[c.index] ?? '❓', who, at: Date.now() }]);
         return;
@@ -350,6 +356,8 @@ export function useBluff() {
       askSwap: (memberId: string) => run(() => request('room:swap', { memberId })),
       answerSwap: (memberId: string, accept: boolean) => run(() => request('room:swapAnswer', { memberId, accept })),
       chat: (kind: ChatKind, index: number) => run(() => request('chat:send', { kind, index })),
+      /** an emoji dropped on the last play (hold the pile) */
+      reactOnPile: (index: number) => run(() => request('chat:send', { kind: 'reaction', index, on: 'pile' })),
       /** throw an emoji at someone in the room; everyone sees it fly */
       throwAt: (memberId: string, index: number) => run(() => request('chat:throw', { to: memberId, index })),
       dropFlyer: (key: number) => setFlyers((prev) => prev.filter((f) => f.key !== key)),

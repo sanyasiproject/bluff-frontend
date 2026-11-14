@@ -76,6 +76,13 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 - If nobody can play and nothing is left to pick, the fewest cards wins. Leaving mid-game is a loss; in a 2-player game the other wins.
 - Game over uses the same screen: the winner wins, everyone else lost (with cards left).
 
+## Tutorial, looks and celebrations
+
+- **📘 Practice tutorial** (`components/tutorial/`, `lib/tutorial.ts`): a scripted 1-minute game against Raju 🤖 for Bluff and for Crazy 7, with coach marks on what to tap. Offered once per account in the lobby before the first game of that kind (`user.tutorials`, `POST /api/me/tutorial`; guests per phone), and always from 📘 How to play on Home and in the lobby.
+- **🎨 Table & cards** (`lib/look.ts`, `LookPicker.tsx`, `styles/looks.css`): felt themes and card backs unlocked by level, picked on the Profile page and saved per account on the phone; applied with `data-table` / `data-back` on `<html>`.
+- **Celebrations** (`lib/celebrate.ts`, `lib/spotlight.ts`, `LevelUp.tsx`): one-card spotlight with a heartbeat, trophy + fireworks + crown on the winner and 🙈 on the losers, and a level-up screen that names newly unlocked looks.
+- **Reactions on plays** (`PileReact.tsx`, `lib/pileReactions.ts`): hold the pile to drop an emoji on the last play (`chat:send` with `on: 'pile'`).
+
 ## Game screen
 
 - Top bar: room code, pot, 👀 join requests (host, only when someone is waiting), 💬 quick chat and ⋯ (voice, people, stop game, leave).

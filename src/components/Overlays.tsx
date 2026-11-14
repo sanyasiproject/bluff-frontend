@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { useBack } from '../lib/back';
 import { avatarColor, claimText, cx, placeLabel, rankPlural } from '../lib/cards';
 import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
+import { winnerMoment } from '../lib/celebrate';
 import { confettiAt } from '../lib/motion';
 import { nextGameReward, titleOf } from '../lib/progress';
 import { LevelBadge } from './LevelBadge';
@@ -229,6 +230,8 @@ export function GameOver({ view, onLobby, onRematch, startLevel }: GameOverProps
     if (view.stopped || view.winnerIds.length === 0) return;
     if (view.winnerIds.includes(view.meId)) confettiAt(box.current, { count: 80, spread: 1.5 });
     else if (!view.players.some((p) => p.id === view.meId)) confettiAt(box.current, { count: 36, spread: 1 });
+    // the trophy and fireworks for everyone, a crown on the winner's seat, 🙈 over the losers
+    winnerMoment(view.winnerIds, [...view.loserIds.filter((id) => !view.winnerIds.includes(id))]);
   }, []);
   // Crazy 7: everyone but the winner, fewest cards left first
   const ranked = [...view.players].sort((a, b) => (a.place ?? 99) - (b.place ?? 99) || (view.crazy7 ? a.cardCount - b.cardCount : 0));
