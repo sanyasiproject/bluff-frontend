@@ -186,6 +186,11 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             Every player has a lie rate and a call rate. Bots read them from your saved record when you join, then keep watching you at the
             table, and lie or call against you to match. Nothing is looked up during the game.
           </li>
+          <li>
+            Bots notice habits without catching you: a player who never passes when they likely have none of the rank, or who claims more of
+            a rank than they probably hold, gets called. Played cards stay in the order you tapped them, so if you always tap your fake last
+            (or first), bots learn where to look. They also lie more against players who never call.
+          </li>
           <li>Bots take a human-like moment to think, and the pause doesn't depend on whether they're lying. They can peek and chat, but never bet.</li>
           <li>
             Coins: with bots the stake is at most 🪙 {BOT_MAX_STAKE}. Bots put in nothing. If a person wins, they take the stake for every seat,
