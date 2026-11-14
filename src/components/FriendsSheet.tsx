@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, errorText } from '../lib/api';
 import { cx } from '../lib/cards';
+import { presenceText } from '../lib/dates';
 import type { FriendsResponse, FriendView, PlayerSearchResult } from '../types';
 import type { Auth } from '../useAuth';
 import type { InviteAck } from '../useBluff';
@@ -182,11 +183,14 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
         </Avatar>
         <div className="grow">
           <b>{f.displayName}</b> <LevelBadge level={f.level} />
-          <p className="muted small">
-            @{f.username}
-            {showOnline && f.online !== null && (f.online ? ' · online' : ' · offline')}
-            {showOnline && where(f)}
-          </p>
+          <p className="muted small">@{f.username}</p>
+          {/* its own line, so it never breaks mid-phrase beside the Invite button */}
+          {showOnline && (f.online !== null || where(f)) && (
+            <p className={cx('muted small friend-seen', f.online && 'on')}>
+              {f.online !== null ? presenceText(f.online, f.lastSeen, true) : ''}
+              {f.online !== null ? where(f) : where(f).replace(/^ · /, '')}
+            </p>
+          )}
         </div>
       </button>
       {actions}

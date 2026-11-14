@@ -326,7 +326,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         <ul>
           <li>One room per account: joining a new room leaves your old one. Not allowed while you still have cards there, or it's open on another device.</li>
           <li>Search, profile cards and friend actions: up to 20 a minute per player.</li>
-          <li>Online status is shown only to friends.</li>
+          <li>Online status is shown only to friends. When a friend is offline, Friends shows when they were last on (“seen 2 h ago”), and so does their card (“last online 2 h ago”).</li>
           <li>Each network can open about 10 rooms in 10 minutes and keep 5 open at once, so nobody can flood the server.</li>
         </ul>
       </Section>

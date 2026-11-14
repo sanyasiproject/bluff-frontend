@@ -628,6 +628,15 @@ p {
   background: var(--ok);
 }
 
+/* a friend's status line: online in green, else when they were last online */
+.friend-seen {
+  margin-top: 1px;
+}
+
+.friend-seen.on {
+  color: var(--ok);
+}
+
 .row-actions {
   display: flex;
   align-items: center;

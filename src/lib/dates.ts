@@ -13,3 +13,10 @@ export function timeAgo(iso: string): string {
   const days = Math.floor(sec / 86_400);
   return days < 30 ? `${days} day${days > 1 ? 's' : ''} ago` : dateTime(iso);
 }
+
+/** like timeAgo, but a month or more back shows just the month ("in Oct 2026") */
+const lastSeenAgo = (iso: string) => ((Date.now() - new Date(iso).getTime()) / 86_400_000 < 30 ? timeAgo(iso) : `in ${monthYear(iso)}`);
+
+/** a friend's presence: "online", "last online 5 min ago" (short: "seen 5 min ago", for narrow rows), or "offline" when it isn't known */
+export const presenceText = (online: boolean, lastSeen: string | null, short = false) =>
+  online ? 'online' : lastSeen ? `${short ? 'seen' : 'last online'} ${lastSeenAgo(lastSeen)}` : 'offline';

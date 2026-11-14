@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { api, errorText } from '../lib/api';
 import { cx } from '../lib/cards';
-import { monthYear } from '../lib/dates';
+import { monthYear, presenceText } from '../lib/dates';
 import { achievementsOf, percent, titleOf } from '../lib/progress';
 import type { PublicProfile } from '../types';
 import type { Auth } from '../useAuth';
@@ -106,7 +106,7 @@ export function PlayerSheet({ auth, name, username, level, avatar = null, childr
         {p && (
           <p className="muted small">
             @{p.username}
-            {p.online !== null && (p.online ? ' · online' : ' · offline')} · joined {monthYear(p.joinedAt)}
+            {p.online !== null && ` · ${presenceText(p.online, p.lastSeen)}`} · joined {monthYear(p.joinedAt)}
           </p>
         )}
         {title && (
