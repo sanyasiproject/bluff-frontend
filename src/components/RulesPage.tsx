@@ -6,7 +6,7 @@ import {
   AVATAR_CHARACTERS,
   AVATAR_FACES,
   BET_STEPS,
-  BOT_MAX_STAKE,
+  BOT_STAKE_CAPS,
   CRAZY7_HAND_SIZES,
   CRAZY7_MAX_PICKS,
   DAILY_GAME_REWARDS,
@@ -114,7 +114,8 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>
             <b>Coins at stake</b> per player: {STAKES.map(stakeLabel).join(', ')}. Coin games need everyone logged in. With bots at the
-            table the stake goes up to {BOT_MAX_STAKE}.
+            table the bot level sets the most: Normal bots play only free games, Hard up to 🪙 {compactCoins(BOT_STAKE_CAPS.hard)}, Expert
+            (and Crazy 7 bots) up to 🪙 {compactCoins(BOT_STAKE_CAPS.expert)}.
           </li>
           <li>
             <b>Cards</b>: 1 deck (52, default) or 2 decks (104).
@@ -175,25 +176,41 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             one card without saying it, bots wait at least 3.5 seconds before their move, so there's time to tap the button.
           </li>
           <li>
+            🤖 Bot level (Bluff, host, at the top of Game settings once a bot is seated): Normal, Hard or Expert (the default). Normal is
+            beatable and full of character; Expert counts every card, uses your saved habits and makes the fewest mistakes. The level also sets
+            the most you can stake against them (free only / 🪙 {compactCoins(BOT_STAKE_CAPS.hard)} / 🪙 {compactCoins(BOT_STAKE_CAPS.expert)}).
+            Crazy 7 bots always play their best.
+          </li>
+          <li>
             Every bot gets its own style (careful, wild liar, detective, sneaky, gambler…) with its own random numbers, and its mood shifts
-            from game to game, so no two bots play alike and their moves can't be guessed.
+            from game to game, so no two bots play alike and their moves can't be guessed. Styles show most at Normal.
           </li>
           <li>
-            Bots only know what a seated player could know: their own cards, the claims, cards turned over, and their own cards in a pile
-            someone picked up. They never see anyone's hand.
+            Bots count cards: their own, how many decks are in play, every claim of the round and the piles thrown away. A claim of more of a
+            rank than can really be out there gets called almost every time (with 1 deck, 5 or more of a rank is always a lie; with 2 decks the
+            line moves up), and so does a likely lie that would let someone go out.
           </li>
           <li>
-            Every player has a lie rate and a call rate. Bots read them from your saved record when you join, then keep watching you at the
-            table, and lie or call against you to match. Nothing is looked up during the game.
+            Your real habits are saved after every Bluff game: how often you lie and with how many cards, where you tap your fakes (cards stay in
+            the order you tapped them), whether you pass or push a fake when you have none, and whether you fake your last cards to finish. Only
+            the server and its bots read them, never another player, and bots read them before the game starts. Normal bots ignore them.
           </li>
           <li>
-            Bots notice habits without catching you: a player who never passes when they likely have none of the rank, or who claims more of
-            a rank than they probably hold, gets called. Played cards stay in the order you tapped them, so if you always tap your fake last
-            (or first), bots learn where to look. They also lie more against players who never call.
+            Bots only know what a seated player could know, plus those saved habits: never anyone's hand, and never the cards of the play in
+            front of them. They check their reads against every card turned over, so an honest player soon stops being called.
           </li>
-          <li>Bots take a human-like moment to think, and the pause doesn't depend on whether they're lying. They can peek and chat, but never bet.</li>
           <li>
-            Coins: with bots the stake is at most 🪙 {BOT_MAX_STAKE}. Bots put in nothing. If a person wins, they take the stake for every seat,
+            Peeks are scarce, so good bots peek only when a look could change their call, at the card most likely to be fake; if it's fake, they
+            call with that card. Bots also fake their last cards to go out when they think nobody will catch it.
+          </li>
+          <li>
+            After any play, people get at least 2 seconds to call it before a bot moves (longer after big plays and when someone is going out).
+            Bots take a human-like moment to think, and the pause doesn't depend on whether they're lying. They can peek and chat, but never bet.
+          </li>
+          <li>
+            Coins: with bots the stake is at most what their level allows (Normal: free only · Hard: 🪙 {compactCoins(BOT_STAKE_CAPS.hard)} ·
+            Expert and Crazy 7: 🪙 {compactCoins(BOT_STAKE_CAPS.expert)}). Adding a bot or picking a lower level brings a higher stake down.
+            Bots put in nothing. If a person wins, they take the stake for every seat,
             bots' seats included. Coins a person loses to a bot (stake or bet) are simply gone; a bet won from a bot is paid in full.
           </li>
           <li>Games with bots count for XP, stats and the daily games reward like any other game.</li>
@@ -227,6 +244,12 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
 
       <Section icon="👑" title="Host tools">
         <ul>
+          <li>
+            ✅ Ready check: everyone in the lobby except the host gets 👍 I'm ready. Each player shows ✅ Ready or ⏳ Not ready, and the host's
+            Start stays greyed out (⏳ Waiting for 2 players) until all of them are ready. Ready players can tap their button again to ask for a
+            minute. A new stake or a different game asks everyone again; bots and players on an older version of the app always count as ready.
+            Play again after a game keeps everyone's ready.
+          </li>
           <li>Tap a player in the lobby to open their card. The host also gets: Make host, Move to watching/playing, Remove from room.</li>
           <li>The host can remove people during a game (People in the ⋯ menu); their cards leave the game and they pay or win nothing.</li>
           <li>If the host leaves, the next player becomes the host.</li>
@@ -305,6 +328,11 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             opens the room. The phone asks "Allow notifications?" when a player logs in or signs up (players already logged in see a one-time
             card on Home), and a phone that allowed it before is signed up by itself. Each player can switch it off in Profile; it then stays off
             on that phone. Works in Android browsers and the installed app; on iPhone only in the app added to the Home Screen.
+          </li>
+          <li>
+            👋 Friend alerts: when a friend opens Bluff after 5 minutes or more away, a card shows in the top-right corner on any screen (home,
+            lobby, in a game) with a soft chime. Friends who come online together share one card. In a lobby, Invite on the card invites them
+            straight away. Quick app switches and a server restart don't trigger it. Each player can switch it off in Profile (per phone).
           </li>
           <li>
             Join a friend from Friends: while they're in a lobby, tap Join (take a seat) or 👀 Watch. Once their game has started, tap 👀 Ask

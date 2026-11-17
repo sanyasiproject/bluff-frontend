@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } 
 import { api, errorText } from '../lib/api';
 import { useBack } from '../lib/back';
 import { cx } from '../lib/cards';
+import { socket } from '../lib/socket';
 import {
   getVoiceGender,
   onVoicesChanged,
@@ -12,7 +13,50 @@ import {
 } from '../lib/speech';
 import { formatCoins, compactCoins, stakeLabel } from '../lib/coins';
 import { markTutorialSeen, tutorialSeen } from '../lib/tutorial';
-import { BOT_MAX_STAKE, CRAZY7_MAX_PICKS, STAKES, type FriendsResponse, type FriendView, type GameConfig, type GameKind, type PublicPlayer, type RoomView } from '../types';
+import {
+  BOT_LEVEL_NAMES,
+  BOT_LEVELS,
+  BOT_STAKE_CAPS,
+  botStakeCap,
+  CRAZY7_MAX_PICKS,
+  STAKES,
+  type BotLevel,
+  type FriendsResponse,
+  type FriendView,
+  type GameConfig,
+  type GameKind,
+  type PublicPlayer,
+  type RoomView,
+} from '../types';
+
+/** what a bot level lets the table stake, in a few words */
+const capText = (cap: number) => (cap === 0 ? 'Free only' : `Up to 🪙 ${compactCoins(cap)}`);
+
+/** host: how well the bots play, three even choices that each show what can be staked against them */
+function BotLevelPicker({ value, onPick }: { value: BotLevel; onPick: (level: BotLevel) => void }) {
+  return (
+    <div className="setting-row stacked">
+      <div className="grow">
+        <b>🤖 Bot level</b>
+        <span>Stronger bots count every card and remember how you play</span>
+      </div>
+      <div className="level-seg" role="group" aria-label="Bot level">
+        {BOT_LEVELS.map((level) => (
+          <button
+            key={level}
+            type="button"
+            className={cx('level-chip', level === value && 'on')}
+            aria-pressed={level === value}
+            onClick={() => level !== value && onPick(level)}
+          >
+            <b>{BOT_LEVEL_NAMES[level]}</b>
+            <small>{capText(BOT_STAKE_CAPS[level])}</small>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 import type { Auth } from '../useAuth';
 import type { Actions } from '../useBluff';
 import { AccountCorner } from './AccountCorner';
@@ -206,9 +250,12 @@ const ROOM_LIMIT = 12;
 
 const names = (players: PublicPlayer[]) => players.map((p) => p.name).join(', ');
 
-/** host picks how many coins each player puts in; everyone sees what it means. Bots cap it and put in nothing */
-function StakePicker({ stake, players, bots, isHost, onPick }: { stake: number; players: number; bots: boolean; isHost: boolean; onPick: (n: number) => void }) {
+/** host picks how many coins each player puts in; everyone sees what it means. Bots cap it by their level and put in nothing */
+function StakePicker({ stake, players, config, bots, isHost, onPick }: { stake: number; players: number; config: GameConfig; bots: boolean; isHost: boolean; onPick: (n: number) => void }) {
   const pot = stake * Math.max(players, 2);
+  const cap = botStakeCap(config);
+  // Crazy 7 bots always play their best; Bluff's are named by their level
+  const who = config.game === 'crazy7' ? 'Bots' : `${BOT_LEVEL_NAMES[config.botLevel ?? 'expert']} bots`;
   return (
     <>
       <p className="label">🪙 Coins at stake (per player)</p>
@@ -220,7 +267,7 @@ function StakePicker({ stake, players, bots, isHost, onPick }: { stake: number; 
               type="button"
               className={cx('stake-chip', s === stake && 'on')}
               aria-pressed={s === stake}
-              disabled={bots && s > BOT_MAX_STAKE}
+              disabled={bots && s > cap}
               onClick={() => onPick(s)}
             >
               {stakeLabel(s)}
@@ -228,7 +275,6 @@ function StakePicker({ stake, players, bots, isHost, onPick }: { stake: number; 
           ))}
         </div>
       )}
-      {isHost && bots && <p className="muted small">🤖 With bots the stake goes up to 🪙 {BOT_MAX_STAKE}</p>}
       <div className={cx('stake-explain', stake > 0 && 'live')}>
         {stake === 0 ? (
           <>
@@ -245,6 +291,8 @@ function StakePicker({ stake, players, bots, isHost, onPick }: { stake: number; 
             </span>
           </>
         )}
+        {/* what the bots allow, inside the box so it never crowds the chips */}
+        {isHost && bots && <span className="stake-bots">🤖 {cap === 0 ? `${who} play only free games` : `${who} play for up to 🪙 ${compactCoins(cap)}`}</span>}
       </div>
     </>
   );
@@ -276,6 +324,8 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   const bots = view.players.filter((p) => p.bot);
   const guests = stake > 0 ? view.players.filter((p) => !p.registered && !p.bot) : [];
   const short = stake > 0 ? view.players.filter((p) => p.registered && (p.coins ?? 0) < stake) : [];
+  // people who haven't tapped I'm ready (the host, bots and older apps always count as ready)
+  const notReady = view.players.filter((p) => !p.bot && p.id !== view.hostId && !p.ready);
   const startBlock =
     view.players.length < 2
       ? 'Need at least 2 players'
@@ -287,7 +337,10 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         ? `${names(guests)} must log in to play for coins`
         : short.length > 0
           ? `${names(short)} ${short.length > 1 ? "don't" : "doesn't"} have 🪙 ${formatCoins(stake)}`
-          : null;
+          : notReady.length > 0
+            ? `⏳ Waiting for ${names(notReady)} to tap I'm ready`
+            : null;
+  const seated = view.players.find((p) => p.id === view.meId);
 
   // friend status of everyone here, so logged-in players can add each other from the lobby
   const [links, setLinks] = useState<FriendsResponse | null>(null);
@@ -303,12 +356,20 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
     }
   }, [auth.token, auth.user?.id]);
   const people = view.players.length + view.watchers.length;
-  // a request someone sends while we wait in the lobby shows up within a few seconds
+  // read again when someone comes or goes
   useEffect(() => {
     void loadLinks();
-    const t = setInterval(() => void loadLinks(), 10_000);
-    return () => clearInterval(t);
   }, [loadLinks, people]);
+  // the server says when a request is sent, accepted or removed, so there's no need to keep asking; after a reconnect, read once more
+  useEffect(() => {
+    const reload = () => void loadLinks();
+    socket.on('friends:changed', reload);
+    socket.on('connect', reload);
+    return () => {
+      socket.off('friends:changed', reload);
+      socket.off('connect', reload);
+    };
+  }, [loadLinks]);
 
   const befriend = async (fn: () => Promise<unknown>, done: string) => {
     try {
@@ -413,10 +474,10 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             disabled={!!meWatching && seatsFull}
             onClick={() => meWatching && void actions.setWatching(false)}
           >
-            🎮 Playing
+            🎮 Play
           </button>
           <button className={cx(meWatching && 'on')} aria-pressed={!!meWatching} onClick={() => !meWatching && void actions.setWatching(true)}>
-            👀 Watching
+            👀 Watch
           </button>
         </div>
       </section>
@@ -453,6 +514,10 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                       {stake > 0 && p.registered && (p.coins ?? 0) < stake && ' · not enough'}
                     </span>
                   )}
+                  {/* everyone but the host says when they're ready to start */}
+                  {p.id !== view.hostId && (
+                    <span className={cx('player-ready', p.ready ? 'yes' : 'no')}>{p.ready ? '✅ Ready' : '⏳ Not ready'}</span>
+                  )}
                 </span>
               </button>
               {p.id === view.hostId && <span className="tag">Host</span>}
@@ -486,7 +551,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                 ? 'Seats are full · you get the next free one'
                 : seatsFull
                   ? 'All 5 seats are taken right now'
-                  : 'Switch to Playing to take a seat'}
+                  : 'Switch to Play to take a seat'}
             </p>
           )}
           <ul className="player-list">
@@ -529,6 +594,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                 {view.config.peeks > 0 && <span>🔍 {view.config.peeks} peek{view.config.peeks > 1 ? 's' : ''}</span>}
                 {view.config.bets && <span>🎲 Bets on calls</span>}
                 {view.config.teams && <span>👥 2 vs 2</span>}
+                {bots.length > 0 && <span>🤖 {BOT_LEVEL_NAMES[view.config.botLevel ?? 'expert']} bots</span>}
               </>
             )}
           </div>
@@ -562,7 +628,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
       {isHost && crazy7 && (
         <section className="panel">
           <h2 className="section-title">Game settings</h2>
-          {coinsOn && <StakePicker stake={stake} players={view.players.length} bots={bots.length > 0} isHost={isHost} onPick={(n) => set({ stake: n })} />}
+          {coinsOn && <StakePicker stake={stake} players={view.players.length} config={view.config} bots={bots.length > 0} isHost={isHost} onPick={(n) => set({ stake: n })} />}
           <SettingRow title="🃏 Cards each" desc="Dealt to every player at the start">
             <Choice<5 | 7> value={view.config.handSize} options={[[5, '5'], [7, '7']]} onPick={(n) => set({ handSize: n })} />
           </SettingRow>
@@ -584,7 +650,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               ))}
             </div>
           </div>
-          <SettingRow title="7️⃣ Stack 7s" desc="Answer a 7 with your own 7: the next player picks 4, then 6…">
+          <SettingRow title="7️⃣ Stack 7s" desc="Answer a 7 with a 7: the next player picks 4, then 6…">
             <Choice value={view.config.stack7} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ stack7: on })} />
           </SettingRow>
           <p className="label">Cards</p>
@@ -597,7 +663,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
 
       {isHost && !crazy7 && <section className="panel">
         <h2 className="section-title">Game settings</h2>
-        {coinsOn && <StakePicker stake={stake} players={view.players.length} bots={bots.length > 0} isHost={isHost} onPick={(n) => set({ stake: n })} />}
+        {/* the bots' level comes first: it sets how much can be staked */}
+        {bots.length > 0 && <BotLevelPicker value={view.config.botLevel ?? 'expert'} onPick={(level) => set({ botLevel: level })} />}
+        {coinsOn && <StakePicker stake={stake} players={view.players.length} config={view.config} bots={bots.length > 0} isHost={isHost} onPick={(n) => set({ stake: n })} />}
         <p className="label">Cards</p>
         <div className="seg">
           <Option on={view.config.decks === 1} disabled={!isHost} title="1 deck" desc="52 cards" onClick={() => set({ decks: 1 })} />
@@ -684,27 +752,46 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               <button className="btn ghost leave-btn" onClick={actions.leave}>
                 Leave
               </button>
-              <button className="btn primary grow shine" disabled={startBlock !== null} onClick={actions.start}>
+              <button className={cx('btn primary grow', startBlock === null ? 'shine' : 'blocked')} disabled={startBlock !== null} onClick={actions.start}>
                 {startBlock === null
                   ? `Start · ${view.players.length} players${stake > 0 ? ` · 🪙 ${compactCoins(pot)}` : ''}`
-                  : 'Start game'}
+                  : notReady.length > 0 && startBlock.startsWith('⏳')
+                    ? `⏳ Waiting for ${notReady.length} ${notReady.length === 1 ? 'player' : 'players'}`
+                    : '🔒 Start game'}
               </button>
             </div>
           </>
         ) : (
-          <div className="sticky-row">
-            <button className="btn ghost leave-btn" onClick={actions.leave}>
-              Leave
-            </button>
-            <p className="waiting grow">
-              ⏳ Waiting for the host to start
-              <span className="dots" aria-hidden>
-                <i>.</i>
-                <i>.</i>
-                <i>.</i>
-              </span>
-            </p>
-          </div>
+          <>
+            <div className="sticky-row">
+              <button className="btn ghost leave-btn" onClick={actions.leave}>
+                Leave
+              </button>
+              {seated ? (
+                seated.ready ? (
+                  // ready: tapping again asks everyone to wait a minute
+                  <button className="btn ready-btn grow" onClick={() => void actions.setReady(false)}>
+                    <span>✅ You're ready</span>
+                    <small>Waiting for the host · tap to wait</small>
+                  </button>
+                ) : (
+                  <button className="btn primary grow shine ready-go" onClick={() => void actions.setReady(true)}>
+                    <span>👍 I'm ready</span>
+                    <small>Host starts when all are ready</small>
+                  </button>
+                )
+              ) : (
+                <p className="waiting grow">
+                  ⏳ Waiting for the host to start
+                  <span className="dots" aria-hidden>
+                    <i>.</i>
+                    <i>.</i>
+                    <i>.</i>
+                  </span>
+                </p>
+              )}
+            </div>
+          </>
         )}
       </div>
 

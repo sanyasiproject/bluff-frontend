@@ -148,7 +148,8 @@
 }
 
 .tut-link {
-  align-self: flex-start;
+  align-self: center;
+  padding: 6px 12px;
   font-weight: 800;
 }
 

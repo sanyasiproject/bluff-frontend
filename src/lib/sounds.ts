@@ -63,6 +63,11 @@ const notes = (c: AudioContext, freqs: number[], step: number, dur: number, opts
   freqs.forEach((f, i) => tone(c, f, i * step, dur, opts));
 
 export const sfx = {
+  /** a friend came online, a soft two-note chime */
+  friendOnline() {
+    const c = audio();
+    if (c) notes(c, [784, 1047], 0.12, 0.28, { gain: 0.07 });
+  },
   /** cards put down; one slap per card, up to four */
   play(count: number) {
     const c = audio();

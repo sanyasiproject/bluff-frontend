@@ -332,6 +332,8 @@ export function useBluff() {
         }),
       setConfig: (config: GameConfig) => run(() => request('room:config', config)),
       start: () => run(() => request('room:start')),
+      /** lobby: ready to start, or not yet (the host starts once everyone is ready) */
+      setReady: (ready: boolean) => run(() => request('room:ready', { ready })),
       toLobby: () => run(() => request('room:lobby')),
       rematch: () => run(() => request('room:rematch')),
       endGame: () => run(() => request('room:end')),

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AdminPanel } from './components/AdminPanel';
 import { Crazy7Table } from './components/Crazy7Table';
 import { Flyers } from './components/Flyers';
+import { FriendOnline } from './components/FriendOnline';
 import { Home } from './components/Home';
 import { Lobby } from './components/Lobby';
 import { BonusPopup, InvitePopup } from './components/Popups';
@@ -98,6 +99,7 @@ export default function App() {
       <Toasts notes={notes} />
       <Reactions items={reactions} />
       <Flyers items={flyers} onDone={actions.dropFlyer} />
+      <FriendOnline auth={auth} inLobby={view?.phase === 'lobby'} onInvite={actions.invite} />
       {invite && (
         <InvitePopup
           invite={invite}

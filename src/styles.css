@@ -5359,3 +5359,252 @@ body::after {
   font-weight: 700;
   text-align: center;
 }
+
+/* friend online alert */
+.friend-online {
+  position: fixed;
+  /* just under the top row of buttons (account corner, ⋯, 💬) */
+  top: calc(64px + env(safe-area-inset-top));
+  right: 16px;
+  z-index: 55;
+  width: min(300px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--sheet);
+  border: 1px solid var(--faint);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  color: var(--ink);
+  animation: friend-online-in 0.32s ease-out backwards;
+}
+
+@keyframes friend-online-in {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+.friend-online-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.friend-online-head b {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.friend-online-x {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin: -4px -6px 0 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.friend-online-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.friend-online-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.friend-online-row .btn {
+  flex: none;
+  min-height: 34px;
+  padding: 4px 12px;
+  font-size: 13px;
+}
+
+.friend-online-row .btn.sent {
+  color: var(--ok);
+}
+
+.friend-online-more {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* lobby: bot level, three even choices that each show what can be staked */
+.level-seg {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.level-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 54px;
+  padding: 6px 4px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+}
+
+.setting-row .level-chip b {
+  font-size: 15px;
+}
+
+.level-chip small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.level-chip.on {
+  border-color: var(--gold);
+  background: rgba(246, 196, 83, 0.2);
+}
+
+.setting-row .level-chip.on b {
+  color: var(--gold);
+}
+
+/* lobby: what the bots let the table stake, the last line of the stake box */
+.stake-explain .stake-bots {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* a section label after setting rows needs room above it */
+.setting-row + .label {
+  margin-top: 16px;
+}
+
+/* lobby: who is ready to start, the I'm ready button, and a Start that's clearly blocked */
+.player-ready {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.player-ready.yes {
+  color: var(--ok);
+}
+
+.player-ready.no {
+  color: #ffb648;
+}
+
+.btn.ready-btn {
+  flex-direction: column;
+  gap: 0;
+  border: 2px solid var(--ok);
+  background: rgba(60, 207, 145, 0.16);
+  color: var(--ok);
+  line-height: 1.2;
+}
+
+.btn.ready-btn small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.btn.ready-go {
+  flex-direction: column;
+  gap: 0;
+  line-height: 1.2;
+}
+
+.btn.ready-go small {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.btn.primary.blocked:disabled {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--muted);
+  box-shadow: none;
+}
+
+/* a section that folds: the whole head toggles it, and the Show / Hide pill makes that easy to spot */
+.fold-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fold-head .section-title {
+  margin-bottom: 0;
+}
+
+.fold-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid rgba(246, 196, 83, 0.6);
+  border-radius: 999px;
+  background: rgba(246, 196, 83, 0.18);
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.fold-btn i {
+  font-style: normal;
+  transition: transform 0.2s ease;
+}
+
+.fold-btn.open i {
+  transform: rotate(180deg);
+}
+
+.badge-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 0;
+  font-size: 22px;
+}
+
+/* lobby: why Start is blocked, as a pill on the sticky bar so it never sits loose over the page */
+.lobby-actions .start-block {
+  align-self: center;
+  max-width: 100%;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 154, 157, 0.35);
+  border-radius: 999px;
+  background: rgba(40, 10, 12, 0.92);
+}

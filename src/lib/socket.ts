@@ -8,7 +8,8 @@ export const SERVER_URL = envUrl || `${location.protocol}//${location.hostname}:
 // the login token is read on every (re)connect, so the server knows which account this is
 export const socket = io(SERVER_URL, {
   reconnectionDelayMax: 4000,
-  auth: (cb) => cb({ token: loadAuthToken() ?? '' }),
+  // ready: this app has the lobby's Ready button (older apps never hold up a start)
+  auth: (cb) => cb({ token: loadAuthToken() ?? '', ready: true }),
 });
 
 /** reconnect so the server picks up a login or logout */

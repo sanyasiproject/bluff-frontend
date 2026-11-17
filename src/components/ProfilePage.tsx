@@ -10,6 +10,7 @@ import { Avatar } from './Avatar';
 import { AvatarPicker } from './AvatarPicker';
 import { FriendsSheet } from './FriendsSheet';
 import { FullPage } from './FullPage';
+import { FriendAlertsRow } from './FriendAlertsRow';
 import { NotifyRow } from './NotifyRow';
 import { RulesPage } from './RulesPage';
 import { XpGuide } from './XpGuide';
@@ -38,6 +39,8 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
   const [guideOpen, setGuideOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
+  /** achievements fold away; the Show button opens them */
+  const [badgesOpen, setBadgesOpen] = useState(false);
 
   useEffect(() => {
     void auth.refresh();
@@ -178,6 +181,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
         </button>
       )}
       <NotifyRow auth={auth} />
+      <FriendAlertsRow auth={auth} />
 
       <section className="panel stack-tight">
         <h3 className="section-title">Record</h3>
@@ -234,12 +238,30 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
       </section>
 
       <section className="panel stack-tight">
-        <h3 className="section-title">
-          Achievements{' '}
-          <span className="muted">
-            {unlocked}/{badges.length}
+        <button type="button" className="fold-head" aria-expanded={badgesOpen} onClick={() => setBadgesOpen((open) => !open)}>
+          <h3 className="section-title">
+            🏅 Achievements{' '}
+            <span className="muted">
+              {unlocked}/{badges.length}
+            </span>
+          </h3>
+          <span className={cx('fold-btn', badgesOpen && 'open')}>
+            {badgesOpen ? 'Hide' : 'Show'} <i aria-hidden>▾</i>
           </span>
-        </h3>
+        </button>
+        {/* folded: just the badges earned so far */}
+        {!badgesOpen && unlocked > 0 && (
+          <p className="badge-strip" aria-label="Achievements earned">
+            {badges
+              .filter((b) => b.value >= b.goal)
+              .map((b) => (
+                <span key={b.title} title={b.title}>
+                  {b.emoji}
+                </span>
+              ))}
+          </p>
+        )}
+        {badgesOpen && (
         <div className="badge-grid">
           {badges.map((b, i) => {
             const done = b.value >= b.goal;
@@ -257,6 +279,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
             );
           })}
         </div>
+        )}
       </section>
 
       <LookPicker auth={auth} />
