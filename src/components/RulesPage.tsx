@@ -184,12 +184,13 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         <ul>
           <li>
             Bluff only, when the host turns it on. When a game ends, the last player still holding cards gets a silly badge at random:{' '}
-            {SAZA_BADGES.map((b) => `${b.emoji} ${b.name}`).join(', ')}.
+            {SAZA_BADGES.map((b) => `${b.emoji} ${b.name}`).join(', ')}. If you go out first against 2 or more bots, the game ends at once and
+            the bot holding the most cards gets it.
           </li>
           <li>The winner can swap it for another one on the game-over screen, until everyone goes back to the lobby.</li>
           <li>
             Everyone sees it wobbling on that player's seat, in the lobby and in the results. It stays on through the next games until they win a
-            game in this room (a 2 vs 2 win and the host's End game count). Bots can get one too.
+            Bluff game in this room (a 2 vs 2 win and the host's End game count). Bots can get one too.
           </li>
           <li>No new badge after 2 vs 2, the host's End game, or when players walk out: nobody was left last.</li>
           <li>Turning Saza off takes every badge off. Badges belong to the room: they aren't saved, and leaving the room takes yours off.</li>
