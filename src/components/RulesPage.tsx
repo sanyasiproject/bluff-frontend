@@ -189,6 +189,17 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             from game to game, so no two bots play alike and their moves can't be guessed. Styles show most at Normal.
           </li>
           <li>
+            Bots are hard to read at every level. They lie often (more against players who never call bots), slip junk cards in with real ones,
+            sometimes keep real cards back (now and then even passing while holding the rank, though a pass usually means they have none), and
+            set the fake-now-real-later trap themselves. Every few rounds, and right after being caught, each bot switches plans: plain, heavy on fakes, full of tricks, or honest
+            with sharp calls. Close calls go either way, and now and then a bot tests a small claim, so no lie is ever free.
+          </li>
+          <li>
+            The trap (fake a rank you hold, then play your real ones when the claims look impossible) works on Normal bots. Hard and Expert
+            bots weigh which claim of the round was really the lie: they see through it from your saved habits, or after being caught by it a
+            few times in the same room.
+          </li>
+          <li>
             Bots count cards: their own, how many decks are in play, every claim of the round and the piles thrown away. A claim of more of a
             rank than can really be out there gets called almost every time (with 1 deck, 5 or more of a rank is always a lie; with 2 decks the
             line moves up), and so does a likely lie that would let someone go out.
@@ -200,8 +211,9 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>
             Your real habits are saved after every Bluff game: how often you lie and with how many cards, where you tap your fakes (cards stay in
-            the order you tapped them), whether you pass or push a fake when you have none, and whether you fake your last cards to finish. Only
-            the server and its bots read them, never another player, and bots read them before the game starts. Normal bots ignore them.
+            the order you tapped them), whether you pass or push a fake when you have none, whether you fake your last cards to finish, whether
+            you keep real cards back, how your impossible-looking claims turn out, and how often you call bots' plays (their lies and their truths).
+            Only the server and its bots read them, never another player, and bots read them before the game starts. Normal bots ignore them.
           </li>
           <li>
             Bots only know what a seated player could know, plus those saved habits: never anyone's hand, and never the cards of the play in
