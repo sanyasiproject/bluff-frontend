@@ -351,9 +351,10 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             on that phone. Works in Android browsers and the installed app; on iPhone only in the app added to the Home Screen.
           </li>
           <li>
-            👋 Friend alerts: when a friend opens Bluff after 5 minutes or more away, a card shows in the top-right corner on any screen (home,
+            👋 Friend alerts: when a friend opens Bluff after 15 seconds or more away, a card shows in the top-right corner on any screen (home,
             lobby, in a game) with a soft chime. Friends who come online together share one card. In a lobby, Invite on the card invites them
-            straight away. Quick app switches and a server restart don't trigger it. Each player can switch it off in Profile (per phone).
+            straight away. A quick reconnect, a friend already in your room, and a server restart don't trigger it. Each player can switch it
+            off in Profile (per phone).
           </li>
           <li>
             Join a friend from Friends: while they're in a lobby, tap Join (take a seat) or 👀 Watch. Once their game has started, tap 👀 Ask
