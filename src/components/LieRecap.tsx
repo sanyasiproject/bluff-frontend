@@ -6,6 +6,8 @@ import { PlayingCard } from './PlayingCard';
 export function LieRecapBox({ view, nameOf }: { view: RoomView; nameOf: (id: string) => string }) {
   const recap = view.lieRecap;
   if (!recap) return null;
+  // the room names everyone in the game, even players who have left it since
+  const who = (id: string) => (id === view.meId ? 'You' : (recap.players.find((p) => p.playerId === id)?.name ?? nameOf(id)));
   const told = recap.players.reduce((n, p) => n + p.lies, 0);
   const more = recap.uncaught - recap.lies.length;
   return (
@@ -16,7 +18,7 @@ export function LieRecapBox({ view, nameOf }: { view: RoomView; nameOf: (id: str
       {recap.lies.map((l, i) => (
         <div key={i} className="lie-row">
           <p className="lie-claim">
-            <b>{nameOf(l.playerId)}</b> said {claimText(l.cards.length, l.rank)}
+            <b>{who(l.playerId)}</b> said {claimText(l.cards.length, l.rank)}
             {l.survivedCall && <span className="lie-tag">survived a call</span>}
           </p>
           <div className="lie-cards">
@@ -37,7 +39,7 @@ export function LieRecapBox({ view, nameOf }: { view: RoomView; nameOf: (id: str
       <div className="lie-report">
         {recap.players.map((p) => (
           <div key={p.playerId} className={cx('lie-player', p.playerId === view.meId && 'me')}>
-            <span className="grow">{nameOf(p.playerId)}</span>
+            <span className="grow">{who(p.playerId)}</span>
             <span>
               {p.lies} {p.lies === 1 ? 'lie' : 'lies'} in {p.plays} {p.plays === 1 ? 'play' : 'plays'}
             </span>

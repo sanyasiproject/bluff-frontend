@@ -3046,6 +3046,18 @@ button.seat {
   font-weight: 800;
 }
 
+/* a long name gives way to the numbers on narrow phones */
+.lie-player .grow {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lie-player > span:not(.grow) {
+  flex: none;
+  white-space: nowrap;
+}
+
 .friend-btn {
   flex: none;
   min-height: 30px;
