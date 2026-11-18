@@ -26,6 +26,8 @@ React 18 + Vite 8 + TypeScript, socket.io-client, no UI library. All styles are 
 | `components/Crazy7Table.tsx` | The Crazy 7 game (`App` picks it when `view.config.game === 'crazy7'`): deck, pile, 7 penalty banner, playable cards glow (`Hand` `playable`/`dimRest`), Pick / Pass / 📢 Last card, move animations from view diffs |
 | `components/Overlays.tsx` | `Backdrop` (every sheet/modal), rank/pick/peek/bet sheets, reveal, game over, people list |
 | `components/ProfilePage.tsx`, `ProfileParts.tsx`, `XpGuide.tsx` | Your profile, levels, achievements, games |
+| `components/MissionsPage.tsx`, `SecretMissions.tsx` | 🎯 Missions page and its Home/Profile button (daily and weekly sets, the daily swap, the games ladder); 🤫 secret mission card pill by the hand and its game-over reveal |
+| `components/LieRecap.tsx`, `Saza.tsx` | Game-over Lie reveal (tap a name for every play and leftover cards) and Saza badges (sticker, picker) |
 | `components/PlayerSheet.tsx` | Public card for any player (no private data) |
 | `components/AdminPanel.tsx`, `AdminUserPage.tsx` | Admin user list and user page |
 | `components/RulesPage.tsx` | Admin-only "📖 Rules & features": **update it whenever a rule or feature changes** |

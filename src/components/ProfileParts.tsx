@@ -1,9 +1,9 @@
 import type { CSSProperties } from 'react';
 import { cx, placeLabel } from '../lib/cards';
-import { formatCoins, signedCoins } from '../lib/coins';
+import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
 import { dateTime } from '../lib/dates';
-import { percent } from '../lib/progress';
-import type { GameSummary, LifetimeStats } from '../types';
+import { earnedFromGames, nextGameReward, percent } from '../lib/progress';
+import { DAILY_GAME_REWARDS, MIN_REWARD_GAME_SEC, type GameSummary, type LifetimeStats } from '../types';
 
 function result(g: GameSummary): [string, string] {
   if (g.kicked) return ['🚫', 'Removed by host'];
@@ -162,6 +162,41 @@ export function StatGrid({ stats }: { stats: LifetimeStats }) {
           <span>{label}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+/** the daily games ladder: games counted today and the coins each step pays */
+export function DailyLadder({ gamesToday }: { gamesToday: number }) {
+  const next = nextGameReward(gamesToday);
+  return (
+    <div className="ladder">
+      <div className="ladder-head">
+        <span>🎯 Daily games</span>
+        <b>
+          {gamesToday} today · +{formatCoins(earnedFromGames(gamesToday))}
+        </b>
+      </div>
+      <p className="ladder-next">
+        {next ? (
+          <>
+            Play <b>{next.left}</b> more game{next.left > 1 ? 's' : ''} to get <b className="gold-text">+{formatCoins(next.coins)}</b>
+          </>
+        ) : (
+          'All daily game rewards collected 🎉 Come back tomorrow'
+        )}
+      </p>
+      <div className="ladder-steps">
+        {DAILY_GAME_REWARDS.map((r) => (
+          <span key={r.games} className={cx('step', gamesToday >= r.games && 'done', next?.games === r.games && 'next')}>
+            <b>{gamesToday >= r.games ? '✓' : r.games}</b>
+            <small>+{compactCoins(r.coins)}</small>
+          </span>
+        ))}
+      </div>
+      <p className="muted small">
+        Games of {MIN_REWARD_GAME_SEC / 60} min or more count, win or lose · starts again at midnight
+      </p>
     </div>
   );
 }

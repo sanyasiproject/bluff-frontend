@@ -24,6 +24,7 @@ import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
 import { Avatar } from './Avatar';
 import { SazaTag } from './Saza';
+import { SecretChip } from './SecretMissions';
 
 interface SeatProps {
   player: PublicPlayer;
@@ -676,11 +677,14 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
         className={cx('hand-area', watching && 'hidden', myTurn && 'my-turn')}
         data-member={watching ? undefined : view.meId}
       >
-        {view.partnerHand && partnerId && (
-          <button className={cx('partner-btn', `team-${teamOf(view.meId)}`)} onClick={() => setSheet('partner')}>
-            🤝 {name(partnerId)}'s cards · {view.partnerHand.length}
-          </button>
-        )}
+        <div className="hand-tags">
+          {view.partnerHand && partnerId && (
+            <button className={cx('partner-btn', `team-${teamOf(view.meId)}`)} onClick={() => setSheet('partner')}>
+              🤝 {name(partnerId)}'s cards · {view.partnerHand.length}
+            </button>
+          )}
+          <SecretChip view={view} />
+        </div>
         <div className="hand-head">
           {myTurn ? (
             <span className="your-turn">YOUR TURN</span>

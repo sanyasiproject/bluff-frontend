@@ -14,16 +14,22 @@ import {
   MAX_BLUFF_CALLS_IN_A_ROW,
   MAX_PEEKS,
   MIN_REWARD_GAME_SEC,
+  MISSIONS,
+  MISSIONS_PER_SET,
   SAZA_BADGES,
+  SECRET_MISSIONS,
+  SECRET_XP,
   SEVEN_PENALTY,
   STAKES,
   THROWS,
   XP_RULES,
   xpForLevel,
+  type MissionDef,
+  type SecretMissionDef,
 } from '../types';
 import { FullPage } from './FullPage';
 
-const ZERO = { gamesPlayed: 0, wins: 0, losses: 0, bluffs: 0, bluffsCaught: 0, goodCalls: 0, wrongCalls: 0, cardsPickedUp: 0, plays: 0, chances: 0, crazy7Games: 0 };
+const ZERO = { gamesPlayed: 0, wins: 0, losses: 0, bluffs: 0, bluffsCaught: 0, goodCalls: 0, wrongCalls: 0, cardsPickedUp: 0, plays: 0, chances: 0, crazy7Games: 0, bonusXp: 0 };
 
 function Section({ icon, title, open, children }: { icon: string; title: string; open?: boolean; children: ReactNode }) {
   return (
@@ -35,6 +41,21 @@ function Section({ icon, title, open, children }: { icon: string; title: string;
     </details>
   );
 }
+
+/** one daily or weekly mission and what it pays */
+const missionLine = (m: MissionDef) => (
+  <li key={m.id}>
+    {m.emoji} {m.title}: +{formatCoins(m.coins)} 🪙 · +{m.xp} XP{m.social ? ' (friend mission)' : ''}
+  </li>
+);
+
+/** one secret mission card and how it's done */
+const secretLine = (s: SecretMissionDef) => (
+  <li key={s.id}>
+    {s.emoji} <b>{s.title}</b>
+    {s.how ? `: ${s.how}` : ''}
+  </li>
+);
 
 /** admin-only reference: every rule and feature, to explain the app to friends */
 export function RulesPage({ onClose }: { onClose: () => void }) {
@@ -349,11 +370,77 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         </ul>
       </Section>
 
+      <Section icon="🎯" title="Missions">
+        <ul>
+          <li>
+            Logged-in players get {MISSIONS_PER_SET} daily missions and {MISSIONS_PER_SET} weekly ones (🎯 Missions on Home). Daily ones start
+            again at midnight, weekly ones on Monday at midnight (India time).
+          </li>
+          <li>
+            Each set has one friend mission (👯) and {MISSIONS_PER_SET - 1} others, all different. Every player gets their own set, and it stays
+            the same all day (or all week).
+          </li>
+          <li>
+            Only games that count for the daily games reward move them: finished, {MIN_REWARD_GAME_SEC / 60} minute or more, logged in, and not
+            removed by the host. A friend game needs another logged-in player at the table who is your friend.
+          </li>
+          <li>
+            Reaching the goal pays its coins and XP straight away, once; there's nothing to claim. Mission XP counts towards your level.
+            Missions not finished by the reset just end.
+          </li>
+          <li>
+            🎲 One free swap a day: change one unfinished mission, daily or weekly, for another one of that set's kind (daily or weekly) that
+            isn't in the set. What comes in is never a friends mission, so a swap is the way out of one. The new one starts from 0.
+          </li>
+          <li>The game-over screen lists each mission that game finished, with its coins and XP.</li>
+          <li>
+            <b>Daily</b>:<ul>{MISSIONS.filter((m) => m.period === 'daily').map(missionLine)}</ul>
+          </li>
+          <li>
+            <b>Weekly</b>:<ul>{MISSIONS.filter((m) => m.period === 'weekly').map(missionLine)}</ul>
+          </li>
+        </ul>
+      </Section>
+
+      <Section icon="🤫" title="Secret missions">
+        <ul>
+          <li>
+            When a Bluff or Crazy 7 game starts, every person at the table gets a secret mission card for that game, at random (different cards
+            when there are enough). Bots and watchers don't get one.
+          </li>
+          <li>
+            Only you see your card: it sits above your cards with your progress and turns green with ✓ once it's done. Tap it to fold it into
+            🤫 so nobody reads it over your shoulder, and tap again to open it.
+          </li>
+          <li>Only your own play in that game counts. Nobody, bots included, can see anyone else's card while the game is on.</li>
+          <li>
+            <b>Bluff cards</b>:<ul>{SECRET_MISSIONS.filter((s) => s.game === 'bluff').map(secretLine)}</ul>
+          </li>
+          <li>
+            <b>Crazy 7 cards</b>:<ul>{SECRET_MISSIONS.filter((s) => s.game === 'crazy7').map(secretLine)}</ul>
+          </li>
+          <li>
+            With 🤥 Lie reveal off, only Bluff cards that can't give a lie away are dealt (catching liars, putting down 4 cards). With Stack 7s
+            off, nobody gets the card for answering a 7 with a 7.
+          </li>
+          <li>A lie counts as got past everyone only once it stood or survived a call, not when it was cut off by a walk-out or End game.</li>
+          <li>
+            Game over: everyone's card is turned over, ✓ done or ✗ not done. Tap a name to see their card face-up (what it asked and, on your
+            own, how far you got), or Show all to turn every card over.
+          </li>
+          <li>
+            A card done in a game that counts (finished, {MIN_REWARD_GAME_SEC / 60} minute or more, logged in, not removed by the host) gives +
+            {SECRET_XP} XP towards your level, shown on the end screen. It also counts for the 🤫 missions.
+          </li>
+        </ul>
+      </Section>
+
       <Section icon="📈" title="Levels, XP & titles">
         <ul>
           <li>
             XP per finished game: +{XP_RULES.game} for playing, +{XP_RULES.win} for winning, +{XP_RULES.goodCall} per liar caught, +
-            {XP_RULES.cleanBluff} per bluff nobody caught.
+            {XP_RULES.cleanBluff} per bluff nobody caught. Missions add their own XP on top, and so does a secret mission card done (+
+            {SECRET_XP}).
           </li>
           <li>Each level needs 100 XP more than the one before. Levels never go down.</li>
           <li>

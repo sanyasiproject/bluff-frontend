@@ -6,6 +6,8 @@ import { unlockSpeech } from './lib/speech';
 import './styles.css';
 // table themes and card backs, after the base styles so they win
 import './styles/looks.css';
+import './styles/missions.css';
+import './styles/secrets.css';
 
 for (const type of ['click', 'touchend'] as const) {
   window.addEventListener(type, unlockSpeech, { once: true, capture: true });

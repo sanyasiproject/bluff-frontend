@@ -3,7 +3,7 @@ import { api, ApiError, serverStatus } from './lib/api';
 import { disablePush } from './lib/push';
 import { reconnectSocket, socket } from './lib/socket';
 import { loadAuthToken, saveAuthToken } from './lib/storage';
-import type { AuthResponse, GameKind, GameSummary, ProfileOverview, PublicUser, ServerInfo } from './types';
+import type { AuthResponse, GameKind, GameSummary, MissionsResponse, ProfileOverview, PublicUser, ServerInfo } from './types';
 
 /** the logged-in account (null = guest) and account actions */
 export function useAuth() {
@@ -156,6 +156,10 @@ export function useAuth() {
     },
     myGames: async () => (await api<{ games: GameSummary[] }>('/me/games?limit=10', { token })).games,
     overview: () => api<ProfileOverview>('/me/overview', { token }),
+    /** today's and this week's missions; a new day or week brings a fresh set */
+    missions: () => api<MissionsResponse>('/me/missions', { token }),
+    /** today's free swap of one unfinished mission; throws with the server's reason */
+    swapMission: (id: string) => api<MissionsResponse>('/me/missions/swap', { body: { id }, token }),
   };
 }
 

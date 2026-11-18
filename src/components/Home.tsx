@@ -7,6 +7,7 @@ import { AccountCorner } from './AccountCorner';
 import { AccountSheet } from './AccountSheet';
 import { HeroFan, ShineTitle, SuitDrift } from './Ambient';
 import { InstallCard } from './InstallCard';
+import { MissionsButton } from './MissionsPage';
 import { NotifyCard } from './NotifyCard';
 import { LessonChooser } from './tutorial/LessonOffer';
 import { TutorialPage } from './tutorial/TutorialPage';
@@ -230,6 +231,7 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
         </>
       )}
 
+      <MissionsButton auth={auth} online={online} />
       <button className="btn ghost block how-to-btn" onClick={() => setChooser(true)}>
         📘 How to play
       </button>

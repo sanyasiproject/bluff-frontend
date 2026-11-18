@@ -21,6 +21,7 @@ import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
 import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
 import { Avatar } from './Avatar';
+import { SecretChip } from './SecretMissions';
 
 const BUBBLE_MS = 4000;
 
@@ -487,6 +488,9 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
         className={cx('hand-area', watching && 'hidden', myTurn && 'my-turn', oneCard.includes(view.meId) && 'spot')}
         data-member={watching ? undefined : view.meId}
       >
+        <div className="hand-tags">
+          <SecretChip view={view} />
+        </div>
         <div className="hand-head">
           {myTurn ? <span className="your-turn">YOUR TURN</span> : <span>Your cards · {view.hand.length}</span>}
           {myTurn && <span className="turn-hint">{status}</span>}

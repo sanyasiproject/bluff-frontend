@@ -1,9 +1,9 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { cx } from '../lib/cards';
-import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
+import { formatCoins, signedCoins } from '../lib/coins';
 import { monthYear } from '../lib/dates';
-import { achievementsOf, earnedFromGames, levelInfo, nextGameReward, percent, winStreak } from '../lib/progress';
-import { DAILY_GAME_REWARDS, LOGIN_BONUS, MIN_REWARD_GAME_SEC, type GameSummary, type ProfileOverview } from '../types';
+import { achievementsOf, levelInfo, percent, winStreak } from '../lib/progress';
+import { LOGIN_BONUS, type GameSummary, type ProfileOverview } from '../types';
 import type { Auth } from '../useAuth';
 import type { InviteAck } from '../useBluff';
 import { Avatar } from './Avatar';
@@ -11,10 +11,11 @@ import { AvatarPicker } from './AvatarPicker';
 import { FriendsSheet } from './FriendsSheet';
 import { FullPage } from './FullPage';
 import { FriendAlertsRow } from './FriendAlertsRow';
+import { MissionsButton } from './MissionsPage';
 import { NotifyRow } from './NotifyRow';
 import { RulesPage } from './RulesPage';
 import { XpGuide } from './XpGuide';
-import { FormStrip, GameList, Meter } from './ProfileParts';
+import { DailyLadder, FormStrip, GameList, Meter } from './ProfileParts';
 import { LookPicker } from './LookPicker';
 import { Rolling } from './Rolling';
 
@@ -58,8 +59,6 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
   if (!user) return null;
   const s = user.stats;
   const lvl = levelInfo(s);
-  const gamesToday = overview?.gamesToday ?? 0;
-  const next = nextGameReward(gamesToday);
   const winRate = percent(s.wins, s.gamesPlayed);
   const badges = achievementsOf(s, user.coins);
   const unlocked = badges.filter((b) => b.value >= b.goal).length;
@@ -121,42 +120,15 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
           🎁 Daily login +{LOGIN_BONUS}
           <small>{overview?.loginBonusToday ? '✓ received today' : 'open the app every day'}</small>
         </span>
-        {overview && (
-          <div className="ladder">
-            <div className="ladder-head">
-              <span>🎯 Daily games</span>
-              <b>
-                {gamesToday} today · +{formatCoins(earnedFromGames(gamesToday))}
-              </b>
-            </div>
-            <p className="ladder-next">
-              {next ? (
-                <>
-                  Play <b>{next.left}</b> more game{next.left > 1 ? 's' : ''} to get <b className="gold-text">+{formatCoins(next.coins)}</b>
-                </>
-              ) : (
-                'All daily game rewards collected 🎉 Come back tomorrow'
-              )}
-            </p>
-            <div className="ladder-steps">
-              {DAILY_GAME_REWARDS.map((r) => (
-                <span key={r.games} className={cx('step', gamesToday >= r.games && 'done', next?.games === r.games && 'next')}>
-                  <b>{gamesToday >= r.games ? '✓' : r.games}</b>
-                  <small>+{compactCoins(r.coins)}</small>
-                </span>
-              ))}
-            </div>
-            <p className="muted small">
-              Games of {MIN_REWARD_GAME_SEC / 60} min or more count, win or lose · starts again at midnight
-            </p>
-          </div>
-        )}
+        {overview && <DailyLadder gamesToday={overview.gamesToday} />}
         {games && games.length > 0 && (
           <p className="muted small">
             Last {games.length} games: <b className={net >= 0 ? 'up' : 'down'}>{signedCoins(net)} coins</b>
           </p>
         )}
       </section>
+
+      <MissionsButton auth={auth} />
 
       <div className="quick-actions">
         <button className="btn" onClick={() => setFriendsOpen(true)}>

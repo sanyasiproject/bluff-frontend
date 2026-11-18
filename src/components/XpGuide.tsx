@@ -1,14 +1,25 @@
 import { cx } from '../lib/cards';
 import { formatCoins } from '../lib/coins';
 import { nextTitle, TITLES } from '../lib/progress';
-import { XP_RULES, xpForLevel } from '../types';
+import { MIN_REWARD_GAME_SEC, MISSIONS, SECRET_XP, XP_RULES, xpForLevel, type MissionPeriod } from '../types';
 import { Backdrop } from './Overlays';
 
-const WAYS: [string, string, number][] = [
-  ['🃏', 'Finish a game', XP_RULES.game],
-  ['🥇', 'Win a game (1st place)', XP_RULES.win],
-  ['🕵️', 'Catch a liar (right Bluff call)', XP_RULES.goodCall],
-  ['🤥', 'Each bluff nobody caught', XP_RULES.cleanBluff],
+/** the XP one daily or weekly mission pays, as a range */
+function missionXp(period: MissionPeriod): string {
+  const xp = MISSIONS.filter((m) => m.period === period).map((m) => m.xp);
+  const lo = Math.min(...xp);
+  const hi = Math.max(...xp);
+  return lo === hi ? `+${lo} XP` : `+${lo}–${hi} XP`;
+}
+
+const WAYS: [string, string, string][] = [
+  ['🃏', 'Finish a game', `+${XP_RULES.game} XP`],
+  ['🥇', 'Win a game (1st place)', `+${XP_RULES.win} XP`],
+  ['🕵️', 'Catch a liar (right Bluff call)', `+${XP_RULES.goodCall} XP`],
+  ['🤥', 'Each bluff nobody caught', `+${XP_RULES.cleanBluff} XP`],
+  ['🎯', 'A daily mission done', missionXp('daily')],
+  ['📅', 'A weekly mission done', missionXp('weekly')],
+  ['🤫', 'Your secret mission card done', `+${SECRET_XP} XP`],
 ];
 
 /** how XP is earned and every title on the way to Legend */
@@ -23,11 +34,14 @@ export function XpGuide({ level, xp, onClose }: { level: number; xp: number; onC
           <li key={text}>
             <span>{emoji}</span>
             <span className="grow">{text}</span>
-            <b>+{points} XP</b>
+            <b>{points}</b>
           </li>
         ))}
       </ul>
-      <p className="muted small">Every finished game counts, win or lose. Wrong Bluff calls, stopped games and guest games give no XP.</p>
+      <p className="muted small">
+        Every finished game counts, win or lose. Missions and secret cards need games of {MIN_REWARD_GAME_SEC / 60} min or more. Wrong
+        Bluff calls, stopped games and guest games give no XP.
+      </p>
 
       <p className="label">Titles</p>
       {next && (

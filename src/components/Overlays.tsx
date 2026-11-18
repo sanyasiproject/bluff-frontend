@@ -9,6 +9,7 @@ import { LevelBadge } from './LevelBadge';
 import {
   BET_STEPS,
   MIN_REWARD_GAME_SEC,
+  missionOf,
   RANKS,
   type Card,
   type CoinResult,
@@ -24,6 +25,7 @@ import { Rolling } from './Rolling';
 import { Avatar } from './Avatar';
 import { SazaResult, SazaTag } from './Saza';
 import { LieRecapBox } from './LieRecap';
+import { SecretsReveal } from './SecretMissions';
 
 export function Backdrop({ center, onClose, children }: { center?: boolean; onClose?: () => void; children: ReactNode }) {
   // the phone's back button closes it too; screens without onClose (game over) stay put
@@ -312,6 +314,7 @@ export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza, onS
         </ol>
         <SazaResult view={view} nameOf={nameOf} onPick={onPickSaza} />
         <LieRecapBox view={view} nameOf={nameOf} onShowPlays={onShowPlays} />
+        <SecretsReveal view={view} nameOf={nameOf} />
         {view.awards.length > 0 && (
           <div className="awards">
             <p className="label">Awards</p>
@@ -352,14 +355,53 @@ export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza, onS
   );
 }
 
-/** XP this game gave me, and a level up if it happened */
+/** this game's XP plus its missions and secret card; older servers send neither */
+const totalXp = (r: CoinResult) => r.xp + (r.secretXp ?? 0) + (r.missionsDone ?? []).reduce((sum, m) => sum + m.xp, 0);
+
+/** coins and XP as one short label */
+const paidText = (coins: number, xp: number) =>
+  [coins > 0 && `+${formatCoins(coins)} 🪙`, xp > 0 && `+${xp} XP`].filter(Boolean).join(' · ');
+
+/** each mission this game finished for me, and my secret card, with what it paid */
+function MissionLines({ result }: { result: CoinResult }) {
+  const done = result.missionsDone ?? [];
+  const secretXp = result.secretXp ?? 0;
+  return (
+    <>
+      {done.map((m, i) => {
+        const def = missionOf(m.id);
+        return (
+          <p key={`${m.id}:${i}`} className="mission-line" style={{ '--i': i } as CSSProperties}>
+            <span className="mission-line-title">
+              🎯 Mission done
+              {def && (
+                <>
+                  : <b>{def.title}</b>
+                </>
+              )}
+            </span>
+            <span className="mission-line-reward">{paidText(m.coins, m.xp)}</span>
+          </p>
+        );
+      })}
+      {secretXp > 0 && (
+        <p className="mission-line secret" style={{ '--i': done.length } as CSSProperties}>
+          <span className="mission-line-title">🤫 Secret mission done</span>
+          <span className="mission-line-reward">{paidText(0, secretXp)}</span>
+        </p>
+      )}
+    </>
+  );
+}
+
+/** XP this game gave me (missions and secret card included), and a level up if it happened */
 function XpLine({ result, startLevel }: { result: CoinResult; startLevel: number | null }) {
   const level = result.level;
   const levelUp = level !== null && startLevel !== null && level > startLevel;
   const title = level !== null ? titleOf(level) : null;
   return (
     <p className={cx('daily-line xp-line', levelUp && 'level-up')}>
-      ⭐ +<Rolling value={result.xp} /> XP
+      ⭐ +<Rolling value={totalXp(result)} /> XP
       {levelUp && title && (
         <>
           {' '}
@@ -432,7 +474,8 @@ function CoinSummary({ view, nameOf, startLevel }: { view: RoomView; nameOf: (id
           </div>
         ))}
       {rows.some((r) => r.bonus > 0) && <p className="muted small">🎯 Daily games reward</p>}
-      {mine && mine.xp > 0 && <XpLine result={mine} startLevel={startLevel} />}
+      {mine && <MissionLines result={mine} />}
+      {mine && totalXp(mine) > 0 && <XpLine result={mine} startLevel={startLevel} />}
       {mine && <DailyProgress result={mine} />}
     </div>
   );
