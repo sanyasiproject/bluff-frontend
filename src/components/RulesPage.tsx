@@ -10,12 +10,18 @@ import {
   CRAZY7_HAND_SIZES,
   CRAZY7_MAX_PICKS,
   DAILY_GAME_REWARDS,
+  DOSTI_LEVELS,
+  LEAGUE_CROWNS,
+  LEAGUE_POINTS,
   LOGIN_BONUS,
   MAX_BLUFF_CALLS_IN_A_ROW,
   MAX_PEEKS,
   MIN_REWARD_GAME_SEC,
   MISSIONS,
   MISSIONS_PER_SET,
+  RANK_DAILY_CAP,
+  RANK_DIVISIONS,
+  RIVAL_MIN_GAMES,
   SAZA_BADGES,
   SECRET_MISSIONS,
   SECRET_XP,
@@ -165,6 +171,9 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>
             <b>🤥 Lie reveal</b>: On (default) or Off (lies stay secret).
+          </li>
+          <li>
+            <b>🏅 Ranked</b> (Bluff): Off (default) or On. Only logged-in players, no bots.
           </li>
           <li>Players who aren't the host see all settings as chips in the lobby.</li>
         </ul>
@@ -332,7 +341,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>
             ✅ Ready check: everyone in the lobby except the host gets 👍 I'm ready. Each player shows ✅ Ready or ⏳ Not ready, and the host's
             Start stays greyed out (⏳ Waiting for 2 players) until all of them are ready. Ready players can tap their button again to ask for a
-            minute. A new stake or a different game asks everyone again; bots and players on an older version of the app always count as ready.
+            minute. A new stake, a different game or turning 🏅 Ranked on or off asks everyone again; bots and players on an older version of the app always count as ready.
             Play again after a game keeps everyone's ready.
           </li>
           <li>Tap a player in the lobby to open their card. The host also gets: Make host, Move to watching/playing, Remove from room.</li>
@@ -432,6 +441,70 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             A card done in a game that counts (finished, {MIN_REWARD_GAME_SEC / 60} minute or more, logged in, not removed by the host) gives +
             {SECRET_XP} XP towards your level, shown on the end screen. It also counts for the 🤫 missions.
           </li>
+        </ul>
+      </Section>
+
+      <Section icon="🏆" title="Friends league">
+        <ul>
+          <li>
+            A board of you and your friends that starts again every Monday at midnight (India time), so anyone can win any week. Open it
+            from 🏆 Friends league on the home screen or your profile.
+          </li>
+          <li>
+            Points: +{LEAGUE_POINTS.game} for each game, +{LEAGUE_POINTS.win} for a win, +{LEAGUE_POINTS.goodCall} for each liar you
+            catch, +{LEAGUE_POINTS.cleanBluff} for each lie nobody catches (catches and lies count in Bluff). Coins never count.
+          </li>
+          <li>
+            Only games of {MIN_REWARD_GAME_SEC / 60} minute or more with at least 2 logged-in players count, finished, Bluff or Crazy 7.
+            Bots, guests and players removed by the host don't count, and games against only bots don't count.
+          </li>
+          <li>
+            Weekly crowns: {LEAGUE_CROWNS.map((c) => `${c.emoji} ${c.title}`).join(', ')} (most points, most liars caught, most lies
+            nobody caught). Ties share a crown. Last week's winners stay up all week.
+          </li>
+          <li>The board shows you and the friends who played that week. "Hide me" takes you off your friends' boards; you still see your own.</li>
+        </ul>
+      </Section>
+
+      <Section icon="⚔️" title="Rivals & Dosti">
+        <ul>
+          <li>
+            Open a friend's card to see your record against them ("You vs Rahul 14–9"), from every finished game of{' '}
+            {MIN_REWARD_GAME_SEC / 60} minute or more you both played while logged in. You're ahead when you won and they didn't, or finished in a better place.
+          </li>
+          <li>Who caught whom lying counts from games played since this came in.</li>
+          <li>
+            Dosti meter: games finished together, never goes down.{' '}
+            {DOSTI_LEVELS.map((d) => `${d.name} (${d.games}+ game${d.games === 1 ? '' : 's'})`).join(', ')}.
+          </li>
+          <li>
+            Tags after {RIVAL_MIN_GAMES} games where one of you finished ahead: ⚔️ Rival when it's close (40–60%), 😈 Nemesis when they
+            finish ahead 60% of the time or more.
+          </li>
+          <li>Your profile lists your records with friends. Bots, guests and players removed by the host never count.</li>
+        </ul>
+      </Section>
+
+      <Section icon="🏅" title="Ranked">
+        <ul>
+          <li>
+            The host turns on 🏅 Ranked in the lobby (Bluff only). Everyone at the table must be logged in, and bots can't sit at a ranked
+            table.
+          </li>
+          <li>
+            A finished ranked game of {MIN_REWARD_GAME_SEC / 60} minute or more moves everyone's rank points: winning against strong
+            players moves you up most. The order everyone finished in counts.
+          </li>
+          <li>
+            Divisions: {RANK_DIVISIONS.map((d) => `${d.emoji} ${d.name} (${formatCoins(d.min)})`).join(', ')}. Once you reach a division
+            you can't drop below its start for the rest of the season.
+          </li>
+          <li>Your points can move at most {RANK_DAILY_CAP} either way in a day, so one night can't make or break a season.</li>
+          <li>
+            Points a loss would have taken but the floor or the daily limit held off are owed: your next wins pay them back first, so
+            taking turns to win doesn't lift both players. In 2v2 the winning pair plays the losing pair.
+          </li>
+          <li>Your division shows on your profile and your player card. An admin can start a new season, and everyone starts again.</li>
         </ul>
       </Section>
 

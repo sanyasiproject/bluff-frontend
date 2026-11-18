@@ -11,7 +11,10 @@ import { AvatarPicker } from './AvatarPicker';
 import { FriendsSheet } from './FriendsSheet';
 import { FullPage } from './FullPage';
 import { FriendAlertsRow } from './FriendAlertsRow';
+import { LeagueButton } from './LeaguePage';
 import { MissionsButton } from './MissionsPage';
+import { RankCard } from './Ranked';
+import { RivalsList } from './Rivals';
 import { NotifyRow } from './NotifyRow';
 import { RulesPage } from './RulesPage';
 import { XpGuide } from './XpGuide';
@@ -101,6 +104,9 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
         </button>
       </section>
 
+      {/* older servers send no rank */}
+      {user.rank !== undefined && <RankCard rank={user.rank} />}
+
       <section className="wallet-card">
         <div className="wallet-top">
           <div>
@@ -129,6 +135,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
       </section>
 
       <MissionsButton auth={auth} />
+      <LeagueButton auth={auth} />
 
       <div className="quick-actions">
         <button className="btn" onClick={() => setFriendsOpen(true)}>
@@ -154,6 +161,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
       )}
       <NotifyRow auth={auth} />
       <FriendAlertsRow auth={auth} />
+      <RivalsList auth={auth} />
 
       <section className="panel stack-tight">
         <h3 className="section-title">Record</h3>

@@ -1,0 +1,377 @@
+/* ---------- friends league: Home/Profile button and the league page ---------- */
+
+/* home: the Friends league button with my place this week */
+.league-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  border-color: rgba(124, 196, 255, 0.45);
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.league-entry-emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.league-pill {
+  flex: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(124, 196, 255, 0.16);
+  color: #b9dcff;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.league-pill.first {
+  background: rgba(246, 196, 83, 0.18);
+  color: var(--gold);
+}
+
+.league-chevron {
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* the page: my place and the countdown to Monday */
+.panel.league-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-color: rgba(246, 196, 83, 0.4);
+  background: linear-gradient(135deg, rgba(246, 196, 83, 0.14), rgba(0, 0, 0, 0.24) 65%);
+}
+
+.league-head-emoji {
+  flex: none;
+  font-size: 34px;
+  line-height: 1;
+  animation: medal-in 0.5s var(--spring) 0.1s backwards;
+}
+
+.league-head-title {
+  display: block;
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.league-head-sub {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* points on a row, and mine in the header */
+.league-points {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.1;
+}
+
+.league-points b {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.league-points small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.league-points.big b {
+  color: var(--gold);
+  font-size: 26px;
+}
+
+/* the three crowns of a week */
+.league-crowns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.league-crown {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--faint);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  animation: pop 0.4s var(--spring) calc(0.05s + var(--i, 0) * 70ms) backwards;
+}
+
+.league-crown.held {
+  border-color: rgba(246, 196, 83, 0.4);
+  background: rgba(246, 196, 83, 0.08);
+}
+
+/* a crown I hold */
+.league-crown.mine {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(246, 196, 83, 0.15);
+}
+
+.league-crown-emoji {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.league-crown:not(.held) .league-crown-emoji {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+
+.league-crown.held .league-crown-emoji {
+  animation: medal-in 0.5s var(--spring) calc(0.15s + var(--i, 0) * 70ms) backwards;
+}
+
+.league-crown-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.league-crown-text b {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.league-crown-text span {
+  font-size: 13px;
+}
+
+.league-crown.held .league-crown-text span {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* the board: place, avatar, name and stats, points */
+.panel.league-board {
+  padding: 14px 10px;
+}
+
+.league-board .section-title {
+  margin-left: 4px;
+}
+
+.league-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.league-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 8px 8px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  animation: row-in 0.35s ease-out calc(0.05s + var(--i, 0) * 50ms) backwards;
+}
+
+.league-row.me {
+  border-color: var(--gold);
+  background: rgba(246, 196, 83, 0.12);
+}
+
+.league-place {
+  display: grid;
+  flex: none;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 4px;
+  border-radius: 13px;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+/* gold, silver and bronze for the top three */
+.podium-1 .league-place {
+  background: var(--gold);
+  color: var(--gold-ink);
+}
+
+.podium-2 .league-place {
+  background: #d7dee4;
+  color: #22292f;
+}
+
+.podium-3 .league-place {
+  background: #d08a4e;
+  color: #2b1606;
+}
+
+.league-who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.league-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+/* a long name with no spaces wraps inside the row */
+.league-name b {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.league-name .tag {
+  padding: 1px 7px;
+  font-size: 11px;
+}
+
+.league-row-crowns {
+  font-size: 14px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.league-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* games and wins, then calls and lies: each pair stays on one line */
+.league-stats > span {
+  display: inline-flex;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* nobody played yet this week */
+.league-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.league-empty > span {
+  font-size: 34px;
+  line-height: 1;
+  animation: pop 0.4s var(--spring) backwards;
+}
+
+.league-empty b {
+  font-size: 16px;
+}
+
+.league-hint {
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* how points work */
+.league-how {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.league-how li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 14px;
+}
+
+.league-how li span {
+  flex: none;
+  width: 24px;
+  font-size: 18px;
+  line-height: 1;
+  text-align: center;
+}
+
+.league-how li b {
+  margin-left: auto;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* last week's winners: the same crowns, smaller */
+.league-crowns.compact {
+  gap: 6px;
+}
+
+.league-crowns.compact .league-crown {
+  padding: 7px 10px;
+}
+
+.league-crowns.compact .league-crown-emoji {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: 18px;
+}
+
+/* narrow phones: the Home pill keeps just the place, and board rows sit a little closer */
+@media (max-width: 359px) {
+  .league-pill-more {
+    display: none;
+  }
+
+  .league-row {
+    gap: 6px;
+    padding: 8px 8px 8px 6px;
+  }
+}

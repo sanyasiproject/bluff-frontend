@@ -323,6 +323,12 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   const stake = view.config.stake;
   const pot = stake * view.players.length;
   const bots = view.players.filter((p) => p.bot);
+  // a rated Bluff table (Crazy 7 keeps the setting but ignores it); older servers don't have it
+  const rankedKnown = typeof view.config.ranked === 'boolean';
+  const ranked = !crazy7 && view.config.ranked === true;
+  // ranked needs everyone seated logged in, at any stake
+  const mustLogIn = stake > 0 || ranked;
+  const rankedGuests = ranked ? view.players.filter((p) => !p.registered && !p.bot) : [];
   const guests = stake > 0 ? view.players.filter((p) => !p.registered && !p.bot) : [];
   const short = stake > 0 ? view.players.filter((p) => p.registered && (p.coins ?? 0) < stake) : [];
   // people who haven't tapped I'm ready (the host, bots and older apps always count as ready)
@@ -334,6 +340,8 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         ? 'Someone has to play with the bots'
       : !crazy7 && view.config.teams && view.players.length !== 4
         ? 'Teams need exactly 4 players'
+        : rankedGuests.length > 0
+        ? `Ranked games need everyone logged in: ${names(rankedGuests)}`
         : guests.length > 0
         ? `${names(guests)} must log in to play for coins`
         : short.length > 0
@@ -511,9 +519,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                   {p.name}
                   {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} /> <SazaTag badge={p.saza} />
                   {coinsOn && (
-                    <span className={cx('player-coins', (!p.registered || (p.coins ?? 0) < stake) && stake > 0 && 'warn')}>
+                    <span className={cx('player-coins', ((!p.registered && mustLogIn) || (stake > 0 && (p.coins ?? 0) < stake)) && 'warn')}>
                       {p.registered ? `🪙 ${compactCoins(p.coins ?? 0)}` : 'guest'}
-                      {stake > 0 && !p.registered && ' · must log in'}
+                      {mustLogIn && !p.registered && ' · must log in'}
                       {stake > 0 && p.registered && (p.coins ?? 0) < stake && ' · not enough'}
                     </span>
                   )}
@@ -532,9 +540,12 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           )}
         </ul>
         {isHost && !seatsFull && people < ROOM_LIMIT && (
-          <button className="btn block add-bot" onClick={() => void actions.addBot()}>
-            🤖 Add a bot
-          </button>
+          <>
+            <button className="btn block add-bot" disabled={ranked} onClick={() => void actions.addBot()}>
+              🤖 Add a bot
+            </button>
+            {ranked && <p className="muted small add-bot-note">🏅 Ranked tables are for people only</p>}
+          </>
         )}
         {isHost && view.players.length + view.watchers.length > 1 && (
           <p className="muted small tap-hint">Tap a player to see their profile or make them the host</p>
@@ -593,6 +604,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               </>
             ) : (
               <>
+                {ranked && <span className="ranked-chip">🏅 Ranked</span>}
                 <span>{view.config.bluffRule === 'one' ? '👆 Pick one card' : '🃏 Show all cards'}</span>
                 {view.config.peeks > 0 && <span>🔍 {view.config.peeks} peek{view.config.peeks > 1 ? 's' : ''}</span>}
                 {view.config.bets && <span>🎲 Bets on calls</span>}
@@ -605,6 +617,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           </div>
           {stake > 0 && <p className="muted small">Winner takes 🪙 {formatCoins(pot)}</p>}
           {bots.length > 0 && <p className="muted small">🤖 Bots put in nothing · coins lost to a bot are gone</p>}
+          {ranked && <p className="muted small">🏅 A finished game moves everyone's rank points</p>}
         </section>
       )}
 
@@ -617,7 +630,8 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               disabled={false}
               title="🃏 Bluff"
               desc="Lie about your cards, catch the liars"
-              onClick={() => set({ game: 'bluff' })}
+              // ranked kept on from before can't come back while bots sit at the table
+              onClick={() => set({ game: 'bluff', ...(bots.length > 0 && view.config.ranked ? { ranked: false } : {}) })}
             />
             <Option
               on={crazy7}
@@ -716,6 +730,14 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         <SettingRow title="🤥 Lie reveal" desc="When the game ends, show the lies nobody caught">
           <Choice value={!(view.config.secretLies ?? false)} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ secretLies: !on })} />
         </SettingRow>
+        {coinsOn && rankedKnown && (
+          <SettingRow
+            title="🏅 Ranked"
+            desc={bots.length > 0 && !ranked ? 'Rated game for people only. Remove the bots to turn it on' : 'Rated game · logged-in players only, no bots'}
+          >
+            <Choice value={ranked} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ ranked: on })} />
+          </SettingRow>
+        )}
       </section>}
 
       <button className="link-btn tut-link" onClick={() => setLesson(view.config.game)}>

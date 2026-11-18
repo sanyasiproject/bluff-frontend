@@ -1,0 +1,223 @@
+/* ---------- ranked: profile card, player card pill, game-over line, lobby and admin bits ---------- */
+
+/* each division's colour, as r, g, b */
+.rank-card,
+.rank-pill,
+.ranked-line {
+  --rank-rgb: 246, 196, 83;
+}
+
+.rank-bronze {
+  --rank-rgb: 214, 149, 90;
+}
+
+.rank-silver {
+  --rank-rgb: 207, 214, 223;
+}
+
+.rank-gold {
+  --rank-rgb: 246, 196, 83;
+}
+
+.rank-platinum {
+  --rank-rgb: 143, 224, 216;
+}
+
+.rank-diamond {
+  --rank-rgb: 138, 184, 255;
+}
+
+.rank-badshah {
+  --rank-rgb: 255, 182, 72;
+}
+
+/* profile: my division, points and the way to the next one */
+.panel.rank-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-color: rgba(var(--rank-rgb), 0.45);
+  background: linear-gradient(135deg, rgba(var(--rank-rgb), 0.18), rgba(0, 0, 0, 0.22) 70%);
+  animation: pop 0.4s var(--spring) 0.1s backwards;
+}
+
+.rank-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rank-emoji {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow: inset 0 0 0 2px rgba(var(--rank-rgb), 0.55);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.rank-division {
+  display: block;
+  color: rgb(var(--rank-rgb));
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.rank-points {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-points small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rank-bar {
+  overflow: hidden;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.rank-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(var(--rank-rgb), 0.55), rgb(var(--rank-rgb)));
+  transform: scaleX(var(--p, 0));
+  transform-origin: 0 50%;
+  animation: rank-fill 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) 0.25s backwards;
+}
+
+.rank-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.rank-facts b {
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-facts .at-cap {
+  color: var(--ink);
+}
+
+.rank-change.up {
+  color: var(--ok);
+}
+
+.rank-change.down {
+  color: #ff9a9d;
+}
+
+/* no rank yet this season: a short invite */
+.panel.rank-card.rank-card-empty {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  border-style: dashed;
+}
+
+.rank-card-empty b {
+  font-size: 16px;
+}
+
+/* player card: "🥇 Gold · 845" */
+.rank-pill-row {
+  margin-top: 6px;
+}
+
+.rank-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px solid rgba(var(--rank-rgb), 0.55);
+  border-radius: 999px;
+  background: rgba(var(--rank-rgb), 0.14);
+  color: rgb(var(--rank-rgb));
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* game over: this game's change, and why it was held back */
+.daily-line.ranked-line {
+  background: rgba(var(--rank-rgb), 0.12);
+  box-shadow: inset 3px 0 0 rgba(var(--rank-rgb), 0.7);
+  animation: pop 0.4s var(--spring) 0.3s backwards;
+}
+
+.ranked-line .rank-change {
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-note {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.ranked-line.promoted {
+  background: linear-gradient(100deg, rgba(var(--rank-rgb), 0.16) 30%, rgba(255, 255, 255, 0.3) 50%, rgba(var(--rank-rgb), 0.16) 70%);
+  background-size: 300% 100%;
+  animation:
+    pop 0.4s var(--spring) 0.3s backwards,
+    title-shine 2.4s ease-in-out 0.8s infinite;
+}
+
+.ranked-line.promoted .rank-note:first-of-type {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+/* lobby: the chip non-hosts see, and why Add a bot is off at a ranked table */
+.summary-chips span.ranked-chip {
+  background: rgba(246, 196, 83, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(246, 196, 83, 0.5);
+  color: var(--gold);
+}
+
+.add-bot-note {
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* admin: the season and its button */
+.season-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.season-row .grow {
+  min-width: 180px;
+}
+
+@keyframes rank-fill {
+  from {
+    transform: scaleX(0);
+  }
+}

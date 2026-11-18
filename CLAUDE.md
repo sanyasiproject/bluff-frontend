@@ -27,6 +27,7 @@ React 18 + Vite 8 + TypeScript, socket.io-client, no UI library. All styles are 
 | `components/Overlays.tsx` | `Backdrop` (every sheet/modal), rank/pick/peek/bet sheets, reveal, game over, people list |
 | `components/ProfilePage.tsx`, `ProfileParts.tsx`, `XpGuide.tsx` | Your profile, levels, achievements, games |
 | `components/MissionsPage.tsx`, `SecretMissions.tsx` | 🎯 Missions page and its Home/Profile button (daily and weekly sets, the daily swap, the games ladder); 🤫 secret mission card pill by the hand and its game-over reveal |
+| `components/LeaguePage.tsx`, `Rivals.tsx`, `Ranked.tsx` | 🏆 Friends league page and button; ⚔️ Rivals & Dosti on friends' cards and the profile; 🏅 rank card, chip and game-over line |
 | `components/LieRecap.tsx`, `Saza.tsx` | Game-over Lie reveal (tap a name for every play and leftover cards) and Saza badges (sticker, picker) |
 | `components/PlayerSheet.tsx` | Public card for any player (no private data) |
 | `components/AdminPanel.tsx`, `AdminUserPage.tsx` | Admin user list and user page |

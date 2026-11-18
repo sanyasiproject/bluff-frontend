@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { api, errorText } from '../lib/api';
+import { api, ApiError, errorText } from '../lib/api';
 import { cx } from '../lib/cards';
 import { compactCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
 import { timeAgo } from '../lib/dates';
-import { levelOf, type AdminUser, type AppSettings } from '../types';
+import { levelOf, RANK_DIVISIONS, type AdminUser, type AppSettings } from '../types';
 import type { Auth } from '../useAuth';
 import { AdminUserPage } from './AdminUserPage';
 import { BackButton } from './BackButton';
+import { ConfirmBox } from './ConfirmBox';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
 import { Avatar } from './Avatar';
@@ -36,13 +37,15 @@ const SWITCHES: Record<SwitchKey, { title: string; on: string; off: string; askO
   },
 };
 
-/** app-wide switches (guest play, invite notifications), one tap plus a confirm */
+/** app-wide switches (guest play, invite notifications) and the ranked season, one tap plus a confirm */
 function AppSwitches({ auth }: { auth: Auth }) {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   /** false: the server has no push keys, so the notifications switch can't do anything */
   const [pushReady, setPushReady] = useState<boolean | null>(null);
   /** the change waiting for the admin to confirm */
   const [asking, setAsking] = useState<{ key: SwitchKey; on: boolean } | null>(null);
+  /** a new ranked season waiting for the admin to confirm */
+  const [seasonAsk, setSeasonAsk] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -62,6 +65,32 @@ function AppSwitches({ auth }: { auth: Auth }) {
       setSettings((await api<{ settings: AppSettings }>('/admin/settings', { body: { [key]: on }, token: auth.token })).settings);
     } catch (err) {
       setError(errorText(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** everyone's rank starts again; then reads who changed it and when */
+  const startSeason = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      // the season seen here, so a stale screen can't start an extra one
+      const { season } = await api<{ season: number }>('/admin/ranked/season', {
+        method: 'POST',
+        body: { from: settings?.rankedSeason },
+        token: auth.token,
+      });
+      setSettings((s) => (s ? { ...s, rankedSeason: season } : s));
+      setSettings((await api<{ settings: AppSettings }>('/admin/settings', { token: auth.token })).settings);
+    } catch (err) {
+      setError(errorText(err));
+      // someone else started one: show the season as it is now
+      if (err instanceof ApiError && err.status === 409) {
+        api<{ settings: AppSettings }>('/admin/settings', { token: auth.token })
+          .then((r) => setSettings(r.settings))
+          .catch(() => undefined);
+      }
     } finally {
       setBusy(false);
     }
@@ -96,6 +125,20 @@ function AppSwitches({ auth }: { auth: Auth }) {
     <section className="panel guest-switch">
       {row('guestsAllowed')}
       {row('pushInvites')}
+      {/* older servers have no seasons */}
+      {settings && typeof settings.rankedSeason === 'number' && (
+        <div className="setting-head season-row">
+          <div className="grow">
+            <b>🏅 Ranked season {settings.rankedSeason}</b>
+            <p className="muted small">
+              A new season starts everyone's rank again from {RANK_DIVISIONS[0].emoji} {RANK_DIVISIONS[0].name}
+            </p>
+          </div>
+          <button className="btn small ghost" disabled={busy} onClick={() => setSeasonAsk(true)}>
+            Start a new season
+          </button>
+        </div>
+      )}
       {settings?.updatedAt && (
         <p className="muted small">
           Last changed by {settings.updatedBy ?? 'an admin'} · {timeAgo(settings.updatedAt)}
@@ -124,6 +167,18 @@ function AppSwitches({ auth }: { auth: Auth }) {
             </div>
           </div>
         </Backdrop>
+      )}
+      {seasonAsk && settings && (
+        <ConfirmBox
+          title={`Start ranked season ${settings.rankedSeason + 1}?`}
+          body={`Everyone's rank points, divisions and floors start again from ${RANK_DIVISIONS[0].emoji} ${RANK_DIVISIONS[0].name}. This season's ranks stop showing. This can't be undone.`}
+          action="Start season"
+          onCancel={() => setSeasonAsk(false)}
+          onConfirm={() => {
+            setSeasonAsk(false);
+            void startSeason();
+          }}
+        />
       )}
     </section>
   );

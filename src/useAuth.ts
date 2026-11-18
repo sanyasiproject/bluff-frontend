@@ -3,7 +3,18 @@ import { api, ApiError, serverStatus } from './lib/api';
 import { disablePush } from './lib/push';
 import { reconnectSocket, socket } from './lib/socket';
 import { loadAuthToken, saveAuthToken } from './lib/storage';
-import type { AuthResponse, GameKind, GameSummary, MissionsResponse, ProfileOverview, PublicUser, ServerInfo } from './types';
+import type {
+  AuthResponse,
+  GameKind,
+  GameSummary,
+  LeagueResponse,
+  MissionsResponse,
+  ProfileOverview,
+  PublicUser,
+  RivalRecord,
+  RivalsResponse,
+  ServerInfo,
+} from './types';
 
 /** the logged-in account (null = guest) and account actions */
 export function useAuth() {
@@ -71,9 +82,15 @@ export function useAuth() {
     // a friend sent me coins
     socket.on('gift:received', onFriends);
     // an admin turned guest play or invite notifications on or off
-    const onSettings = (s: { guestsAllowed: boolean; pushInvites?: boolean }) => {
+    // a new ranked season: everyone's rank starts again, so the account is read afresh
+    let season: number | null = null;
+    const onSettings = (s: { guestsAllowed: boolean; pushInvites?: boolean; rankedSeason?: number }) => {
       setGuestsAllowed(s.guestsAllowed);
       if (typeof s.pushInvites === 'boolean') setPushInvites(s.pushInvites);
+      if (typeof s.rankedSeason === 'number' && s.rankedSeason !== season) {
+        season = s.rankedSeason;
+        void refresh();
+      }
     };
     socket.on('settings:changed', onSettings);
     // sent on every connection and when a guest is turned away, so Log in and the guest lock show even if /health is blocked
@@ -160,6 +177,14 @@ export function useAuth() {
     missions: () => api<MissionsResponse>('/me/missions', { token }),
     /** today's free swap of one unfinished mission; throws with the server's reason */
     swapMission: (id: string) => api<MissionsResponse>('/me/missions/swap', { body: { id }, token }),
+    /** this week's friends league board and last week's */
+    league: () => api<LeagueResponse>('/me/league', { token }),
+    /** leave me off my friends' league boards, or put me back */
+    setLeagueHidden: (hidden: boolean) => api<LeagueResponse>('/me/league/hide', { body: { hidden }, token }),
+    /** my records against every friend I've played */
+    rivals: () => api<RivalsResponse>('/me/rivals', { token }),
+    /** my record against one friend; null when not a friend or no games together */
+    rivalOf: async (username: string) => (await api<{ record: RivalRecord | null }>(`/players/${encodeURIComponent(username)}/rival`, { token })).record,
   };
 }
 

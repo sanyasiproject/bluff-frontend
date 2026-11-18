@@ -26,6 +26,7 @@ import { Avatar } from './Avatar';
 import { SazaResult, SazaTag } from './Saza';
 import { LieRecapBox } from './LieRecap';
 import { SecretsReveal } from './SecretMissions';
+import { RankedLine } from './Ranked';
 
 export function Backdrop({ center, onClose, children }: { center?: boolean; onClose?: () => void; children: ReactNode }) {
   // the phone's back button closes it too; screens without onClose (game over) stay put
@@ -475,6 +476,7 @@ function CoinSummary({ view, nameOf, startLevel }: { view: RoomView; nameOf: (id
         ))}
       {rows.some((r) => r.bonus > 0) && <p className="muted small">🎯 Daily games reward</p>}
       {mine && <MissionLines result={mine} />}
+      {mine && <RankedLine result={mine} />}
       {mine && totalXp(mine) > 0 && <XpLine result={mine} startLevel={startLevel} />}
       {mine && <DailyProgress result={mine} />}
     </div>

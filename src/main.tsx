@@ -8,6 +8,9 @@ import './styles.css';
 import './styles/looks.css';
 import './styles/missions.css';
 import './styles/secrets.css';
+import './styles/league.css';
+import './styles/rivals.css';
+import './styles/ranked.css';
 
 for (const type of ['click', 'touchend'] as const) {
   window.addEventListener(type, unlockSpeech, { once: true, capture: true });

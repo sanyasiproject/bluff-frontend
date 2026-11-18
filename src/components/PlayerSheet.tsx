@@ -9,6 +9,8 @@ import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
 import { GiftRow, ThrowRow } from './PlayerActions';
 import { Avatar } from './Avatar';
+import { RankChip } from './Ranked';
+import { RivalPanel } from './Rivals';
 
 const pct = (n: number | null) => (n === null ? '–' : `${n}%`);
 
@@ -114,6 +116,7 @@ export function PlayerSheet({ auth, name, username, level, avatar = null, childr
             {title.emoji} {title.title}
           </p>
         )}
+        {p && <RankChip rank={p.rank ?? null} />}
         {!username && <p className="muted small">Guest player · no account, so no profile</p>}
         {username && !auth.user && <p className="muted small">Log in to see player profiles</p>}
       </div>
@@ -147,6 +150,7 @@ export function PlayerSheet({ auth, name, username, level, avatar = null, childr
               ))}
             </p>
           )}
+          {p.status === 'friend' && <RivalPanel auth={auth} username={p.username} />}
           {friend}
         </>
       )}
