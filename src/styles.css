@@ -44,6 +44,8 @@ body {
   background: var(--felt-deep);
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
+  /* a long name with no spaces breaks onto the next line instead of running over its row */
+  overflow-wrap: break-word;
 }
 
 body::before {
@@ -2930,6 +2932,11 @@ button.seat {
   gap: 10px;
   margin: 0 0 4px;
   font-weight: 700;
+}
+
+/* lets a long name wrap instead of pushing past the box */
+.saza-line > span {
+  min-width: 0;
 }
 
 .saza-big {
