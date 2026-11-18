@@ -22,6 +22,7 @@ import { PlayingCard } from './PlayingCard';
 import { Rolling } from './Rolling';
 import { Avatar } from './Avatar';
 import { SazaResult, SazaTag } from './Saza';
+import { LieRecapBox } from './LieRecap';
 
 export function Backdrop({ center, onClose, children }: { center?: boolean; onClose?: () => void; children: ReactNode }) {
   // the phone's back button closes it too; screens without onClose (game over) stay put
@@ -307,6 +308,7 @@ export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza }: G
           ))}
         </ol>
         <SazaResult view={view} nameOf={nameOf} onPick={onPickSaza} />
+        <LieRecapBox view={view} nameOf={nameOf} />
         {view.awards.length > 0 && (
           <div className="awards">
             <p className="label">Awards</p>

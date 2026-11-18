@@ -598,6 +598,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                 {view.config.bets && <span>🎲 Bets on calls</span>}
                 {view.config.teams && <span>👥 2 vs 2</span>}
                 {view.config.saza && <span>🤡 Saza for the loser</span>}
+                {view.config.secretLies && <span>🤐 Lies stay secret</span>}
                 {bots.length > 0 && <span>🤖 {BOT_LEVEL_NAMES[view.config.botLevel ?? 'expert']} bots</span>}
               </>
             )}
@@ -711,6 +712,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         </SettingRow>
         <SettingRow title="🤡 Saza for the loser" desc="The last player wears a silly badge until they win a game here">
           <Choice value={view.config.saza ?? false} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ saza: on })} />
+        </SettingRow>
+        <SettingRow title="🤥 Lie reveal" desc="When the game ends, show the lies nobody caught">
+          <Choice value={!(view.config.secretLies ?? false)} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ secretLies: !on })} />
         </SettingRow>
       </section>}
 

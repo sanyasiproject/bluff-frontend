@@ -105,8 +105,8 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             in Crazy 7 don't count towards the lifetime 🧲 Collector achievement (that one is for Bluff piles).
           </li>
           <li>
-            Peek, Bet, Teams and Saza settings are kept when you switch to Crazy 7 and back; Crazy 7 just ignores them (saza badges are hidden
-            while Crazy 7 is picked).
+            Peek, Bet, Teams, Saza and Lie reveal settings are kept when you switch to Crazy 7 and back; Crazy 7 just ignores them (saza badges
+            are hidden while Crazy 7 is picked).
           </li>
         </ul>
       </Section>
@@ -141,6 +141,9 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>
             <b>🤡 Saza for the loser</b>: Off (default) or On.
+          </li>
+          <li>
+            <b>🤥 Lie reveal</b>: On (default) or Off (lies stay secret).
           </li>
           <li>Players who aren't the host see all settings as chips in the lobby.</li>
         </ul>
@@ -190,6 +193,18 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>No new badge after 2 vs 2, the host's End game, or when players walk out: nobody was left last.</li>
           <li>Turning Saza off takes every badge off. Badges belong to the room: they aren't saved, and leaving the room takes yours off.</li>
+        </ul>
+      </Section>
+
+      <Section icon="🤥" title="Lie reveal">
+        <ul>
+          <li>
+            Bluff only, on unless the host turns it off. When the game ends, the lies nobody caught are turned face-up on the game-over screen:
+            who said what and the real cards (✗ on each fake), boldest first, up to 6. Bots' lies are shown too.
+          </li>
+          <li>"Survived a call" means someone called it but turned over a real card.</li>
+          <li>Below that: each player's lies, out of their plays, and how many got caught.</li>
+          <li>Nothing is shown while a game is on. With it off, every lie stays secret.</li>
         </ul>
       </Section>
 

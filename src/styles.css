@@ -2977,6 +2977,75 @@ button.seat {
   }
 }
 
+/* Bluff's lie reveal on the game-over screen: the lies that got away, face-up, and each player's lying */
+.lie-recap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.lie-row {
+  padding: 8px 10px 10px;
+  border-radius: 12px;
+  background: rgba(229, 72, 77, 0.1);
+}
+
+.lie-claim {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.lie-tag {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(246, 196, 83, 0.18);
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.lie-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  perspective: 600px;
+}
+
+.lie-cards .reveal-slot .mark {
+  right: -5px;
+  bottom: -5px;
+  width: 17px;
+  height: 17px;
+  font-size: 10px;
+}
+
+.lie-report {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--panel);
+  font-size: 13px;
+}
+
+.lie-player {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lie-player.me {
+  color: var(--gold);
+  font-weight: 800;
+}
+
 .friend-btn {
   flex: none;
   min-height: 30px;
