@@ -97,7 +97,7 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 - **Credit:** character avatars use [Avataaars](https://avataaars.com/) by Pablo Stanley (free for personal and commercial use) and [Notionists](https://heyzoish.gumroad.com/l/notionists) by Zoish ([CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)), drawn with [DiceBear](https://www.dicebear.com/) (MIT); the rules page names both artists.
 - **Credit:** animated emoji are [Noto Animated Emoji](https://googlefonts.github.io/noto-emoji-animation/) by Google, licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (unmodified; a credit line sits under the throw buttons). Keep the credit if the files change, and note any edits. `lottie-web` is MIT.
 - Your turn: gold glow and a YOUR TURN bar above your cards. Seats show each player's last move (e.g. 3 × Q).
-- Bluff is limited to 2 calls in a row; the button shows "last call", then "Bluff locked" until you play or pass.
+- Bluff is limited to 2 calls in a row; the button shows "last call", then "Bluff locked" until you play or pass. A player's last cards can always be called, so the button unlocks for them (the server sends `bluffCallsLeft` 1).
 
 ## Chat, watching and awards
 

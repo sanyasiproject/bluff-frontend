@@ -62,7 +62,10 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             <b>Show all</b>: every card of that play is turned over. <b>Pick one</b> (default): the caller chooses one face-down card.
           </li>
           <li>Caught lying: the liar picks up the whole pile. It was true: the caller picks it up. The winner of the call starts the next round.</li>
-          <li>You can call bluff at most {MAX_BLUFF_CALLS_IN_A_ROW} times in a row; playing or passing your turn unlocks it.</li>
+          <li>
+            You can call bluff at most {MAX_BLUFF_CALLS_IN_A_ROW} times in a row; playing or passing your turn unlocks it. A player's last
+            cards can always be called, even then.
+          </li>
         </ul>
       </Section>
 
@@ -191,6 +194,11 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             line moves up), and so does a likely lie that would let someone go out.
           </li>
           <li>
+            A player's last cards are always called, at every level: if that play stands, they're out. Under Pick one the bot may turn over
+            any of those cards (likely fakes more often), so putting your real cards first or last doesn't fool it; good bots with a peek
+            left look first.
+          </li>
+          <li>
             Your real habits are saved after every Bluff game: how often you lie and with how many cards, where you tap your fakes (cards stay in
             the order you tapped them), whether you pass or push a fake when you have none, and whether you fake your last cards to finish. Only
             the server and its bots read them, never another player, and bots read them before the game starts. Normal bots ignore them.
@@ -215,8 +223,8 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>Games with bots count for XP, stats and the daily games reward like any other game.</li>
           <li>
-            A room is never left to bots: when the last person leaves, the room closes. Once no person holds cards, the game ends straight
-            away (except 2 vs 2, which plays on to find the winning team).
+            A room is never left to bots: when the last person leaves, the room closes. Once no person holds cards and the last play has been
+            called or let go, the game ends straight away (except 2 vs 2, which plays on to find the winning team).
           </li>
           <li>Bots wait while no person is connected. They can't be the host or sit out to watch; in 2 vs 2 they swap places at once.</li>
         </ul>
@@ -236,8 +244,9 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             <b>Play again</b> (host, end screen): deals the same table again with the same settings.
           </li>
           <li>
-            <b>Leave game</b> (any player, ⋯ menu, asks first): counts as a loss and you still pay the stake. In 2 vs 2 your team loses;
-            if only one player is left, they win. Leavers show as 🚪 Left · Lost on the end screen.
+            <b>Leave game</b> (any player, ⋯ menu, asks first): counts as a loss and you still pay the stake, even right after putting down
+            your last cards if nobody has called them yet. In 2 vs 2 your team loses; if only one player is left, they win. Leavers show as 🚪
+            Left · Lost on the end screen.
           </li>
         </ul>
       </Section>
