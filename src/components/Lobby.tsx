@@ -65,6 +65,7 @@ import { SuitDrift } from './Ambient';
 import { FriendsSheet } from './FriendsSheet';
 import { InvitePanel } from './InvitePanel';
 import { LevelBadge } from './LevelBadge';
+import { SazaTag } from './Saza';
 import { Backdrop } from './Overlays';
 import { PlayerSheet } from './PlayerSheet';
 import { QuickChat } from './QuickChat';
@@ -495,7 +496,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               <li key={p.id} className="player-row bot-row">
                 <span className="row-open">
                   <Avatar name={p.name} bot size="sm" member={p.id} />
-                  <span className="grow">{p.name}</span>
+                  <span className="grow">
+                    {p.name} <SazaTag badge={p.saza} />
+                  </span>
                 </span>
                 <span className="tag dim">Bot</span>
                 {removeButton(p.id, p.name)}
@@ -506,7 +509,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                 <Avatar name={p.name} avatar={p.avatar} size="sm" member={p.id} />
                 <span className="grow">
                   {p.name}
-                  {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} />
+                  {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} /> <SazaTag badge={p.saza} />
                   {coinsOn && (
                     <span className={cx('player-coins', (!p.registered || (p.coins ?? 0) < stake) && stake > 0 && 'warn')}>
                       {p.registered ? `🪙 ${compactCoins(p.coins ?? 0)}` : 'guest'}
@@ -594,6 +597,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                 {view.config.peeks > 0 && <span>🔍 {view.config.peeks} peek{view.config.peeks > 1 ? 's' : ''}</span>}
                 {view.config.bets && <span>🎲 Bets on calls</span>}
                 {view.config.teams && <span>👥 2 vs 2</span>}
+                {view.config.saza && <span>🤡 Saza for the loser</span>}
                 {bots.length > 0 && <span>🤖 {BOT_LEVEL_NAMES[view.config.botLevel ?? 'expert']} bots</span>}
               </>
             )}
@@ -704,6 +708,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         )}
         <SettingRow title="👥 Teams" desc="Partners play together, both must finish">
           <Choice value={view.config.teams} options={[[false, 'Off'], [true, '2 vs 2']]} onPick={(on) => set({ teams: on })} />
+        </SettingRow>
+        <SettingRow title="🤡 Saza for the loser" desc="The last player wears a silly badge until they win a game here">
+          <Choice value={view.config.saza ?? false} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ saza: on })} />
         </SettingRow>
       </section>}
 

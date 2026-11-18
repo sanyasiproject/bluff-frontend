@@ -18,6 +18,7 @@ import {
   type InviteEvent,
   type Rank,
   type RoomView,
+  type SazaBadge,
   type ThrowEvent,
 } from './types';
 
@@ -337,6 +338,8 @@ export function useBluff() {
       toLobby: () => run(() => request('room:lobby')),
       rematch: () => run(() => request('room:rematch')),
       endGame: () => run(() => request('room:end')),
+      /** game over with Saza on: the winner swaps the loser's badge */
+      pickSaza: (badge: SazaBadge) => run(() => request('room:saza', { badge })),
       makeHost: (memberId: string) => run(() => request('room:host', { memberId })),
       // memberId: the host moving someone else; omitted for yourself
       setWatching: (watching: boolean, memberId?: string) => run(() => request('room:watch', { watching, memberId })),

@@ -16,10 +16,12 @@ import {
   type Rank,
   type RevealView,
   type RoomView,
+  type SazaBadge,
 } from '../types';
 import { PlayingCard } from './PlayingCard';
 import { Rolling } from './Rolling';
 import { Avatar } from './Avatar';
+import { SazaResult, SazaTag } from './Saza';
 
 export function Backdrop({ center, onClose, children }: { center?: boolean; onClose?: () => void; children: ReactNode }) {
   // the phone's back button closes it too; screens without onClose (game over) stay put
@@ -229,9 +231,11 @@ interface GameOverProps {
   onRematch?: () => Promise<unknown>;
   /** my level when the game started, to show a level up */
   startLevel?: number | null;
+  /** Saza: the winner swaps the loser's badge */
+  onPickSaza?: (badge: SazaBadge) => Promise<unknown>;
 }
 
-export function GameOver({ view, onLobby, onRematch, startLevel }: GameOverProps) {
+export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza }: GameOverProps) {
   const [busy, setBusy] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   // winners (and watchers) get confetti; losers don't need it
@@ -287,7 +291,7 @@ export function GameOver({ view, onLobby, onRematch, startLevel }: GameOverProps
               <span className="medal">{medal(p)}</span>
               <span className="grow">
                 {p.name}
-                {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} />
+                {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} /> <SazaTag badge={p.saza} />
               </span>
               <span className="muted">{label(p)}</span>
             </li>
@@ -302,6 +306,7 @@ export function GameOver({ view, onLobby, onRematch, startLevel }: GameOverProps
             </li>
           ))}
         </ol>
+        <SazaResult view={view} nameOf={nameOf} onPick={onPickSaza} />
         {view.awards.length > 0 && (
           <div className="awards">
             <p className="label">Awards</p>

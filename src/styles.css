@@ -2884,6 +2884,99 @@ button.seat {
   text-align: center;
 }
 
+/* Saza for the loser: the badge someone wears (lobby rows, results, my cards), a wobbly sticker on a table seat */
+.saza-tag {
+  display: inline-block;
+  font-size: 15px;
+  line-height: 1;
+  vertical-align: -1px;
+}
+
+.seat-saza {
+  position: absolute;
+  left: -7px;
+  top: -7px;
+  font-size: 17px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+  transform-origin: 50% 90%;
+  animation: saza-wobble 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes saza-wobble {
+  0%,
+  100% {
+    transform: rotate(-12deg);
+  }
+  50% {
+    transform: rotate(12deg);
+  }
+}
+
+.saza-box {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px dashed rgba(246, 196, 83, 0.45);
+  border-radius: 12px;
+  background: rgba(246, 196, 83, 0.08);
+  text-align: left;
+}
+
+.saza-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px;
+  font-weight: 700;
+}
+
+.saza-big {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.saza-picks {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.saza-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: 6px 2px;
+  border: 1px solid var(--faint);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  font-size: 22px;
+  line-height: 1.1;
+  cursor: pointer;
+}
+
+.saza-pick small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.saza-pick.on {
+  border-color: var(--gold);
+  background: rgba(246, 196, 83, 0.18);
+}
+
+@media (max-width: 360px) {
+  .saza-picks {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .friend-btn {
   flex: none;
   min-height: 30px;

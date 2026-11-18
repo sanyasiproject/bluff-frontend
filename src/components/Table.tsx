@@ -23,6 +23,7 @@ import { GiftRow, ThrowRow } from './PlayerActions';
 import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
 import { Avatar } from './Avatar';
+import { SazaTag } from './Saza';
 
 interface SeatProps {
   player: PublicPlayer;
@@ -64,6 +65,7 @@ export function Seat({ player, turn, passed, viewing, action, bubble, onClick, l
       {badge && <span className={cx('badge', player.place && 'gold')}>{badge}</span>}
       <Avatar name={player.name} avatar={player.avatar} bot={player.bot}>
         {player.level && <span className="seat-lv">{player.level}</span>}
+        <SazaTag badge={player.saza} className="seat-saza" />
       </Avatar>
       <span className="seat-name">
         {partner && '🤝 '}
@@ -680,7 +682,13 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
           </button>
         )}
         <div className="hand-head">
-          {myTurn ? <span className="your-turn">YOUR TURN</span> : <span>Your cards · {view.hand.length}</span>}
+          {myTurn ? (
+            <span className="your-turn">YOUR TURN</span>
+          ) : (
+            <span>
+              Your cards · {view.hand.length} <SazaTag badge={me?.saza} />
+            </span>
+          )}
           {myTurn && <span className="turn-hint">{status}</span>}
           {newIds.length > 0 && <span className="new-chip">+{newIds.length} new</span>}
           {selected.length > 0 ? (
@@ -781,6 +789,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
           onLobby={actions.toLobby}
           onRematch={isHost ? actions.rematch : undefined}
           startLevel={startLevel.current}
+          onPickSaza={actions.pickSaza}
         />
       )}
       {levelUp !== null && !(showReveal && view.reveal) && (

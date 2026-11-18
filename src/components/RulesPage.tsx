@@ -14,6 +14,7 @@ import {
   MAX_BLUFF_CALLS_IN_A_ROW,
   MAX_PEEKS,
   MIN_REWARD_GAME_SEC,
+  SAZA_BADGES,
   SEVEN_PENALTY,
   STAKES,
   THROWS,
@@ -103,7 +104,10 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             Awards: 🎯 Sevens master, 🧲 Card collector (most cards picked), 🙊 Forgot to call. XP and daily rewards count like Bluff. Cards picked
             in Crazy 7 don't count towards the lifetime 🧲 Collector achievement (that one is for Bluff piles).
           </li>
-          <li>Peek, Bet and Teams settings are kept when you switch to Crazy 7 and back; Crazy 7 just ignores them.</li>
+          <li>
+            Peek, Bet, Teams and Saza settings are kept when you switch to Crazy 7 and back; Crazy 7 just ignores them (saza badges are hidden
+            while Crazy 7 is picked).
+          </li>
         </ul>
       </Section>
 
@@ -134,6 +138,9 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>
             <b>👥 Teams</b>: Off (default) or 2 vs 2 (exactly 4 players).
+          </li>
+          <li>
+            <b>🤡 Saza for the loser</b>: Off (default) or On.
           </li>
           <li>Players who aren't the host see all settings as chips in the lobby.</li>
         </ul>
@@ -167,6 +174,22 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>You can't call bluff on your partner. Your partner has 🤝 on their seat.</li>
           <li>The first team with both partners out wins; the other team loses. A coin pot is split between the winners.</li>
           <li>If the host removes a player mid-game, the game stops and no coins move.</li>
+        </ul>
+      </Section>
+
+      <Section icon="🤡" title="Saza for the loser">
+        <ul>
+          <li>
+            Bluff only, when the host turns it on. When a game ends, the last player still holding cards gets a silly badge at random:{' '}
+            {SAZA_BADGES.map((b) => `${b.emoji} ${b.name}`).join(', ')}.
+          </li>
+          <li>The winner can swap it for another one on the game-over screen, until everyone goes back to the lobby.</li>
+          <li>
+            Everyone sees it wobbling on that player's seat, in the lobby and in the results. It stays on through the next games until they win a
+            game in this room (a 2 vs 2 win and the host's End game count). Bots can get one too.
+          </li>
+          <li>No new badge after 2 vs 2, the host's End game, or when players walk out: nobody was left last.</li>
+          <li>Turning Saza off takes every badge off. Badges belong to the room: they aren't saved, and leaving the room takes yours off.</li>
         </ul>
       </Section>
 
