@@ -3017,6 +3017,16 @@ button.seat {
   white-space: nowrap;
 }
 
+.lie-tag.truth {
+  background: rgba(60, 207, 145, 0.16);
+  color: var(--ok);
+}
+
+.lie-tag.caught {
+  background: rgba(229, 72, 77, 0.2);
+  color: #ff8a8e;
+}
+
 .lie-cards {
   display: flex;
   flex-wrap: wrap;
@@ -3046,6 +3056,35 @@ button.seat {
   display: flex;
   align-items: center;
   gap: 6px;
+  width: 100%;
+  padding: 3px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lie-player:disabled {
+  cursor: default;
+}
+
+.lie-chev {
+  width: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* a player's every play, opened from their name */
+.lie-more {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 8px;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
 }
 
 .lie-player.me {

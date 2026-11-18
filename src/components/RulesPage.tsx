@@ -205,6 +205,10 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>"Survived a call" means someone called it but turned over a real card.</li>
           <li>Below that: each player's lies, out of their plays, and how many got caught.</li>
+          <li>
+            Tap a name to see every play they made that game, truths too: what they said, the real cards (✓ real, ✗ fake) and whether it
+            was caught, survived a call or got away, plus the cards they still held at the end.
+          </li>
           <li>Nothing is shown while a game is on. With it off, every lie stays secret.</li>
         </ul>
       </Section>

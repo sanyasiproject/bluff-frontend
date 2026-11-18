@@ -15,6 +15,7 @@ import {
   type PublicPlayer,
   type Rank,
   type RevealView,
+  type PlayerPlays,
   type RoomView,
   type SazaBadge,
 } from '../types';
@@ -234,9 +235,11 @@ interface GameOverProps {
   startLevel?: number | null;
   /** Saza: the winner swaps the loser's badge */
   onPickSaza?: (badge: SazaBadge) => Promise<unknown>;
+  /** lie reveal: everything one player put down and still held */
+  onShowPlays?: (playerId: string) => Promise<PlayerPlays>;
 }
 
-export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza }: GameOverProps) {
+export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza, onShowPlays }: GameOverProps) {
   const [busy, setBusy] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   // winners (and watchers) get confetti; losers don't need it
@@ -308,7 +311,7 @@ export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza }: G
           ))}
         </ol>
         <SazaResult view={view} nameOf={nameOf} onPick={onPickSaza} />
-        <LieRecapBox view={view} nameOf={nameOf} />
+        <LieRecapBox view={view} nameOf={nameOf} onShowPlays={onShowPlays} />
         {view.awards.length > 0 && (
           <div className="awards">
             <p className="label">Awards</p>

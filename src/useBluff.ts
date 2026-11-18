@@ -16,6 +16,7 @@ import {
   type GiftEvent,
   type GiftReceived,
   type InviteEvent,
+  type PlayerPlays,
   type Rank,
   type RoomView,
   type SazaBadge,
@@ -338,6 +339,8 @@ export function useBluff() {
       toLobby: () => run(() => request('room:lobby')),
       rematch: () => run(() => request('room:rematch')),
       endGame: () => run(() => request('room:end')),
+      /** game over: everything one player put down and still held, for the lie reveal; errors are shown where it was asked */
+      playsOf: (playerId: string) => request<PlayerPlays>('room:plays', { playerId }),
       /** game over with Saza on: the winner swaps the loser's badge */
       pickSaza: (badge: SazaBadge) => run(() => request('room:saza', { badge })),
       makeHost: (memberId: string) => run(() => request('room:host', { memberId })),

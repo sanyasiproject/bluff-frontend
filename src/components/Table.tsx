@@ -790,6 +790,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
           onRematch={isHost ? actions.rematch : undefined}
           startLevel={startLevel.current}
           onPickSaza={actions.pickSaza}
+          onShowPlays={actions.playsOf}
         />
       )}
       {levelUp !== null && !(showReveal && view.reveal) && (
