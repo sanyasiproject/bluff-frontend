@@ -111,7 +111,9 @@ export function RankedLine({ result }: { result: CoinResult }) {
       ? div.min === 0
         ? '🛡️ Rank points never go below 0'
         : `🛡️ Your floor held: you stay in ${div.emoji} ${div.name} this season`
-      : held === 'debt'
+      : held === 'shield'
+        ? '🛡️ Rank Shield used: this loss cost no points'
+        : held === 'debt'
         ? '↩️ This win first paid back points your floor or the daily limit kept you from losing'
         : `📅 Daily limit reached: points move up to ±${RANK_DAILY_CAP} a day`;
   return (

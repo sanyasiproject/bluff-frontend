@@ -22,6 +22,7 @@ import {
   MISSIONS,
   MISSIONS_PER_SET,
   RANK_DAILY_CAP,
+  RANK_LOSS_SHARE,
   RANK_DIVISIONS,
   RIVAL_MIN_GAMES,
   SAZA_BADGES,
@@ -427,6 +428,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         <ul>
           <li>🛍️ Coin shop on Home and Profile. Everything is rented for a day or a week; nothing is kept for good.</li>
           <li>XP boosts (1.25x / 1.5x / 2x for a day, 1.25x / 1.5x for a week) multiply only a game's own XP, in games of {MIN_REWARD_GAME_SEC / 60} min or more.</li>
+          <li>🛡️ Rank Shield (🪙 300 each, hold up to 5): used up on your next ranked loss, which then costs no rank points and nothing is owed. Kept if the floor already stops the loss.</li>
           <li>🪙 Coin Magnet: +25% on daily ladder and mission coins for 7 days.</li>
           <li>Auras show on your seat, card backs and profile. Win bursts and entry flashes are seen by everyone at the table.</li>
           <li>One XP boost and one coin boost at a time. Buying again adds time, up to 28 days ahead.</li>
@@ -554,6 +556,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             Divisions: {RANK_DIVISIONS.map((d) => `${d.emoji} ${d.name} (${formatCoins(d.min)})`).join(', ')}. Once you reach a division
             you can't drop below its start for the rest of the season.
           </li>
+          <li>A loss costs {Math.round(RANK_LOSS_SHARE * 100)}% of what the same win would give, so wins count for more. A 🛡️ Rank Shield from the coin shop makes one loss cost nothing.</li>
           <li>Your points can move at most {RANK_DAILY_CAP} either way in a day, so one night can't make or break a season.</li>
           <li>
             Points a loss would have taken but the floor or the daily limit held off are owed: your next wins pay them back first, so

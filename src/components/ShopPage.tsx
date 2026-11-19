@@ -10,7 +10,7 @@ import { cx } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { confetti, useCountUp } from '../lib/motion';
 import { useNow } from '../lib/useNow';
-import { MIN_REWARD_GAME_SEC, SHOP_ITEMS, shopItemOf, type ShopItem, type ShopKind, type ShopLookKind, type ShopResponse } from '../types';
+import { MAX_SHIELDS, MIN_REWARD_GAME_SEC, SHOP_ITEMS, shopItemOf, type ShopItem, type ShopKind, type ShopLookKind, type ShopResponse } from '../types';
 import type { Auth } from '../useAuth';
 import { ConfirmBox } from './ConfirmBox';
 import { FullPage } from './FullPage';
@@ -33,6 +33,7 @@ const daysText = (days: number) => (days === 1 ? '1 day' : `${days} days`);
 function lengthBadge(item: ShopItem): string {
   if (item.kind === 'xp' && item.mult) return `${item.mult}x · ${daysText(item.days)}`;
   if (item.kind === 'coins' && item.mult) return `+${Math.round((item.mult - 1) * 100)}% · ${daysText(item.days)}`;
+  if (item.kind === 'shield') return '1 loss';
   return daysText(item.days);
 }
 
@@ -47,6 +48,7 @@ interface SectionDef {
 const SECTIONS: readonly SectionDef[] = [
   { kind: 'xp', title: '⚡ XP boosts', note: `Games of ${MIN_REWARD_GAME_SEC / 60} min or more · one at a time` },
   { kind: 'coins', title: '🪙 Coin boost', note: 'Daily ladder and mission coins · one at a time' },
+  { kind: 'shield', title: '🛡️ Rank protection', note: `Ranked games · used up on your next ranked loss · hold up to ${MAX_SHIELDS}` },
   { kind: 'aura', title: '✨ Auras', note: 'On your seat, card backs and profile, for everyone' },
   { kind: 'win', title: '🎆 Win bursts', note: 'Everyone sees it when you win' },
   { kind: 'entry', title: '🚪 Entry flashes', note: 'Plays when you join a table' },
@@ -70,6 +72,8 @@ function ShopTile({ item }: { item: ShopItem }) {
 }
 
 interface CardProps {
+  /** Rank Shields held (shield card only) */
+  held?: number;
   /** see the look before buying: an aura on your own seat, or the burst played on screen */
   onPreview: (item: ShopItem) => void;
   item: ShopItem;
@@ -88,10 +92,12 @@ interface CardProps {
 }
 
 /** one shop item: tile, words, price and what can be done with it now */
-function ShopCard({ item, index, coins, until, now, worn, busy, error, onRent, onWear, onPreview }: CardProps) {
-  const running = until !== null && until > now;
+function ShopCard({ item, index, coins, until, now, worn, busy, error, onRent, onWear, onPreview, held = 0 }: CardProps) {
+  const shield = item.kind === 'shield';
+  const running = !shield && until !== null && until > now;
   const short = Math.max(0, item.price - coins);
-  const rentLabel = running ? `Add ${daysText(item.days)}` : 'Rent';
+  const full = shield && held >= MAX_SHIELDS;
+  const rentLabel = shield ? 'Buy' : running ? `Add ${daysText(item.days)}` : 'Rent';
   return (
     <li className={cx('shop-card', running && 'running', worn && 'worn')} style={{ '--i': index } as CSSProperties}>
       <ShopTile item={item} />
@@ -101,6 +107,13 @@ function ShopCard({ item, index, coins, until, now, worn, busy, error, onRent, o
           <span className="shop-len">{lengthBadge(item)}</span>
         </div>
         <p className="shop-card-desc">{item.desc}</p>
+        {shield && (
+          <p className="shop-card-state">
+            <span className={held > 0 ? 'shop-on' : 'shop-off'}>
+              🛡️ You have {held}/{MAX_SHIELDS}
+            </span>
+          </p>
+        )}
         {running && (
           <p className="shop-card-state">
             {worn ? <span className="shop-wearing">✓ Wearing</span> : isLook(item.kind) ? <span className="shop-off">Not on</span> : <span className="shop-on">● On</span>}
@@ -112,7 +125,7 @@ function ShopCard({ item, index, coins, until, now, worn, busy, error, onRent, o
           <button
             type="button"
             className={cx('btn', 'shop-rent', !running && 'primary')}
-            disabled={busy || short > 0}
+            disabled={busy || short > 0 || full}
             onClick={(e) => onRent(item, e.currentTarget)}
           >
             {rentLabel} · 🪙 {formatCoins(item.price)}
@@ -141,11 +154,23 @@ function RunningStrip({ data, now }: { data: ShopResponse; now: number }) {
     const until = Date.parse(r.until);
     return item && until > now ? [{ item, until }] : [];
   });
-  if (list.length === 0) return <p className="shop-running-empty muted small">Nothing running. Rent something below.</p>;
+  const shields = data.shields ?? 0;
+  if (list.length === 0 && shields === 0) return <p className="shop-running-empty muted small">Nothing running. Rent something below.</p>;
   return (
     <section className="shop-running" aria-label="Running now">
       <h3 className="shop-running-title">Running now</h3>
       <ul className="shop-running-list">
+        {shields > 0 && (
+          <li className="shop-chip">
+            <span className="shop-chip-emoji" aria-hidden>
+              🛡️
+            </span>
+            <span className="shop-chip-text">
+              <b>Rank Shield ×{shields}</b>
+              <small>next ranked loss</small>
+            </span>
+          </li>
+        )}
         {list.map(({ item, until }) => {
           const worn = isLook(item.kind) && data.wearing[item.kind] === item.id;
           return (
@@ -238,7 +263,7 @@ export function ShopPage({ auth, onClose, initial = null, onChange }: Props) {
       got(await auth.buyShop(item.id));
       const box = el.getBoundingClientRect();
       confetti(box.left + box.width / 2, box.top + box.height / 2, { count: 28, spread: 0.8 });
-      say(`${item.emoji} ${item.name}: ${daysText(item.days)} added`);
+      say(item.kind === 'shield' ? `🛡️ Rank Shield added` : `${item.emoji} ${item.name}: ${daysText(item.days)} added`);
     } catch (err) {
       setCardError({ id: item.id, text: errorText(err) });
     } finally {
@@ -310,6 +335,7 @@ export function ShopPage({ auth, onClose, initial = null, onChange }: Props) {
                       onRent={(it, el) => setAsking({ item: it, el })}
                       onWear={(it, on) => void wear(it, on)}
                       onPreview={preview}
+                      held={data.shields ?? 0}
                     />
                   ))}
                 </ul>
@@ -328,16 +354,20 @@ export function ShopPage({ auth, onClose, initial = null, onChange }: Props) {
       {asking && (
         <ConfirmBox
           title={
-            askingRunning
+            asking.item.kind === 'shield'
+              ? `Buy a 🛡️ Rank Shield for 🪙 ${formatCoins(asking.item.price)}?`
+              : askingRunning
               ? `Add ${daysText(asking.item.days)} to ${asking.item.emoji} ${asking.item.name} for 🪙 ${formatCoins(asking.item.price)}?`
               : `Rent ${asking.item.emoji} ${asking.item.name} for 🪙 ${formatCoins(asking.item.price)}?`
           }
           body={
-            askingRunning
+            asking.item.kind === 'shield'
+              ? `Your next ranked loss costs no rank points; the shield is used up on that loss. You hold ${data?.shields ?? 0} now.`
+              : askingRunning
               ? `Adds ${daysText(asking.item.days)} to the time left. Nothing is kept for good.`
               : `Lasts ${daysText(asking.item.days)}. Buying again adds time. Nothing is kept for good.`
           }
-          action={askingRunning ? 'Add time' : 'Rent'}
+          action={asking.item.kind === 'shield' ? 'Buy' : askingRunning ? 'Add time' : 'Rent'}
           danger={false}
           onConfirm={() => void rent(asking.item, asking.el)}
           onCancel={() => setAsking(null)}
