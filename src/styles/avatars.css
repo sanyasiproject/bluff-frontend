@@ -1,0 +1,274 @@
+/* Avatars: ring, shine and the special backgrounds (colours in lib/avatars.ts); loaded after styles.css so these win */
+
+/* ring width grows with the size: seats and lists thin, profile thick */
+.avatar {
+  --av-rim: 2px;
+}
+
+.avatar.sm {
+  --av-rim: 1.5px;
+}
+
+.avatar.lg {
+  --av-rim: 2.5px;
+}
+
+.avatar.xl {
+  --av-rim: 3px;
+}
+
+.avatar.has-face {
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.avatar.xl.has-face {
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.avatar-art {
+  --av-ring: rgba(255, 255, 255, 0.5);
+  /* a soft inner shade at the bottom; the ring itself sits on top (::after) */
+  box-shadow: inset 0 calc(var(--av) * -0.08) calc(var(--av) * 0.16) rgba(0, 0, 0, 0.26);
+}
+
+/* ring and a glossy top edge, drawn over the picture so shoulders never hide the ring */
+.avatar-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(68% 36% at 50% 3%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 72%);
+  box-shadow: inset 0 0 0 var(--av-rim) var(--av-ring);
+}
+
+/* emoji faces: one glyph from the colour emoji font (keeps 🧑‍🚀 as one picture) */
+.avatar-emoji {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  font-size: calc(var(--av) * 0.58);
+  white-space: nowrap;
+  filter: drop-shadow(0 calc(var(--av) * 0.03) calc(var(--av) * 0.03) rgba(0, 0, 0, 0.35));
+}
+
+/* ring tint per background */
+.av-sunset .avatar-art {
+  --av-ring: rgba(255, 225, 170, 0.75);
+}
+
+.av-ocean .avatar-art {
+  --av-ring: rgba(180, 240, 255, 0.7);
+}
+
+.av-forest .avatar-art {
+  --av-ring: rgba(200, 255, 190, 0.65);
+}
+
+.av-grape .avatar-art {
+  --av-ring: rgba(235, 205, 255, 0.7);
+}
+
+.av-candy .avatar-art {
+  --av-ring: rgba(255, 255, 255, 0.85);
+}
+
+.av-mint .avatar-art {
+  --av-ring: rgba(230, 255, 245, 0.85);
+}
+
+.av-fire .avatar-art {
+  --av-ring: rgba(255, 210, 120, 0.8);
+}
+
+.av-ice .avatar-art {
+  --av-ring: rgba(255, 255, 255, 0.95);
+}
+
+.av-night .avatar-art {
+  --av-ring: rgba(190, 200, 255, 0.55);
+}
+
+.av-peacock .avatar-art {
+  --av-ring: rgba(242, 201, 76, 0.85);
+}
+
+/* special backgrounds: a metal or colour ring just outside the circle, a soft glow and the light sweep */
+.av-gold::before,
+.av-galaxy::before,
+.av-rainbow::before,
+.av-aurora::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--av-rim) * -1);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.av-gold::before {
+  background: conic-gradient(from 20deg, #fff6c4, #d49a1e, #fde58c, #9a6a12, #ffe9a3, #b8860b, #fff6c4);
+}
+
+.av-galaxy::before {
+  background: conic-gradient(from 0deg, #f3a6ff, #7b4dff, #4fa8ff, #c86bff, #f3a6ff);
+}
+
+.av-rainbow::before {
+  background: conic-gradient(from 200deg, #ff5f6d, #ffb347, #f9f871, #47e891, #34d3ff, #5b7cff, #b36cff, #ff5f6d);
+}
+
+.av-aurora::before {
+  background: conic-gradient(from 90deg, #5bffb4, #6ec8ff, #b98cff, #5bffb4, #3fd6c4, #5bffb4);
+}
+
+.av-gold .avatar-art {
+  --av-ring: rgba(255, 245, 200, 0.7);
+  box-shadow:
+    inset 0 calc(var(--av) * -0.08) calc(var(--av) * 0.16) rgba(0, 0, 0, 0.22),
+    0 0 calc(var(--av) * 0.3) rgba(246, 196, 83, 0.55);
+}
+
+.av-galaxy .avatar-art {
+  --av-ring: rgba(235, 215, 255, 0.45);
+  box-shadow:
+    inset 0 calc(var(--av) * -0.08) calc(var(--av) * 0.16) rgba(0, 0, 0, 0.26),
+    0 0 calc(var(--av) * 0.3) rgba(170, 110, 255, 0.5);
+}
+
+.av-rainbow .avatar-art {
+  --av-ring: rgba(255, 255, 255, 0.6);
+  box-shadow:
+    inset 0 calc(var(--av) * -0.08) calc(var(--av) * 0.16) rgba(0, 0, 0, 0.2),
+    0 0 calc(var(--av) * 0.3) rgba(255, 255, 255, 0.3);
+}
+
+.av-aurora .avatar-art {
+  --av-ring: rgba(200, 255, 235, 0.45);
+  box-shadow:
+    inset 0 calc(var(--av) * -0.08) calc(var(--av) * 0.16) rgba(0, 0, 0, 0.26),
+    0 0 calc(var(--av) * 0.32) rgba(90, 255, 190, 0.45);
+}
+
+/* the sweep: brighter on gold, colourful on aurora */
+.av-gold .avatar-shimmer {
+  background: linear-gradient(115deg, transparent 36%, rgba(255, 255, 240, 0.75) 50%, transparent 64%);
+}
+
+.av-aurora .avatar-shimmer {
+  background: linear-gradient(115deg, transparent 32%, rgba(120, 255, 200, 0.4) 46%, rgba(200, 150, 255, 0.4) 56%, transparent 68%);
+  animation-duration: 5.2s;
+}
+
+/* big avatars only (profile, picker, player card): the special ring turns slowly; lists stay still */
+.avatar.xl.av-gold::before,
+.avatar.xl.av-galaxy::before,
+.avatar.xl.av-rainbow::before,
+.avatar.xl.av-aurora::before,
+.avatar.lg.av-gold::before,
+.avatar.lg.av-galaxy::before,
+.avatar.lg.av-rainbow::before,
+.avatar.lg.av-aurora::before {
+  animation: av-ring-turn 9s linear infinite;
+}
+
+@keyframes av-ring-turn {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar::before,
+  .avatar-shimmer {
+    animation: none;
+  }
+
+  .avatar-shimmer {
+    display: none;
+  }
+}
+
+/* profile: keep the felt gap inside the level ring */
+.level-ring .avatar.has-face {
+  box-shadow:
+    0 0 0 5px var(--felt-deep),
+    0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+/* ---------- the picker: longer lists that still fit a 320 px phone ---------- */
+
+/* six faces a row on the narrowest phones, more when there's room */
+.face-grid {
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+}
+
+.face-emoji {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  white-space: nowrap;
+}
+
+.face-lock {
+  right: 3px;
+  bottom: 2px;
+  font-size: 9px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* backgrounds wrap into rows so every one (and its lock) is in view without sideways scrolling */
+.bg-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 8px 4px;
+  overflow: visible;
+  padding: 2px 0 4px;
+}
+
+.bg-swatch {
+  min-width: 0;
+}
+
+.bg-dot {
+  width: 40px;
+  height: 40px;
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.bg-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* character tiles: the same ring as a real avatar */
+.char-pic {
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.char-pic::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+
+.char-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* four characters a row on the narrowest phones, more when there's room */
+.char-grid {
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+}

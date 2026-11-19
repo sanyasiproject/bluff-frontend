@@ -13,6 +13,8 @@ import './styles/rivals.css';
 import './styles/ranked.css';
 import './styles/voice.css';
 import './styles/twists.css';
+// avatar rings, shine and picker layout, last so they win
+import './styles/avatars.css';
 
 for (const type of ['click', 'touchend'] as const) {
   window.addEventListener(type, unlockSpeech, { once: true, capture: true });

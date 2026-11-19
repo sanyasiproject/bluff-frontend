@@ -15,6 +15,12 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'emoji', label: '😎 Emoji' },
 ];
 
+// shown in unlock order: new catalog items are appended at the end, whatever their level
+const byLevel = <T extends { level: number }>(items: readonly T[]) => [...items].sort((a, b) => a.level - b.level);
+const FACES = byLevel(AVATAR_FACES);
+const CHARACTERS = byLevel(AVATAR_CHARACTERS);
+const BACKGROUNDS = byLevel(AVATAR_BACKGROUNDS);
+
 /** Profile: pick a girl, boy or emoji face and a background; some unlock with level. Everyone in your rooms and friends list sees it */
 export function AvatarPicker({ auth, onClose }: { auth: Auth; onClose: () => void }) {
   const user = auth.user;
@@ -72,7 +78,7 @@ export function AvatarPicker({ auth, onClose }: { auth: Auth; onClose: () => voi
 
         {tab === 'emoji' ? (
           <div className="face-grid" role="radiogroup" aria-label="Face">
-            {AVATAR_FACES.map((f) => {
+            {FACES.map((f) => {
               const open = faceUnlocked(f, level);
               return (
                 <button
@@ -92,7 +98,7 @@ export function AvatarPicker({ auth, onClose }: { auth: Auth; onClose: () => voi
           </div>
         ) : (
           <div className="char-grid" role="radiogroup" aria-label={tab === 'girl' ? 'Girls' : 'Boys'}>
-            {AVATAR_CHARACTERS.filter((c) => c.kind === tab).map((c) => {
+            {CHARACTERS.filter((c) => c.kind === tab).map((c) => {
               const open = faceUnlocked(c, level);
               const name = characterName(c.id);
               return (
@@ -118,7 +124,7 @@ export function AvatarPicker({ auth, onClose }: { auth: Auth; onClose: () => voi
 
         <p className="label">Background</p>
         <div className="bg-row" role="radiogroup" aria-label="Background">
-          {AVATAR_BACKGROUNDS.map((b) => {
+          {BACKGROUNDS.map((b) => {
             const open = bgUnlocked(b, level);
             return (
               <button

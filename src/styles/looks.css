@@ -1,32 +1,48 @@
 /* ---------- looks: table themes and card backs, unlocked by level (lib/look.ts) ---------- */
-/* "classic" has no rules here, so it is exactly the original look */
+/* Each felt is one fixed layer (body::before) of grain, a motif, a vignette and the felt light; body::after is the slow light */
 
-/* tables: the felt is drawn from these tokens (body::before, .page, sheets) */
+:root {
+  /* fine felt grain: a small noise tile, drawn once and repeated */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .6 -.2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  --vignette: radial-gradient(130% 95% at 50% 40%, transparent 48%, rgba(0, 0, 0, 0.45) 100%);
+  --felt-glow: radial-gradient(120% 70% at 50% 38%, var(--felt-light) 0%, var(--felt) 48%, var(--felt-deep) 100%);
+}
+
+/* classic green: the same felt with grain, a faint table rail and a darker edge */
+body::before {
+  background:
+    var(--grain),
+    radial-gradient(ellipse 80% 54% at 50% 44%, transparent 95.5%, rgba(255, 255, 255, 0.06) 97%, transparent 98.5%),
+    var(--vignette),
+    var(--felt-glow);
+}
+
+/* ---------- table tokens: felt, deep edge, light centre, sheets ---------- */
 :root[data-table='royal'] {
-  --felt: #163a7a;
-  --felt-deep: #08183a;
-  --felt-light: #2a5bb8;
+  --felt: #183f86;
+  --felt-deep: #07153a;
+  --felt-light: #3166c8;
   --sheet: #0c1d40;
 }
 
 :root[data-table='wood'] {
-  --felt: #6b4423;
-  --felt-deep: #2b170a;
-  --felt-light: #9a6a3c;
+  --felt: #6e4523;
+  --felt-deep: #2a1608;
+  --felt-light: #a3713f;
   --sheet: #2a1a0e;
 }
 
 :root[data-table='midnight'] {
-  --felt: #161b2e;
-  --felt-deep: #07090f;
-  --felt-light: #2c3550;
+  --felt: #171d33;
+  --felt-deep: #05070d;
+  --felt-light: #2f3a5c;
   --sheet: #0e1220;
 }
 
 :root[data-table='maroon'] {
-  --felt: #5a0f24;
-  --felt-deep: #24040e;
-  --felt-light: #8a1f3a;
+  --felt: #5e0f27;
+  --felt-deep: #22030d;
+  --felt-light: #93223f;
   --sheet: #2a0912;
 }
 
@@ -39,33 +55,119 @@
 
 :root[data-table='galaxy'] {
   --felt: #2a1b5e;
-  --felt-deep: #0a0620;
+  --felt-deep: #080418;
   --felt-light: #5b3fa8;
   --sheet: #140d33;
 }
 
-/* wood grain over the felt */
-:root[data-table='wood'] body::before {
-  background:
-    repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.09) 0 2px, transparent 2px 23px),
-    repeating-linear-gradient(88deg, rgba(255, 220, 170, 0.04) 0 1px, transparent 1px 9px),
-    radial-gradient(120% 70% at 50% 38%, var(--felt-light) 0%, var(--felt) 48%, var(--felt-deep) 100%);
+:root[data-table='saffron'] {
+  --felt: #a4470f;
+  --felt-deep: #3a1504;
+  --felt-light: #e07a22;
+  --sheet: #2e1204;
 }
 
-/* jewel-bright emerald with a fine gold diamond weave and a gold frame round the screen */
+:root[data-table='lagoon'] {
+  --felt: #0b6b74;
+  --felt-deep: #03283a;
+  --felt-light: #22b8b0;
+  --sheet: #04252f;
+}
+
+:root[data-table='diwali'] {
+  --felt: #5c1630;
+  --felt-deep: #1c0614;
+  --felt-light: #9a2f3c;
+  --sheet: #240916;
+}
+
+:root[data-table='monsoon'] {
+  --felt: #24394f;
+  --felt-deep: #0a121c;
+  --felt-light: #4d6f8a;
+  --sheet: #111c28;
+}
+
+:root[data-table='champion'] {
+  --felt: #1a1b3a;
+  --felt-deep: #07070f;
+  --felt-light: #3a3f6e;
+  --sheet: #10112a;
+}
+
+/* ---------- felts ---------- */
+
+/* royal blue: a fine damask lattice and a soft light from above */
+:root[data-table='royal'] body::before {
+  background:
+    var(--grain),
+    radial-gradient(circle at 50% 50%, rgba(246, 196, 83, 0.1) 0 1.5px, transparent 2px) 0 0 / 30px 52px,
+    repeating-linear-gradient(60deg, rgba(160, 200, 255, 0.07) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(-60deg, rgba(160, 200, 255, 0.07) 0 1px, transparent 1px 26px),
+    radial-gradient(70% 40% at 50% 0%, rgba(170, 205, 255, 0.2), transparent 70%),
+    var(--vignette),
+    var(--felt-glow);
+}
+
+/* wooden: planks with seams, wavy grain and a couple of knots */
+:root[data-table='wood'] body::before {
+  background:
+    var(--grain),
+    radial-gradient(14px 7px at 22% 30%, rgba(40, 18, 4, 0.45), rgba(40, 18, 4, 0.15) 60%, transparent 100%),
+    radial-gradient(18px 9px at 71% 64%, rgba(40, 18, 4, 0.4), rgba(40, 18, 4, 0.12) 60%, transparent 100%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.32) 0 2px, rgba(255, 220, 170, 0.06) 2px 3px, transparent 3px 92px),
+    repeating-linear-gradient(91deg, rgba(0, 0, 0, 0.07) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(89deg, rgba(255, 220, 170, 0.05) 0 2px, transparent 2px 13px),
+    repeating-linear-gradient(90.5deg, rgba(60, 28, 6, 0.12) 0 6px, transparent 6px 31px),
+    var(--vignette),
+    var(--felt-glow);
+}
+
+/* midnight: a moon glow, a few stars and a cool silver edge */
+:root[data-table='midnight'] body::before {
+  background:
+    var(--grain),
+    radial-gradient(circle at calc(84% + 7px) calc(9% - 4px), #0d1222 0 12px, transparent 13px),
+    radial-gradient(circle at 84% 9%, rgba(240, 244, 255, 0.85) 0 14px, rgba(170, 190, 255, 0.14) 16px, transparent 110px),
+    radial-gradient(1px 1px at 14% 12%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 38% 6%, #dfe6ff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 62% 18%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 8% 44%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 92% 52%, #dfe6ff 50%, transparent 51%),
+    radial-gradient(1px 1px at 27% 88%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 76% 92%, #fff 50%, transparent 51%),
+    radial-gradient(130% 95% at 50% 40%, transparent 55%, rgba(150, 170, 220, 0.08) 85%, rgba(0, 0, 0, 0.4) 100%),
+    var(--felt-glow);
+}
+
+/* maroon velvet: soft crushed-velvet sheen in diagonal bands */
+:root[data-table='maroon'] body::before {
+  background:
+    var(--grain),
+    linear-gradient(115deg, transparent 12%, rgba(255, 150, 180, 0.08) 26%, transparent 40%, rgba(255, 150, 180, 0.06) 62%, transparent 78%),
+    repeating-linear-gradient(115deg, rgba(0, 0, 0, 0.06) 0 2px, transparent 2px 6px),
+    radial-gradient(40% 25% at 30% 30%, rgba(255, 120, 150, 0.1), transparent 70%),
+    var(--vignette),
+    var(--felt-glow);
+}
+
+/* emerald gold: jewel-bright felt, a fine gold diamond weave and a gold frame round the screen */
 :root[data-table='emerald'] body::before {
   background:
-    repeating-linear-gradient(45deg, rgba(246, 196, 83, 0.08) 0 1px, transparent 1px 22px),
-    repeating-linear-gradient(-45deg, rgba(246, 196, 83, 0.08) 0 1px, transparent 1px 22px),
-    radial-gradient(120% 70% at 50% 38%, var(--felt-light) 0%, var(--felt) 46%, var(--felt-deep) 100%);
+    var(--grain),
+    radial-gradient(circle at 50% 50%, rgba(255, 223, 128, 0.22) 0 1.5px, transparent 2px) 0 0 / 22px 22px,
+    repeating-linear-gradient(45deg, rgba(246, 196, 83, 0.09) 0 1px, transparent 1px 15.5px),
+    repeating-linear-gradient(-45deg, rgba(246, 196, 83, 0.09) 0 1px, transparent 1px 15.5px),
+    var(--vignette),
+    var(--felt-glow);
   box-shadow:
-    inset 0 0 0 3px rgba(246, 196, 83, 0.8),
+    inset 0 0 0 3px rgba(246, 196, 83, 0.85),
     inset 0 0 0 6px rgba(1, 38, 28, 0.9),
-    inset 0 0 0 7px rgba(246, 196, 83, 0.4),
+    inset 0 0 0 7px rgba(246, 196, 83, 0.45),
     inset 0 0 70px rgba(246, 196, 83, 0.2);
 }
 
-/* gold glints instead of the plain light, drifting with the usual slow light (still under reduced motion) */
+/* gold glints instead of the plain light */
 :root[data-table='emerald'] body::after {
   background:
     radial-gradient(26% 16% at 30% 30%, rgba(255, 223, 128, 0.17), transparent 70%),
@@ -73,26 +175,143 @@
     radial-gradient(14% 10% at 55% 15%, rgba(255, 255, 255, 0.09), transparent 70%);
 }
 
-/* its picker swatch gets the gold frame too */
-.look-felt.emerald {
-  box-shadow: inset 0 0 0 2px rgba(246, 196, 83, 0.85);
-}
-
-/* stars and a nebula; still, so nothing moves */
+/* galaxy: three repeating star fields, a nebula and a bright core */
 :root[data-table='galaxy'] body::before {
   background:
-    radial-gradient(1.5px 1.5px at 12% 18%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 28% 72%, #fff 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 46% 34%, #e8ddff 50%, transparent 51%),
-    radial-gradient(1px 1px at 63% 12%, #fff 50%, transparent 51%),
-    radial-gradient(2px 2px at 78% 58%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 88% 26%, #d6e4ff 50%, transparent 51%),
-    radial-gradient(1px 1px at 8% 86%, #fff 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 55% 90%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 36% 52%, #fff 50%, transparent 51%),
-    radial-gradient(60% 40% at 72% 30%, rgba(214, 90, 200, 0.22), transparent 70%),
-    radial-gradient(50% 35% at 24% 70%, rgba(80, 160, 255, 0.18), transparent 70%),
-    radial-gradient(120% 70% at 50% 38%, var(--felt-light) 0%, var(--felt) 48%, var(--felt-deep) 100%);
+    radial-gradient(1px 1px at 20% 30%, #fff 50%, transparent 51%) 0 0 / 61px 67px,
+    radial-gradient(1px 1px at 70% 80%, #d6e4ff 50%, transparent 51%) 0 0 / 89px 79px,
+    radial-gradient(1.5px 1.5px at 40% 60%, #fff 50%, transparent 51%) 0 0 / 151px 137px,
+    radial-gradient(2px 2px at 50% 50%, #ffe9ff 50%, transparent 51%) 0 0 / 233px 211px,
+    radial-gradient(60% 40% at 72% 28%, rgba(214, 90, 200, 0.26), transparent 70%),
+    radial-gradient(50% 35% at 24% 70%, rgba(80, 160, 255, 0.2), transparent 70%),
+    radial-gradient(30% 20% at 48% 46%, rgba(255, 230, 250, 0.1), transparent 70%),
+    var(--vignette),
+    var(--felt-glow);
+}
+
+/* saffron: warm sun rays from the top and a marigold dot weave */
+:root[data-table='saffron'] body::before {
+  background:
+    var(--grain),
+    radial-gradient(circle at 50% 50%, rgba(255, 214, 102, 0.09) 0 1.5px, transparent 2px) 0 0 / 18px 18px,
+    repeating-conic-gradient(from 0deg at 50% -8%, rgba(255, 214, 140, 0.07) 0 3deg, transparent 3deg 9deg),
+    radial-gradient(80% 45% at 50% 0%, rgba(255, 196, 92, 0.24), transparent 70%),
+    radial-gradient(130% 95% at 50% 40%, transparent 46%, rgba(40, 10, 0, 0.5) 100%),
+    var(--felt-glow);
+}
+
+/* lagoon: rippling light on shallow water and warm sand at the bottom */
+:root[data-table='lagoon'] body::before {
+  background:
+    var(--grain),
+    repeating-radial-gradient(circle at 18% 26%, rgba(220, 255, 250, 0.05) 0 2px, transparent 2px 24px),
+    repeating-radial-gradient(circle at 82% 66%, rgba(220, 255, 250, 0.05) 0 2px, transparent 2px 30px),
+    radial-gradient(100% 30% at 50% 108%, rgba(244, 214, 150, 0.32), transparent 70%),
+    radial-gradient(60% 35% at 50% 18%, rgba(160, 255, 240, 0.14), transparent 70%),
+    var(--vignette),
+    var(--felt-glow);
+}
+
+/* lagoon light dances like sun through water */
+:root[data-table='lagoon'] body::after {
+  background:
+    radial-gradient(30% 18% at 28% 34%, rgba(200, 255, 245, 0.12), transparent 70%),
+    radial-gradient(24% 16% at 70% 62%, rgba(200, 255, 245, 0.1), transparent 70%),
+    radial-gradient(18% 12% at 50% 84%, rgba(255, 240, 200, 0.08), transparent 70%);
+}
+
+/* diwali: a string of lights across the top and a row of diyas glowing along the bottom */
+:root[data-table='diwali'] body::before {
+  background:
+    radial-gradient(circle at 4% 5%, #ffd166 0 2.5px, rgba(255, 209, 102, 0.35) 4px, transparent 11px),
+    radial-gradient(circle at 13% 7.5%, #ff6b8a 0 2.5px, rgba(255, 107, 138, 0.35) 4px, transparent 11px),
+    radial-gradient(circle at 22% 9.5%, #7bdcff 0 2.5px, rgba(123, 220, 255, 0.35) 4px, transparent 11px),
+    radial-gradient(circle at 31% 10.8%, #ffd166 0 2.5px, rgba(255, 209, 102, 0.35) 4px, transparent 11px),
+    radial-gradient(circle at 40% 11.6%, #9dff8a 0 2.5px, rgba(157, 255, 138, 0.35) 4px, transparent 11px),
+    radial-gradient(circle at 50% 11.9%, #ff6b8a 0 2.5px, rgba(255, 107, 138, 0.35) 4px, transparent 11px),
+    radial-gradient(circle at 60% 11.6%, #ffd166 0 2.5px, rgba(255, 209, 102, 0.35) 4px, transparent 11px),
+    radial-gradient(circle at 69% 10.8%, #7bdcff 0 2.5px, rgba(123, 220, 255, 0.35) 4px, transparent 11px),
+    radial-gradient(circle at 78% 9.5%, #ffd166 0 2.5px, rgba(255, 209, 102, 0.35) 4px, transparent 11px),
+    radial-gradient(circle at 87% 7.5%, #9dff8a 0 2.5px, rgba(157, 255, 138, 0.35) 4px, transparent 11px),
+    radial-gradient(circle at 96% 5%, #ff6b8a 0 2.5px, rgba(255, 107, 138, 0.35) 4px, transparent 11px),
+    radial-gradient(3px 6px at 12% calc(100% - 14px), #fff6cf 0 35%, #ffb03c 70%, transparent 100%),
+    radial-gradient(3px 6px at 37% calc(100% - 14px), #fff6cf 0 35%, #ffb03c 70%, transparent 100%),
+    radial-gradient(3px 6px at 63% calc(100% - 14px), #fff6cf 0 35%, #ffb03c 70%, transparent 100%),
+    radial-gradient(3px 6px at 88% calc(100% - 14px), #fff6cf 0 35%, #ffb03c 70%, transparent 100%),
+    radial-gradient(18% 9% at 12% 100%, rgba(255, 176, 60, 0.42), transparent 70%),
+    radial-gradient(18% 9% at 37% 100%, rgba(255, 176, 60, 0.36), transparent 70%),
+    radial-gradient(18% 9% at 63% 100%, rgba(255, 176, 60, 0.36), transparent 70%),
+    radial-gradient(18% 9% at 88% 100%, rgba(255, 176, 60, 0.42), transparent 70%),
+    var(--grain),
+    repeating-conic-gradient(from 0deg at 50% 50%, rgba(255, 200, 120, 0.035) 0 7.5deg, transparent 7.5deg 15deg),
+    var(--vignette),
+    var(--felt-glow);
+}
+
+/* warm flickering glows instead of the plain light */
+:root[data-table='diwali'] body::after {
+  background:
+    radial-gradient(30% 18% at 30% 36%, rgba(255, 190, 90, 0.12), transparent 70%),
+    radial-gradient(26% 16% at 72% 66%, rgba(255, 140, 70, 0.1), transparent 70%);
+}
+
+/* monsoon: heavy clouds at the top and rings where drops hit the felt */
+:root[data-table='monsoon'] body::before {
+  background:
+    var(--grain),
+    radial-gradient(60% 18% at 22% 0%, rgba(160, 180, 200, 0.2), transparent 70%),
+    radial-gradient(55% 16% at 78% 2%, rgba(160, 180, 200, 0.16), transparent 70%),
+    radial-gradient(circle at 50% 50%, transparent 5px, rgba(190, 220, 255, 0.08) 6px 7px, transparent 8px) 0 0 / 97px 89px,
+    radial-gradient(circle at 30% 70%, transparent 3px, rgba(190, 220, 255, 0.07) 4px 5px, transparent 6px) 0 0 / 61px 73px,
+    var(--vignette),
+    var(--felt-glow);
+}
+
+/* soft rain streaks, slanted, falling one tile height per loop so it repeats seamlessly; still under reduced motion */
+:root[data-table='monsoon'] body::after {
+  background:
+    radial-gradient(1px 16px at 50% 50%, rgba(205, 228, 255, 0.3), transparent) 0 0 / 37px 120px,
+    radial-gradient(1px 11px at 30% 20%, rgba(205, 228, 255, 0.22), transparent) 0 0 / 53px 120px,
+    radial-gradient(1px 20px at 70% 80%, rgba(205, 228, 255, 0.16), transparent) 0 0 / 71px 120px;
+  animation: rain-fall 1.4s linear infinite;
+}
+
+@keyframes rain-fall {
+  from {
+    transform: rotate(10deg) translateY(0);
+  }
+  to {
+    transform: rotate(10deg) translateY(120px);
+  }
+}
+
+/* champion: gold rays from above, scattered confetti and a double gold frame */
+:root[data-table='champion'] body::before {
+  background:
+    radial-gradient(2px 3px at 20% 30%, #f6c453 50%, transparent 55%) 0 0 / 97px 83px,
+    radial-gradient(2px 2px at 60% 70%, #ff7aa8 50%, transparent 55%) 0 0 / 61px 71px,
+    radial-gradient(3px 2px at 40% 50%, #7fd8ff 50%, transparent 55%) 0 0 / 131px 113px,
+    radial-gradient(1.5px 1.5px at 80% 20%, #fff3c4 50%, transparent 55%) 0 0 / 47px 53px,
+    radial-gradient(2px 2px at 10% 80%, #9dff8a 50%, transparent 55%) 0 0 / 173px 149px,
+    var(--grain),
+    repeating-conic-gradient(from -2deg at 50% -6%, rgba(246, 196, 83, 0.05) 0 4deg, transparent 4deg 12deg),
+    radial-gradient(90% 50% at 50% 0%, rgba(246, 196, 83, 0.2), transparent 70%),
+    var(--vignette),
+    var(--felt-glow);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 233, 160, 0.9),
+    inset 0 0 0 5px rgba(7, 7, 15, 0.9),
+    inset 0 0 0 8px #c9922a,
+    inset 0 0 0 9px rgba(255, 233, 160, 0.7),
+    inset 0 0 90px rgba(246, 196, 83, 0.22);
+}
+
+/* gold glints instead of the plain light */
+:root[data-table='champion'] body::after {
+  background:
+    radial-gradient(28% 16% at 30% 28%, rgba(255, 223, 128, 0.16), transparent 70%),
+    radial-gradient(22% 14% at 72% 70%, rgba(255, 223, 128, 0.12), transparent 70%),
+    radial-gradient(12% 8% at 58% 12%, rgba(255, 255, 255, 0.1), transparent 70%);
 }
 
 /* the two places that draw the green felt with a fixed colour follow the table too */
@@ -105,30 +324,48 @@
 }
 
 /* ---------- seats: each player's box in their own table style, so the whole table sees it ---------- */
-.seat[data-table='classic'] {
-  --seat-bg: radial-gradient(120% 90% at 50% 20%, #177650 0%, #0e4d35 55%, #05261a 100%);
+/* the Profile picker's swatches (.look-felt) are drawn from the same art */
+.look-felt {
+  background: var(--seat-bg, var(--panel));
 }
 
-.seat[data-table='royal'] {
-  --seat-bg: radial-gradient(120% 90% at 50% 20%, #2a5bb8 0%, #163a7a 55%, #08183a 100%);
+:is(.seat, .look-felt)[data-table='classic'] {
+  --seat-bg: var(--grain), radial-gradient(120% 90% at 50% 20%, #1b8058 0%, #0e4d35 55%, #05261a 100%);
 }
 
-.seat[data-table='wood'] {
+:is(.seat, .look-felt)[data-table='royal'] {
   --seat-bg:
-    repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.1) 0 2px, transparent 2px 13px),
-    radial-gradient(120% 90% at 50% 20%, #9a6a3c 0%, #6b4423 55%, #2b170a 100%);
+    repeating-linear-gradient(60deg, rgba(160, 200, 255, 0.1) 0 1px, transparent 1px 13px),
+    repeating-linear-gradient(-60deg, rgba(160, 200, 255, 0.1) 0 1px, transparent 1px 13px),
+    radial-gradient(120% 90% at 50% 20%, #3166c8 0%, #183f86 55%, #07153a 100%);
 }
 
-.seat[data-table='midnight'] {
-  --seat-bg: radial-gradient(120% 90% at 50% 20%, #2c3550 0%, #161b2e 55%, #07090f 100%);
+:is(.seat, .look-felt)[data-table='wood'] {
+  --seat-bg:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.3) 0 1.5px, transparent 1.5px 26px),
+    repeating-linear-gradient(91deg, rgba(0, 0, 0, 0.08) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(89deg, rgba(255, 220, 170, 0.06) 0 1px, transparent 1px 9px),
+    radial-gradient(120% 90% at 50% 20%, #a3713f 0%, #6e4523 55%, #2a1608 100%);
 }
 
-.seat[data-table='maroon'] {
-  --seat-bg: radial-gradient(120% 90% at 50% 20%, #8a1f3a 0%, #5a0f24 55%, #24040e 100%);
+:is(.seat, .look-felt)[data-table='midnight'] {
+  --seat-bg:
+    radial-gradient(circle at 82% 14%, rgba(235, 240, 255, 0.55) 0 4px, rgba(170, 190, 255, 0.12) 5px, transparent 18px),
+    radial-gradient(1px 1px at 18% 24%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 40% 10%, #dfe6ff 50%, transparent 51%),
+    radial-gradient(1px 1px at 12% 70%, #fff 50%, transparent 51%),
+    radial-gradient(120% 90% at 50% 20%, #2f3a5c 0%, #171d33 55%, #05070d 100%);
+}
+
+:is(.seat, .look-felt)[data-table='maroon'] {
+  --seat-bg:
+    linear-gradient(115deg, transparent 15%, rgba(255, 150, 180, 0.12) 35%, transparent 55%),
+    repeating-linear-gradient(115deg, rgba(0, 0, 0, 0.08) 0 1.5px, transparent 1.5px 4px),
+    radial-gradient(120% 90% at 50% 20%, #93223f 0%, #5e0f27 55%, #22030d 100%);
 }
 
 /* emerald: the gold weave and a thin gold frame inside the box */
-.seat[data-table='emerald'] {
+:is(.seat, .look-felt)[data-table='emerald'] {
   --seat-bg:
     repeating-linear-gradient(45deg, rgba(246, 196, 83, 0.14) 0 1px, transparent 1px 12px),
     repeating-linear-gradient(-45deg, rgba(246, 196, 83, 0.14) 0 1px, transparent 1px 12px),
@@ -137,116 +374,262 @@
   outline-offset: -5px;
 }
 
-.seat[data-table='galaxy'] {
+:is(.seat, .look-felt)[data-table='galaxy'] {
   --seat-bg:
     radial-gradient(1.5px 1.5px at 18% 22%, #fff 50%, transparent 51%),
     radial-gradient(1px 1px at 78% 16%, #fff 50%, transparent 51%),
     radial-gradient(1.5px 1.5px at 86% 64%, #e8ddff 50%, transparent 51%),
     radial-gradient(1px 1px at 12% 74%, #fff 50%, transparent 51%),
     radial-gradient(1px 1px at 52% 90%, #fff 50%, transparent 51%),
-    radial-gradient(70% 50% at 75% 30%, rgba(214, 90, 200, 0.3), transparent 70%),
-    radial-gradient(120% 90% at 50% 20%, #5b3fa8 0%, #2a1b5e 55%, #0a0620 100%);
+    radial-gradient(1px 1px at 34% 46%, #fff 50%, transparent 51%),
+    radial-gradient(70% 50% at 75% 30%, rgba(214, 90, 200, 0.32), transparent 70%),
+    radial-gradient(60% 40% at 20% 70%, rgba(80, 160, 255, 0.22), transparent 70%),
+    radial-gradient(120% 90% at 50% 20%, #5b3fa8 0%, #2a1b5e 55%, #080418 100%);
+}
+
+:is(.seat, .look-felt)[data-table='saffron'] {
+  --seat-bg:
+    repeating-conic-gradient(from 0deg at 50% -10%, rgba(255, 214, 140, 0.1) 0 4deg, transparent 4deg 12deg),
+    radial-gradient(circle at 50% 50%, rgba(255, 214, 102, 0.16) 0 1px, transparent 1.5px) 0 0 / 9px 9px,
+    radial-gradient(120% 90% at 50% 20%, #e07a22 0%, #a4470f 52%, #3a1504 100%);
+}
+
+:is(.seat, .look-felt)[data-table='lagoon'] {
+  --seat-bg:
+    repeating-radial-gradient(circle at 20% 20%, rgba(220, 255, 250, 0.08) 0 1px, transparent 1px 10px),
+    radial-gradient(100% 30% at 50% 110%, rgba(244, 214, 150, 0.35), transparent 70%),
+    radial-gradient(120% 90% at 50% 20%, #22b8b0 0%, #0b6b74 52%, #03283a 100%);
+}
+
+/* diwali: three little lights along the top and a diya glow at the bottom */
+:is(.seat, .look-felt)[data-table='diwali'] {
+  --seat-bg:
+    radial-gradient(circle at 20% 8%, #ffd166 0 1.5px, rgba(255, 209, 102, 0.3) 2.5px, transparent 6px),
+    radial-gradient(circle at 50% 12%, #ff6b8a 0 1.5px, rgba(255, 107, 138, 0.3) 2.5px, transparent 6px),
+    radial-gradient(circle at 80% 8%, #7bdcff 0 1.5px, rgba(123, 220, 255, 0.3) 2.5px, transparent 6px),
+    radial-gradient(70% 30% at 50% 104%, rgba(255, 176, 60, 0.5), transparent 70%),
+    radial-gradient(120% 90% at 50% 20%, #9a2f3c 0%, #5c1630 55%, #1c0614 100%);
+}
+
+/* monsoon: still slanted rain over a slate felt (seats don't move) */
+:is(.seat, .look-felt)[data-table='monsoon'] {
+  --seat-bg:
+    repeating-linear-gradient(100deg, transparent 0 9px, rgba(205, 228, 255, 0.1) 9px 10px),
+    radial-gradient(80% 30% at 50% 0%, rgba(160, 180, 200, 0.25), transparent 70%),
+    radial-gradient(120% 90% at 50% 20%, #4d6f8a 0%, #24394f 55%, #0a121c 100%);
+}
+
+/* champion: confetti flecks, gold rays and a gold frame */
+:is(.seat, .look-felt)[data-table='champion'] {
+  --seat-bg:
+    radial-gradient(1.5px 2px at 20% 30%, #f6c453 50%, transparent 55%) 0 0 / 23px 19px,
+    radial-gradient(1.5px 1.5px at 70% 60%, #ff7aa8 50%, transparent 55%) 0 0 / 29px 23px,
+    radial-gradient(2px 1.5px at 40% 80%, #7fd8ff 50%, transparent 55%) 0 0 / 37px 31px,
+    repeating-conic-gradient(from -2deg at 50% -10%, rgba(246, 196, 83, 0.12) 0 5deg, transparent 5deg 14deg),
+    radial-gradient(120% 110% at 50% 50%, transparent 62%, rgba(246, 196, 83, 0.3) 100%),
+    radial-gradient(120% 90% at 50% 20%, #3a3f6e 0%, #1a1b3a 55%, #07070f 100%);
+  outline: 2px solid #e9b23a;
+  outline-offset: -4px;
+}
+
+/* the swatch is smaller than a seat, so its frame sits closer to the edge */
+.look-felt[data-table='emerald'],
+.look-felt[data-table='champion'] {
+  outline-offset: -3px;
 }
 
 /* ---------- card backs ---------- */
 /* Everyone's face-down cards show in that player's own back: data-back on the card or seat badge, from the server.
-   Cards nobody owns (the Crazy 7 deck, practice, the home screen) use this phone's own back, set on :root */
+   Cards nobody owns (the Crazy 7 deck, practice, the home screen) use this phone's own back, set on :root.
+   Each back only sets these variables; .card.back in styles.css draws them: --back-art (centre emblem, then pattern),
+   --back-edge (outer border) and two pad + frame bands inside it (inset shadows, so no extra elements). */
 
-/* stripe colours */
+/* classic red: white border, red pinstripe, fine crosshatch and a rosette */
+:root,
 [data-back='classic'] {
   --back-1: #a11f35;
   --back-2: #c7384f;
+  --back-edge: #fff;
+  --back-pad: #fff;
+  --back-frame: #a11f35;
+  --back-pad-2: #fff;
+  --back-frame-2: transparent;
+  --back-art:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='16' fill='%23fff'/%3E%3Ccircle cx='20' cy='20' r='13.5' fill='none' stroke='%23a11f35' stroke-width='1.2'/%3E%3Cg fill='%23c7384f'%3E%3Cellipse cx='20' cy='12.5' rx='3' ry='6' transform='rotate(0 20 20)'/%3E%3Cellipse cx='20' cy='12.5' rx='3' ry='6' transform='rotate(45 20 20)'/%3E%3Cellipse cx='20' cy='12.5' rx='3' ry='6' transform='rotate(90 20 20)'/%3E%3Cellipse cx='20' cy='12.5' rx='3' ry='6' transform='rotate(135 20 20)'/%3E%3Cellipse cx='20' cy='12.5' rx='3' ry='6' transform='rotate(180 20 20)'/%3E%3Cellipse cx='20' cy='12.5' rx='3' ry='6' transform='rotate(225 20 20)'/%3E%3Cellipse cx='20' cy='12.5' rx='3' ry='6' transform='rotate(270 20 20)'/%3E%3Cellipse cx='20' cy='12.5' rx='3' ry='6' transform='rotate(315 20 20)'/%3E%3C/g%3E%3Ccircle cx='20' cy='20' r='3.2' fill='%23fff' stroke='%23a11f35' stroke-width='1.2'/%3E%3C/svg%3E") center / 62% auto no-repeat,
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px 5px), repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px 5px), radial-gradient(circle at 50% 50%, #c7384f, #a11f35 70%);
 }
 
+/* ocean blue: rolling scallop waves and an anchor */
 [data-back='ocean'] {
   --back-1: #1d4e9e;
   --back-2: #2f6fd0;
+  --back-edge: #fff;
+  --back-pad: #0e2f66;
+  --back-frame: #8fd3ff;
+  --back-pad-2: transparent;
+  --back-frame-2: transparent;
+  --back-art:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='16' fill='%230e2f66' stroke='%238fd3ff' stroke-width='1.5'/%3E%3Cg fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='20' cy='10.5' r='2.6'/%3E%3Cpath d='M20 13v16M14.5 17h11M10.5 22c0 5 4.5 8 9.5 8s9.5-3 9.5-8'/%3E%3C/g%3E%3Cpath d='M8 22l2.5-2 2.5 2M27 22l2.5-2 2.5 2' fill='none' stroke='%23fff' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E") center / 60% auto no-repeat,
+    radial-gradient(circle at 50% 100%, transparent 38%, rgba(143, 211, 255, 0.4) 40% 47%, transparent 49%) 0 0 / 12px 7px, linear-gradient(180deg, #2f6fd0, #143a7a);
 }
 
+/* paisley: gold and teal dots round a boteh */
 [data-back='paisley'] {
   --back-1: #b4532a;
   --back-2: #2bb3a3;
+  --back-edge: #ffe7b0;
+  --back-pad: #7a2f12;
+  --back-frame: #ffd27a;
+  --back-pad-2: transparent;
+  --back-frame-2: transparent;
+  --back-art:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M24 5c-9 0-16 7-16 16 0 7 5 13 12 13s11-5 11-11c0-5-4-8-8-8-3 0-5 2-5 4.5 0 2 1.5 3.5 3.5 3.5' fill='%232bb3a3' stroke='%23ffd27a' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M24 5c4 0 8 2 9 6' fill='none' stroke='%23ffd27a' stroke-width='2' stroke-linecap='round'/%3E%3Cg fill='%23ffd27a'%3E%3Ccircle cx='14' cy='17' r='1.4'/%3E%3Ccircle cx='12.5' cy='22' r='1.4'/%3E%3Ccircle cx='14' cy='27' r='1.4'/%3E%3Ccircle cx='18.5' cy='30.5' r='1.4'/%3E%3Ccircle cx='18' cy='11.5' r='1.4'/%3E%3C/g%3E%3C/svg%3E") center / 60% auto no-repeat,
+    radial-gradient(circle at 25% 25%, rgba(255, 210, 122, 0.85) 0 16%, transparent 19%) 0 0 / 10px 10px, radial-gradient(circle at 75% 75%, rgba(43, 179, 163, 0.85) 0 16%, transparent 19%) 0 0 / 10px 10px, radial-gradient(circle at 50% 50%, #c4643a, #9a4220 75%);
 }
 
+/* neon: a glowing grid, double neon frame and a lightning bolt */
 [data-back='neon'] {
   --back-1: #120320;
   --back-2: #ff2fd6;
+  --back-edge: #2fe6ff;
+  --back-pad: #120320;
+  --back-frame: #ff2fd6;
+  --back-pad-2: #120320;
+  --back-frame-2: #2fe6ff;
+  --back-art:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='15' fill='%23120320' stroke='%232fe6ff' stroke-width='1.5'/%3E%3Cpath d='M22.5 6 11 22h7.5L16 34l13-17h-8z' fill='%232fe6ff' stroke='%23ff2fd6' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E") center / 62% auto no-repeat,
+    repeating-linear-gradient(0deg, rgba(47, 230, 255, 0.32) 0 1px, transparent 1px 7px), repeating-linear-gradient(90deg, rgba(255, 47, 214, 0.32) 0 1px, transparent 1px 7px), radial-gradient(circle at 50% 50%, #4a0d72, #120320 70%);
 }
 
+/* royal gold: foil stripes with a sheen and a jewelled crown */
 [data-back='gold'] {
   --back-1: #8a6a12;
   --back-2: #d4a72c;
+  --back-edge: #ffe7a3;
+  --back-pad: #6e5210;
+  --back-frame: #ffe7a3;
+  --back-pad-2: transparent;
+  --back-frame-2: transparent;
+  --back-art:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='15' fill='%236e5210' stroke='%23ffe7a3' stroke-width='1.5'/%3E%3Cpath d='M9 27V14l6 5 5-8 5 8 6-5v13z' fill='%23fff3c4' stroke='%233a2a04' stroke-width='1.3' stroke-linejoin='round'/%3E%3Crect x='9' y='26' width='22' height='3.5' rx='1' fill='%23ffe7a3' stroke='%233a2a04' stroke-width='1.2'/%3E%3Cg fill='%23c7384f'%3E%3Ccircle cx='20' cy='22' r='1.8'/%3E%3Ccircle cx='14' cy='23' r='1.3'/%3E%3Ccircle cx='26' cy='23' r='1.3'/%3E%3C/g%3E%3C/svg%3E") center / 62% auto no-repeat,
+    linear-gradient(135deg, transparent 30%, rgba(255, 250, 220, 0.3) 48%, transparent 66%), repeating-linear-gradient(45deg, #8a6a12 0 4px, #d4a72c 4px 8px);
 }
 
+/* mandala: rings and petals round a lotus */
 [data-back='mandala'] {
   --back-1: #b0123b;
   --back-2: #3a0a52;
+  --back-edge: #ffcf5a;
+  --back-pad: #3a0a52;
+  --back-frame: #ffcf5a;
+  --back-pad-2: transparent;
+  --back-frame-2: transparent;
+  --back-art:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='16' fill='%233a0a52' stroke='%23ffcf5a' stroke-width='1.5'/%3E%3Cg fill='%23ffcf5a'%3E%3Cpath d='M20 20C17 15 18 9 20 6c2 3 3 9 0 14z' transform='rotate(0 20 20)'/%3E%3Cpath d='M20 20C17 15 18 9 20 6c2 3 3 9 0 14z' transform='rotate(30 20 20)'/%3E%3Cpath d='M20 20C17 15 18 9 20 6c2 3 3 9 0 14z' transform='rotate(60 20 20)'/%3E%3Cpath d='M20 20C17 15 18 9 20 6c2 3 3 9 0 14z' transform='rotate(90 20 20)'/%3E%3Cpath d='M20 20C17 15 18 9 20 6c2 3 3 9 0 14z' transform='rotate(120 20 20)'/%3E%3Cpath d='M20 20C17 15 18 9 20 6c2 3 3 9 0 14z' transform='rotate(150 20 20)'/%3E%3Cpath d='M20 20C17 15 18 9 20 6c2 3 3 9 0 14z' transform='rotate(180 20 20)'/%3E%3Cpath d='M20 20C17 15 18 9 20 6c2 3 3 9 0 14z' transform='rotate(210 20 20)'/%3E%3Cpath d='M20 20C17 15 18 9 20 6c2 3 3 9 0 14z' transform='rotate(240 20 20)'/%3E%3Cpath d='M20 20C17 15 18 9 20 6c2 3 3 9 0 14z' transform='rotate(270 20 20)'/%3E%3Cpath d='M20 20C17 15 18 9 20 6c2 3 3 9 0 14z' transform='rotate(300 20 20)'/%3E%3Cpath d='M20 20C17 15 18 9 20 6c2 3 3 9 0 14z' transform='rotate(330 20 20)'/%3E%3C/g%3E%3Cg fill='%23b0123b'%3E%3Cpath d='M20 20c-1.6-3-1-6 0-8 1 2 1.6 5 0 8z' transform='rotate(15 20 20)'/%3E%3Cpath d='M20 20c-1.6-3-1-6 0-8 1 2 1.6 5 0 8z' transform='rotate(45 20 20)'/%3E%3Cpath d='M20 20c-1.6-3-1-6 0-8 1 2 1.6 5 0 8z' transform='rotate(75 20 20)'/%3E%3Cpath d='M20 20c-1.6-3-1-6 0-8 1 2 1.6 5 0 8z' transform='rotate(105 20 20)'/%3E%3Cpath d='M20 20c-1.6-3-1-6 0-8 1 2 1.6 5 0 8z' transform='rotate(135 20 20)'/%3E%3Cpath d='M20 20c-1.6-3-1-6 0-8 1 2 1.6 5 0 8z' transform='rotate(165 20 20)'/%3E%3Cpath d='M20 20c-1.6-3-1-6 0-8 1 2 1.6 5 0 8z' transform='rotate(195 20 20)'/%3E%3Cpath d='M20 20c-1.6-3-1-6 0-8 1 2 1.6 5 0 8z' transform='rotate(225 20 20)'/%3E%3Cpath d='M20 20c-1.6-3-1-6 0-8 1 2 1.6 5 0 8z' transform='rotate(255 20 20)'/%3E%3Cpath d='M20 20c-1.6-3-1-6 0-8 1 2 1.6 5 0 8z' transform='rotate(285 20 20)'/%3E%3Cpath d='M20 20c-1.6-3-1-6 0-8 1 2 1.6 5 0 8z' transform='rotate(315 20 20)'/%3E%3Cpath d='M20 20c-1.6-3-1-6 0-8 1 2 1.6 5 0 8z' transform='rotate(345 20 20)'/%3E%3C/g%3E%3Ccircle cx='20' cy='20' r='3' fill='%23ffcf5a' stroke='%23b0123b' stroke-width='1.2'/%3E%3C/svg%3E") center / 66% auto no-repeat,
+    repeating-conic-gradient(from 0deg at 50% 50%, rgba(255, 207, 90, 0.16) 0 10deg, transparent 10deg 20deg), repeating-radial-gradient(circle at 50% 50%, #b0123b 0 5px, #8a0d30 5px 6px, #3a0a52 6px 10px, #ffcf5a 10px 11px);
 }
 
+/* diamond: icy argyle with sparkles and a cut gem */
 [data-back='diamond'] {
   --back-1: #3a7bd5;
   --back-2: #b9f2ff;
+  --back-edge: #e8fbff;
+  --back-pad: #1d3f73;
+  --back-frame: #b9f2ff;
+  --back-pad-2: #1d3f73;
+  --back-frame-2: rgba(185, 242, 255, 0.55);
+  --back-art:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='16' fill='%231d3f73' stroke='%23b9f2ff' stroke-width='1.5'/%3E%3Cpath d='M9 16l5-6h12l5 6-11 15z' fill='%237fd8ff'/%3E%3Cpath d='M9 16h22l-11 15z' fill='%233a9be0'/%3E%3Cpath d='M14 10l2 6h8l2-6z' fill='%23e8fbff'/%3E%3Cpath d='M16 16l4 15 4-15z' fill='%23b9f2ff'/%3E%3Cpath d='M9 16l5-6h12l5 6-11 15zM9 16h22M14 10l2 6 4 15 4-15 2-6' fill='none' stroke='%230d2a50' stroke-width='1' stroke-linejoin='round'/%3E%3C/svg%3E") center / 62% auto no-repeat,
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.9) 0 4%, transparent 9%) 0 0 / 25% 18%, conic-gradient(from 45deg, #9fe4ff 25%, #3a7bd5 0 50%, #b9f2ff 0 75%, #2f63b0 0) 0 0 / 12px 12px;
 }
 
+/* legend: a black-and-gold sunburst with a foil laurel star */
 [data-back='legend'] {
   --back-1: #2a1c00;
   --back-2: #f6c453;
+  --back-edge: #f6c453;
+  --back-pad: #1a1100;
+  --back-frame: #f6c453;
+  --back-pad-2: #1a1100;
+  --back-frame-2: #a8761a;
+  --back-art:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff2b8'/%3E%3Cstop offset='.35' stop-color='%23e9b23a'/%3E%3Cstop offset='.55' stop-color='%23fff2b8'/%3E%3Cstop offset='.8' stop-color='%23a8761a'/%3E%3Cstop offset='1' stop-color='%23f6c453'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='20' cy='20' r='17' fill='%231a1100' stroke='url(%23g)' stroke-width='2'/%3E%3Cg fill='url(%23g)'%3E%3Cellipse cx='15.9' cy='31.3' rx='1.6' ry='3.2' transform='rotate(90 15.9 31.3)'/%3E%3Cellipse cx='11.5' cy='28.5' rx='1.6' ry='3.2' transform='rotate(115 11.5 28.5)'/%3E%3Cellipse cx='8.7' cy='24.1' rx='1.6' ry='3.2' transform='rotate(140 8.7 24.1)'/%3E%3Cellipse cx='8.0' cy='19.0' rx='1.6' ry='3.2' transform='rotate(165 8.0 19.0)'/%3E%3Cellipse cx='9.6' cy='14.0' rx='1.6' ry='3.2' transform='rotate(190 9.6 14.0)'/%3E%3Cellipse cx='13.1' cy='10.2' rx='1.6' ry='3.2' transform='rotate(215 13.1 10.2)'/%3E%3Cellipse cx='26.9' cy='10.2' rx='1.6' ry='3.2' transform='rotate(-35 26.9 10.2)'/%3E%3Cellipse cx='30.4' cy='14.0' rx='1.6' ry='3.2' transform='rotate(-10 30.4 14.0)'/%3E%3Cellipse cx='32.0' cy='19.0' rx='1.6' ry='3.2' transform='rotate(15 32.0 19.0)'/%3E%3Cellipse cx='31.3' cy='24.1' rx='1.6' ry='3.2' transform='rotate(40 31.3 24.1)'/%3E%3Cellipse cx='28.5' cy='28.5' rx='1.6' ry='3.2' transform='rotate(65 28.5 28.5)'/%3E%3Cellipse cx='24.1' cy='31.3' rx='1.6' ry='3.2' transform='rotate(90 24.1 31.3)'/%3E%3Cpath d='M20 9.5l3 6.6 7.2.7-5.4 4.8 1.6 7.1L20 25l-6.4 3.7 1.6-7.1-5.4-4.8 7.2-.7z' stroke='%231a1100' stroke-width='.8'/%3E%3C/g%3E%3C/svg%3E") center / 68% auto no-repeat,
+    linear-gradient(135deg, transparent 25%, rgba(255, 242, 184, 0.28) 45%, transparent 60%), repeating-conic-gradient(from 0deg at 50% 50%, #e9b23a 0 8deg, #2a1c00 8deg 16deg);
 }
 
-/* a card in someone's back starts from the plain stripes, whatever back this phone uses */
-.card.back[data-back] {
-  border-color: #fff;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.22) 0 18%, transparent 19%),
-    repeating-linear-gradient(45deg, var(--back-1) 0 5px, var(--back-2) 5px 10px);
+/* rangoli: a dotted festival gradient and a flower */
+[data-back='rangoli'] {
+  --back-1: #c2185b;
+  --back-2: #ff7a1a;
+  --back-edge: #fff;
+  --back-pad: #8e0f4a;
+  --back-frame: #ffd23f;
+  --back-pad-2: transparent;
+  --back-frame-2: transparent;
+  --back-art:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='16.5' fill='%23fff7e6'/%3E%3Cg fill='%23ffd23f'%3E%3Cpath d='M20 20C16 15 17 8 20 4c3 4 4 11 0 16z' transform='rotate(0 20 20)'/%3E%3Cpath d='M20 20C16 15 17 8 20 4c3 4 4 11 0 16z' transform='rotate(45 20 20)'/%3E%3Cpath d='M20 20C16 15 17 8 20 4c3 4 4 11 0 16z' transform='rotate(90 20 20)'/%3E%3Cpath d='M20 20C16 15 17 8 20 4c3 4 4 11 0 16z' transform='rotate(135 20 20)'/%3E%3Cpath d='M20 20C16 15 17 8 20 4c3 4 4 11 0 16z' transform='rotate(180 20 20)'/%3E%3Cpath d='M20 20C16 15 17 8 20 4c3 4 4 11 0 16z' transform='rotate(225 20 20)'/%3E%3Cpath d='M20 20C16 15 17 8 20 4c3 4 4 11 0 16z' transform='rotate(270 20 20)'/%3E%3Cpath d='M20 20C16 15 17 8 20 4c3 4 4 11 0 16z' transform='rotate(315 20 20)'/%3E%3C/g%3E%3Cg fill='%23ff5e8a'%3E%3Cpath d='M20 20c-2.5-3-2-7 0-10 2 3 2.5 7 0 10z' transform='rotate(22 20 20)'/%3E%3Cpath d='M20 20c-2.5-3-2-7 0-10 2 3 2.5 7 0 10z' transform='rotate(67 20 20)'/%3E%3Cpath d='M20 20c-2.5-3-2-7 0-10 2 3 2.5 7 0 10z' transform='rotate(112 20 20)'/%3E%3Cpath d='M20 20c-2.5-3-2-7 0-10 2 3 2.5 7 0 10z' transform='rotate(157 20 20)'/%3E%3Cpath d='M20 20c-2.5-3-2-7 0-10 2 3 2.5 7 0 10z' transform='rotate(202 20 20)'/%3E%3Cpath d='M20 20c-2.5-3-2-7 0-10 2 3 2.5 7 0 10z' transform='rotate(247 20 20)'/%3E%3Cpath d='M20 20c-2.5-3-2-7 0-10 2 3 2.5 7 0 10z' transform='rotate(292 20 20)'/%3E%3Cpath d='M20 20c-2.5-3-2-7 0-10 2 3 2.5 7 0 10z' transform='rotate(337 20 20)'/%3E%3C/g%3E%3Ccircle cx='20' cy='20' r='5' fill='%2316a3a3'/%3E%3Ccircle cx='20' cy='20' r='2.2' fill='%23fff'/%3E%3Cg fill='%23c2185b'%3E%3Ccircle cx='20' cy='3.6' r='1' transform='rotate(0 20 20)'/%3E%3Ccircle cx='20' cy='3.6' r='1' transform='rotate(30 20 20)'/%3E%3Ccircle cx='20' cy='3.6' r='1' transform='rotate(60 20 20)'/%3E%3Ccircle cx='20' cy='3.6' r='1' transform='rotate(90 20 20)'/%3E%3Ccircle cx='20' cy='3.6' r='1' transform='rotate(120 20 20)'/%3E%3Ccircle cx='20' cy='3.6' r='1' transform='rotate(150 20 20)'/%3E%3Ccircle cx='20' cy='3.6' r='1' transform='rotate(180 20 20)'/%3E%3Ccircle cx='20' cy='3.6' r='1' transform='rotate(210 20 20)'/%3E%3Ccircle cx='20' cy='3.6' r='1' transform='rotate(240 20 20)'/%3E%3Ccircle cx='20' cy='3.6' r='1' transform='rotate(270 20 20)'/%3E%3Ccircle cx='20' cy='3.6' r='1' transform='rotate(300 20 20)'/%3E%3Ccircle cx='20' cy='3.6' r='1' transform='rotate(330 20 20)'/%3E%3C/g%3E%3C/svg%3E") center / 66% auto no-repeat,
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.6) 0 1px, transparent 1.6px) 0 0 / 6px 6px, linear-gradient(135deg, #c2185b, #ff7a1a);
 }
 
-/* patterned backs: this phone's own cards, and anyone's card in that back */
-:root[data-back='paisley'] .card.back:not([data-back]),
-.card.back[data-back='paisley'] {
-  background:
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.25) 0 16%, transparent 17%),
-    radial-gradient(circle at 25% 25%, #ffd27a 0 18%, transparent 20%) 0 0 / 10px 10px,
-    radial-gradient(circle at 75% 75%, #2bb3a3 0 18%, transparent 20%) 0 0 / 10px 10px,
-    #b4532a;
+/* peacock: feather eyes on teal and one big eye */
+[data-back='peacock'] {
+  --back-1: #0b5c5f;
+  --back-2: #19a3a3;
+  --back-edge: #d9f7e8;
+  --back-pad: #062a3a;
+  --back-frame: #39c6a5;
+  --back-pad-2: transparent;
+  --back-frame-2: transparent;
+  --back-art:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg stroke='%2339c6a5' stroke-width='.9' stroke-linecap='round'%3E%3Cpath d='M20 20L20 2' transform='rotate(-80 20 20)'/%3E%3Cpath d='M20 20L20 2' transform='rotate(-64 20 20)'/%3E%3Cpath d='M20 20L20 2' transform='rotate(-48 20 20)'/%3E%3Cpath d='M20 20L20 2' transform='rotate(-32 20 20)'/%3E%3Cpath d='M20 20L20 2' transform='rotate(-16 20 20)'/%3E%3Cpath d='M20 20L20 2' transform='rotate(0 20 20)'/%3E%3Cpath d='M20 20L20 2' transform='rotate(16 20 20)'/%3E%3Cpath d='M20 20L20 2' transform='rotate(32 20 20)'/%3E%3Cpath d='M20 20L20 2' transform='rotate(48 20 20)'/%3E%3Cpath d='M20 20L20 2' transform='rotate(64 20 20)'/%3E%3Cpath d='M20 20L20 2' transform='rotate(80 20 20)'/%3E%3C/g%3E%3Cpath d='M20 39V24' stroke='%23d9b44a' stroke-width='1.6'/%3E%3Cellipse cx='20' cy='17' rx='11' ry='13.5' fill='%231f8f5a'/%3E%3Cellipse cx='20' cy='17.5' rx='8.5' ry='10.5' fill='%23e0b040'/%3E%3Cellipse cx='20' cy='18' rx='6.5' ry='8' fill='%2319a3a3'/%3E%3Cellipse cx='20' cy='18.5' rx='3.8' ry='5' fill='%231c2f8f'/%3E%3Cellipse cx='19' cy='16.5' rx='1.2' ry='1.8' fill='%239fd0ff'/%3E%3C/svg%3E") center / 70% auto no-repeat,
+    radial-gradient(ellipse 30% 36% at 50% 50%, #1c2f8f 0 28%, #19a3a3 30% 52%, #e0b040 54% 62%, transparent 66%) 0 0 / 33.4% 20%, linear-gradient(160deg, #0d6a62, #06314a);
 }
 
-:root[data-back='neon'] .card.back:not([data-back]),
-.card.back[data-back='neon'] {
-  border-color: #2fe6ff;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(255, 47, 214, 0.45) 0 16%, transparent 17%),
-    repeating-linear-gradient(135deg, #ff2fd6 0 2px, transparent 2px 8px),
-    repeating-linear-gradient(45deg, #2fe6ff 0 2px, transparent 2px 8px),
-    #120320;
+/* kite festival: a breezy sky with strings and a bright kite */
+[data-back='kite'] {
+  --back-1: #1e6fb8;
+  --back-2: #7fd0ff;
+  --back-edge: #fff;
+  --back-pad: #1e6fb8;
+  --back-frame: #ffd23f;
+  --back-pad-2: transparent;
+  --back-frame-2: transparent;
+  --back-art:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 3 31 16 20 29 9 16z' fill='%23ffd23f'/%3E%3Cpath d='M20 3 31 16H20z' fill='%23ff5e5e'/%3E%3Cpath d='M20 29 9 16h11z' fill='%232bb3a3'/%3E%3Cpath d='M20 3 9 16 20 29 31 16zM20 3v26M9 16h22' fill='none' stroke='%231b2a4a' stroke-width='1.2' stroke-linejoin='round'/%3E%3Cpath d='M20 29c-3 3 3 5 0 8' fill='none' stroke='%23fff' stroke-width='1.2'/%3E%3Cg fill='%23ff5e8a'%3E%3Cpath d='M17 31.5l3 1.5 3-1.5-3-1.5zM17 36l3 1.5 3-1.5-3-1.5z'/%3E%3C/g%3E%3C/svg%3E") center / 66% auto no-repeat,
+    radial-gradient(40% 14% at 30% 22%, rgba(255, 255, 255, 0.55), transparent 70%), radial-gradient(36% 12% at 72% 80%, rgba(255, 255, 255, 0.45), transparent 70%), repeating-linear-gradient(120deg, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px 9px), linear-gradient(180deg, #2f8ae0, #7fd0ff);
 }
 
-:root[data-back='gold'] .card.back:not([data-back]),
-.card.back[data-back='gold'] {
-  border-color: #ffe7a3;
-  background:
-    radial-gradient(circle at 50% 50%, #fff3c4 0 10%, #8a6a12 11% 16%, transparent 17%),
-    repeating-linear-gradient(45deg, #8a6a12 0 5px, #d4a72c 5px 10px);
+/* cosmic: stars and nebula round a ringed planet */
+[data-back='cosmic'] {
+  --back-1: #0b0624;
+  --back-2: #9d7bff;
+  --back-edge: #c9b6ff;
+  --back-pad: #0a0620;
+  --back-frame: #9d7bff;
+  --back-pad-2: #0a0620;
+  --back-frame-2: rgba(255, 255, 255, 0.4);
+  --back-art:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cdefs%3E%3CradialGradient id='p' cx='.35' cy='.35'%3E%3Cstop offset='0' stop-color='%23ffd6f5'/%3E%3Cstop offset='.6' stop-color='%23b06ad9'/%3E%3Cstop offset='1' stop-color='%234a2a8a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath d='M3 9l12 6' stroke='%23fff' stroke-width='1.2' stroke-linecap='round' opacity='.7'/%3E%3Ccircle cx='4' cy='9' r='1.6' fill='%23fff'/%3E%3Ccircle cx='22' cy='22' r='9' fill='url(%23p)'/%3E%3Cellipse cx='22' cy='22' rx='16' ry='4.5' fill='none' stroke='%237fd8ff' stroke-width='1.8' transform='rotate(-20 22 22)'/%3E%3Cpath d='M13.5 19a9 9 0 0 1 17 0' fill='url(%23p)'/%3E%3C/svg%3E") center / 66% auto no-repeat,
+    radial-gradient(circle at 30% 30%, #fff 0 3%, transparent 4%) 0 0 / 25% 18%, radial-gradient(circle at 70% 60%, rgba(214, 228, 255, 0.85) 0 2%, transparent 3%) 0 0 / 33.4% 25%, radial-gradient(60% 40% at 75% 25%, rgba(214, 90, 200, 0.45), transparent 70%), radial-gradient(60% 40% at 25% 75%, rgba(80, 160, 255, 0.4), transparent 70%), #0b0624;
 }
 
-:root[data-back='mandala'] .card.back:not([data-back]),
-.card.back[data-back='mandala'] {
-  background: repeating-radial-gradient(circle at 50% 50%, #ffcf5a 0 2px, #b0123b 2px 6px, #ffcf5a 6px 7px, #3a0a52 7px 11px);
+/* maharaja: maroon and gold jali, foil sheen and an elephant under an arch */
+[data-back='maharaja'] {
+  --back-1: #4a0716;
+  --back-2: #e9b23a;
+  --back-edge: #e9b23a;
+  --back-pad: #4a0716;
+  --back-frame: #f6c453;
+  --back-pad-2: #4a0716;
+  --back-frame-2: #f6c453;
+  --back-art:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff2b8'/%3E%3Cstop offset='.35' stop-color='%23e9b23a'/%3E%3Cstop offset='.55' stop-color='%23fff2b8'/%3E%3Cstop offset='.8' stop-color='%23a8761a'/%3E%3Cstop offset='1' stop-color='%23f6c453'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M4 38V18C4 8 11 2 20 2s16 6 16 16v20z' fill='%234a0716' stroke='url(%23g)' stroke-width='2'/%3E%3Cg fill='url(%23g)'%3E%3Cellipse cx='18' cy='25' rx='10' ry='6.5'/%3E%3Ccircle cx='28.5' cy='21' r='5.2'/%3E%3Cpath d='M31.5 23c2 3 2 7 0 9.5-.8 1-2.3.5-1.8-.8 1-2.6.4-5.5-1.5-7.6z'/%3E%3Crect x='10' y='28' width='3.4' height='7' rx='1'/%3E%3Crect x='14.6' y='28' width='3.4' height='7' rx='1'/%3E%3Crect x='20' y='28' width='3.4' height='7' rx='1'/%3E%3Crect x='24.6' y='27' width='3.4' height='8' rx='1'/%3E%3Cpath d='M12 20.5c0-4.5 2.7-7.5 6-7.5s6 3 6 7.5z'/%3E%3Ccircle cx='18' cy='12' r='1.3'/%3E%3C/g%3E%3Cpath d='M11 20.5h14l-1.5 6h-11z' fill='%23c7384f' stroke='%23fff2b8' stroke-width='.8'/%3E%3Cellipse cx='26.5' cy='21.5' rx='2.2' ry='3' fill='%23a8761a'/%3E%3Ccircle cx='29.6' cy='19.6' r='.8' fill='%234a0716'/%3E%3Cpath d='M30 25.5l3.5 1' stroke='%23fffaf0' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") center / 64% auto no-repeat,
+    linear-gradient(135deg, transparent 25%, rgba(255, 242, 184, 0.3) 45%, transparent 62%), radial-gradient(circle at 50% 50%, #f6c453 0 1.2px, transparent 1.8px) 0 0 / 8px 8px, repeating-linear-gradient(45deg, rgba(233, 178, 58, 0.55) 0 1px, transparent 1px 5.66px), repeating-linear-gradient(-45deg, rgba(233, 178, 58, 0.55) 0 1px, transparent 1px 5.66px), radial-gradient(circle at 50% 50%, #7a1028, #3a0410 75%);
 }
 
-:root[data-back='diamond'] .card.back:not([data-back]),
-.card.back[data-back='diamond'] {
-  background:
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.5) 0 14%, transparent 15%),
-    conic-gradient(from 45deg, #b9f2ff 25%, #3a7bd5 0 50%, #b9f2ff 0 75%, #3a7bd5 0) 0 0 / 10px 10px;
-}
-
-:root[data-back='legend'] .card.back:not([data-back]),
-.card.back[data-back='legend'] {
-  border-color: var(--gold);
-  background:
-    radial-gradient(circle at 50% 50%, #f6c453 0 13%, #2a1c00 14% 17%, transparent 18%),
-    repeating-conic-gradient(from 0deg at 50% 50%, #f6c453 0 10deg, #2a1c00 10deg 20deg);
+/* the little back on each seat's card count: that player's stripes and edge */
+.mini-back {
+  border-color: var(--back-edge, #fff);
 }
 
 /* ---------- the picker on the Profile page ---------- */

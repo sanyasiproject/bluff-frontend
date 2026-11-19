@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { errorText } from '../lib/api';
 import { cx } from '../lib/cards';
-import { BACKS, currentLook, nextUnlock, TABLES, type LookChoice } from '../lib/look';
+import { BACKS, currentLook, nextUnlocks, TABLES, type LookChoice } from '../lib/look';
 import { levelOf } from '../types';
 import type { Auth } from '../useAuth';
 import { PlayingCard } from './PlayingCard';
@@ -29,7 +29,8 @@ export function LookPicker({ auth }: { auth: Auth }) {
       setTrying({});
     }
   };
-  const next = nextUnlock(level);
+  const next = nextUnlocks(level);
+  const nextText = next.map((l) => `${l.name} ${l.emoji}`).join(' and ');
 
   return (
     <section className="panel stack-tight look-picker">
@@ -52,11 +53,8 @@ export function LookPicker({ auth }: { auth: Auth }) {
               className={cx('look-swatch', on && 'on', locked && 'locked')}
               onClick={() => !on && void choose({ table: t.id })}
             >
-              <span
-                className={cx('look-felt', t.id)}
-                style={{ background: `radial-gradient(120% 90% at 50% 35%, ${t.colors[0]} 0%, ${t.colors[1]} 50%, ${t.colors[2]} 100%)` }}
-                aria-hidden
-              >
+              {/* drawn like that table's seat box (styles/looks.css) */}
+              <span className={cx('look-felt', t.id)} data-table={t.id} aria-hidden>
                 {locked ? '🔒' : t.emoji}
               </span>
               <span className="look-name">{t.name}</span>
@@ -96,7 +94,7 @@ export function LookPicker({ auth }: { auth: Auth }) {
       {error && <p className="form-error">{error}</p>}
       <p className="muted small">
         Everyone at the table sees your seat in your table style and your cards in your card back.{' '}
-        {next ? `Reach Lv ${next.level} for ${next.name} ${next.emoji}` : 'Every table and card back is yours 🏆'}
+        {next.length > 0 ? `Reach Lv ${next[0].level} for ${nextText}` : 'Every table and card back is yours 🏆'}
       </p>
     </section>
   );

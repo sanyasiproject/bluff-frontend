@@ -3,62 +3,113 @@ import { AVATAR_BACKGROUNDS, parseAvatar } from '../types';
 export type AvatarBackground = (typeof AVATAR_BACKGROUNDS)[number];
 
 // a soft light from the top, laid over every background
-const SHINE = 'radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.08) 45%, transparent 60%)';
+const SHINE = 'radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.1) 42%, transparent 62%)';
 // a little shade at the bottom so the face pops
-const SHADE = 'radial-gradient(90% 60% at 50% 110%, rgba(0, 0, 0, 0.35), transparent 70%)';
+const SHADE = 'radial-gradient(90% 60% at 50% 112%, rgba(0, 0, 0, 0.38), transparent 70%)';
+// a glow of one colour, placed by x/y percent
+const glow = (x: number, y: number, rgba: string, size = '55% 45%') => `radial-gradient(${size} at ${x}% ${y}%, ${rgba}, transparent 70%)`;
+// one tiny star
+const star = (x: number, y: number, px = 1, color = '#fff') => `radial-gradient(${px}px ${px}px at ${x}% ${y}%, ${color} 50%, transparent 51%)`;
+// a peacock feather eye: navy centre, teal ring, gold rim
+const eye = (x: number, y: number, w: number) =>
+  `radial-gradient(${w}% ${w * 1.25}% at ${x}% ${y}%, #1d2a7a 0 30%, #1fb5a8 36% 58%, #f2c94c 63% 76%, transparent 84%)`;
 
 /** the look of each background: layered gradients, the shine and shade on top */
 const BACKGROUNDS: Record<string, string> = {
-  sunset: `${SHINE}, ${SHADE}, linear-gradient(150deg, #ffb347 0%, #ff6a5c 48%, #e0408f 100%)`,
-  ocean: `${SHINE}, ${SHADE}, linear-gradient(150deg, #5ee7ff 0%, #2e9bff 50%, #2348d6 100%)`,
-  forest: `${SHINE}, ${SHADE}, linear-gradient(150deg, #7ef0b0 0%, #1fb37a 50%, #0b6f6a 100%)`,
-  grape: `${SHINE}, ${SHADE}, linear-gradient(150deg, #c79bff 0%, #8a4dff 50%, #4b1fb0 100%)`,
-  candy: `${SHINE}, ${SHADE}, linear-gradient(150deg, #ffd1e8 0%, #ff8fc6 45%, #ffb38a 100%)`,
+  sunset: [SHINE, SHADE, glow(72, 30, 'rgba(255, 236, 140, 0.75)', '45% 38%'), 'linear-gradient(165deg, #ffd06b 0%, #ff8a4c 35%, #f0507a 68%, #8e2d8f 100%)'].join(', '),
+  ocean: [
+    SHINE,
+    SHADE,
+    glow(28, 30, 'rgba(160, 250, 255, 0.6)', '50% 40%'),
+    'repeating-radial-gradient(120% 60% at 50% 130%, rgba(255, 255, 255, 0.07) 0 3px, transparent 3px 11px)',
+    'linear-gradient(165deg, #6ff2ff 0%, #2aa8ff 38%, #1f52d9 72%, #142b86 100%)',
+  ].join(', '),
+  forest: [SHINE, SHADE, glow(30, 28, 'rgba(210, 255, 160, 0.55)', '50% 40%'), 'linear-gradient(165deg, #b4f5a0 0%, #3ccf84 35%, #12876a 70%, #08463f 100%)'].join(', '),
+  grape: [SHINE, SHADE, glow(70, 30, 'rgba(255, 170, 240, 0.5)', '50% 40%'), 'linear-gradient(165deg, #e6bcff 0%, #a463ff 35%, #5d27cf 70%, #2b0e70 100%)'].join(', '),
+  candy: [
+    SHINE,
+    glow(25, 30, 'rgba(255, 255, 255, 0.6)', '40% 32%'),
+    'repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0 6px, transparent 6px 14px)',
+    'linear-gradient(165deg, #ffe0f0 0%, #ff9ccf 45%, #ff8fa8 70%, #ffb07c 100%)',
+  ].join(', '),
+  mint: [
+    SHINE,
+    SHADE,
+    glow(70, 26, 'rgba(255, 255, 255, 0.5)', '42% 34%'),
+    'linear-gradient(165deg, #e2fff2 0%, #8ff2cc 32%, #33c9a4 66%, #127f80 100%)',
+  ].join(', '),
   fire: [
     SHINE,
-    'radial-gradient(60% 45% at 50% 85%, rgba(255, 220, 90, 0.85), transparent 70%)',
-    'radial-gradient(30% 20% at 25% 70%, rgba(255, 170, 60, 0.6), transparent 70%)',
-    'linear-gradient(170deg, #ff9a3c 0%, #f2412b 55%, #8a0f1a 100%)',
+    glow(50, 88, 'rgba(255, 228, 100, 0.9)', '62% 46%'),
+    glow(22, 72, 'rgba(255, 170, 60, 0.65)', '32% 24%'),
+    glow(80, 70, 'rgba(255, 120, 40, 0.55)', '30% 26%'),
+    'linear-gradient(172deg, #ffa043 0%, #f4452b 50%, #b0131f 80%, #5c0812 100%)',
   ].join(', '),
   ice: [
     SHINE,
-    'radial-gradient(40% 25% at 30% 30%, rgba(255, 255, 255, 0.85), transparent 70%)',
-    'repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.16) 0 2px, transparent 2px 9px)',
-    'linear-gradient(160deg, #ffffff 0%, #bfe9ff 45%, #59b7f5 100%)',
+    glow(30, 28, 'rgba(255, 255, 255, 0.9)', '40% 26%'),
+    'repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 9px)',
+    'repeating-linear-gradient(-60deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 12px)',
+    'linear-gradient(165deg, #ffffff 0%, #c6ecff 40%, #6cc2f7 75%, #2f86d6 100%)',
   ].join(', '),
   night: [
-    'radial-gradient(1.2px 1.2px at 22% 28%, #fff 50%, transparent 51%)',
-    'radial-gradient(1px 1px at 70% 20%, #fff 50%, transparent 51%)',
-    'radial-gradient(1.4px 1.4px at 80% 62%, #dfe6ff 50%, transparent 51%)',
-    'radial-gradient(1px 1px at 35% 78%, #fff 50%, transparent 51%)',
-    'radial-gradient(1px 1px at 55% 45%, #fff 50%, transparent 51%)',
+    star(22, 28, 1.2),
+    star(70, 18),
+    star(84, 58, 1.4, '#dfe6ff'),
+    star(32, 80),
+    star(56, 42),
+    star(14, 55, 0.9),
+    glow(76, 24, 'rgba(255, 246, 210, 0.5)', '22% 22%'),
     SHINE,
-    'linear-gradient(160deg, #3a4bb8 0%, #1d2470 50%, #0a0d33 100%)',
+    'linear-gradient(165deg, #4152c4 0%, #232b80 45%, #10154a 75%, #070922 100%)',
+  ].join(', '),
+  peacock: [
+    SHINE,
+    eye(15, 24, 13),
+    eye(86, 20, 11),
+    eye(86, 80, 13),
+    eye(14, 82, 11),
+    glow(60, 30, 'rgba(120, 255, 210, 0.45)', '50% 40%'),
+    'linear-gradient(165deg, #3fe0c5 0%, #12a1a6 32%, #0d5f92 66%, #0b2a66 100%)',
   ].join(', '),
   gold: [
-    'radial-gradient(70% 45% at 30% 20%, rgba(255, 255, 255, 0.75), transparent 60%)',
+    glow(30, 20, 'rgba(255, 255, 255, 0.8)', '70% 45%'),
+    star(74, 26, 1.6, '#fffbe6'),
+    star(22, 64, 1.2, '#fffbe6'),
     SHADE,
-    'linear-gradient(135deg, #fff2b0 0%, #f6c453 30%, #b8860b 55%, #f9d976 75%, #9a6a12 100%)',
+    'linear-gradient(135deg, #fff4bf 0%, #f7c94f 26%, #b9840c 50%, #fbe08a 70%, #9a6a12 100%)',
   ].join(', '),
   galaxy: [
-    'radial-gradient(1.2px 1.2px at 20% 30%, #fff 50%, transparent 51%)',
-    'radial-gradient(1px 1px at 75% 25%, #fff 50%, transparent 51%)',
-    'radial-gradient(1.4px 1.4px at 62% 72%, #ffe4ff 50%, transparent 51%)',
-    'radial-gradient(1px 1px at 32% 68%, #fff 50%, transparent 51%)',
-    'radial-gradient(55% 40% at 70% 35%, rgba(230, 90, 220, 0.6), transparent 70%)',
-    'radial-gradient(50% 40% at 25% 75%, rgba(70, 150, 255, 0.55), transparent 70%)',
+    star(20, 30, 1.2),
+    star(76, 22),
+    star(62, 74, 1.4, '#ffe4ff'),
+    star(32, 68),
+    star(88, 48, 1, '#cfe3ff'),
+    glow(70, 34, 'rgba(240, 100, 220, 0.65)', '55% 40%'),
+    glow(24, 76, 'rgba(70, 160, 255, 0.6)', '50% 40%'),
+    glow(50, 52, 'rgba(255, 255, 255, 0.18)', '30% 14%'),
     SHINE,
-    'linear-gradient(160deg, #5b3fa8 0%, #2a1b5e 55%, #0a0620 100%)',
+    'linear-gradient(165deg, #6a46c2 0%, #2f1d6a 50%, #120a36 80%, #06031a 100%)',
   ].join(', '),
   rainbow: [
     SHINE,
-    'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.35), transparent 55%)',
-    'conic-gradient(from 200deg, #ff5f6d, #ffc371, #f9f871, #47e891, #4facfe, #a66cff, #ff5f6d)',
+    'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.4), transparent 58%)',
+    'conic-gradient(from 200deg, #ff5f6d, #ffb347, #f9f871, #47e891, #34d3ff, #5b7cff, #b36cff, #ff5f9e, #ff5f6d)',
+  ].join(', '),
+  aurora: [
+    star(18, 20),
+    star(80, 16, 1.2),
+    star(64, 34, 0.9),
+    'radial-gradient(70% 22% at 40% 46%, rgba(80, 255, 170, 0.7), transparent 70%)',
+    'radial-gradient(60% 18% at 64% 34%, rgba(110, 200, 255, 0.55), transparent 70%)',
+    'radial-gradient(64% 20% at 50% 60%, rgba(190, 110, 255, 0.55), transparent 70%)',
+    SHINE,
+    'linear-gradient(175deg, #0c2a52 0%, #0a1a3c 45%, #0b0f2c 75%, #050816 100%)',
   ].join(', '),
 };
 
-/** backgrounds that get a slow light sweep */
-const SHIMMER = new Set(['gold', 'galaxy', 'rainbow']);
+/** the special backgrounds: a slow light sweep and a glowing ring */
+const SHIMMER = new Set(['gold', 'galaxy', 'rainbow', 'aurora']);
 
 export interface AvatarLook {
   /** an emoji face, or null for a character */
@@ -105,4 +156,7 @@ export const BACKGROUND_NAMES: Record<string, string> = {
   gold: 'Gold',
   galaxy: 'Galaxy',
   rainbow: 'Rainbow',
+  mint: 'Mint',
+  peacock: 'Peacock',
+  aurora: 'Aurora',
 };

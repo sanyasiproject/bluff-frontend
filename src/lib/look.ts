@@ -37,14 +37,23 @@ const TABLE_COLORS: Record<string, [string, string, string, string]> = {
   maroon: ['#8a1f3a', '#5a0f24', '#24040e', '#24040e'],
   emerald: ['#12b585', '#06664a', '#01261c', '#01261c'],
   galaxy: ['#5b3fa8', '#2a1b5e', '#0a0620', '#0a0620'],
+  saffron: ['#e07a22', '#a4470f', '#3a1504', '#3a1504'],
+  lagoon: ['#22b8b0', '#0b6b74', '#03283a', '#03283a'],
+  diwali: ['#b8452a', '#5c1630', '#1c0614', '#1c0614'],
+  monsoon: ['#4d6f8a', '#24394f', '#0a121c', '#0a121c'],
+  champion: ['#3a3f6e', '#1a1b3a', '#07070f', '#07070f'],
 };
 
-export const TABLES: TableLook[] = TABLE_THEMES.map((t) => {
-  const [light, felt, deep, bar] = TABLE_COLORS[t.id];
+/** catalog order is the order ids were added; the picker lists them by level */
+const byLevel = <T extends { level: number }>(items: readonly T[]): T[] => [...items].sort((a, b) => a.level - b.level);
+
+export const TABLES: TableLook[] = byLevel(TABLE_THEMES).map((t) => {
+  // a table with no shades here falls back to classic's rather than breaking the app
+  const [light, felt, deep, bar] = TABLE_COLORS[t.id] ?? TABLE_COLORS.classic;
   return { ...t, colors: [light, felt, deep], bar };
 });
 
-export const BACKS: BackLook[] = [...CARD_BACKS];
+export const BACKS: BackLook[] = byLevel(CARD_BACKS);
 
 export interface LookChoice {
   table: string;
@@ -94,6 +103,12 @@ export function unlocksAt(level: number): { tables: TableLook[]; backs: BackLook
 export function nextUnlock(level: number): (TableLook | BackLook) | null {
   const locked = [...TABLES, ...BACKS].filter((l) => l.level > level).sort((a, b) => a.level - b.level);
   return locked[0] ?? null;
+}
+
+/** every look still locked that unlocks at the next level with any (a table and a back can share one) */
+export function nextUnlocks(level: number): (TableLook | BackLook)[] {
+  const next = nextUnlock(level);
+  return next ? [...TABLES, ...BACKS].filter((l) => l.level === next.level) : [];
 }
 
 /** paints this player's table and own card back (deck, practice, home screen) on the app; guests always see the defaults */

@@ -4,6 +4,8 @@ import { achievementsOf, TITLES } from '../lib/progress';
 import {
   AVATAR_BACKGROUNDS,
   AVATAR_CHARACTERS,
+  CARD_BACKS,
+  TABLE_THEMES,
   AVATAR_FACES,
   BET_STEPS,
   BOT_STAKE_CAPS,
@@ -36,6 +38,10 @@ import {
   type SecretMissionDef,
 } from '../types';
 import { FullPage } from './FullPage';
+
+/** the levels a catalog's locked items open at, lowest first */
+const unlockLevels = (items: readonly { level: number }[]) =>
+  [...new Set(items.map((i) => i.level).filter((l) => l > 1))].sort((a, b) => a - b).join(', ');
 
 const ZERO = { gamesPlayed: 0, wins: 0, losses: 0, bluffs: 0, bluffsCaught: 0, goodCalls: 0, wrongCalls: 0, cardsPickedUp: 0, plays: 0, chances: 0, crazy7Games: 0, bonusXp: 0 };
 
@@ -562,7 +568,8 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             Level up: a full-screen "Level up! Lv N" with the title (✨ New title! when it changes) and any table or card back that level unlocks.
           </li>
           <li>
-            🎨 Table &amp; cards (Profile): felt themes unlock at Lv 3, 6, 10, 15, 20, 30 and card backs at Lv 2, 5, 8, 12, 18, 25, 40. Both are your
+            🎨 Table &amp; cards (Profile): {TABLE_THEMES.length} felt themes unlock at Lv {unlockLevels(TABLE_THEMES)} and {CARD_BACKS.length} card
+            backs at Lv {unlockLevels(CARD_BACKS)}. Both are your
             showpiece: everyone at the table sees your seat box in your table style, and your face-down cards in your card back (the cards you
             play onto the pile, cards flying to your hand). Your own screen uses your table as the felt.
           </li>
@@ -604,7 +611,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>
             🎭 Avatars: tap your picture on the Profile page to pick a girl or boy character ({AVATAR_CHARACTERS.length}, some waving, pointing or
             on the phone) or an emoji face ({AVATAR_FACES.length}), and a background ({AVATAR_BACKGROUNDS.length}). The rarest unlock with level,
-            up to 👑 at Lv 40 and the rainbow background at Lv 30; gold, galaxy and rainbow shimmer. Everyone sees it on your seat, in lobbies,
+            up to 👑 at Lv 40 and the rainbow background at Lv 30; gold, galaxy, rainbow and aurora shimmer. Everyone sees it on your seat, in lobbies,
             Friends and profiles. Guests and players who haven't picked one keep their first letter. Character art: Avataaars by Pablo Stanley and
             Notionists by Zoish.
           </li>
