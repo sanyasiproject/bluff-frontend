@@ -4,6 +4,7 @@ import { pushPileReaction } from './lib/pileReactions';
 import { request, ServerError, socket } from './lib/socket';
 import { speak } from './lib/speech';
 import { clearSession, loadSavedSession, loadTabSession, saveName, saveSession, type Session } from './lib/storage';
+import { playVoice, type Clip } from './lib/voice';
 import {
   QUICK_MESSAGES,
   REACTIONS,
@@ -21,6 +22,7 @@ import {
   type RoomView,
   type SazaBadge,
   type ThrowEvent,
+  type VoiceEvent,
 } from './types';
 
 export interface Invite extends InviteEvent {
@@ -179,6 +181,13 @@ export function useBluff() {
       setReactions((prev) => [...prev.slice(-12), { key: ++noteSeq, emoji: '', text, who, at: Date.now() }]);
       if (v && v.phase !== 'lobby') setBubbles((prev) => [...prev.slice(-10), { key: ++noteSeq, from: c.from, text, at: Date.now() }]);
     };
+    // someone else's voice note: played unless this phone muted them or voice notes
+    const onVoice = (n: VoiceEvent) => {
+      const v = viewRef.current;
+      const p = [...(v?.players ?? []), ...(v?.watchers ?? [])].find((x) => x.id === n.from);
+      if (!(n.audio instanceof ArrayBuffer) || n.from === v?.meId) return;
+      playVoice(p?.name ?? 'Someone', p?.username ?? null, n.audio, n.ms);
+    };
     const onThrow = (t: ThrowEvent) => {
       setFlyers((prev) => [...prev.slice(-8), { key: ++noteSeq, from: t.from, to: t.to, emoji: THROWS[t.index] ?? '❓', count: 1 }]);
     };
@@ -212,6 +221,7 @@ export function useBluff() {
     socket.on('announce', onAnnounce);
     socket.on('chat', onChat);
     socket.on('throw', onThrow);
+    socket.on('voice', onVoice);
     socket.on('gift', onGift);
     socket.on('gift:received', onGiftReceived);
     socket.on('session:replaced', onReplaced);
@@ -228,6 +238,7 @@ export function useBluff() {
       socket.off('announce', onAnnounce);
       socket.off('chat', onChat);
       socket.off('throw', onThrow);
+      socket.off('voice', onVoice);
       socket.off('gift', onGift);
       socket.off('gift:received', onGiftReceived);
       socket.off('room:kicked', onKicked);
@@ -368,6 +379,8 @@ export function useBluff() {
       reactOnPile: (index: number) => run(() => request('chat:send', { kind: 'reaction', index, on: 'pile' })),
       /** throw an emoji at someone in the room; everyone sees it fly */
       throwAt: (memberId: string, index: number) => run(() => request('chat:throw', { to: memberId, index })),
+      /** a recorded voice note for everyone else in the room; errors come back to the mic button */
+      sendVoice: (clip: Clip) => request('voice:send', { audio: clip.audio, mime: clip.mime, ms: clip.ms }),
       dropFlyer: (key: number) => setFlyers((prev) => prev.filter((f) => f.key !== key)),
       reclaim: () => {
         replacedRef.current = false;

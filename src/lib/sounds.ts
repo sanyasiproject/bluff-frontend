@@ -14,6 +14,9 @@ export function unlockAudio(): void {
   if (ctx.state !== 'running') void ctx.resume().catch(() => undefined);
 }
 
+/** the unlocked audio, whether or not game sounds are on (voice notes check their own switches) */
+export const liveAudio = (): AudioContext | null => (ctx?.state === 'running' ? ctx : null);
+
 function audio(): AudioContext | null {
   return isSoundOn() && ctx?.state === 'running' ? ctx : null;
 }

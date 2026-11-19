@@ -69,6 +69,7 @@ import { SazaTag } from './Saza';
 import { Backdrop } from './Overlays';
 import { PlayerSheet } from './PlayerSheet';
 import { QuickChat } from './QuickChat';
+import { VoiceButton, VoiceMuteRow } from './Voice';
 import { LessonOffer } from './tutorial/LessonOffer';
 import { TutorialPage } from './tutorial/TutorialPage';
 import { Avatar } from './Avatar';
@@ -461,6 +462,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             ))}
           </p>
         </div>
+        <VoiceButton view={view} onSend={actions.sendVoice} onToast={actions.toast} />
         <QuickChat onSend={actions.chat} />
         <AccountCorner auth={auth} roomCode={view.code} onInvite={actions.invite} onJoin={joinFriend} />
       </header>
@@ -614,6 +616,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                 {bots.length > 0 && <span>🤖 {BOT_LEVEL_NAMES[view.config.botLevel ?? 'expert']} bots</span>}
               </>
             )}
+            {view.config.voice === false && <span>🔇 No voice notes</span>}
           </div>
           {stake > 0 && <p className="muted small">Winner takes 🪙 {formatCoins(pot)}</p>}
           {bots.length > 0 && <p className="muted small">🤖 Bots put in nothing · coins lost to a bot are gone</p>}
@@ -740,6 +743,15 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         )}
       </section>}
 
+      {/* older servers have no voice notes */}
+      {isHost && view.config.voice !== undefined && (
+        <section className="panel">
+          <SettingRow title="🎤 Voice notes" desc="Logged-in players hold the mic to send a short clip to the table. Never saved">
+            <Choice value={view.config.voice} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ voice: on })} />
+          </SettingRow>
+        </section>
+      )}
+
       <button className="link-btn tut-link" onClick={() => setLesson(view.config.game)}>
         📘 How to play: 1-minute practice game
       </button>
@@ -839,6 +851,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           onThrow={viewing.id !== view.meId ? (i) => void actions.throwAt(viewing.id, i) : undefined}
           onClose={() => setViewingId(null)}
         >
+          {view.config.voice && viewing.id !== view.meId && viewing.username && <VoiceMuteRow name={viewing.name} username={viewing.username} />}
           {isHost && viewing.id !== view.meId && (
             <div className="host-tools">
               <p className="label">Host tools</p>

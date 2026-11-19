@@ -28,6 +28,8 @@ import {
   SEVEN_PENALTY,
   STAKES,
   THROWS,
+  VOICE_GAP_MS,
+  VOICE_MAX_MS,
   XP_RULES,
   xpForLevel,
   type MissionDef,
@@ -174,6 +176,9 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>
             <b>🏅 Ranked</b> (Bluff): Off (default) or On. Only logged-in players, no bots.
+          </li>
+          <li>
+            <b>🎤 Voice notes</b> (both games): On (default) or Off.
           </li>
           <li>Players who aren't the host see all settings as chips in the lobby.</li>
         </ul>
@@ -572,6 +577,24 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             Notionists by Zoish.
           </li>
           <li>Your own Profile: level ring, coins and rank, rewards, record, play style, achievements and the last 10 games.</li>
+        </ul>
+      </Section>
+
+      <Section icon="🎤" title="Voice notes">
+        <ul>
+          <li>
+            Hold 🎤 (top bar, lobby and game) and talk; let go to send. Up to {VOICE_MAX_MS / 1000} seconds; slide up before letting go to
+            cancel. Everyone else in the room hears it at once.
+          </li>
+          <li>
+            Logged-in players only, seated or watching; guests can listen. One note every {VOICE_GAP_MS / 1000} seconds per player. The
+            phone asks for the mic the first time.
+          </li>
+          <li>Notes are passed straight on and never saved: not on the server, not in the game history.</li>
+          <li>
+            Don't want to hear someone? Tap 🔇 on their note, or on their card in the lobby. ⋯ → Voice notes mutes everyone; Sound off
+            mutes them too. The host can turn voice notes off for the room in the lobby.
+          </li>
         </ul>
       </Section>
 

@@ -22,6 +22,8 @@ import { Backdrop, BetSheet, GameOver, PeekSheet, PickSheet, PlayersSheet, RankS
 import { GiftRow, ThrowRow } from './PlayerActions';
 import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
+import { stopVoice } from '../lib/voice';
+import { HearVoiceButton, VoiceButton } from './Voice';
 import { Avatar } from './Avatar';
 import { SazaTag } from './Saza';
 import { SecretChip } from './SecretMissions';
@@ -228,6 +230,7 @@ export function GameMenu({
         <button className="btn block" onClick={onToggleSound}>
           {sound ? '🔊 Sound on · tap to mute' : '🔇 Sound off · tap to turn on'}
         </button>
+        {c.voice && <HearVoiceButton />}
         {onPeople && (
           <button className="btn block" onClick={onPeople}>
             👥 People in this room
@@ -535,6 +538,8 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
   const toggleSound = () => {
     unlockSpeech();
     setSoundOn(!sound);
+    // Sound off silences voice notes too, including one playing now
+    if (sound) stopVoice();
     setSound(!sound);
   };
 
@@ -563,6 +568,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
               👀<span className="req-dot">{view.watchRequests.length}</span>
             </button>
           )}
+          <VoiceButton view={view} onSend={actions.sendVoice} onToast={actions.toast} />
           <QuickChat onSend={actions.chat} />
           <button className="icon-btn" aria-label="Game menu" onClick={() => setPanel('menu')}>
             ⋯

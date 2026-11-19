@@ -7,6 +7,7 @@ import { Home } from './components/Home';
 import { Lobby } from './components/Lobby';
 import { BonusPopup, InvitePopup } from './components/Popups';
 import { Reactions } from './components/Reactions';
+import { VoicePill } from './components/Voice';
 import { Splash } from './components/Splash';
 import { Table } from './components/Table';
 import { Toasts } from './components/Toasts';
@@ -98,6 +99,7 @@ export default function App() {
       {view && !replaced && status !== 'online' && <div className="conn-pill">Reconnecting…</div>}
       <Toasts notes={notes} />
       <Reactions items={reactions} />
+      <VoicePill />
       <Flyers items={flyers} onDone={actions.dropFlyer} />
       <FriendOnline auth={auth} inLobby={view?.phase === 'lobby'} onInvite={actions.invite} />
       {invite && (
