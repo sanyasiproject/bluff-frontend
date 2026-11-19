@@ -1,3 +1,4 @@
+import { AuraCanvas } from './AuraCanvas';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { api, errorText } from '../lib/api';
 import { cx } from '../lib/cards';
@@ -98,7 +99,9 @@ export function PlayerSheet({ auth, name, username, level, avatar = null, childr
 
   return (
     <Backdrop onClose={onClose}>
-      <div className="player-card">
+      {/* their shop aura round the header, as everyone sees it */}
+      <div className={cx('player-card', p?.aura && 'aura-live aura-card')} data-aura={p?.aura ?? undefined}>
+        <AuraCanvas aura={p?.aura} pad={16} />
         <Avatar name={p?.displayName ?? name} avatar={p ? p.avatar : avatar} size="lg">
           {p && p.online !== null && <i className={cx('presence', p.online && 'on')} />}
         </Avatar>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type RefObject } from 
 import { cx, isRed, SUIT_SYMBOL } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
+import { auraOf } from '../lib/aura';
 import { backOf } from '../lib/look';
 import { confettiAt } from '../lib/motion';
 import { useNewCards } from '../lib/newCards';
@@ -200,7 +201,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
       const owners = [...opponents.map((p) => p.id), view.meId];
       // cards going into a hand show in that player's card back
       targets.forEach((el, i) => {
-        if (el) fly({ key: `deal-${i}-${Date.now()}`, count: 4, from, to: el.getBoundingClientRect(), delay: i * 140, vanish: true, backs: [backOf(view.players, owners[i])] });
+        if (el) fly({ key: `deal-${i}-${Date.now()}`, count: 4, from, to: el.getBoundingClientRect(), delay: i * 140, vanish: true, backs: [backOf(view.players, owners[i])], auras: [auraOf(view.players, owners[i])] });
       });
     });
     const t = setTimeout(() => setDealing(false), 1600);
@@ -254,6 +255,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
           delay,
           vanish: true,
           backs: [p.back],
+          auras: [p.shop?.aura ?? null],
         });
       }
       next[p.id] = `+${gained}`;

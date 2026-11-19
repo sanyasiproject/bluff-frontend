@@ -14,6 +14,8 @@ import type {
   RivalRecord,
   RivalsResponse,
   ServerInfo,
+  ShopLookKind,
+  ShopResponse,
 } from './types';
 
 /** the logged-in account (null = guest) and account actions */
@@ -181,6 +183,20 @@ export function useAuth() {
     league: () => api<LeagueResponse>('/me/league', { token }),
     /** leave me off my friends' league boards, or put me back */
     setLeagueHidden: (hidden: boolean) => api<LeagueResponse>('/me/league/hide', { body: { hidden }, token }),
+    /** my coins, running rentals and the looks I show */
+    shop: () => api<ShopResponse>('/me/shop', { token }),
+    /** rent a shop item (again adds its time); the account's coins update everywhere; throws with the server's reason */
+    buyShop: async (id: string) => {
+      const res = await api<{ shop: ShopResponse; user: PublicUser }>('/me/shop/buy', { body: { id }, token });
+      setUser(res.user);
+      return res.shop;
+    },
+    /** show a running look to others, or null to take it off */
+    wearShop: async (kind: ShopLookKind, id: string | null) => {
+      const res = await api<{ shop: ShopResponse; user: PublicUser }>('/me/shop/wear', { body: { kind, id }, token });
+      setUser(res.user);
+      return res.shop;
+    },
     /** my records against every friend I've played */
     rivals: () => api<RivalsResponse>('/me/rivals', { token }),
     /** my record against one friend; null when not a friend or no games together */

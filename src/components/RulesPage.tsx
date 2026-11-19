@@ -28,6 +28,7 @@ import {
   SECRET_MISSIONS,
   SECRET_XP,
   SEVEN_PENALTY,
+  SHOP_ITEMS,
   STAKES,
   THROWS,
   VOICE_GAP_MS,
@@ -419,6 +420,17 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>Stakes: everyone pays when the game finishes and the winner takes the pot. Stopped games move nothing.</li>
           <li>Coins are only for fun inside the app; there's no real money.</li>
+        </ul>
+      </Section>
+
+      <Section icon="🛍️" title="Coin shop">
+        <ul>
+          <li>🛍️ Coin shop on Home and Profile. Everything is rented for a day or a week; nothing is kept for good.</li>
+          <li>XP boosts (1.5x / 2x / 3x for a day, 1.5x / 2x for a week) multiply only a game's own XP, in games of {MIN_REWARD_GAME_SEC / 60} min or more.</li>
+          <li>🪙 Coin Magnet: +25% on daily ladder and mission coins for 7 days.</li>
+          <li>Auras show on your seat, card backs and profile. Win bursts and entry flashes are seen by everyone at the table.</li>
+          <li>One XP boost and one coin boost at a time. Buying again adds time, up to 28 days ahead.</li>
+          <li>{SHOP_ITEMS.map((i) => `${i.emoji} ${i.name} ${compactCoins(i.price)}`).join(' · ')}</li>
         </ul>
       </Section>
 

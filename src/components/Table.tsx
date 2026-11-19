@@ -1,8 +1,10 @@
+import { AuraCanvas } from './AuraCanvas';
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { api } from '../lib/api';
 import { claimText, cx, placeLabel, rankPlural, SUIT_SYMBOL } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
+import { auraOf } from '../lib/aura';
 import { backOf } from '../lib/look';
 import { confettiAt } from '../lib/motion';
 import { useNewCards } from '../lib/newCards';
@@ -52,6 +54,8 @@ interface SeatProps {
 }
 
 export function Seat({ player, turn, passed, viewing, action, bubble, onClick, label, seatRef, team, partner, tag, extra }: SeatProps) {
+  // the shop aura everyone sees round this player's seat, drawn live (AuraCanvas)
+  const aura = player.shop?.aura ?? undefined;
   const badge = player.place ? placeLabel(player.place) : !player.connected ? 'offline' : passed ? 'pass' : null;
   const className = cx(
     'seat',
@@ -60,10 +64,12 @@ export function Seat({ player, turn, passed, viewing, action, bubble, onClick, l
     !player.connected && 'offline',
     player.place && 'done',
     team && `team-${team}`,
+    aura && 'aura-live',
     extra,
   );
   const body = (
     <>
+      <AuraCanvas aura={aura} />
       {viewing && <span className="eye-badge">👁</span>}
       {badge && <span className={cx('badge', player.place && 'gold')}>{badge}</span>}
       <Avatar name={player.name} avatar={player.avatar} bot={player.bot}>
@@ -75,7 +81,7 @@ export function Seat({ player, turn, passed, viewing, action, bubble, onClick, l
         {player.name}
       </span>
       <span className="seat-count">
-        <i className="mini-back" data-back={player.back} />
+        <i className={cx('mini-back', aura && 'shop-aura')} data-back={player.back} data-aura={aura} />
         {/* re-keyed so the number bumps when it changes */}
         <b key={player.cardCount} className="bump">
           {player.cardCount}
@@ -97,6 +103,7 @@ export function Seat({ player, turn, passed, viewing, action, bubble, onClick, l
       className={className}
       data-member={player.id}
       data-table={player.table}
+      data-aura={aura}
       aria-pressed={viewing}
       aria-label={label}
       onClick={onClick}
@@ -105,7 +112,7 @@ export function Seat({ player, turn, passed, viewing, action, bubble, onClick, l
     </button>
   ) : (
     // the seat box shows the player's own table style, so everyone sees it
-    <div ref={seatRef} className={className} data-member={player.id} data-table={player.table}>
+    <div ref={seatRef} className={className} data-member={player.id} data-table={player.table} data-aura={aura}>
       {body}
     </div>
   );
@@ -158,7 +165,20 @@ function TruthRow({ cards, claim, kismat }: { cards: Card[]; claim: Rank; kismat
   );
 }
 
-function Pile({ count, boxRef, playKey, backs }: { count: number; boxRef: RefObject<HTMLDivElement>; playKey: string | null; backs: string[] }) {
+function Pile({
+  count,
+  boxRef,
+  playKey,
+  backs,
+  auras = [],
+}: {
+  count: number;
+  boxRef: RefObject<HTMLDivElement>;
+  playKey: string | null;
+  backs: string[];
+  /** owners' shop auras, lined up with backs */
+  auras?: (string | null)[];
+}) {
   const shown = Math.min(count, 7);
   // backs line up with the top cards; any without an owner show the classic back
   const offset = shown - backs.length;
@@ -173,6 +193,7 @@ function Pile({ count, boxRef, playKey, backs }: { count: number; boxRef: RefObj
             key={n}
             faceDown
             back={backs[i - offset] ?? DEFAULT_CARD_BACK}
+            aura={auras[i - offset]}
             size="sm"
             className="pile-card"
             style={{ transform: `translate(-50%, -50%) rotate(${((n * 47) % 34) - 17}deg) translate(${((n * 13) % 11) - 5}px, ${-i}px)` }}
@@ -312,9 +333,15 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
   // everyone's face-down cards show in their own card back
   const back = (id: string | null | undefined) => backOf(view.players, id);
   const pileBacks = view.pileTopBy.map(back);
+  const aura = (id: string | null | undefined) => auraOf(view.players, id);
+  const pileAuras = view.pileTopBy.map(aura);
   // the pile as it was before a call took it, for the cards flying to whoever picks it up
   const lastPileBacks = useRef<string[]>([]);
-  if (pileBacks.length) lastPileBacks.current = pileBacks;
+  const lastPileAuras = useRef<(string | null)[]>([]);
+  if (pileBacks.length) {
+    lastPileBacks.current = pileBacks;
+    lastPileAuras.current = pileAuras;
+  }
   const pot = view.config.stake * (view.players.length + view.leftPlayers.length);
   const playing = view.phase === 'playing';
   // anyone still holding a single card gets a spotlight (and a heartbeat when it starts)
@@ -360,6 +387,8 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
   const followed = view.players.find((p) => p.id === followId);
   // everyone still holds an even share: the cards were just dealt
   const perPlayer = (view.config.decks * 52) / Math.max(view.players.length, 1);
+  // a big hand (2 decks) leaves little room: the middle of the table goes compact
+  const crowded = Math.max(view.hand.length, followed?.cardCount ?? 0) > 30;
   const freshDeal = playing && !lp && view.pileCount === 0 && view.players.every((p) => Math.abs(p.cardCount - perPlayer) < 1);
 
   // quick messages also show on the sender's seat (they float up the screen for everyone)
@@ -399,7 +428,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
       const targets = [...opponents.map((p) => seatEls.current.get(p.id)), watching ? null : handRef.current];
       const owners = [...opponents.map((p) => p.id), view.meId];
       targets.forEach((el, i) => {
-        if (el) fly({ key: `deal-${i}-${Date.now()}`, count: 4, from: pile, to: el.getBoundingClientRect(), delay: i * 140, vanish: true, backs: [back(owners[i])] });
+        if (el) fly({ key: `deal-${i}-${Date.now()}`, count: 4, from: pile, to: el.getBoundingClientRect(), delay: i * 140, vanish: true, backs: [back(owners[i])], auras: [aura(owners[i])] });
       });
     });
     const t = setTimeout(() => setDealing(false), 1600);
@@ -422,7 +451,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
     const from = pileRef.current?.getBoundingClientRect();
     const target = r.loserId === view.meId ? handRef.current : seatEls.current.get(r.loserId);
     if (from && target && r.pileCount > 0) {
-      fly({ key: `sweep-${r.playId}`, count: Math.min(r.pileCount, 8), from, to: target.getBoundingClientRect(), vanish: true, backs: [...lastPileBacks.current].reverse() });
+      fly({ key: `sweep-${r.playId}`, count: Math.min(r.pileCount, 8), from, to: target.getBoundingClientRect(), vanish: true, backs: [...lastPileBacks.current].reverse(), auras: [...lastPileAuras.current].reverse() });
     }
   }, [showReveal, view.reveal?.playId]);
 
@@ -475,7 +504,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
     const from = lp.playerId === view.meId ? handRef.current : seatEls.current.get(lp.playerId);
     const to = pileRef.current;
     if (from && to) {
-      fly({ key: id, count: Math.min(lp.count, 6), from: from.getBoundingClientRect(), to: to.getBoundingClientRect(), backs: [back(lp.playerId)] });
+      fly({ key: id, count: Math.min(lp.count, 6), from: from.getBoundingClientRect(), to: to.getBoundingClientRect(), backs: [back(lp.playerId)], auras: [aura(lp.playerId)] });
     }
   });
   useOnChange(view.passedIds.length, (n) => n > 0 && sfx.pass());
@@ -578,7 +607,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
   else if (playing) status = `${name(view.turnId)}'s turn`;
 
   return (
-    <main className="table">
+    <main className={cx('table', crowded && 'crowded')}>
       <header className="topbar">
         <span className="code-chip">{view.code}</span>
         {partnerId && (
@@ -646,7 +675,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
           roundChip
         )}
         <PileReact onReact={(i) => void actions.reactOnPile(i)}>
-          <Pile count={view.pileCount} boxRef={pileRef} playKey={lp?.id ?? null} backs={pileBacks} />
+          <Pile count={view.pileCount} boxRef={pileRef} playKey={lp?.id ?? null} backs={pileBacks} auras={pileAuras} />
         </PileReact>
         {lp && (
           <p className="last-play">
@@ -818,6 +847,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
         <PickSheet
           count={lp.count}
           back={back(lp.playerId)}
+          aura={aura(lp.playerId)}
           who={name(lp.playerId)}
           claim={claimText(lp.count, lp.rank)}
           kismat={kismat}
@@ -832,6 +862,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
         <PeekSheet
           count={lp.count}
           back={back(lp.playerId)}
+          aura={aura(lp.playerId)}
           peeked={peekedNow}
           left={view.peeksLeft}
           claim={lp.rank}
@@ -864,7 +895,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
         />
       )}
       {showReveal && view.reveal && (
-        <RevealOverlay reveal={view.reveal} name={name} back={back(view.reveal.playerId)} onClose={() => setShowReveal(false)} kismat={kismat} />
+        <RevealOverlay reveal={view.reveal} name={name} back={back(view.reveal.playerId)} aura={aura(view.reveal.playerId)} onClose={() => setShowReveal(false)} kismat={kismat} />
       )}
       {view.phase === 'over' && !(showReveal && view.reveal) && (
         <GameOver

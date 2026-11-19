@@ -1,0 +1,670 @@
+/* shop looks everyone sees: auras on seats, card backs and profile cards; win and entry effects (components/ShopFx.tsx) */
+
+/* ---------- auras: .shop-aura[data-aura] on a seat, card back, profile card or shop swatch ----------
+   Two layers: ::before is the edge (glow ring, bolts, flames), ::after the light inside (screen-blended so text stays readable).
+   A seat's turn ring (::before) and one-card spotlight (::after) win over the aura while they show. */
+
+:where(.shop-aura[data-aura]) {
+  position: relative;
+}
+
+.shop-aura[data-aura]:not(.turn):not(.mini-back)::before,
+.shop-aura[data-aura]:not(.spot):not(.mini-back)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* the inner light tints what's under it instead of covering it */
+.shop-aura[data-aura]:not(.spot)::after {
+  mix-blend-mode: screen;
+}
+
+/* the tiny card-back badge on a seat: just a coloured glow */
+.mini-back.shop-aura {
+  box-shadow: 0 0 5px 1px var(--aura-glow, transparent);
+}
+
+/* a profile card with an aura becomes a lit box; its content sits over the light */
+.player-card.shop-aura {
+  isolation: isolate;
+  padding: 14px 10px 12px;
+  border-radius: 20px;
+  background: radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.28));
+}
+
+.player-card.shop-aura > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* fallback look for the shop's preview swatch (shop.css may restyle it) */
+:where(.shop-aura.aura-swatch) {
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, #1d2b36, #0d151c);
+}
+
+/* ---------- ⚡ lightning: bolts crackle round the box, the edge hums and flashes with each strike ---------- */
+
+.shop-aura[data-aura='aura-lightning'] {
+  --aura-glow: rgba(120, 200, 255, 0.9);
+}
+
+.shop-aura[data-aura='aura-lightning']:not(.turn):not(.mini-back)::before {
+  inset: -2px;
+  background: radial-gradient(90% 70% at 50% 45%, rgba(160, 215, 255, 0.16), transparent 70%);
+  box-shadow:
+    0 0 0 1.5px rgba(170, 225, 255, 0.85),
+    0 0 10px 2px rgba(80, 170, 255, 0.65),
+    0 0 22px 4px rgba(130, 90, 255, 0.35),
+    inset 0 0 12px rgba(120, 190, 255, 0.45);
+  opacity: 0.75;
+  animation: aura-hum 2.6s steps(1, end) infinite;
+}
+
+/* the bolts: drawn on the edges, flipped between strikes so they jump round the box */
+.shop-aura[data-aura='aura-lightning']:not(.spot):not(.mini-back)::after {
+  inset: -9px;
+  border-radius: 0;
+  mix-blend-mode: normal;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 60' preserveAspectRatio='none'%3E%3Cg fill='none' stroke-linejoin='bevel' vector-effect='non-scaling-stroke'%3E%3Cpath d='M13 0 6 21l7 3-9 19 7 2-8 15' stroke='%2366c2ff' stroke-width='4' stroke-opacity='.5' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M13 0 6 21l7 3-9 19 7 2-8 15' stroke='%23f2fbff' stroke-width='1.6' vector-effect='non-scaling-stroke'/%3E%3Cpath d='m13 24 6 9m-8 12 5 7' stroke='%23bfe6ff' stroke-width='1' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E")
+      0 22% / 20% 62% no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 20' preserveAspectRatio='none'%3E%3Cg fill='none' stroke-linejoin='bevel'%3E%3Cpath d='M0 9 17 4l4 8 17-7 4 8 18-5' stroke='%23a98bff' stroke-width='4' stroke-opacity='.45' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M0 9 17 4l4 8 17-7 4 8 18-5' stroke='%23f6f2ff' stroke-width='1.6' vector-effect='non-scaling-stroke'/%3E%3Cpath d='m21 12 5 7m16-6 3 6' stroke='%23d9ccff' stroke-width='1' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E")
+      78% 0 / 58% 16% no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 60' preserveAspectRatio='none'%3E%3Cg fill='none' stroke-linejoin='bevel'%3E%3Cpath d='M7 0l7 18-8 4 9 17-6 3 7 18' stroke='%2366c2ff' stroke-width='4' stroke-opacity='.5' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M7 0l7 18-8 4 9 17-6 3 7 18' stroke='%23f2fbff' stroke-width='1.6' vector-effect='non-scaling-stroke'/%3E%3C/g%3E%3C/svg%3E")
+      100% 88% / 18% 48% no-repeat;
+  filter: drop-shadow(0 0 3px rgba(140, 210, 255, 0.95));
+  opacity: 0.85;
+  animation: aura-zap 2.6s steps(1, end) infinite;
+}
+
+/* the edge glow jumps up with each strike */
+@keyframes aura-hum {
+  0%, 12%, 49%, 77% { opacity: 0.6; }
+  4%, 8% { opacity: 1; }
+  6% { opacity: 0.75; }
+  41%, 45% { opacity: 1; }
+  43% { opacity: 0.7; }
+  72%, 74% { opacity: 0.95; }
+}
+
+/* bolts: on, stutter, faint; then again flipped to the other edges */
+@keyframes aura-zap {
+  0% { opacity: 0.12; transform: none; }
+  3% { opacity: 1; transform: none; }
+  5% { opacity: 0.25; transform: translate(1px, -1px); }
+  7% { opacity: 1; transform: none; }
+  11% { opacity: 0.12; transform: none; }
+  40% { opacity: 1; transform: scale(-1, -1); }
+  42% { opacity: 0.3; transform: scale(-1, -1) translate(-1px, 1px); }
+  44% { opacity: 0.95; transform: scale(-1, -1); }
+  48% { opacity: 0.12; transform: scale(-1, -1); }
+  71% { opacity: 1; transform: scale(-1, 1); }
+  73% { opacity: 0.2; transform: scale(-1, 1); }
+  75% { opacity: 0.9; transform: scale(-1, 1); }
+  78% { opacity: 0.12; transform: scale(-1, 1); }
+}
+
+/* ---------- 🌌 aurora: green and violet curtains sway inside, a soft polar glow round the edge ---------- */
+
+.shop-aura[data-aura='aura-aurora'] {
+  --aura-glow: rgba(90, 240, 190, 0.85);
+}
+
+.shop-aura[data-aura='aura-aurora']:not(.turn):not(.mini-back)::before {
+  inset: -2px;
+  box-shadow:
+    0 0 0 1.5px rgba(130, 255, 210, 0.7),
+    0 0 12px 2px rgba(60, 230, 170, 0.5),
+    0 0 24px 5px rgba(150, 100, 255, 0.35);
+  opacity: 0.7;
+  animation: aura-breathe 3.4s ease-in-out infinite alternate;
+}
+
+/* curtains: diagonal colour bands with fine vertical rays, fading towards the bottom */
+.shop-aura[data-aura='aura-aurora']:not(.spot):not(.mini-back)::after {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0 2px, transparent 2px 7px),
+    linear-gradient(
+      105deg,
+      transparent 0%,
+      rgba(60, 255, 170, 0.8) 14%,
+      rgba(60, 210, 255, 0.6) 26%,
+      rgba(170, 100, 255, 0.75) 38%,
+      transparent 50%,
+      rgba(80, 255, 190, 0.7) 64%,
+      rgba(120, 140, 255, 0.6) 76%,
+      rgba(230, 110, 255, 0.55) 86%,
+      transparent 100%
+    );
+  background-size: 100% 100%, 260% 100%;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.85) 45%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.85) 45%, transparent 100%);
+  opacity: 0.85;
+  animation:
+    aura-curtain 6s ease-in-out infinite alternate,
+    aura-shimmer 2.3s ease-in-out infinite alternate;
+}
+
+/* ---------- ✨ galaxy: stars drift through a nebula, twinkling ---------- */
+
+.shop-aura[data-aura='aura-galaxy'] {
+  --aura-glow: rgba(190, 140, 255, 0.9);
+}
+
+.shop-aura[data-aura='aura-galaxy']:not(.turn):not(.mini-back)::before {
+  inset: -2px;
+  box-shadow:
+    0 0 0 1.5px rgba(205, 170, 255, 0.75),
+    0 0 12px 3px rgba(140, 90, 255, 0.5),
+    0 0 26px 6px rgba(255, 100, 220, 0.22);
+  opacity: 0.7;
+  animation: aura-breathe 4s ease-in-out infinite alternate;
+}
+
+.shop-aura[data-aura='aura-galaxy']:not(.spot):not(.mini-back)::after {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cg fill='%23fff'%3E%3Ccircle cx='6' cy='8' r='.9'/%3E%3Ccircle cx='31' cy='4' r='.6'/%3E%3Ccircle cx='42' cy='31' r='.7'/%3E%3Ccircle cx='11' cy='38' r='.8' fill-opacity='.8'/%3E%3Ccircle cx='35' cy='44' r='.5'/%3E%3Cpath d='M21 19.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z'/%3E%3C/g%3E%3C/svg%3E")
+      0 0 / 48px 48px,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cg fill='%23e6d8ff'%3E%3Ccircle cx='4' cy='22' r='.5'/%3E%3Ccircle cx='19' cy='10' r='.7'/%3E%3Ccircle cx='27' cy='26' r='.45'/%3E%3Ccircle cx='13' cy='29' r='.4'/%3E%3C/g%3E%3C/svg%3E")
+      0 0 / 32px 32px,
+    radial-gradient(60% 50% at 28% 30%, rgba(150, 80, 255, 0.4), transparent 70%),
+    radial-gradient(55% 45% at 76% 72%, rgba(255, 90, 200, 0.3), transparent 70%);
+  opacity: 0.9;
+  animation:
+    aura-drift 16s linear infinite,
+    aura-shimmer 1.9s ease-in-out infinite alternate;
+}
+
+/* shared: the edge glow breathes */
+@keyframes aura-breathe {
+  from { opacity: 0.55; transform: scale(1); }
+  to { opacity: 1; transform: scale(1.015); }
+}
+
+/* shared: the inner light flickers softly */
+@keyframes aura-shimmer {
+  from { opacity: 0.65; }
+  to { opacity: 1; }
+}
+
+/* the light inside has to stay clipped to the box, so these two slide the background, not the layer */
+@keyframes aura-curtain {
+  from { background-position: 0 0, 0% 0; }
+  to { background-position: 0 0, 100% 0; }
+}
+
+/* one whole tile each (two for the near stars), so the loop has no seam */
+@keyframes aura-drift {
+  from { background-position: 0 0, 0 0, 0 0, 0 0; }
+  to { background-position: -48px 48px, -64px 32px, 0 0, 0 0; }
+}
+
+/* ---------- 🔥 fire: flames lick up the top and sides, embers glow from below ---------- */
+
+.shop-aura[data-aura='aura-fire'] {
+  --aura-glow: rgba(255, 130, 30, 0.95);
+}
+
+/* a row of flame tongues along the top, a tall one up each side */
+.shop-aura[data-aura='aura-fire']:not(.turn):not(.mini-back)::before {
+  inset: -15px -6px 0;
+  border-radius: 0;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 20' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='f' x1='0' y1='1' x2='0' y2='0'%3E%3Cstop offset='0' stop-color='%23ff3d00'/%3E%3Cstop offset='.55' stop-color='%23ff9100'/%3E%3Cstop offset='1' stop-color='%23ffe082' stop-opacity='.15'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23f)' d='M7 20C2 16 4 10 7 2c1 6 6 9 6 13 0 3-2 5-6 5zm13 0c-4-2-3-7-1-11 1 4 5 5 5 8 0 2-2 3-4 3z'/%3E%3Cpath fill='%23ffd54f' fill-opacity='.85' d='M7.5 20c-2-1.6-1.6-4.4 0-7.5.6 2.6 2.6 3.8 2.6 5.5S9 20 7.5 20zm12.5 0c-1.4-.9-1-2.8 0-4.4.5 1.5 1.7 2 1.7 3.1s-.8 1.3-1.7 1.3z'/%3E%3C/svg%3E")
+      0 0 / 15px 18px repeat-x,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 40' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='s' x1='0' y1='1' x2='0' y2='0'%3E%3Cstop offset='0' stop-color='%23ff3d00' stop-opacity='.1'/%3E%3Cstop offset='.4' stop-color='%23ff6d00'/%3E%3Cstop offset='.8' stop-color='%23ffab40'/%3E%3Cstop offset='1' stop-color='%23ffe082' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23s)' d='M5 40C1 32 2 22 4 14 5 9 4 4 6 0c1 6 4 11 4 18 0 9-2 15-5 22z'/%3E%3C/svg%3E")
+      0 100% / 9px 75% no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 40' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='s' x1='0' y1='1' x2='0' y2='0'%3E%3Cstop offset='0' stop-color='%23ff3d00' stop-opacity='.1'/%3E%3Cstop offset='.4' stop-color='%23ff6d00'/%3E%3Cstop offset='.8' stop-color='%23ffab40'/%3E%3Cstop offset='1' stop-color='%23ffe082' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23s)' d='M5 40C9 32 8 22 6 14 5 9 6 4 4 0 3 6 0 11 0 18c0 9 2 15 5 22z'/%3E%3C/svg%3E")
+      100% 100% / 9px 68% no-repeat;
+  filter: drop-shadow(0 0 4px rgba(255, 110, 0, 0.85));
+  transform-origin: 50% 100%;
+  animation:
+    aura-flame 0.55s ease-in-out infinite alternate,
+    aura-flicker 1.7s steps(1, end) infinite;
+}
+
+/* the hot rim and the ember light rising from the bottom */
+.shop-aura[data-aura='aura-fire']:not(.spot):not(.mini-back)::after {
+  inset: -2px;
+  background: radial-gradient(120% 65% at 50% 112%, rgba(255, 120, 20, 0.5), rgba(255, 60, 0, 0.12) 60%, transparent 80%);
+  box-shadow:
+    0 0 0 1.5px rgba(255, 160, 60, 0.85),
+    0 0 12px 3px rgba(255, 90, 0, 0.55),
+    inset 0 -10px 16px -6px rgba(255, 120, 20, 0.6);
+  opacity: 0.8;
+  animation: aura-shimmer 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes aura-flame {
+  from { transform: scale(1, 1); }
+  to { transform: scale(1.02, 1.06) translateY(-1px); }
+}
+
+@keyframes aura-flicker {
+  0% { opacity: 0.95; }
+  17% { opacity: 0.8; }
+  31% { opacity: 1; }
+  52% { opacity: 0.85; }
+  66% { opacity: 1; }
+  83% { opacity: 0.75; }
+}
+
+/* ---------- 👑 gold: a gold ring spins round the edge and a shine sweeps across ---------- */
+
+.shop-aura[data-aura='aura-gold'] {
+  --aura-glow: rgba(255, 205, 70, 0.95);
+}
+
+/* the ring: a conic gold band cut to the edge (same trick as the turn ring) */
+.shop-aura[data-aura='aura-gold']:not(.turn):not(.mini-back)::before {
+  inset: -3px;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--ring),
+    #8a6100,
+    #ffd76a 60deg,
+    #fff7d6 90deg,
+    #d4a017 140deg,
+    #7a5400 200deg,
+    #ffe08a 270deg,
+    #fffbe8 300deg,
+    #b8860b 330deg,
+    #8a6100
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 5px rgba(255, 200, 60, 0.75));
+  animation: ring-spin 3.4s linear infinite;
+}
+
+/* a warm wash with a bright diagonal shine that crosses every few seconds */
+.shop-aura[data-aura='aura-gold']:not(.spot):not(.mini-back)::after {
+  background:
+    linear-gradient(
+      112deg,
+      transparent 38%,
+      rgba(255, 230, 160, 0.45) 46%,
+      rgba(255, 255, 255, 0.9) 50%,
+      rgba(255, 215, 110, 0.45) 54%,
+      transparent 62%
+    ),
+    radial-gradient(100% 80% at 50% 0%, rgba(255, 210, 90, 0.18), transparent 75%);
+  background-size: 260% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  animation: aura-sweep 3.2s ease-in-out infinite;
+}
+
+@keyframes aura-sweep {
+  0% { background-position: 125% 0, 0 0; }
+  45%, 100% { background-position: -25% 0, 0 0; }
+}
+
+/* ---------- win bursts and entry flashes (components/ShopFx.tsx): full screen, never in the way ---------- */
+
+.shop-fx {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+/* a win plays over the game-over box; an entry stays under sheets and pages */
+.shop-fx.win {
+  z-index: 64;
+}
+
+.shop-fx.entry {
+  z-index: 44;
+}
+
+.shop-fx-label {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  max-width: calc(100% - 32px);
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 215, 110, 0.55);
+  border-radius: 999px;
+  background: rgba(10, 14, 20, 0.78);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45), 0 0 18px rgba(255, 200, 80, 0.25);
+  color: #ffe9a8;
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transform: translateX(-50%);
+  animation: fx-label var(--fx-ms, 3000ms) ease-out both;
+}
+
+.shop-fx.entry .shop-fx-label {
+  top: 30%;
+}
+
+@keyframes fx-label {
+  0% { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.85); }
+  12% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.06); }
+  20% { transform: translateX(-50%) scale(1); }
+  82% { opacity: 1; transform: translateX(-50%) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-8px) scale(0.96); }
+}
+
+/* 🎆 fireworks: a rocket climbs, then a ring of sparks bursts out and falls away */
+.fw-burst {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.fw-rocket {
+  position: absolute;
+  left: -1.5px;
+  top: 0;
+  width: 3px;
+  height: 22px;
+  border-radius: 2px;
+  background: linear-gradient(to bottom, #fff, rgba(255, 220, 150, 0));
+  opacity: 0;
+  animation: fw-rise 0.55s ease-out both;
+  animation-delay: var(--d);
+}
+
+.fw-flash {
+  position: absolute;
+  left: -40px;
+  top: -40px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--c) 0%, rgba(255, 255, 255, 0) 65%);
+  opacity: 0;
+  animation: fw-flash 0.9s ease-out both;
+  animation-delay: calc(var(--d) + 0.5s);
+}
+
+.fw-spark {
+  position: absolute;
+  left: -2px;
+  top: 0;
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+  background: linear-gradient(to top, var(--c), #fff);
+  box-shadow: 0 0 6px var(--c);
+  opacity: 0;
+  transform-origin: 50% 0;
+  animation: fw-spark 1.3s cubic-bezier(0.15, 0.7, 0.3, 1) both;
+  animation-delay: calc(var(--d) + 0.5s);
+}
+
+@keyframes fw-rise {
+  0% { opacity: 0; transform: translateY(55vh) scaleY(1.6); }
+  15% { opacity: 1; }
+  90% { opacity: 1; transform: translateY(0) scaleY(1); }
+  100% { opacity: 0; transform: translateY(0) scaleY(0.4); }
+}
+
+@keyframes fw-flash {
+  0% { opacity: 0; transform: scale(0.3); }
+  20% { opacity: 0.9; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* each spark flies out along its own angle, then droops and fades */
+@keyframes fw-spark {
+  0% { opacity: 1; transform: rotate(var(--a)) translateY(0) scaleY(0.4); }
+  60% { opacity: 1; transform: rotate(var(--a)) translateY(var(--r)) scaleY(1); }
+  100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(var(--r) * 1.15)) translateX(6px) scaleY(0.3); }
+}
+
+/* 🪙 gold rain: a warm glow from the top and spinning coins falling through it */
+.gr-glow {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 45%;
+  background: radial-gradient(80% 100% at 50% 0%, rgba(255, 200, 70, 0.35), transparent 70%);
+  animation: fx-glow 3s ease-out both;
+}
+
+.gr-coin {
+  position: absolute;
+  top: -40px;
+  left: var(--x);
+  animation: gr-fall var(--t) cubic-bezier(0.4, 0, 0.9, 0.7) both;
+  animation-delay: var(--d);
+}
+
+/* the coin face flips round as it falls */
+.gr-coin i {
+  display: block;
+  width: var(--s);
+  height: var(--s);
+  border: 2px solid #b8860b;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, #fffbe6 0 12%, transparent 30%),
+    radial-gradient(circle, #ffe08a 0 45%, #f2b81f 46% 62%, #d49a0f 63%);
+  box-shadow: 0 0 8px rgba(255, 200, 60, 0.7);
+  animation: gr-flip 0.7s linear infinite;
+}
+
+@keyframes gr-fall {
+  0% { opacity: 0; transform: translateY(0) rotate(0deg); }
+  8% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(105vh) rotate(var(--rot)); }
+}
+
+@keyframes gr-flip {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(0.15); }
+}
+
+@keyframes fx-glow {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ⚡ thunder: the screen flashes, a bolt strikes down to the table, a ring spreads where it lands */
+.th-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(90% 70% at 50% 35%, rgba(215, 235, 255, 0.85), rgba(120, 160, 255, 0.35) 60%, rgba(40, 50, 120, 0.2));
+  opacity: 0;
+  animation: th-flash var(--fx-ms, 3000ms) steps(1, end) both;
+}
+
+.th-bolt {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 110px;
+  height: 52vh;
+  margin-left: -55px;
+  overflow: visible;
+  filter: drop-shadow(0 0 8px rgba(150, 210, 255, 0.95)) drop-shadow(0 0 22px rgba(110, 120, 255, 0.7));
+  transform-origin: 50% 0;
+  opacity: 0;
+  animation: th-strike var(--fx-ms, 3000ms) steps(1, end) both;
+}
+
+.th-ring {
+  position: absolute;
+  left: 50%;
+  top: 52vh;
+  width: 140px;
+  height: 46px;
+  margin: -23px 0 0 -70px;
+  border: 3px solid rgba(190, 225, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(130, 190, 255, 0.9), inset 0 0 14px rgba(130, 190, 255, 0.7);
+  opacity: 0;
+  animation: th-ring 0.9s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+/* entry flashes are shorter: everything runs on --fx-ms */
+@keyframes th-flash {
+  0% { opacity: 0; }
+  6% { opacity: 1; }
+  8% { opacity: 0.2; }
+  11% { opacity: 0.9; }
+  16% { opacity: 0; }
+  44% { opacity: 0.85; }
+  46% { opacity: 0.15; }
+  49% { opacity: 0.6; }
+  54% { opacity: 0; }
+}
+
+@keyframes th-strike {
+  0% { opacity: 0; transform: scaleY(0.2); }
+  5% { opacity: 1; transform: scaleY(0.6); }
+  7% { opacity: 1; transform: scaleY(1); }
+  9% { opacity: 0.3; transform: scaleY(1); }
+  12% { opacity: 1; transform: scaleY(1); }
+  20% { opacity: 0; }
+  42% { opacity: 1; transform: scaleX(-1) scaleY(0.7); }
+  44% { opacity: 1; transform: scaleX(-1); }
+  47% { opacity: 0.4; transform: scaleX(-1); }
+  50% { opacity: 1; transform: scaleX(-1); }
+  58% { opacity: 0; transform: scaleX(-1); }
+}
+
+@keyframes th-ring {
+  0% { opacity: 1; transform: scale(0.2); }
+  100% { opacity: 0; transform: scale(2.2); }
+}
+
+/* 🔦 spotlight: two beams swing in from the top corners and meet on the name */
+.sp-dim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(40% 22% at 50% 32%, transparent 0 60%, rgba(0, 0, 0, 0.45) 100%);
+  animation: fx-glow var(--fx-ms, 1800ms) ease-out both;
+}
+
+.sp-beam {
+  position: absolute;
+  top: -6%;
+  width: 46vmax;
+  height: 120vmax;
+  margin-left: -23vmax;
+  background: linear-gradient(to bottom, rgba(255, 246, 210, 0.75), rgba(255, 236, 170, 0.18) 45%, transparent 75%);
+  clip-path: polygon(47% 0, 53% 0, 82% 100%, 18% 100%);
+  transform-origin: 50% 0;
+  opacity: 0;
+}
+
+.sp-beam.left {
+  left: 0;
+  animation: sp-left var(--fx-ms, 1800ms) cubic-bezier(0.3, 0.7, 0.3, 1) both;
+}
+
+.sp-beam.right {
+  left: 100%;
+  animation: sp-right var(--fx-ms, 1800ms) cubic-bezier(0.3, 0.7, 0.3, 1) both;
+}
+
+@keyframes sp-left {
+  0% { opacity: 0; transform: rotate(10deg); }
+  15% { opacity: 1; }
+  55% { transform: rotate(-41deg); }
+  80% { opacity: 1; transform: rotate(-36deg); }
+  100% { opacity: 0; transform: rotate(-36deg); }
+}
+
+@keyframes sp-right {
+  0% { opacity: 0; transform: rotate(-10deg); }
+  15% { opacity: 1; }
+  55% { transform: rotate(41deg); }
+  80% { opacity: 1; transform: rotate(36deg); }
+  100% { opacity: 0; transform: rotate(36deg); }
+}
+
+/* reduced motion: only the label shows (ShopFx renders nothing else) */
+@media (prefers-reduced-motion: reduce) {
+  .shop-fx > :not(.shop-fx-label) {
+    display: none;
+  }
+}
+
+/* ---------- live auras (components/AuraCanvas.tsx): drawn on a canvas, never the same twice ---------- */
+
+.aura-live {
+  position: relative;
+}
+
+.aura-canvas {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.player-card.aura-card {
+  padding: 14px 10px 12px;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.shop-fx-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* played from the shop as a preview: above the shop page */
+.shop-fx.preview {
+  z-index: 120;
+}
+
+.aura-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 0 6px;
+}
+
+.aura-preview-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+
+.aura-preview .seat {
+  transform: scale(1.25);
+  margin: 12px;
+}
+
+.aura-preview-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* a night sky behind the fireworks so the colours pop */
+.shop-fx.fx-win-fireworks {
+  animation: fx-night var(--fx-ms) ease both;
+}
+
+@keyframes fx-night {
+  0% { background: rgba(2, 4, 16, 0); }
+  10%, 80% { background: rgba(2, 4, 16, 0.55); }
+  100% { background: rgba(2, 4, 16, 0); }
+}

@@ -7,6 +7,8 @@ import './styles.css';
 // table themes and card backs, after the base styles so they win
 import './styles/looks.css';
 import './styles/missions.css';
+import './styles/shop.css';
+import './styles/shop-fx.css';
 import './styles/secrets.css';
 import './styles/league.css';
 import './styles/rivals.css';

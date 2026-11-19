@@ -85,6 +85,8 @@ interface PickSheetProps {
   count: number;
   /** the back of the player whose cards these are */
   back: string;
+  /** and their shop aura */
+  aura?: string | null;
   who: string;
   claim: string;
   onPick: (index: number) => void;
@@ -93,7 +95,7 @@ interface PickSheetProps {
   kismat?: Rank | null;
 }
 
-export function PickSheet({ count, back, who, claim, onPick, onClose, kismat = null }: PickSheetProps) {
+export function PickSheet({ count, back, aura, who, claim, onPick, onClose, kismat = null }: PickSheetProps) {
   return (
     <Backdrop onClose={onClose}>
       <h3>Pick one card to turn over</h3>
@@ -103,7 +105,7 @@ export function PickSheet({ count, back, who, claim, onPick, onClose, kismat = n
       </p>
       <div className="pick-row">
         {Array.from({ length: count }, (_, i) => (
-          <PlayingCard key={i} faceDown back={back} size={count > 8 ? 'md' : 'lg'} className="pick-card" onClick={() => onPick(i)} />
+          <PlayingCard key={i} faceDown back={back} aura={aura} size={count > 8 ? 'md' : 'lg'} className="pick-card" onClick={() => onPick(i)} />
         ))}
       </div>
       <button className="btn ghost block" onClick={onClose}>
@@ -117,6 +119,8 @@ interface PeekSheetProps {
   count: number;
   /** the back of the player whose cards these are */
   back: string;
+  /** and their shop aura */
+  aura?: string | null;
   /** cards already peeked at in this play */
   peeked: { index: number; card: Card }[];
   left: number;
@@ -128,7 +132,7 @@ interface PeekSheetProps {
 }
 
 /** tap a face-down card of the last play to see it; only you see it */
-export function PeekSheet({ count, back, peeked, left, claim, kismat = null, onPeek, onClose }: PeekSheetProps) {
+export function PeekSheet({ count, back, aura, peeked, left, claim, kismat = null, onPeek, onClose }: PeekSheetProps) {
   const [busy, setBusy] = useState(false);
   const seen = new Map(peeked.map((p) => [p.index, p.card]));
   return (
@@ -152,6 +156,7 @@ export function PeekSheet({ count, back, peeked, left, claim, kismat = null, onP
               key={i}
               faceDown
               back={back}
+              aura={aura}
               size={count > 8 ? 'md' : 'lg'}
               className={cx('pick-card', (left === 0 || busy) && 'disabled')}
               onClick={
@@ -207,12 +212,14 @@ interface RevealProps {
   name: (id: string) => string;
   /** the back of the player who made the play, for cards left face down */
   back: string;
+  /** that player's shop aura, for the same cards */
+  aura?: string | null;
   onClose: () => void;
   /** this game's wild rank (Kismat card), if any */
   kismat?: Rank | null;
 }
 
-export function RevealOverlay({ reveal, name, back, onClose, kismat = null }: RevealProps) {
+export function RevealOverlay({ reveal, name, back, aura, onClose, kismat = null }: RevealProps) {
   // a Kismat card that isn't the claimed rank still backs the claim: say why
   const wildHelped = kismat !== null && kismat !== reveal.rank && reveal.cards.some((c) => c?.rank === kismat);
   return (
@@ -233,6 +240,7 @@ export function RevealOverlay({ reveal, name, back, onClose, kismat = null }: Re
               <PlayingCard
                 card={c}
                 back={back}
+                aura={aura}
                 size={reveal.cards.length > 8 ? 'sm' : 'md'}
                 wild={!!c && c.rank === kismat}
                 className={c ? 'flip' : undefined}
@@ -390,10 +398,13 @@ const totalXp = (r: CoinResult) => r.xp + (r.secretXp ?? 0) + (r.missionsDone ??
 const paidText = (coins: number, xp: number) =>
   [coins > 0 && `+${formatCoins(coins)} 🪙`, xp > 0 && `+${xp} XP`].filter(Boolean).join(' · ');
 
-/** each mission this game finished for me, and my secret card, with what it paid */
+/** each mission this game finished for me, my secret card and shop boosts, with what they paid */
 function MissionLines({ result }: { result: CoinResult }) {
   const done = result.missionsDone ?? [];
   const secretXp = result.secretXp ?? 0;
+  // shop boosts: already counted in the totals, shown so the boost is felt
+  const boostXp = result.boostXp ?? 0;
+  const boostCoins = result.boostCoins ?? 0;
   return (
     <>
       {done.map((m, i) => {
@@ -416,6 +427,16 @@ function MissionLines({ result }: { result: CoinResult }) {
         <p className="mission-line secret" style={{ '--i': done.length } as CSSProperties}>
           <span className="mission-line-title">🤫 Secret mission done</span>
           <span className="mission-line-reward">{paidText(0, secretXp)}</span>
+        </p>
+      )}
+      {boostXp > 0 && (
+        <p className="mission-line boost" style={{ '--i': done.length + 1 } as CSSProperties}>
+          <span className="mission-line-title">⚡ +{boostXp} XP from boost</span>
+        </p>
+      )}
+      {boostCoins > 0 && (
+        <p className="mission-line boost" style={{ '--i': done.length + 2 } as CSSProperties}>
+          <span className="mission-line-title">🪙 +{formatCoins(boostCoins)} from Coin Magnet</span>
         </p>
       )}
     </>

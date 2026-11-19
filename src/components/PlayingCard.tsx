@@ -19,6 +19,8 @@ interface Props {
   back?: string;
   /** a Kismat card: wild this game, marked with a small 🍀 */
   wild?: boolean;
+  /** a face-down card's owner's shop aura (styles/shop-fx.css) */
+  aura?: string | null;
 }
 
 /** suit shapes drawn in the card's colour, so they look the same on every phone */
@@ -70,7 +72,7 @@ function CourtArt({ rank }: { rank: Rank }) {
   );
 }
 
-export function PlayingCard({ card, faceDown, size, selected, order, onClick, className, style, note = '', back, wild }: Props) {
+export function PlayingCard({ card, faceDown, size, selected, order, onClick, className, style, note = '', back, wild, aura }: Props) {
   const shown = faceDown ? null : (card ?? null);
   const court = !!shown && ['J', 'Q', 'K'].includes(shown.rank);
   const classes = cx(
@@ -81,6 +83,7 @@ export function PlayingCard({ card, faceDown, size, selected, order, onClick, cl
     selected && 'selected',
     shown && wild && 'wild',
     onClick && 'tappable',
+    !shown && aura && 'shop-aura',
     className,
   );
   const label = (shown ? `${rankName(shown.rank)} of ${SUIT_NAME[shown.suit]}${wild ? ', wild Kismat card' : ''}` : 'Face-down card') + note;
@@ -117,12 +120,13 @@ export function PlayingCard({ card, faceDown, size, selected, order, onClick, cl
   );
 
   const backId = shown ? undefined : back;
+  const auraId = shown ? undefined : (aura ?? undefined);
   return onClick ? (
-    <button type="button" className={classes} style={style} onClick={onClick} aria-label={label} aria-pressed={selected} data-back={backId}>
+    <button type="button" className={classes} style={style} onClick={onClick} aria-label={label} aria-pressed={selected} data-back={backId} data-aura={auraId}>
       {body}
     </button>
   ) : (
-    <div className={classes} style={style} role="img" aria-label={label} data-back={backId}>
+    <div className={classes} style={style} role="img" aria-label={label} data-back={backId} data-aura={auraId}>
       {body}
     </div>
   );

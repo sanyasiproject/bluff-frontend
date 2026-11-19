@@ -13,6 +13,7 @@ import { FullPage } from './FullPage';
 import { FriendAlertsRow } from './FriendAlertsRow';
 import { LeagueButton } from './LeaguePage';
 import { MissionsButton } from './MissionsPage';
+import { ShopButton } from './ShopPage';
 import { RankCard } from './Ranked';
 import { RivalsList } from './Rivals';
 import { NotifyRow } from './NotifyRow';
@@ -136,6 +137,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
 
       <MissionsButton auth={auth} />
       <LeagueButton auth={auth} />
+      <ShopButton auth={auth} />
 
       <div className="quick-actions">
         <button className="btn" onClick={() => setFriendsOpen(true)}>

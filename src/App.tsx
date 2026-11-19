@@ -7,6 +7,7 @@ import { Home } from './components/Home';
 import { Lobby } from './components/Lobby';
 import { BonusPopup, InvitePopup } from './components/Popups';
 import { Reactions } from './components/Reactions';
+import { ShopFx } from './components/ShopFx';
 import { VoicePill } from './components/Voice';
 import { Splash } from './components/Splash';
 import { Table } from './components/Table';
@@ -96,6 +97,8 @@ export default function App() {
   return (
     <>
       {screen}
+      {/* shop win bursts and entry flashes, for both games and the lobby */}
+      <ShopFx view={replaced ? null : view} />
       {view && !replaced && status !== 'online' && <div className="conn-pill">Reconnecting…</div>}
       <Toasts notes={notes} />
       <Reactions items={reactions} />

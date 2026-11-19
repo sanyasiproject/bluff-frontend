@@ -18,6 +18,8 @@ export interface Flight {
   size?: 'sm' | 'md' | 'lg';
   /** face-down cards' backs, one per card (repeating): their owners'; omit for this phone's own back */
   backs?: string[];
+  /** their owners' shop auras, lined up with backs */
+  auras?: (string | null)[];
 }
 
 /** face-down cards sliding from a seat (or your hand) onto the pile, or from the pile to a player */
@@ -74,7 +76,12 @@ export function FlyingCards({ flight, onDone }: { flight: Flight; onDone: () => 
           {flight.card ? (
             <PlayingCard card={flight.card} size={flight.size ?? 'sm'} />
           ) : (
-            <PlayingCard faceDown size={flight.size ?? 'sm'} back={flight.backs?.length ? flight.backs[i % flight.backs.length] : undefined} />
+            <PlayingCard
+              faceDown
+              size={flight.size ?? 'sm'}
+              back={flight.backs?.length ? flight.backs[i % flight.backs.length] : undefined}
+              aura={flight.auras?.length ? flight.auras[i % flight.auras.length] : null}
+            />
           )}
         </div>
       ))}
