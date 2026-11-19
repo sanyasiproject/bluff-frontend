@@ -326,6 +326,8 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   const bots = view.players.filter((p) => p.bot);
   // a rated Bluff table (Crazy 7 keeps the setting but ignores it); older servers don't have it
   const rankedKnown = typeof view.config.ranked === 'boolean';
+  // house twists preset: Classic (both off), Chaos (both on), or neither when mixed
+  const twists = !view.config.kismat && !view.config.seedhi ? 'classic' : view.config.kismat && view.config.seedhi ? 'chaos' : null;
   const ranked = !crazy7 && view.config.ranked === true;
   // ranked needs everyone seated logged in, at any stake
   const mustLogIn = stake > 0 || ranked;
@@ -612,6 +614,8 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                 {view.config.bets && <span>🎲 Bets on calls</span>}
                 {view.config.teams && <span>👥 2 vs 2</span>}
                 {view.config.saza && <span>🤡 Saza for the loser</span>}
+                {view.config.kismat && <span>🍀 Kismat card</span>}
+                {view.config.seedhi && <span>🪜 Seedhi</span>}
                 {view.config.secretLies && <span>🤐 Lies stay secret</span>}
                 {bots.length > 0 && <span>🤖 {BOT_LEVEL_NAMES[view.config.botLevel ?? 'expert']} bots</span>}
               </>
@@ -741,6 +745,31 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             <Choice value={ranked} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ ranked: on })} />
           </SettingRow>
         )}
+        {/* older servers have no house twists */}
+        {view.config.kismat !== undefined && (
+          <>
+            <div className="setting-row stacked twist-presets">
+              <div className="grow">
+                <b>🎭 Twists</b>
+                <span>Classic: no twists · Chaos: both on. Or set each one below</span>
+              </div>
+              <Choice<'classic' | 'chaos' | null>
+                value={twists}
+                options={[
+                  ['classic', 'Classic'],
+                  ['chaos', 'Chaos'],
+                ]}
+                onPick={(v) => set({ kismat: v === 'chaos', seedhi: v === 'chaos' })}
+              />
+            </div>
+            <SettingRow title="🍀 Kismat card" desc="A random rank each game is wild: it backs up any claim">
+              <Choice value={view.config.kismat} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ kismat: on })} />
+            </SettingRow>
+            <SettingRow title="🪜 Seedhi" desc="Each claim goes one rank down, stays, or goes one up. K and A wrap">
+              <Choice value={view.config.seedhi ?? false} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ seedhi: on })} />
+            </SettingRow>
+          </>
+        )}
       </section>}
 
       {/* older servers have no voice notes */}
@@ -779,7 +808,12 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         ) : (
           <ul>
             <li>On your turn put one or more cards face down and call a rank. You can lie.</li>
-            <li>Everyone after you must call the same rank, or pass.</li>
+            <li>
+              {view.config.seedhi
+                ? 'Everyone after you calls one rank down, the same, or one up from the last call (K and A wrap), or passes.'
+                : 'Everyone after you must call the same rank, or pass.'}
+            </li>
+            {view.config.kismat && <li>🍀 Kismat card: one random rank is wild all game. Its cards back up any call.</li>}
             <li>Anyone can shout Bluff on the last play. Liar picks up the whole pile; if it was true, the caller does.</li>
             <li>If everyone passes, the pile is cleared and the last player starts a new round.</li>
             <li>Empty your hand first to win. The last player holding cards loses.</li>

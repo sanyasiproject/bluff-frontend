@@ -9,7 +9,7 @@ import { useNewCards } from '../lib/newCards';
 import { useOneCardAlert } from '../lib/spotlight';
 import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
-import { DEFAULT_CARD_BACK, type Card, type FriendsResponse, type PublicPlayer, type Rank, type RoomView } from '../types';
+import { backsClaim, claimsAllowed, DEFAULT_CARD_BACK, type Card, type FriendsResponse, type PublicPlayer, type Rank, type RoomView } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions, ChatBubble } from '../useBluff';
 import { ConfirmBox } from './ConfirmBox';
@@ -141,15 +141,15 @@ export function SeatSheet({ player, auth, onThrow, onClose }: { player: PublicPl
   );
 }
 
-/** watchers see what was really put down, outlined green (matches the claim) or red */
-function TruthRow({ cards, claim }: { cards: Card[]; claim: Rank }) {
-  const lie = cards.some((c) => c.rank !== claim);
+/** watchers see what was really put down, outlined green (backs the claim, Kismat cards too) or red */
+function TruthRow({ cards, claim, kismat }: { cards: Card[]; claim: Rank; kismat: Rank | null }) {
+  const lie = cards.some((c) => !backsClaim(c, claim, kismat));
   return (
     <div className="truth-row" aria-label="Cards actually played">
       <div className="truth-cards">
         {cards.map((c) => (
-          <div key={c.id} className={cx('truth-card', c.rank === claim ? 'match' : 'miss')}>
-            <PlayingCard card={c} size="sm" />
+          <div key={c.id} className={cx('truth-card', backsClaim(c, claim, kismat) ? 'match' : 'miss')}>
+            <PlayingCard card={c} size="sm" wild={c.rank === kismat} />
           </div>
         ))}
       </div>
@@ -219,9 +219,7 @@ export function GameMenu({
         {c.decks === 2 ? '2 decks' : '1 deck'} ·{' '}
         {c.game === 'crazy7'
           ? `Crazy 7 · ${c.handSize} cards each · up to ${c.maxPicks} pick${c.maxPicks > 1 ? 's' : ''}${c.stack7 ? ' · 7s stack' : ''}`
-          : c.bluffRule === 'one'
-            ? 'Pick one card'
-            : 'Show all cards'}{' '}
+          : `${c.bluffRule === 'one' ? 'Pick one card' : 'Show all cards'}${view.kismat ? ` · 🍀 ${rankPlural(view.kismat)} wild` : c.kismat ? ' · 🍀 Kismat card' : ''}${c.seedhi ? ' · 🪜 Seedhi' : ''}`}{' '}
         ·{' '}
         {c.stake > 0 ? `🪙 ${formatCoins(c.stake)} each` : 'Free game'}
         {view.watchers.length > 0 && ` · 👀 ${view.watchers.length} watching`}
@@ -267,6 +265,10 @@ export function useOnChange<T>(value: T, fn: (next: T) => void) {
 }
 
 const BUBBLE_MS = 4000;
+/** captions under the three Seedhi claim buttons */
+const SEEDHI_STEPS = ['down', 'same', 'up'];
+/** short plurals for the Seedhi status line: "7s", "Ks", "Aces" */
+const shortPlural = (r: Rank) => (r === 'A' ? 'Aces' : `${r}s`);
 const DOUBLE_TAP_MS = 350;
 
 export function Table({ view, actions, bubbles, auth }: { view: RoomView; actions: Actions; bubbles: ChatBubble[]; auth: Auth }) {
@@ -329,6 +331,11 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
   }, [view.phase, myLevel]);
   const myTurn = playing && view.turnId === view.meId;
   const lp = view.lastPlay;
+  // house twists; older servers send neither
+  const kismat = view.kismat ?? null;
+  const seedhi = view.config.seedhi === true;
+  /** Seedhi, following a round: the three ranks this play may claim (one down, same, one up) */
+  const seedhiNext = seedhi && view.roundRank ? claimsAllowed(view.roundRank, true) : null;
   // 2v2: my partner's play can't be challenged
   const teamOf = (id: string): 'a' | 'b' | null =>
     view.teams?.[0].includes(id) ? 'a' : view.teams?.[1].includes(id) ? 'b' : null;
@@ -543,8 +550,30 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
     setSound(!sound);
   };
 
+  // Seedhi claim buttons: green when every selected card backs that rank
+  const picked = view.hand.filter((c) => selected.includes(c.id));
+  const honestFor = (r: Rank) => picked.length > 0 && picked.every((c) => backsClaim(c, r, kismat));
+  const roundChip = (
+    <div
+      className={cx('round-chip', view.roundRank ? 'set' : 'blank')}
+      aria-hidden={!view.roundRank}
+      title={seedhiNext ? 'Seedhi: one rank down, the same, or one up' : undefined}
+    >
+      {seedhiNext ? (
+        <>
+          🪜 Next <b>{seedhiNext.join(' · ')}</b>
+        </>
+      ) : (
+        <>
+          Round <b>{view.roundRank ? rankPlural(view.roundRank) : '–'}</b>
+        </>
+      )}
+    </div>
+  );
+
   let status = '';
   if (me?.place) status = `You finished ${placeLabel(me.place)}!`;
+  else if (myTurn && seedhiNext) status = `Claim ${seedhiNext.map(shortPlural).slice(0, 2).join(', ')} or ${shortPlural(seedhiNext[2])}`;
   else if (myTurn) status = view.roundRank ? `Put down ${rankPlural(view.roundRank)} or pass` : 'New round · call any rank';
   else if (playing) status = `${name(view.turnId)}'s turn`;
 
@@ -600,9 +629,22 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
       </section>
 
       <section className="center">
-        <div className={cx('round-chip', view.roundRank ? 'set' : 'blank')} aria-hidden={!view.roundRank}>
-          Round <b>{view.roundRank ? rankPlural(view.roundRank) : '–'}</b>
-        </div>
+        {kismat ? (
+          <div className="round-row">
+            {roundChip}
+            <button
+              type="button"
+              className="kismat-chip"
+              title={`${rankPlural(kismat)} are wild this game`}
+              aria-label={`Kismat card: ${rankPlural(kismat)} are wild this game`}
+              onClick={() => actions.toast(`🍀 Kismat card: ${rankPlural(kismat)} are wild this game. They back up any claim`)}
+            >
+              🍀 Kismat <b>{kismat}</b>
+            </button>
+          </div>
+        ) : (
+          roundChip
+        )}
         <PileReact onReact={(i) => void actions.reactOnPile(i)}>
           <Pile count={view.pileCount} boxRef={pileRef} playKey={lp?.id ?? null} backs={pileBacks} />
         </PileReact>
@@ -611,7 +653,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
             <b>{name(lp.playerId)}</b> put down <b>{claimText(lp.count, lp.rank)}</b>
           </p>
         )}
-        {watching && lp && view.watch?.lastPlayCards && <TruthRow cards={view.watch.lastPlayCards} claim={lp.rank} />}
+        {watching && lp && view.watch?.lastPlayCards && <TruthRow cards={view.watch.lastPlayCards} claim={lp.rank} kismat={kismat} />}
         {!myTurn && status && <p className="turn-status">{status}</p>}
         {canBluff && lp && (
           <button
@@ -651,6 +693,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
               <span key={p.index}>
                 🔍 Card {p.index + 1}: <b>{p.card.rank}</b>
                 {SUIT_SYMBOL[p.card.suit]}
+                {view.kismat !== null && p.card.rank === view.kismat && ' 🍀 wild'}
               </span>
             ))}
           </p>
@@ -674,7 +717,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
               <span>Tap a player to pin</span>
             )}
           </div>
-          {followId && <Hand cards={view.watch?.hands[followId] ?? []} />}
+          {followId && <Hand cards={view.watch?.hands[followId] ?? []} kismat={kismat} />}
         </section>
       )}
 
@@ -709,11 +752,11 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
             !myTurn && view.hand.length > 1 && <span className="tap-tip">Double-tap = all of a rank</span>
           )}
         </div>
-        <Hand cards={view.hand} selected={selected} onToggle={tapCard} deal={dealing} fresh={newIds} />
+        <Hand cards={view.hand} selected={selected} onToggle={tapCard} deal={dealing} fresh={newIds} kismat={kismat} />
       </section>
 
       <footer className="action-bar">
-        {myTurn && view.roundRank && (
+        {myTurn && view.roundRank && !seedhiNext && (
           <>
             <button className="btn" disabled={busy} onClick={pass}>
               Pass
@@ -721,6 +764,33 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
             <button className="btn primary grow" disabled={busy || selected.length === 0} onClick={() => play()}>
               {selected.length ? `Play ${claimText(selected.length, view.roundRank)}` : 'Tap cards to select'}
             </button>
+          </>
+        )}
+        {myTurn && seedhiNext && (
+          <>
+            <button className="btn pass-btn" disabled={busy} onClick={pass}>
+              Pass
+            </button>
+            {selected.length === 0 ? (
+              <button className="btn primary grow" disabled>
+                Tap cards to select
+              </button>
+            ) : (
+              <div className="claim-pick" role="group" aria-label={`Call ${selected.length} card${selected.length > 1 ? 's' : ''} as`}>
+                {seedhiNext.map((r, i) => (
+                  <button
+                    key={r}
+                    className={cx('btn claim-btn', honestFor(r) && 'honest')}
+                    disabled={busy}
+                    aria-label={`Play ${claimText(selected.length, r)}`}
+                    onClick={() => play(r)}
+                  >
+                    <b>{r}</b>
+                    <small>{SEEDHI_STEPS[i]}</small>
+                  </button>
+                ))}
+              </div>
+            )}
           </>
         )}
         {myTurn && !view.roundRank && (
@@ -742,7 +812,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
       </footer>
 
       {sheet === 'rank' && (
-        <RankSheet hand={view.hand} selected={selected} busy={busy} onPick={play} onClose={() => setSheet(null)} />
+        <RankSheet hand={view.hand} selected={selected} busy={busy} onPick={play} onClose={() => setSheet(null)} kismat={kismat} />
       )}
       {sheet === 'pick' && lp && (
         <PickSheet
@@ -750,6 +820,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
           back={back(lp.playerId)}
           who={name(lp.playerId)}
           claim={claimText(lp.count, lp.rank)}
+          kismat={kismat}
           onPick={async (i) => {
             setSheet(null);
             if ((await actions.bluff(lp.id, i, betNow)) !== null) setBet(0);
@@ -763,6 +834,8 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
           back={back(lp.playerId)}
           peeked={peekedNow}
           left={view.peeksLeft}
+          claim={lp.rank}
+          kismat={view.kismat}
           onPeek={peekAt}
           onClose={() => setSheet(null)}
         />
@@ -773,7 +846,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
             🤝 {name(partnerId)}'s cards · {view.partnerHand.length}
           </h3>
           <p className="muted small">Only you and {name(partnerId)} see these. Plan together, the other team can't.</p>
-          <Hand cards={view.partnerHand} />
+          <Hand cards={view.partnerHand} kismat={kismat} />
           <button className="btn ghost block" onClick={() => setSheet(null)}>
             Close
           </button>
@@ -791,7 +864,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
         />
       )}
       {showReveal && view.reveal && (
-        <RevealOverlay reveal={view.reveal} name={name} back={back(view.reveal.playerId)} onClose={() => setShowReveal(false)} />
+        <RevealOverlay reveal={view.reveal} name={name} back={back(view.reveal.playerId)} onClose={() => setShowReveal(false)} kismat={kismat} />
       )}
       {view.phase === 'over' && !(showReveal && view.reveal) && (
         <GameOver

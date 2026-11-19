@@ -9,6 +9,7 @@ import { LevelBadge } from './LevelBadge';
 import {
   BET_STEPS,
   MIN_REWARD_GAME_SEC,
+  backsClaim,
   missionOf,
   RANKS,
   type Card,
@@ -46,20 +47,29 @@ interface RankSheetProps {
   busy: boolean;
   onPick: (rank: Rank) => void;
   onClose: () => void;
+  /** this game's wild rank (Kismat card), if any */
+  kismat?: Rank | null;
 }
 
-export function RankSheet({ hand, selected, busy, onPick, onClose }: RankSheetProps) {
-  const ranks = new Set(hand.filter((c) => selected.includes(c.id)).map((c) => c.rank));
+export function RankSheet({ hand, selected, busy, onPick, onClose, kismat = null }: RankSheetProps) {
+  const cards = hand.filter((c) => selected.includes(c.id));
+  // Kismat cards back up any claim, so only the other cards decide which call is true
+  const ranks = new Set(cards.filter((c) => c.rank !== kismat).map((c) => c.rank));
   const honest = ranks.size === 1 ? [...ranks][0] : null;
+  const allWild = cards.length > 0 && ranks.size === 0;
   return (
     <Backdrop onClose={onClose}>
       <h3>Call a rank for {selected.length} card{selected.length > 1 ? 's' : ''}</h3>
       <p className="muted small">
-        {honest ? `Your cards really are ${rankPlural(honest)}, or bluff with any other rank.` : 'Pick any rank: truth or bluff.'}
+        {allWild
+          ? `Your 🍀 Kismat ${cards.length === 1 ? 'card backs' : 'cards back'} up any rank you call.`
+          : honest
+            ? `Your cards really are ${rankPlural(honest)}${cards.length > 1 && cards.some((c) => c.rank === kismat) ? ' (🍀 wild ones count)' : ''}, or bluff with any other rank.`
+            : 'Pick any rank: truth or bluff.'}
       </p>
       <div className="rank-grid">
         {RANKS.map((r) => (
-          <button key={r} className={cx('rank-btn', r === honest && 'honest')} disabled={busy} onClick={() => onPick(r)}>
+          <button key={r} className={cx('rank-btn', (allWild || r === honest) && 'honest')} disabled={busy} onClick={() => onPick(r)}>
             {r}
           </button>
         ))}
@@ -79,14 +89,17 @@ interface PickSheetProps {
   claim: string;
   onPick: (index: number) => void;
   onClose: () => void;
+  /** this game's wild rank (Kismat card), if any */
+  kismat?: Rank | null;
 }
 
-export function PickSheet({ count, back, who, claim, onPick, onClose }: PickSheetProps) {
+export function PickSheet({ count, back, who, claim, onPick, onClose, kismat = null }: PickSheetProps) {
   return (
     <Backdrop onClose={onClose}>
       <h3>Pick one card to turn over</h3>
       <p className="muted small">
         {who} said {claim}. If your card doesn't match, they pick up the pile. If it matches, you do.
+        {kismat && ` 🍀 ${rankPlural(kismat)} count as a match.`}
       </p>
       <div className="pick-row">
         {Array.from({ length: count }, (_, i) => (
@@ -107,12 +120,15 @@ interface PeekSheetProps {
   /** cards already peeked at in this play */
   peeked: { index: number; card: Card }[];
   left: number;
+  /** the claim being peeked at and this game's Kismat rank, so a wild card reads as a match */
+  claim?: Rank;
+  kismat?: Rank | null;
   onPeek: (index: number) => Promise<void>;
   onClose: () => void;
 }
 
 /** tap a face-down card of the last play to see it; only you see it */
-export function PeekSheet({ count, back, peeked, left, onPeek, onClose }: PeekSheetProps) {
+export function PeekSheet({ count, back, peeked, left, claim, kismat = null, onPeek, onClose }: PeekSheetProps) {
   const [busy, setBusy] = useState(false);
   const seen = new Map(peeked.map((p) => [p.index, p.card]));
   return (
@@ -121,11 +137,16 @@ export function PeekSheet({ count, back, peeked, left, onPeek, onClose }: PeekSh
       <p className="muted small">
         Tap a card to see it secretly. Others only see that you peeked. {left} peek{left === 1 ? '' : 's'} left this game.
       </p>
+      {claim && kismat && kismat !== claim && peeked.some((p) => p.card.rank === kismat) && (
+        <p className="wild-note">
+          🍀 {rankPlural(kismat)} are wild: they count as {rankPlural(claim)}
+        </p>
+      )}
       <div className="pick-row">
         {Array.from({ length: count }, (_, i) => {
           const card = seen.get(i);
           return card ? (
-            <PlayingCard key={i} card={card} size={count > 8 ? 'md' : 'lg'} className="flip" />
+            <PlayingCard key={i} card={card} size={count > 8 ? 'md' : 'lg'} className="flip" wild={kismat !== null && card.rank === kismat} />
           ) : (
             <PlayingCard
               key={i}
@@ -187,9 +208,13 @@ interface RevealProps {
   /** the back of the player who made the play, for cards left face down */
   back: string;
   onClose: () => void;
+  /** this game's wild rank (Kismat card), if any */
+  kismat?: Rank | null;
 }
 
-export function RevealOverlay({ reveal, name, back, onClose }: RevealProps) {
+export function RevealOverlay({ reveal, name, back, onClose, kismat = null }: RevealProps) {
+  // a Kismat card that isn't the claimed rank still backs the claim: say why
+  const wildHelped = kismat !== null && kismat !== reveal.rank && reveal.cards.some((c) => c?.rank === kismat);
   return (
     <Backdrop center onClose={onClose}>
       <div className={cx('reveal', reveal.bluff ? 'caught' : 'truth')} onClick={onClose}>
@@ -198,20 +223,22 @@ export function RevealOverlay({ reveal, name, back, onClose }: RevealProps) {
         </p>
         <h3 className="reveal-title">{reveal.bluff ? 'Caught bluffing!' : 'It was the truth!'}</h3>
         <p className="small">Claimed {claimText(reveal.cards.length, reveal.rank)}</p>
+        {wildHelped && <p className="small wild-note">🍀 {rankPlural(kismat)} are wild: they count as {rankPlural(reveal.rank)}</p>}
         <div className="reveal-cards">
           {reveal.cards.map((c, i) => (
             <div
               key={i}
-              className={cx('reveal-slot', c && (c.rank === reveal.rank ? 'match' : 'miss'), reveal.pickedIndex === i && 'picked')}
+              className={cx('reveal-slot', c && (backsClaim(c, reveal.rank, kismat) ? 'match' : 'miss'), reveal.pickedIndex === i && 'picked')}
             >
               <PlayingCard
                 card={c}
                 back={back}
                 size={reveal.cards.length > 8 ? 'sm' : 'md'}
+                wild={!!c && c.rank === kismat}
                 className={c ? 'flip' : undefined}
                 style={{ animationDelay: `${120 + Math.min(i, 10) * 110}ms` }}
               />
-              {c && <span className="mark">{c.rank === reveal.rank ? '✓' : '✗'}</span>}
+              {c && <span className="mark">{backsClaim(c, reveal.rank, kismat) ? '✓' : '✗'}</span>}
             </div>
           ))}
         </div>

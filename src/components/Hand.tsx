@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { cx } from '../lib/cards';
-import type { Card } from '../types';
+import type { Card, Rank } from '../types';
 import { PlayingCard } from './PlayingCard';
 
 const MIN_SLICE = 28;
@@ -19,10 +19,12 @@ interface Props {
   dimRest?: boolean;
   /** ids of cards that just arrived, shown with a short glow */
   fresh?: string[];
+  /** Bluff with the Kismat card: this game's wild rank, its cards get a small 🍀 */
+  kismat?: Rank | null;
 }
 
 /** Overlapping rows of cards that fit the screen width; each row shows the card corners */
-export function Hand({ cards, selected = [], onToggle, deal, fresh = [], playable, dimRest }: Props) {
+export function Hand({ cards, selected = [], onToggle, deal, fresh = [], playable, dimRest, kismat }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(340);
 
@@ -63,6 +65,7 @@ export function Hand({ cards, selected = [], onToggle, deal, fresh = [], playabl
                   selected={isSelected}
                   order={isSelected ? pick + 1 : undefined}
                   onClick={onToggle ? () => onToggle(card.id) : undefined}
+                  wild={!!kismat && card.rank === kismat}
                   note={playable?.includes(card.id) ? ', playable' : undefined}
                   className={cx(
                     deal ? 'in-hand deal' : fresh.includes(card.id) ? 'in-hand fresh' : 'in-hand',

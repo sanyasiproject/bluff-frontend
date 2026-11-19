@@ -1,0 +1,89 @@
+/* ---------- house twists: Kismat card (wild rank) and Seedhi (claims climb one rank) ---------- */
+
+/* the round chip and the Kismat chip side by side; the blank round chip steps aside so the row stays centred */
+.round-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.round-row .round-chip.blank {
+  display: none;
+}
+
+.kismat-chip {
+  padding: 5px 12px;
+  border: 1px solid rgba(60, 207, 145, 0.5);
+  border-radius: 999px;
+  background: rgba(60, 207, 145, 0.14);
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.kismat-chip b {
+  color: var(--ok);
+}
+
+/* a small clover under the top-left corner, so it shows even on overlapped cards in the hand */
+.card .wild-mark {
+  position: absolute;
+  top: calc(var(--cw) * 0.6);
+  left: calc(var(--cw) * 0.05);
+  font-size: max(10px, calc(var(--cw) * 0.19));
+  line-height: 1;
+  pointer-events: none;
+}
+
+.wild-note {
+  color: var(--ok);
+  font-weight: 700;
+}
+
+/* Seedhi: Pass and the three claims share the action bar, down to 320 px */
+.action-bar .pass-btn {
+  min-width: 72px;
+  padding: 0 12px;
+}
+
+.claim-pick {
+  display: flex;
+  flex: 1;
+  gap: 6px;
+  min-width: 0;
+}
+
+.action-bar .claim-btn {
+  flex: 1;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  padding: 2px 4px;
+  border: 2px solid rgba(246, 196, 83, 0.55);
+  line-height: 1.1;
+}
+
+.claim-btn b {
+  color: var(--gold);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.claim-btn small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.action-bar .claim-btn.honest {
+  border-color: var(--ok);
+  background: rgba(60, 207, 145, 0.16);
+}
+
+/* lobby: the Classic / Chaos preset row, stacked so both fit at 320 px */
+.twist-presets .mini-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 8px;
+}

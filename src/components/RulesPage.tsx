@@ -134,7 +134,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             in Crazy 7 don't count towards the lifetime 🧲 Collector achievement (that one is for Bluff piles).
           </li>
           <li>
-            Peek, Bet, Teams, Saza and Lie reveal settings are kept when you switch to Crazy 7 and back; Crazy 7 just ignores them (saza badges
+            Peek, Bet, Teams, Saza, Lie reveal and the house twists are kept when you switch to Crazy 7 and back; Crazy 7 just ignores them (saza badges
             are hidden while Crazy 7 is picked).
           </li>
         </ul>
@@ -176,6 +176,15 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>
             <b>🏅 Ranked</b> (Bluff): Off (default) or On. Only logged-in players, no bots.
+          </li>
+          <li>
+            <b>🎭 Twists</b> (Bluff): Classic (both twists off, default) or Chaos (both on). A quick pick for the two rows below it.
+          </li>
+          <li>
+            <b>🍀 Kismat card</b> (Bluff): Off (default) or On.
+          </li>
+          <li>
+            <b>🪜 Seedhi</b> (Bluff): Off (default) or On.
           </li>
           <li>
             <b>🎤 Voice notes</b> (both games): On (default) or Off.
@@ -245,6 +254,29 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             was caught, survived a call or got away, plus the cards they still held at the end.
           </li>
           <li>Nothing is shown while a game is on. With it off, every lie stays secret.</li>
+        </ul>
+      </Section>
+
+      <Section icon="🍀" title="House twists">
+        <ul>
+          <li>Bluff only, both off by default. The host turns each on in the lobby; the 🎭 Twists row sets both at once: Classic (both off) or Chaos (both on).</li>
+          <li>
+            <b>🍀 Kismat card</b>: at the deal one random rank is drawn for the whole game and shown to everyone (the 🍀 Kismat chip by the
+            Round chip; tap it for a reminder). Cards of that rank are wild: they back up any claim. A play is a lie only if a card in it is
+            neither the claimed rank nor the Kismat rank. You can claim the Kismat rank itself too.
+          </li>
+          <li>
+            Kismat cards carry a small 🍀 in your hand, in bluff reveals and in the lie reveal, where they count as real (✓). With Pick one,
+            turning over a Kismat card counts as a match.
+          </li>
+          <li>
+            <b>🪜 Seedhi</b>: the round starter calls any rank. After that each call must be one rank down, the same, or one up from the last
+            call (A and K wrap: after K comes Q, K or A; after A comes K, A or 2). Tap your cards, then one of the three rank buttons. The
+            chip above the pile shows the next three ranks.
+          </li>
+          <li>A bluff call or a cleared pile starts a fresh round, so the next starter can call any rank again.</li>
+          <li>Crazy 7 ignores both.</li>
+          <li>Everyone seated needs the latest app: a twist game won't start until players on an older version reload it.</li>
         </ul>
       </Section>
 
@@ -346,7 +378,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>
             ✅ Ready check: everyone in the lobby except the host gets 👍 I'm ready. Each player shows ✅ Ready or ⏳ Not ready, and the host's
             Start stays greyed out (⏳ Waiting for 2 players) until all of them are ready. Ready players can tap their button again to ask for a
-            minute. A new stake, a different game or turning 🏅 Ranked on or off asks everyone again; bots and players on an older version of the app always count as ready.
+            minute. A new stake, a different game, or turning 🏅 Ranked or a twist on or off asks everyone again; bots and players on an older version of the app always count as ready.
             Play again after a game keeps everyone's ready.
           </li>
           <li>Tap a player in the lobby to open their card. The host also gets: Make host, Move to watching/playing, Remove from room.</li>

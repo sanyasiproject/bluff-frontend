@@ -17,19 +17,22 @@ interface Props {
   note?: string;
   /** a face-down card's back (CARD_BACKS id): its owner's; omit for this phone's own back */
   back?: string;
+  /** a Kismat card: wild this game, marked with a small 🍀 */
+  wild?: boolean;
 }
 
-export function PlayingCard({ card, faceDown, size, selected, order, onClick, className, style, note = '', back }: Props) {
+export function PlayingCard({ card, faceDown, size, selected, order, onClick, className, style, note = '', back, wild }: Props) {
   const shown = faceDown ? null : (card ?? null);
   const classes = cx(
     'card',
     size && `card-${size}`,
     !shown ? 'back' : isRed(shown.suit) ? 'red' : 'black',
     selected && 'selected',
+    shown && wild && 'wild',
     onClick && 'tappable',
     className,
   );
-  const label = (shown ? `${rankName(shown.rank)} of ${SUIT_NAME[shown.suit]}` : 'Face-down card') + note;
+  const label = (shown ? `${rankName(shown.rank)} of ${SUIT_NAME[shown.suit]}${wild ? ', wild Kismat card' : ''}` : 'Face-down card') + note;
   const face = shown && ['J', 'Q', 'K'].includes(shown.rank);
   const body = shown && (
     <>
@@ -45,6 +48,11 @@ export function PlayingCard({ card, faceDown, size, selected, order, onClick, cl
         <b>{shown.rank}</b>
         <i>{SUIT_SYMBOL[shown.suit]}</i>
       </span>
+      {wild && (
+        <span className="wild-mark" aria-hidden>
+          🍀
+        </span>
+      )}
       {order !== undefined && <span className="order-badge">{order}</span>}
     </>
   );

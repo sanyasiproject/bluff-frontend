@@ -1,21 +1,22 @@
 import { useState } from 'react';
-import { claimText, cx } from '../lib/cards';
-import type { Card, PlayerPlays, Rank, RoomView } from '../types';
+import { claimText, cx, rankPlural } from '../lib/cards';
+import { backsClaim, type Card, type PlayerPlays, type Rank, type RoomView } from '../types';
 import { PlayingCard } from './PlayingCard';
 
-/** small face-up cards with a ✓ on each real one and a ✗ on each fake; flipFrom sets when the flip-in starts (ms) */
-function MarkedCards({ cards, rank, flipFrom }: { cards: Card[]; rank: Rank; flipFrom?: number }) {
+/** small face-up cards with a ✓ on each real one (Kismat cards count) and a ✗ on each fake; flipFrom sets when the flip-in starts (ms) */
+function MarkedCards({ cards, rank, kismat, flipFrom }: { cards: Card[]; rank: Rank; kismat: Rank | null; flipFrom?: number }) {
   return (
     <div className="lie-cards">
       {cards.map((c, j) => (
-        <div key={c.id} className={cx('reveal-slot', c.rank === rank ? 'match' : 'miss')}>
+        <div key={c.id} className={cx('reveal-slot', backsClaim(c, rank, kismat) ? 'match' : 'miss')}>
           <PlayingCard
             card={c}
             size="sm"
+            wild={c.rank === kismat}
             className={flipFrom === undefined ? undefined : 'flip'}
             style={flipFrom === undefined ? undefined : { animationDelay: `${flipFrom + Math.min(j, 8) * 70}ms` }}
           />
-          <span className="mark">{c.rank === rank ? '✓' : '✗'}</span>
+          <span className="mark">{backsClaim(c, rank, kismat) ? '✓' : '✗'}</span>
         </div>
       ))}
     </div>
@@ -25,28 +26,28 @@ function MarkedCards({ cards, rank, flipFrom }: { cards: Card[]; rank: Rank; fli
 type Loaded = PlayerPlays | { error: string } | 'loading';
 
 /** what became of one play: a lie caught, one that survived a call or got away, or the truth */
-function playTag(p: PlayerPlays['plays'][number]): { text: string; kind: 'caught' | 'away' | 'truth' } {
-  if (p.cards.every((c) => c.rank === p.rank)) return { text: p.called ? 'truth, called' : 'truth', kind: 'truth' };
+function playTag(p: PlayerPlays['plays'][number], kismat: Rank | null): { text: string; kind: 'caught' | 'away' | 'truth' } {
+  if (p.cards.every((c) => backsClaim(c, p.rank, kismat))) return { text: p.called ? 'truth, called' : 'truth', kind: 'truth' };
   if (p.caught) return { text: 'caught', kind: 'caught' };
   return { text: p.called ? 'survived a call' : 'got away', kind: 'away' };
 }
 
 /** one player's every play, in order, and the cards they still held at the end */
-function PlayerPlaysView({ data, me }: { data: Loaded; me: boolean }) {
+function PlayerPlaysView({ data, me, kismat }: { data: Loaded; me: boolean; kismat: Rank | null }) {
   if (data === 'loading') return <p className="muted small lie-more">Turning the cards over…</p>;
   if ('error' in data) return <p className="muted small lie-more">{data.error}</p>;
   return (
     <div className="lie-more">
       {data.plays.length === 0 && <p className="muted small">{me ? "You didn't" : "They didn't"} put any cards down.</p>}
       {data.plays.map((p, i) => {
-        const tag = playTag(p);
+        const tag = playTag(p, kismat);
         return (
           <div key={i}>
             <p className="lie-claim">
               Said {claimText(p.cards.length, p.rank)}
               <span className={cx('lie-tag', tag.kind)}>{tag.text}</span>
             </p>
-            <MarkedCards cards={p.cards} rank={p.rank} />
+            <MarkedCards cards={p.cards} rank={p.rank} kismat={kismat} />
           </div>
         );
       })}
@@ -56,7 +57,7 @@ function PlayerPlaysView({ data, me }: { data: Loaded; me: boolean }) {
       {data.hand.length > 0 && (
         <div className="lie-cards">
           {data.hand.map((c) => (
-            <PlayingCard key={c.id} card={c} size="sm" />
+            <PlayingCard key={c.id} card={c} size="sm" wild={c.rank === kismat} />
           ))}
         </div>
       )}
@@ -81,6 +82,8 @@ export function LieRecapBox({ view, nameOf, onShowPlays }: LieRecapProps) {
   const who = (id: string) => (id === view.meId ? 'You' : (recap.players.find((p) => p.playerId === id)?.name ?? nameOf(id)));
   const told = recap.players.reduce((n, p) => n + p.lies, 0);
   const more = recap.uncaught - recap.lies.length;
+  // older servers don't send it
+  const kismat = view.kismat ?? null;
 
   const toggle = (id: string) => {
     if (open === id) return setOpen(null);
@@ -106,7 +109,7 @@ export function LieRecapBox({ view, nameOf, onShowPlays }: LieRecapProps) {
             <b>{who(l.playerId)}</b> said {claimText(l.cards.length, l.rank)}
             {l.survivedCall && <span className="lie-tag away">survived a call</span>}
           </p>
-          <MarkedCards cards={l.cards} rank={l.rank} flipFrom={250 + i * 160} />
+          <MarkedCards cards={l.cards} rank={l.rank} kismat={kismat} flipFrom={250 + i * 160} />
         </div>
       ))}
       {more > 0 && (
@@ -114,6 +117,7 @@ export function LieRecapBox({ view, nameOf, onShowPlays }: LieRecapProps) {
           +{more} more {more === 1 ? 'lie' : 'lies'} got away
         </p>
       )}
+      {kismat && <p className="muted small">🍀 {rankPlural(kismat)} were wild this game: they count as true</p>}
       {onShowPlays && <p className="muted small">Tap a name to see every card they put down</p>}
       <div className="lie-report">
         {recap.players.map((p) => (
@@ -136,7 +140,7 @@ export function LieRecapBox({ view, nameOf, onShowPlays }: LieRecapProps) {
                 </span>
               )}
             </button>
-            {open === p.playerId && <PlayerPlaysView data={loaded[p.playerId] ?? 'loading'} me={p.playerId === view.meId} />}
+            {open === p.playerId && <PlayerPlaysView data={loaded[p.playerId] ?? 'loading'} me={p.playerId === view.meId} kismat={kismat} />}
           </div>
         ))}
       </div>
