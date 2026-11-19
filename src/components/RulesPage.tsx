@@ -426,7 +426,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
       <Section icon="🛍️" title="Coin shop">
         <ul>
           <li>🛍️ Coin shop on Home and Profile. Everything is rented for a day or a week; nothing is kept for good.</li>
-          <li>XP boosts (1.5x / 2x / 3x for a day, 1.5x / 2x for a week) multiply only a game's own XP, in games of {MIN_REWARD_GAME_SEC / 60} min or more.</li>
+          <li>XP boosts (1.25x / 1.5x / 2x for a day, 1.25x / 1.5x for a week) multiply only a game's own XP, in games of {MIN_REWARD_GAME_SEC / 60} min or more.</li>
           <li>🪙 Coin Magnet: +25% on daily ladder and mission coins for 7 days.</li>
           <li>Auras show on your seat, card backs and profile. Win bursts and entry flashes are seen by everyone at the table.</li>
           <li>One XP boost and one coin boost at a time. Buying again adds time, up to 28 days ahead.</li>

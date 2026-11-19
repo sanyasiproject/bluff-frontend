@@ -29,7 +29,7 @@ function leftText(ms: number): string {
 
 const daysText = (days: number) => (days === 1 ? '1 day' : `${days} days`);
 
-/** the length badge: "1.5x · 1 day", "+25% · 7 days" or "7 days" */
+/** the length badge: "1.25x · 1 day", "+25% · 7 days" or "7 days" */
 function lengthBadge(item: ShopItem): string {
   if (item.kind === 'xp' && item.mult) return `${item.mult}x · ${daysText(item.days)}`;
   if (item.kind === 'coins' && item.mult) return `+${Math.round((item.mult - 1) * 100)}% · ${daysText(item.days)}`;
