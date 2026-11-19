@@ -42,6 +42,13 @@ const TABLE_COLORS: Record<string, [string, string, string, string]> = {
   diwali: ['#b8452a', '#5c1630', '#1c0614', '#1c0614'],
   monsoon: ['#4d6f8a', '#24394f', '#0a121c', '#0a121c'],
   champion: ['#3a3f6e', '#1a1b3a', '#07070f', '#07070f'],
+  rail: ['#1b8058', '#0e4d35', '#05261a', '#062a1d'],
+  lattice: ['#3166c8', '#183f86', '#07153a', '#07153a'],
+  planks: ['#a3713f', '#6e4523', '#2a1608', '#2a1608'],
+  moonlit: ['#2f3a5c', '#171d33', '#05070d', '#05070d'],
+  velvet: ['#93223f', '#5e0f27', '#22030d', '#22030d'],
+  goldweave: ['#12b585', '#06664a', '#01261c', '#01261c'],
+  nebula: ['#5b3fa8', '#2a1b5e', '#080418', '#080418'],
 };
 
 /** catalog order is the order ids were added; the picker lists them by level */

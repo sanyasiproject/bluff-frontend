@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { errorText } from '../lib/api';
 import { cx } from '../lib/cards';
 import { BACKS, currentLook, nextUnlocks, TABLES, type LookChoice } from '../lib/look';
@@ -53,8 +53,13 @@ export function LookPicker({ auth }: { auth: Auth }) {
               className={cx('look-swatch', on && 'on', locked && 'locked')}
               onClick={() => !on && void choose({ table: t.id })}
             >
-              {/* drawn like that table's seat box (styles/looks.css) */}
-              <span className={cx('look-felt', t.id)} data-table={t.id} aria-hidden>
+              {/* the felt's shades; the newer tables draw it like their seat box (styles/looks.css) */}
+              <span
+                className={cx('look-felt', t.id)}
+                data-table={t.id}
+                style={{ '--swatch-1': t.colors[0], '--swatch-2': t.colors[1], '--swatch-3': t.colors[2] } as CSSProperties}
+                aria-hidden
+              >
                 {locked ? '🔒' : t.emoji}
               </span>
               <span className="look-name">{t.name}</span>

@@ -1,48 +1,33 @@
 /* ---------- looks: table themes and card backs, unlocked by level (lib/look.ts) ---------- */
-/* Each felt is one fixed layer (body::before) of grain, a motif, a vignette and the felt light; body::after is the slow light */
+/* The original 7 tables and 8 backs keep their first look (the rules copied as they were); the newer ones follow them.
+   "classic" has no table rules here, so it is exactly the original look */
 
-:root {
-  /* fine felt grain: a small noise tile, drawn once and repeated */
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .6 -.2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
-  --vignette: radial-gradient(130% 95% at 50% 40%, transparent 48%, rgba(0, 0, 0, 0.45) 100%);
-  --felt-glow: radial-gradient(120% 70% at 50% 38%, var(--felt-light) 0%, var(--felt) 48%, var(--felt-deep) 100%);
-}
-
-/* classic green: the same felt with grain, a faint table rail and a darker edge */
-body::before {
-  background:
-    var(--grain),
-    radial-gradient(ellipse 80% 54% at 50% 44%, transparent 95.5%, rgba(255, 255, 255, 0.06) 97%, transparent 98.5%),
-    var(--vignette),
-    var(--felt-glow);
-}
-
-/* ---------- table tokens: felt, deep edge, light centre, sheets ---------- */
+/* tables: the felt is drawn from these tokens (body::before, .page, sheets) */
 :root[data-table='royal'] {
-  --felt: #183f86;
-  --felt-deep: #07153a;
-  --felt-light: #3166c8;
+  --felt: #163a7a;
+  --felt-deep: #08183a;
+  --felt-light: #2a5bb8;
   --sheet: #0c1d40;
 }
 
 :root[data-table='wood'] {
-  --felt: #6e4523;
-  --felt-deep: #2a1608;
-  --felt-light: #a3713f;
+  --felt: #6b4423;
+  --felt-deep: #2b170a;
+  --felt-light: #9a6a3c;
   --sheet: #2a1a0e;
 }
 
 :root[data-table='midnight'] {
-  --felt: #171d33;
-  --felt-deep: #05070d;
-  --felt-light: #2f3a5c;
+  --felt: #161b2e;
+  --felt-deep: #07090f;
+  --felt-light: #2c3550;
   --sheet: #0e1220;
 }
 
 :root[data-table='maroon'] {
-  --felt: #5e0f27;
-  --felt-deep: #22030d;
-  --felt-light: #93223f;
+  --felt: #5a0f24;
+  --felt-deep: #24040e;
+  --felt-light: #8a1f3a;
   --sheet: #2a0912;
 }
 
@@ -54,6 +39,170 @@ body::before {
 }
 
 :root[data-table='galaxy'] {
+  --felt: #2a1b5e;
+  --felt-deep: #0a0620;
+  --felt-light: #5b3fa8;
+  --sheet: #140d33;
+}
+
+/* wood grain over the felt */
+:root[data-table='wood'] body::before {
+  background:
+    repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.09) 0 2px, transparent 2px 23px),
+    repeating-linear-gradient(88deg, rgba(255, 220, 170, 0.04) 0 1px, transparent 1px 9px),
+    radial-gradient(120% 70% at 50% 38%, var(--felt-light) 0%, var(--felt) 48%, var(--felt-deep) 100%);
+}
+
+/* jewel-bright emerald with a fine gold diamond weave and a gold frame round the screen */
+:root[data-table='emerald'] body::before {
+  background:
+    repeating-linear-gradient(45deg, rgba(246, 196, 83, 0.08) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(-45deg, rgba(246, 196, 83, 0.08) 0 1px, transparent 1px 22px),
+    radial-gradient(120% 70% at 50% 38%, var(--felt-light) 0%, var(--felt) 46%, var(--felt-deep) 100%);
+  box-shadow:
+    inset 0 0 0 3px rgba(246, 196, 83, 0.8),
+    inset 0 0 0 6px rgba(1, 38, 28, 0.9),
+    inset 0 0 0 7px rgba(246, 196, 83, 0.4),
+    inset 0 0 70px rgba(246, 196, 83, 0.2);
+}
+
+/* gold glints instead of the plain light, drifting with the usual slow light (still under reduced motion) */
+:root[data-table='emerald'] body::after {
+  background:
+    radial-gradient(26% 16% at 30% 30%, rgba(255, 223, 128, 0.17), transparent 70%),
+    radial-gradient(22% 14% at 72% 68%, rgba(255, 223, 128, 0.13), transparent 70%),
+    radial-gradient(14% 10% at 55% 15%, rgba(255, 255, 255, 0.09), transparent 70%);
+}
+
+/* its picker swatch gets the gold frame too */
+.look-felt.emerald {
+  box-shadow: inset 0 0 0 2px rgba(246, 196, 83, 0.85);
+}
+
+/* stars and a nebula; still, so nothing moves */
+:root[data-table='galaxy'] body::before {
+  background:
+    radial-gradient(1.5px 1.5px at 12% 18%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 28% 72%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 46% 34%, #e8ddff 50%, transparent 51%),
+    radial-gradient(1px 1px at 63% 12%, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 78% 58%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 26%, #d6e4ff 50%, transparent 51%),
+    radial-gradient(1px 1px at 8% 86%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 55% 90%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 36% 52%, #fff 50%, transparent 51%),
+    radial-gradient(60% 40% at 72% 30%, rgba(214, 90, 200, 0.22), transparent 70%),
+    radial-gradient(50% 35% at 24% 70%, rgba(80, 160, 255, 0.18), transparent 70%),
+    radial-gradient(120% 70% at 50% 38%, var(--felt-light) 0%, var(--felt) 48%, var(--felt-deep) 100%);
+}
+
+/* the two places that draw the green felt with a fixed colour follow the table too */
+:root[data-table]:not([data-table='classic']) .lobby-actions {
+  background: linear-gradient(transparent, color-mix(in srgb, var(--felt-deep) 96%, transparent) 28%);
+}
+
+:root[data-table]:not([data-table='classic']) .page-head {
+  background: color-mix(in srgb, var(--felt-deep) 86%, transparent);
+}
+
+/* ---------- seats: each player's box in their own table style, so the whole table sees it ---------- */
+.seat[data-table='classic'] {
+  --seat-bg: radial-gradient(120% 90% at 50% 20%, #177650 0%, #0e4d35 55%, #05261a 100%);
+}
+
+.seat[data-table='royal'] {
+  --seat-bg: radial-gradient(120% 90% at 50% 20%, #2a5bb8 0%, #163a7a 55%, #08183a 100%);
+}
+
+.seat[data-table='wood'] {
+  --seat-bg:
+    repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.1) 0 2px, transparent 2px 13px),
+    radial-gradient(120% 90% at 50% 20%, #9a6a3c 0%, #6b4423 55%, #2b170a 100%);
+}
+
+.seat[data-table='midnight'] {
+  --seat-bg: radial-gradient(120% 90% at 50% 20%, #2c3550 0%, #161b2e 55%, #07090f 100%);
+}
+
+.seat[data-table='maroon'] {
+  --seat-bg: radial-gradient(120% 90% at 50% 20%, #8a1f3a 0%, #5a0f24 55%, #24040e 100%);
+}
+
+/* emerald: the gold weave and a thin gold frame inside the box */
+.seat[data-table='emerald'] {
+  --seat-bg:
+    repeating-linear-gradient(45deg, rgba(246, 196, 83, 0.14) 0 1px, transparent 1px 12px),
+    repeating-linear-gradient(-45deg, rgba(246, 196, 83, 0.14) 0 1px, transparent 1px 12px),
+    radial-gradient(120% 90% at 50% 20%, #12b585 0%, #06664a 55%, #01261c 100%);
+  outline: 1.5px solid rgba(246, 196, 83, 0.75);
+  outline-offset: -5px;
+}
+
+.seat[data-table='galaxy'] {
+  --seat-bg:
+    radial-gradient(1.5px 1.5px at 18% 22%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 16%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 86% 64%, #e8ddff 50%, transparent 51%),
+    radial-gradient(1px 1px at 12% 74%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 52% 90%, #fff 50%, transparent 51%),
+    radial-gradient(70% 50% at 75% 30%, rgba(214, 90, 200, 0.3), transparent 70%),
+    radial-gradient(120% 90% at 50% 20%, #5b3fa8 0%, #2a1b5e 55%, #0a0620 100%);
+}
+
+/* ---------- newer tables: one fixed layer (body::before) of grain, a motif, a vignette and the felt light ---------- */
+:root {
+  /* fine felt grain: a small noise tile, drawn once and repeated */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .6 -.2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  --vignette: radial-gradient(130% 95% at 50% 40%, transparent 48%, rgba(0, 0, 0, 0.45) 100%);
+  --felt-glow: radial-gradient(120% 70% at 50% 38%, var(--felt-light) 0%, var(--felt) 48%, var(--felt-deep) 100%);
+}
+
+/* green rail: the classic felt with grain, a faint table rail and a darker edge */
+:root[data-table='rail'] body::before {
+  background:
+    var(--grain),
+    radial-gradient(ellipse 80% 54% at 50% 44%, transparent 95.5%, rgba(255, 255, 255, 0.06) 97%, transparent 98.5%),
+    var(--vignette),
+    var(--felt-glow);
+}
+
+/* tokens: felt, deep edge, light centre, sheets (rail keeps the classic green ones) */
+:root[data-table='lattice'] {
+  --felt: #183f86;
+  --felt-deep: #07153a;
+  --felt-light: #3166c8;
+  --sheet: #0c1d40;
+}
+
+:root[data-table='planks'] {
+  --felt: #6e4523;
+  --felt-deep: #2a1608;
+  --felt-light: #a3713f;
+  --sheet: #2a1a0e;
+}
+
+:root[data-table='moonlit'] {
+  --felt: #171d33;
+  --felt-deep: #05070d;
+  --felt-light: #2f3a5c;
+  --sheet: #0e1220;
+}
+
+:root[data-table='velvet'] {
+  --felt: #5e0f27;
+  --felt-deep: #22030d;
+  --felt-light: #93223f;
+  --sheet: #2a0912;
+}
+
+:root[data-table='goldweave'] {
+  --felt: #06664a;
+  --felt-deep: #01261c;
+  --felt-light: #12b585;
+  --sheet: #04291e;
+}
+
+:root[data-table='nebula'] {
   --felt: #2a1b5e;
   --felt-deep: #080418;
   --felt-light: #5b3fa8;
@@ -95,10 +244,8 @@ body::before {
   --sheet: #10112a;
 }
 
-/* ---------- felts ---------- */
-
-/* royal blue: a fine damask lattice and a soft light from above */
-:root[data-table='royal'] body::before {
+/* royal lattice: a fine damask lattice and a soft light from above */
+:root[data-table='lattice'] body::before {
   background:
     var(--grain),
     radial-gradient(circle at 50% 50%, rgba(246, 196, 83, 0.1) 0 1.5px, transparent 2px) 0 0 / 30px 52px,
@@ -109,8 +256,8 @@ body::before {
     var(--felt-glow);
 }
 
-/* wooden: planks with seams, wavy grain and a couple of knots */
-:root[data-table='wood'] body::before {
+/* wood planks: planks with seams, wavy grain and a couple of knots */
+:root[data-table='planks'] body::before {
   background:
     var(--grain),
     radial-gradient(14px 7px at 22% 30%, rgba(40, 18, 4, 0.45), rgba(40, 18, 4, 0.15) 60%, transparent 100%),
@@ -123,8 +270,8 @@ body::before {
     var(--felt-glow);
 }
 
-/* midnight: a moon glow, a few stars and a cool silver edge */
-:root[data-table='midnight'] body::before {
+/* moonlit night: a moon glow, a few stars and a cool silver edge */
+:root[data-table='moonlit'] body::before {
   background:
     var(--grain),
     radial-gradient(circle at calc(84% + 7px) calc(9% - 4px), #0d1222 0 12px, transparent 13px),
@@ -140,8 +287,8 @@ body::before {
     var(--felt-glow);
 }
 
-/* maroon velvet: soft crushed-velvet sheen in diagonal bands */
-:root[data-table='maroon'] body::before {
+/* velvet sheen: soft crushed-velvet sheen in diagonal bands */
+:root[data-table='velvet'] body::before {
   background:
     var(--grain),
     linear-gradient(115deg, transparent 12%, rgba(255, 150, 180, 0.08) 26%, transparent 40%, rgba(255, 150, 180, 0.06) 62%, transparent 78%),
@@ -151,8 +298,8 @@ body::before {
     var(--felt-glow);
 }
 
-/* emerald gold: jewel-bright felt, a fine gold diamond weave and a gold frame round the screen */
-:root[data-table='emerald'] body::before {
+/* gold weave: jewel-bright felt, a fine gold diamond weave and a gold frame round the screen */
+:root[data-table='goldweave'] body::before {
   background:
     var(--grain),
     radial-gradient(circle at 50% 50%, rgba(255, 223, 128, 0.22) 0 1.5px, transparent 2px) 0 0 / 22px 22px,
@@ -168,15 +315,15 @@ body::before {
 }
 
 /* gold glints instead of the plain light */
-:root[data-table='emerald'] body::after {
+:root[data-table='goldweave'] body::after {
   background:
     radial-gradient(26% 16% at 30% 30%, rgba(255, 223, 128, 0.17), transparent 70%),
     radial-gradient(22% 14% at 72% 68%, rgba(255, 223, 128, 0.13), transparent 70%),
     radial-gradient(14% 10% at 55% 15%, rgba(255, 255, 255, 0.09), transparent 70%);
 }
 
-/* galaxy: three repeating star fields, a nebula and a bright core */
-:root[data-table='galaxy'] body::before {
+/* nebula: three repeating star fields, a nebula and a bright core */
+:root[data-table='nebula'] body::before {
   background:
     radial-gradient(1px 1px at 20% 30%, #fff 50%, transparent 51%) 0 0 / 61px 67px,
     radial-gradient(1px 1px at 70% 80%, #d6e4ff 50%, transparent 51%) 0 0 / 89px 79px,
@@ -314,33 +461,29 @@ body::before {
     radial-gradient(12% 8% at 58% 12%, rgba(255, 255, 255, 0.1), transparent 70%);
 }
 
-/* the two places that draw the green felt with a fixed colour follow the table too */
-:root[data-table]:not([data-table='classic']) .lobby-actions {
-  background: linear-gradient(transparent, color-mix(in srgb, var(--felt-deep) 96%, transparent) 28%);
-}
-
-:root[data-table]:not([data-table='classic']) .page-head {
-  background: color-mix(in srgb, var(--felt-deep) 86%, transparent);
-}
-
-/* ---------- seats: each player's box in their own table style, so the whole table sees it ---------- */
-/* the Profile picker's swatches (.look-felt) are drawn from the same art */
+/* ---------- seats and picker swatches for the newer tables (the originals are above) ---------- */
+/* a picker swatch is the felt's three shades, set inline by LookPicker, like the originals always were */
 .look-felt {
-  background: var(--seat-bg, var(--panel));
+  background: radial-gradient(120% 90% at 50% 35%, var(--swatch-1) 0%, var(--swatch-2) 50%, var(--swatch-3) 100%);
 }
 
-:is(.seat, .look-felt)[data-table='classic'] {
+/* the newer tables draw their swatch from the same art as their seat box */
+.look-felt:is([data-table='rail'], [data-table='lattice'], [data-table='planks'], [data-table='moonlit'], [data-table='velvet'], [data-table='goldweave'], [data-table='nebula'], [data-table='saffron'], [data-table='lagoon'], [data-table='diwali'], [data-table='monsoon'], [data-table='champion']) {
+  background: var(--seat-bg);
+}
+
+:is(.seat, .look-felt)[data-table='rail'] {
   --seat-bg: var(--grain), radial-gradient(120% 90% at 50% 20%, #1b8058 0%, #0e4d35 55%, #05261a 100%);
 }
 
-:is(.seat, .look-felt)[data-table='royal'] {
+:is(.seat, .look-felt)[data-table='lattice'] {
   --seat-bg:
     repeating-linear-gradient(60deg, rgba(160, 200, 255, 0.1) 0 1px, transparent 1px 13px),
     repeating-linear-gradient(-60deg, rgba(160, 200, 255, 0.1) 0 1px, transparent 1px 13px),
     radial-gradient(120% 90% at 50% 20%, #3166c8 0%, #183f86 55%, #07153a 100%);
 }
 
-:is(.seat, .look-felt)[data-table='wood'] {
+:is(.seat, .look-felt)[data-table='planks'] {
   --seat-bg:
     repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.3) 0 1.5px, transparent 1.5px 26px),
     repeating-linear-gradient(91deg, rgba(0, 0, 0, 0.08) 0 1px, transparent 1px 5px),
@@ -348,7 +491,7 @@ body::before {
     radial-gradient(120% 90% at 50% 20%, #a3713f 0%, #6e4523 55%, #2a1608 100%);
 }
 
-:is(.seat, .look-felt)[data-table='midnight'] {
+:is(.seat, .look-felt)[data-table='moonlit'] {
   --seat-bg:
     radial-gradient(circle at 82% 14%, rgba(235, 240, 255, 0.55) 0 4px, rgba(170, 190, 255, 0.12) 5px, transparent 18px),
     radial-gradient(1px 1px at 18% 24%, #fff 50%, transparent 51%),
@@ -357,15 +500,15 @@ body::before {
     radial-gradient(120% 90% at 50% 20%, #2f3a5c 0%, #171d33 55%, #05070d 100%);
 }
 
-:is(.seat, .look-felt)[data-table='maroon'] {
+:is(.seat, .look-felt)[data-table='velvet'] {
   --seat-bg:
     linear-gradient(115deg, transparent 15%, rgba(255, 150, 180, 0.12) 35%, transparent 55%),
     repeating-linear-gradient(115deg, rgba(0, 0, 0, 0.08) 0 1.5px, transparent 1.5px 4px),
     radial-gradient(120% 90% at 50% 20%, #93223f 0%, #5e0f27 55%, #22030d 100%);
 }
 
-/* emerald: the gold weave and a thin gold frame inside the box */
-:is(.seat, .look-felt)[data-table='emerald'] {
+/* gold weave: the gold weave and a thin gold frame inside the box */
+:is(.seat, .look-felt)[data-table='goldweave'] {
   --seat-bg:
     repeating-linear-gradient(45deg, rgba(246, 196, 83, 0.14) 0 1px, transparent 1px 12px),
     repeating-linear-gradient(-45deg, rgba(246, 196, 83, 0.14) 0 1px, transparent 1px 12px),
@@ -374,7 +517,7 @@ body::before {
   outline-offset: -5px;
 }
 
-:is(.seat, .look-felt)[data-table='galaxy'] {
+:is(.seat, .look-felt)[data-table='nebula'] {
   --seat-bg:
     radial-gradient(1.5px 1.5px at 18% 22%, #fff 50%, transparent 51%),
     radial-gradient(1px 1px at 78% 16%, #fff 50%, transparent 51%),
@@ -433,20 +576,120 @@ body::before {
 }
 
 /* the swatch is smaller than a seat, so its frame sits closer to the edge */
-.look-felt[data-table='emerald'],
+.look-felt[data-table='goldweave'],
 .look-felt[data-table='champion'] {
   outline-offset: -3px;
 }
 
+
 /* ---------- card backs ---------- */
 /* Everyone's face-down cards show in that player's own back: data-back on the card or seat badge, from the server.
-   Cards nobody owns (the Crazy 7 deck, practice, the home screen) use this phone's own back, set on :root.
-   Each back only sets these variables; .card.back in styles.css draws them: --back-art (centre emblem, then pattern),
-   --back-edge (outer border) and two pad + frame bands inside it (inset shadows, so no extra elements). */
+   Cards nobody owns (the Crazy 7 deck, practice, the home screen) use this phone's own back, set on :root */
 
-/* classic red: white border, red pinstripe, fine crosshatch and a rosette */
-:root,
+/* stripe colours */
 [data-back='classic'] {
+  --back-1: #a11f35;
+  --back-2: #c7384f;
+}
+
+[data-back='ocean'] {
+  --back-1: #1d4e9e;
+  --back-2: #2f6fd0;
+}
+
+[data-back='paisley'] {
+  --back-1: #b4532a;
+  --back-2: #2bb3a3;
+}
+
+[data-back='neon'] {
+  --back-1: #120320;
+  --back-2: #ff2fd6;
+}
+
+[data-back='gold'] {
+  --back-1: #8a6a12;
+  --back-2: #d4a72c;
+}
+
+[data-back='mandala'] {
+  --back-1: #b0123b;
+  --back-2: #3a0a52;
+}
+
+[data-back='diamond'] {
+  --back-1: #3a7bd5;
+  --back-2: #b9f2ff;
+}
+
+[data-back='legend'] {
+  --back-1: #2a1c00;
+  --back-2: #f6c453;
+}
+
+/* a card in someone's back starts from the plain stripes, whatever back this phone uses */
+.card.back[data-back] {
+  border-color: #fff;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.22) 0 18%, transparent 19%),
+    repeating-linear-gradient(45deg, var(--back-1) 0 5px, var(--back-2) 5px 10px);
+}
+
+/* patterned backs: this phone's own cards, and anyone's card in that back */
+:root[data-back='paisley'] .card.back:not([data-back]),
+.card.back[data-back='paisley'] {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.25) 0 16%, transparent 17%),
+    radial-gradient(circle at 25% 25%, #ffd27a 0 18%, transparent 20%) 0 0 / 10px 10px,
+    radial-gradient(circle at 75% 75%, #2bb3a3 0 18%, transparent 20%) 0 0 / 10px 10px,
+    #b4532a;
+}
+
+:root[data-back='neon'] .card.back:not([data-back]),
+.card.back[data-back='neon'] {
+  border-color: #2fe6ff;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 47, 214, 0.45) 0 16%, transparent 17%),
+    repeating-linear-gradient(135deg, #ff2fd6 0 2px, transparent 2px 8px),
+    repeating-linear-gradient(45deg, #2fe6ff 0 2px, transparent 2px 8px),
+    #120320;
+}
+
+:root[data-back='gold'] .card.back:not([data-back]),
+.card.back[data-back='gold'] {
+  border-color: #ffe7a3;
+  background:
+    radial-gradient(circle at 50% 50%, #fff3c4 0 10%, #8a6a12 11% 16%, transparent 17%),
+    repeating-linear-gradient(45deg, #8a6a12 0 5px, #d4a72c 5px 10px);
+}
+
+:root[data-back='mandala'] .card.back:not([data-back]),
+.card.back[data-back='mandala'] {
+  background: repeating-radial-gradient(circle at 50% 50%, #ffcf5a 0 2px, #b0123b 2px 6px, #ffcf5a 6px 7px, #3a0a52 7px 11px);
+}
+
+:root[data-back='diamond'] .card.back:not([data-back]),
+.card.back[data-back='diamond'] {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.5) 0 14%, transparent 15%),
+    conic-gradient(from 45deg, #b9f2ff 25%, #3a7bd5 0 50%, #b9f2ff 0 75%, #3a7bd5 0) 0 0 / 10px 10px;
+}
+
+:root[data-back='legend'] .card.back:not([data-back]),
+.card.back[data-back='legend'] {
+  border-color: var(--gold);
+  background:
+    radial-gradient(circle at 50% 50%, #f6c453 0 13%, #2a1c00 14% 17%, transparent 18%),
+    repeating-conic-gradient(from 0deg at 50% 50%, #f6c453 0 10deg, #2a1c00 10deg 20deg);
+}
+
+/* ---------- newer card backs: a framed border, a pattern and a centre emblem ---------- */
+/* Each sets only variables, on the card or seat badge (that player's back) or on :root (this phone's own back).
+   The drawer below paints them only for these ids, so the original backs above keep their own rules, and
+   players with original and newer backs mix freely at one table. */
+
+/* red rosette: white border, red pinstripe, fine crosshatch and a rosette */
+[data-back='rosette'] {
   --back-1: #a11f35;
   --back-2: #c7384f;
   --back-edge: #fff;
@@ -459,8 +702,8 @@ body::before {
     repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px 5px), repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px 5px), radial-gradient(circle at 50% 50%, #c7384f, #a11f35 70%);
 }
 
-/* ocean blue: rolling scallop waves and an anchor */
-[data-back='ocean'] {
+/* anchor blue: rolling scallop waves and an anchor */
+[data-back='anchor'] {
   --back-1: #1d4e9e;
   --back-2: #2f6fd0;
   --back-edge: #fff;
@@ -473,8 +716,8 @@ body::before {
     radial-gradient(circle at 50% 100%, transparent 38%, rgba(143, 211, 255, 0.4) 40% 47%, transparent 49%) 0 0 / 12px 7px, linear-gradient(180deg, #2f6fd0, #143a7a);
 }
 
-/* paisley: gold and teal dots round a boteh */
-[data-back='paisley'] {
+/* paisley drop: gold and teal dots round a boteh */
+[data-back='teardrop'] {
   --back-1: #b4532a;
   --back-2: #2bb3a3;
   --back-edge: #ffe7b0;
@@ -487,8 +730,8 @@ body::before {
     radial-gradient(circle at 25% 25%, rgba(255, 210, 122, 0.85) 0 16%, transparent 19%) 0 0 / 10px 10px, radial-gradient(circle at 75% 75%, rgba(43, 179, 163, 0.85) 0 16%, transparent 19%) 0 0 / 10px 10px, radial-gradient(circle at 50% 50%, #c4643a, #9a4220 75%);
 }
 
-/* neon: a glowing grid, double neon frame and a lightning bolt */
-[data-back='neon'] {
+/* neon bolt: a glowing grid, double neon frame and a lightning bolt */
+[data-back='bolt'] {
   --back-1: #120320;
   --back-2: #ff2fd6;
   --back-edge: #2fe6ff;
@@ -501,8 +744,8 @@ body::before {
     repeating-linear-gradient(0deg, rgba(47, 230, 255, 0.32) 0 1px, transparent 1px 7px), repeating-linear-gradient(90deg, rgba(255, 47, 214, 0.32) 0 1px, transparent 1px 7px), radial-gradient(circle at 50% 50%, #4a0d72, #120320 70%);
 }
 
-/* royal gold: foil stripes with a sheen and a jewelled crown */
-[data-back='gold'] {
+/* gold crown: foil stripes with a sheen and a jewelled crown */
+[data-back='crown'] {
   --back-1: #8a6a12;
   --back-2: #d4a72c;
   --back-edge: #ffe7a3;
@@ -515,8 +758,8 @@ body::before {
     linear-gradient(135deg, transparent 30%, rgba(255, 250, 220, 0.3) 48%, transparent 66%), repeating-linear-gradient(45deg, #8a6a12 0 4px, #d4a72c 4px 8px);
 }
 
-/* mandala: rings and petals round a lotus */
-[data-back='mandala'] {
+/* lotus: rings and petals round a lotus */
+[data-back='lotus'] {
   --back-1: #b0123b;
   --back-2: #3a0a52;
   --back-edge: #ffcf5a;
@@ -529,8 +772,8 @@ body::before {
     repeating-conic-gradient(from 0deg at 50% 50%, rgba(255, 207, 90, 0.16) 0 10deg, transparent 10deg 20deg), repeating-radial-gradient(circle at 50% 50%, #b0123b 0 5px, #8a0d30 5px 6px, #3a0a52 6px 10px, #ffcf5a 10px 11px);
 }
 
-/* diamond: icy argyle with sparkles and a cut gem */
-[data-back='diamond'] {
+/* cut gem: icy argyle with sparkles and a cut gem */
+[data-back='gem'] {
   --back-1: #3a7bd5;
   --back-2: #b9f2ff;
   --back-edge: #e8fbff;
@@ -543,8 +786,8 @@ body::before {
     radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.9) 0 4%, transparent 9%) 0 0 / 25% 18%, conic-gradient(from 45deg, #9fe4ff 25%, #3a7bd5 0 50%, #b9f2ff 0 75%, #2f63b0 0) 0 0 / 12px 12px;
 }
 
-/* legend: a black-and-gold sunburst with a foil laurel star */
-[data-back='legend'] {
+/* laurel: a black-and-gold sunburst with a foil laurel star */
+[data-back='laurel'] {
   --back-1: #2a1c00;
   --back-2: #f6c453;
   --back-edge: #f6c453;
@@ -627,9 +870,22 @@ body::before {
     linear-gradient(135deg, transparent 25%, rgba(255, 242, 184, 0.3) 45%, transparent 62%), radial-gradient(circle at 50% 50%, #f6c453 0 1.2px, transparent 1.8px) 0 0 / 8px 8px, repeating-linear-gradient(45deg, rgba(233, 178, 58, 0.55) 0 1px, transparent 1px 5.66px), repeating-linear-gradient(-45deg, rgba(233, 178, 58, 0.55) 0 1px, transparent 1px 5.66px), radial-gradient(circle at 50% 50%, #7a1028, #3a0410 75%);
 }
 
-/* the little back on each seat's card count: that player's stripes and edge */
-.mini-back {
-  border-color: var(--back-edge, #fff);
+/* the drawer: border, art, then two pad + frame rings drawn as inset shadows (no extra elements) */
+.card.back:is([data-back='rosette'], [data-back='anchor'], [data-back='teardrop'], [data-back='bolt'], [data-back='crown'], [data-back='lotus'], [data-back='gem'], [data-back='laurel'], [data-back='rangoli'], [data-back='peacock'], [data-back='kite'], [data-back='cosmic'], [data-back='maharaja']),
+:root:is([data-back='rosette'], [data-back='anchor'], [data-back='teardrop'], [data-back='bolt'], [data-back='crown'], [data-back='lotus'], [data-back='gem'], [data-back='laurel'], [data-back='rangoli'], [data-back='peacock'], [data-back='kite'], [data-back='cosmic'], [data-back='maharaja']) .card.back:not([data-back]) {
+  border: calc(var(--cw) * 0.045) solid var(--back-edge);
+  background: var(--back-art);
+  box-shadow:
+    inset 0 0 0 calc(var(--cw) * 0.035) var(--back-pad),
+    inset 0 0 0 calc(var(--cw) * 0.055) var(--back-frame),
+    inset 0 0 0 calc(var(--cw) * 0.075) var(--back-pad-2),
+    inset 0 0 0 calc(var(--cw) * 0.09) var(--back-frame-2),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* the little back on a seat's card count: that back's stripes with its own edge colour */
+.mini-back:is([data-back='rosette'], [data-back='anchor'], [data-back='teardrop'], [data-back='bolt'], [data-back='crown'], [data-back='lotus'], [data-back='gem'], [data-back='laurel'], [data-back='rangoli'], [data-back='peacock'], [data-back='kite'], [data-back='cosmic'], [data-back='maharaja']) {
+  border-color: var(--back-edge);
 }
 
 /* ---------- the picker on the Profile page ---------- */
