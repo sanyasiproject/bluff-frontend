@@ -1362,6 +1362,8 @@ a.btn {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* when crowded, spill downwards instead of over the seats */
+  justify-content: safe center;
   gap: 8px;
   min-height: 0;
   padding: 6px 16px;
@@ -1522,6 +1524,11 @@ a.btn {
 
 .hand-row + .hand-row {
   margin-top: calc(var(--cw) * 1.4 * -0.5);
+}
+
+/* big hands: each later row shows only the top corner of its cards */
+.hand.tight .hand-row + .hand-row {
+  margin-top: calc(var(--cw) * 1.4 * (var(--row-show) - 1));
 }
 
 .card.in-hand {
@@ -5909,4 +5916,54 @@ body::after {
   border: 1px solid rgba(255, 154, 157, 0.35);
   border-radius: 999px;
   background: rgba(40, 10, 12, 0.92);
+}
+
+/* ---------- crowded table: 2 decks or a short phone ---------- */
+
+.table.crowded .center {
+  /* the call buttons always stay whole; the hand scrolls if it must */
+  flex-shrink: 0;
+  gap: 5px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.table.crowded .pile {
+  height: 74px;
+}
+
+.table.crowded .bluff-btn {
+  min-height: 50px;
+  margin-top: 0;
+}
+
+.table.crowded .hand-area {
+  min-height: 150px;
+  padding-top: 4px;
+}
+
+@media (max-height: 740px) {
+  .table .center {
+    flex-shrink: 0;
+    gap: 5px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  .table .pile {
+    height: 74px;
+  }
+
+  .table .bluff-btn {
+    min-height: 50px;
+    margin-top: 0;
+  }
+
+  .table .seats {
+    padding-top: 6px;
+  }
+
+  .table .hand-area {
+    min-height: 150px;
+  }
 }

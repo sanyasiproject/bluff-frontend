@@ -5,6 +5,10 @@ import { PlayingCard } from './PlayingCard';
 
 const MIN_SLICE = 28;
 const RATIO = 1.4;
+// big hands (2 decks): narrower slices and rows that show only the corners, so every card fits without scrolling
+const BIG_HAND = 30;
+const BIG_SLICE = 23;
+const BIG_ROW_SHOW = 0.44;
 
 interface Props {
   cards: Card[];
@@ -39,14 +43,15 @@ export function Hand({ cards, selected = [], onToggle, deal, fresh = [], playabl
   }, []);
 
   const cw = width >= 480 ? 70 : 58;
-  const perRowMax = Math.max(1, Math.floor((width - cw) / MIN_SLICE) + 1);
+  const big = cards.length > BIG_HAND;
+  const perRowMax = Math.max(1, Math.floor((width - cw) / (big ? BIG_SLICE : MIN_SLICE)) + 1);
   const rowCount = Math.max(1, Math.ceil(cards.length / perRowMax));
   const perRow = Math.ceil(cards.length / rowCount);
   const slice = perRow > 1 ? Math.min(cw + 6, (width - cw) / (perRow - 1)) : 0;
   const rows = Array.from({ length: rowCount }, (_, r) => cards.slice(r * perRow, (r + 1) * perRow));
 
   return (
-    <div className="hand" ref={ref} style={{ ['--cw' as string]: `${cw}px` }}>
+    <div className={cx('hand', big && rowCount > 2 && 'tight')} ref={ref} style={{ ['--cw' as string]: `${cw}px`, ['--row-show' as string]: BIG_ROW_SHOW }}>
       {cards.length === 0 && <p className="hand-empty">No cards left</p>}
       {cards.length > 0 &&
         rows.map((row, r) => (

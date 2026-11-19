@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { api, errorText } from '../lib/api';
 import { useBack } from '../lib/back';
 import { cx } from '../lib/cards';
@@ -309,7 +309,14 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   // back from the lobby leaves the room, like the Leave button
   useBack(() => void actions.leave());
   const me = [...view.players, ...view.watchers].find((p) => p.id === view.meId);
-  const set = (patch: Partial<GameConfig>) => actions.setConfig({ ...view.config, ...patch });
+  // taps the server hasn't echoed yet, so quick taps in a row don't undo each other
+  const pending = useRef<{ patch: Partial<GameConfig>; at: number }>({ patch: {}, at: 0 });
+  const set = (patch: Partial<GameConfig>) => {
+    const now = Date.now();
+    const kept = now - pending.current.at < 3000 ? pending.current.patch : {};
+    pending.current = { patch: { ...kept, ...patch }, at: now };
+    actions.setConfig({ ...view.config, ...pending.current.patch });
+  };
   const coinsOn = auth.accountsOn === true;
   const crazy7 = view.config.game === 'crazy7';
   // practice lessons: offered once the first time someone plays a game, open any time from How to play
