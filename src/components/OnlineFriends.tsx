@@ -16,7 +16,7 @@ interface Props {
 /** what a friend is doing, in two words */
 const status = (f: FriendView) => (f.inRoom === null ? 'free' : f.roomPhase === 'playing' ? 'in a game' : 'in a lobby');
 
-/** Home: who of my friends is online right now; tap one to open Friends, Join a lobby straight away */
+/** Home: who of my friends is online right now; tap one to open Friends, ask to join a lobby in one tap (they say yes or no) */
 export function OnlineFriends({ auth, onJoin }: Props) {
   const all = useOnlineFriends(auth.user ? auth.token : null);
   const [open, setOpen] = useState(false);
@@ -58,10 +58,10 @@ export function OnlineFriends({ auth, onJoin }: Props) {
                 <b>{f.displayName}</b>
                 <span className={cx('online-where', f.inRoom === null && 'free')}>{status(f)}</span>
               </button>
-              {/* a friend in a lobby can be joined in one tap; a game in progress goes through Friends to ask the host */}
+              {/* a friend in a lobby: ask to join in one tap; a game in progress goes through Friends */}
               {f.inRoom === 'other' && f.roomPhase !== 'playing' && (
                 <button className="btn small primary online-join" disabled={joining !== null} onClick={() => void join(f)}>
-                  {joining === f.id ? '…' : 'Join'}
+                  {joining === f.id ? '…' : 'Ask'}
                 </button>
               )}
             </li>

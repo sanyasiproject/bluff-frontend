@@ -145,15 +145,14 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
     if (!onJoin) return;
     setError('');
     setNote('');
-    const playing = f.roomPhase === 'playing';
     if (!(await onJoin(f.id, watch))) return;
-    if (!playing) return;
-    setNote(`Asked to watch ${f.displayName}'s game. You'll get in when the host says yes.`);
+    // never straight in: they get a card and say yes or no
+    setNote(`Asked ${f.displayName} to let you ${watch ? 'watch' : 'join'}. You'll get in when they say yes.`);
     setAsked((prev) => new Set(prev).add(f.id));
     setTimeout(() => setAsked((prev) => new Set([...prev].filter((id) => id !== f.id))), ASK_AGAIN_MS);
   };
 
-  /** join or watch a friend's room: both in a lobby, only a request to watch once their game is on */
+  /** ask to join or watch a friend's room (both in a lobby, only watch once their game is on); they say yes or no */
   const joinActions = (f: FriendView) => {
     if (!onJoin || !f.online || f.inRoom !== 'other') return null;
     if (f.roomPhase === 'playing') {
@@ -165,12 +164,14 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
     }
     return (
       <>
-        <button className="btn small primary" onClick={() => void join(f, false)}>
-          Join
+        <button className="btn small primary" disabled={asked.has(f.id)} onClick={() => void join(f, false)}>
+          {asked.has(f.id) ? 'Asked ✓' : 'Ask to join'}
         </button>
-        <button className="btn small" onClick={() => void join(f, true)}>
-          👀 Watch
-        </button>
+        {!asked.has(f.id) && (
+          <button className="btn small" onClick={() => void join(f, true)}>
+            👀 Watch
+          </button>
+        )}
       </>
     );
   };

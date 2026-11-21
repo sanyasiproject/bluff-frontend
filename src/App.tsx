@@ -9,6 +9,7 @@ import { BonusPopup, InvitePopup } from './components/Popups';
 import { Reactions } from './components/Reactions';
 import { ShopFx } from './components/ShopFx';
 import { LiveVoiceSync } from './components/LiveVoice';
+import { JoinAsks } from './components/JoinAsks';
 import { Splash } from './components/Splash';
 import { Table } from './components/Table';
 import { Toasts } from './components/Toasts';
@@ -103,6 +104,8 @@ export default function App() {
       <Toasts notes={notes} />
       <Reactions items={reactions} />
       <LiveVoiceSync view={replaced ? null : view} />
+      {/* people asking me to let them in, top right on any screen */}
+      <JoinAsks view={replaced ? null : view} onAnswer={actions.admit} />
       <Flyers items={flyers} onDone={actions.dropFlyer} />
       <FriendOnline auth={auth} inLobby={view?.phase === 'lobby'} onInvite={actions.invite} />
       {invite && (

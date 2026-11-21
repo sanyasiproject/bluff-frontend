@@ -127,13 +127,13 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
 
       {pendingWatch ? (
         <section className="panel stack invite-card">
-          <p className="label">Game in progress</p>
+          <p className="label">{pendingWatch.askedOf ? 'Asked to join' : 'Game in progress'}</p>
           <p className="invite-room">
             Room <b>{pendingWatch.code}</b>
           </p>
           <p className="waiting-host">
             <span className="dot" />
-            Waiting for the host to let you watch…
+            {pendingWatch.askedOf ? `Waiting for ${pendingWatch.askedOf} to let you in…` : 'Waiting for the host to let you watch…'}
           </p>
           <p className="muted small">You'll go straight in when they say yes.</p>
           <button className="btn ghost block" onClick={actions.cancelWatch}>

@@ -67,12 +67,14 @@ export interface ChatBubble {
 
 type Entered = { code: string; token: string };
 /** room:join answers pending when a game is running and the host has to say yes */
-type JoinReply = { code: string; token?: string; pending?: boolean };
+type JoinReply = { code: string; token?: string; pending?: boolean; askedOf?: string };
 
-/** waiting for the host to let me watch a game in progress */
+/** waiting to be let in: by the friend I asked, or the host of a game in progress */
 export interface PendingWatch {
   code: string;
   name: string;
+  /** the friend I asked; missing: the host */
+  askedOf?: string;
 }
 
 let noteSeq = 0;
@@ -149,8 +151,9 @@ export function useBluff() {
       }
     };
     const onDenied = ({ code, reason }: { code: string; reason?: string }) => {
+      const who = pendingRef.current?.askedOf ?? 'The host';
       setPending(null);
-      pushNote('error', reason ?? `The host didn't let you into room ${code} this time`);
+      pushNote('error', reason ?? `${who} didn't let you into room ${code} this time`);
     };
     const onState = (v: RoomView) => {
       viewRef.current = v;
@@ -295,7 +298,7 @@ export function useBluff() {
       kick: (memberId: string) => run(() => request('room:kick', { memberId })),
       /** host: a bot takes a free seat */
       addBot: () => run(() => request('room:addBot')),
-      /** join or watch a friend's room from the Friends list; once their game is on it's a request to the host */
+      /** asks a friend to let me into their room (to play or watch); I get in when they say yes */
       joinFriend: async (userId: string, watch: boolean, name: string) =>
         (await run(async () => {
           const res = await request<JoinReply>('friend:join', { userId, watch });
@@ -306,7 +309,7 @@ export function useBluff() {
             viewRef.current = null;
             setView(null);
           }
-          if (res.pending) setPending({ code: res.code, name });
+          if (res.pending) setPending({ code: res.code, name, askedOf: res.askedOf });
           else enter({ code: res.code, token: res.token! }, name);
         })) !== null,
       /** the server's answer (pushed: the friend was offline and got a phone notification), or null if it failed */

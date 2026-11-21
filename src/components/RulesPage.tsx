@@ -618,8 +618,8 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             lists online friends first.
           </li>
           <li>
-            Join a friend from Friends: while they're in a lobby, tap Join (take a seat) or 👀 Watch. Once their game has started, tap 👀 Ask
-            to watch and the host decides.
+            Join a friend from Friends or Online now: tap Ask to join (or 👀 Watch). Nobody goes straight in: that friend gets a card at the
+            top right and taps Let in or No. Room codes and invite links still let people straight in.
           </li>
           <li>Tap anyone in the lobby or Friends to see their public card: level, record and badges. Never coins or private data.</li>
           <li>
