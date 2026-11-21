@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { api, ApiError, errorText } from '../lib/api';
+import { api, errorText } from '../lib/api';
 import { cx } from '../lib/cards';
 import { compactCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
 import { timeAgo } from '../lib/dates';
-import { levelOf, RANK_DIVISIONS, type AdminUser, type AppSettings } from '../types';
+import { levelOf, RANK_SEASON_DROP, SEASON_REMIND_DAY, SEASON_START_DELAY_DAYS, type AdminUser, type AppSettings } from '../types';
 import type { Auth } from '../useAuth';
 import { AdminUserPage } from './AdminUserPage';
 import { BackButton } from './BackButton';
@@ -14,6 +14,15 @@ import { Backdrop } from './Overlays';
 import { Avatar } from './Avatar';
 
 type SwitchKey = 'guestsAllowed' | 'pushInvites';
+
+const DAY_MS = 86_400_000;
+
+/** which day of the season it is (day 1 is the day it started); null when the server doesn't know */
+const seasonDay = (startedAt: string | null | undefined, now = Date.now()) =>
+  startedAt ? Math.floor((now - new Date(startedAt).getTime()) / DAY_MS) + 1 : null;
+
+/** whole days until a date, at least 0 */
+const daysUntil = (iso: string, now = Date.now()) => Math.max(0, Math.ceil((new Date(iso).getTime() - now) / DAY_MS));
 
 /** what each app-wide switch says, and what its confirm popup asks */
 const SWITCHES: Record<SwitchKey, { title: string; on: string; off: string; askOn: string; askOff: string; sayOn: string; sayOff: string }> = {
@@ -44,8 +53,8 @@ function AppSwitches({ auth }: { auth: Auth }) {
   const [pushReady, setPushReady] = useState<boolean | null>(null);
   /** the change waiting for the admin to confirm */
   const [asking, setAsking] = useState<{ key: SwitchKey; on: boolean } | null>(null);
-  /** a new ranked season waiting for the admin to confirm */
-  const [seasonAsk, setSeasonAsk] = useState(false);
+  /** booking or calling off the next ranked season, waiting for the admin to confirm */
+  const [seasonAsk, setSeasonAsk] = useState<'book' | 'cancel' | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -70,28 +79,24 @@ function AppSwitches({ auth }: { auth: Auth }) {
     }
   };
 
-  /** everyone's rank starts again; then reads who changed it and when */
-  const startSeason = async () => {
+  /** books the next season (it starts in SEASON_START_DELAY_DAYS) or calls it off; then reads the settings again */
+  const changeSeason = async (what: 'book' | 'cancel') => {
     setBusy(true);
     setError('');
     try {
-      // the season seen here, so a stale screen can't start an extra one
-      const { season } = await api<{ season: number }>('/admin/ranked/season', {
+      // the season seen here, so a stale screen can't book an extra one
+      await api(what === 'book' ? '/admin/ranked/season' : '/admin/ranked/season/cancel', {
         method: 'POST',
-        body: { from: settings?.rankedSeason },
+        body: what === 'book' ? { from: settings?.rankedSeason } : undefined,
         token: auth.token,
       });
-      setSettings((s) => (s ? { ...s, rankedSeason: season } : s));
-      setSettings((await api<{ settings: AppSettings }>('/admin/settings', { token: auth.token })).settings);
     } catch (err) {
       setError(errorText(err));
-      // someone else started one: show the season as it is now
-      if (err instanceof ApiError && err.status === 409) {
-        api<{ settings: AppSettings }>('/admin/settings', { token: auth.token })
-          .then((r) => setSettings(r.settings))
-          .catch(() => undefined);
-      }
     } finally {
+      // either way, show the season as it is now
+      await api<{ settings: AppSettings }>('/admin/settings', { token: auth.token })
+        .then((r) => setSettings(r.settings))
+        .catch(() => undefined);
       setBusy(false);
     }
   };
@@ -121,22 +126,38 @@ function AppSwitches({ auth }: { auth: Auth }) {
   };
 
   const ask = asking ? SWITCHES[asking.key] : null;
+  const day = seasonDay(settings?.rankedSeasonStartedAt);
+  // from about a week before the month is up, the button stands out until a season is booked
+  const due = !!settings && !settings.nextSeasonAt && day !== null && day >= SEASON_REMIND_DAY;
   return (
     <section className="panel guest-switch">
       {row('guestsAllowed')}
       {row('pushInvites')}
       {/* older servers have no seasons */}
       {settings && typeof settings.rankedSeason === 'number' && (
-        <div className="setting-head season-row">
+        <div className={cx('setting-head season-row', due && 'due')}>
           <div className="grow">
-            <b>🏅 Ranked season {settings.rankedSeason}</b>
+            <b>
+              🏅 Ranked season {settings.rankedSeason}
+              {day !== null && <span className="muted"> · day {day}</span>}
+            </b>
             <p className="muted small">
-              A new season starts everyone's rank again from {RANK_DIVISIONS[0].emoji} {RANK_DIVISIONS[0].name}
+              {settings.nextSeasonAt
+                ? `Season ${settings.rankedSeason + 1} starts in ${daysUntil(settings.nextSeasonAt)} day${daysUntil(settings.nextSeasonAt) === 1 ? '' : 's'}`
+                : due
+                  ? 'About a month in: time to book the next season'
+                  : 'A season runs about a month'}
             </p>
           </div>
-          <button className="btn small ghost" disabled={busy} onClick={() => setSeasonAsk(true)}>
-            Start a new season
-          </button>
+          {settings.nextSeasonAt ? (
+            <button className="btn small ghost" disabled={busy} onClick={() => setSeasonAsk('cancel')}>
+              Call off
+            </button>
+          ) : (
+            <button className={cx('btn small', due ? 'primary' : 'ghost')} disabled={busy} onClick={() => setSeasonAsk('book')}>
+              New season
+            </button>
+          )}
         </div>
       )}
       {settings?.updatedAt && (
@@ -170,13 +191,18 @@ function AppSwitches({ auth }: { auth: Auth }) {
       )}
       {seasonAsk && settings && (
         <ConfirmBox
-          title={`Start ranked season ${settings.rankedSeason + 1}?`}
-          body={`Everyone's rank points, divisions and floors start again from ${RANK_DIVISIONS[0].emoji} ${RANK_DIVISIONS[0].name}. This season's ranks stop showing. This can't be undone.`}
-          action="Start season"
-          onCancel={() => setSeasonAsk(false)}
+          title={seasonAsk === 'book' ? `Start season ${settings.rankedSeason + 1} in ${SEASON_START_DELAY_DAYS} days?` : `Call off season ${settings.rankedSeason + 1}?`}
+          body={
+            seasonAsk === 'book'
+              ? `Season ${settings.rankedSeason} ends in ${SEASON_START_DELAY_DAYS} days and players see the countdown. Then everyone drops ${RANK_SEASON_DROP} divisions and this season goes into their history. You can call it off until it starts.`
+              : `Season ${settings.rankedSeason} carries on with no end date until you book a new one.`
+          }
+          action={seasonAsk === 'book' ? 'Book it' : 'Call off'}
+          onCancel={() => setSeasonAsk(null)}
           onConfirm={() => {
-            setSeasonAsk(false);
-            void startSeason();
+            const what = seasonAsk;
+            setSeasonAsk(null);
+            void changeSeason(what);
           }}
         />
       )}

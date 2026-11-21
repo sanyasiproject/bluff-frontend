@@ -84,15 +84,17 @@ export function useAuth() {
     // a friend sent me coins
     socket.on('gift:received', onFriends);
     // an admin turned guest play or invite notifications on or off
-    // a new ranked season: everyone's rank starts again, so the account is read afresh
+    // a new ranked season (the rank moves into it), or one booked or called off (the countdown): the account is read afresh
     let season: number | null = null;
-    const onSettings = (s: { guestsAllowed: boolean; pushInvites?: boolean; rankedSeason?: number }) => {
+    let nextSeason: string | null | undefined = undefined;
+    const onSettings = (s: { guestsAllowed: boolean; pushInvites?: boolean; rankedSeason?: number; nextSeasonAt?: string | null }) => {
       setGuestsAllowed(s.guestsAllowed);
       if (typeof s.pushInvites === 'boolean') setPushInvites(s.pushInvites);
-      if (typeof s.rankedSeason === 'number' && s.rankedSeason !== season) {
-        season = s.rankedSeason;
-        void refresh();
-      }
+      const seasonMoved = typeof s.rankedSeason === 'number' && s.rankedSeason !== season;
+      const bookingMoved = s.nextSeasonAt !== undefined && s.nextSeasonAt !== nextSeason;
+      if (typeof s.rankedSeason === 'number') season = s.rankedSeason;
+      if (s.nextSeasonAt !== undefined) nextSeason = s.nextSeasonAt;
+      if (seasonMoved || bookingMoved) void refresh();
     };
     socket.on('settings:changed', onSettings);
     // sent on every connection and when a guest is turned away, so Log in and the guest lock show even if /health is blocked

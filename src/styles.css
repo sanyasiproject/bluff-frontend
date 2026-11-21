@@ -630,6 +630,153 @@ p {
   background: var(--ok);
 }
 
+/* Home "Online now" strip and the corner count of online friends */
+.live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6b7a73;
+  vertical-align: middle;
+}
+
+.live-dot.on {
+  background: var(--ok);
+  box-shadow: 0 0 0 3px rgba(60, 207, 145, 0.2);
+}
+
+.online-friends {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.online-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+
+.online-count {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(60, 207, 145, 0.18);
+  color: var(--ok);
+  font-size: 12px;
+}
+
+.online-empty {
+  margin: 0;
+}
+
+.online-strip {
+  display: flex;
+  gap: 8px;
+  margin: 0 -14px;
+  padding: 2px 14px 4px;
+  overflow-x: auto;
+  list-style: none;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.online-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.online-strip li {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 76px;
+  scroll-snap-align: start;
+}
+
+.online-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+
+.online-chip b {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.online-where {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.online-where.free {
+  color: var(--ok);
+}
+
+.online-join {
+  min-height: 28px;
+  padding: 2px 12px;
+}
+
+.online-pill {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 6px;
+  margin-right: 8px;
+  padding: 6px 10px;
+  border: 1px solid rgba(60, 207, 145, 0.45);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--ok);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/* the lobby's Friends button: friends online now, top left (requests keep the top right) */
+.online-dot-badge {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: 2px solid var(--felt-deep);
+  border-radius: 10px;
+  background: var(--ok);
+  color: var(--felt-deep);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 16px;
+  text-align: center;
+}
+
+.online-note {
+  color: var(--ok);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 /* a friend's status line: online in green, else when they were last online */
 .friend-seen {
   margin-top: 1px;
@@ -2674,6 +2821,60 @@ button.seat {
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   gap: 8px;
+}
+
+/* Profile: Stats · Social · Looks · Settings, sticky under the page header */
+.profile-tabs {
+  position: sticky;
+  top: calc(66px + env(safe-area-inset-top));
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  padding: 3px;
+  border-radius: 14px;
+  background: rgba(5, 38, 26, 0.92);
+  box-shadow: 0 0 0 1px var(--faint);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.profile-tabs button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-height: 46px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.profile-tabs button span {
+  font-size: 17px;
+  line-height: 1.1;
+}
+
+.profile-tabs button.on {
+  background: var(--gold);
+  color: var(--gold-ink);
+}
+
+.profile-tabs .req-dot {
+  top: 2px;
+  right: 6px;
+  font-style: normal;
+}
+
+.profile-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .record-row {
@@ -5452,11 +5653,6 @@ body::after {
   background: var(--gold);
   font-size: 12px;
   line-height: 1;
-}
-
-.avatar-nudge {
-  margin-top: -2px;
-  font-weight: 800;
 }
 
 /* the avatar picker sheet */

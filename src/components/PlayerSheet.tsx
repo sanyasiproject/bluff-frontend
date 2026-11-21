@@ -3,14 +3,14 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { api, errorText } from '../lib/api';
 import { cx } from '../lib/cards';
 import { monthYear, presenceText } from '../lib/dates';
-import { achievementsOf, percent, titleOf } from '../lib/progress';
+import { achievementsOf, percent, topEarned } from '../lib/progress';
 import type { PublicProfile } from '../types';
 import type { Auth } from '../useAuth';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
 import { GiftRow, ThrowRow } from './PlayerActions';
 import { Avatar } from './Avatar';
-import { RankChip } from './Ranked';
+import { PastSeasons, RankChip } from './Ranked';
 import { RivalPanel } from './Rivals';
 
 const pct = (n: number | null) => (n === null ? '–' : `${n}%`);
@@ -67,8 +67,8 @@ export function PlayerSheet({ auth, name, username, level, avatar = null, childr
 
   const p = profile;
   const shownLevel = p?.level ?? level ?? null;
-  const title = shownLevel ? titleOf(shownLevel) : null;
-  const badges = p ? achievementsOf(p.stats, 0).filter((b) => !b.private && b.value >= b.goal) : [];
+  // the highest badge of each ladder only, so the card stays short
+  const badges = p ? topEarned(achievementsOf(p.stats, 0).filter((b) => !b.private)) : [];
 
   let friend: ReactNode = null;
   if (p?.status === 'none') {
@@ -114,12 +114,9 @@ export function PlayerSheet({ auth, name, username, level, avatar = null, childr
             {p.online !== null && ` · ${presenceText(p.online, p.lastSeen)}`} · joined {monthYear(p.joinedAt)}
           </p>
         )}
-        {title && (
-          <p className="level-title">
-            {title.emoji} {title.title}
-          </p>
-        )}
-        {p && <RankChip rank={p.rank ?? null} />}
+        {/* this season's ranked division (everyone starts at Bronze), then earlier seasons */}
+        {p && <RankChip rank={p.rank} />}
+        {p && <PastSeasons seasons={p.seasons} />}
         {!username && <p className="muted small">Guest player · no account, so no profile</p>}
         {username && !auth.user && <p className="muted small">Log in to see player profiles</p>}
       </div>

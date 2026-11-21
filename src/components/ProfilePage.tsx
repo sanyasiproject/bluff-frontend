@@ -3,7 +3,7 @@ import { cx } from '../lib/cards';
 import { formatCoins, signedCoins } from '../lib/coins';
 import { monthYear } from '../lib/dates';
 import { achievementsOf, levelInfo, percent, winStreak } from '../lib/progress';
-import { LOGIN_BONUS, type GameSummary, type ProfileOverview } from '../types';
+import { divisionOf, LOGIN_BONUS, type GameSummary, type ProfileOverview } from '../types';
 import type { Auth } from '../useAuth';
 import type { InviteAck } from '../useBluff';
 import { Avatar } from './Avatar';
@@ -17,10 +17,12 @@ import { ShopButton } from './ShopPage';
 import { RankCard } from './Ranked';
 import { RivalsList } from './Rivals';
 import { NotifyRow } from './NotifyRow';
+import { OnlineFriends } from './OnlineFriends';
 import { RulesPage } from './RulesPage';
 import { XpGuide } from './XpGuide';
 import { DailyLadder, FormStrip, GameList, Meter } from './ProfileParts';
 import { LookPicker } from './LookPicker';
+import { ProfileTabs, useProfileTab } from './ProfileTabs';
 import { Rolling } from './Rolling';
 
 interface Props {
@@ -46,6 +48,8 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
   const [avatarOpen, setAvatarOpen] = useState(false);
   /** achievements fold away; the Show button opens them */
   const [badgesOpen, setBadgesOpen] = useState(false);
+  /** Stats · Social · Looks · Settings; the last one used on this phone */
+  const [tab, setTab] = useProfileTab();
 
   useEffect(() => {
     void auth.refresh();
@@ -67,6 +71,8 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
   const badges = achievementsOf(s, user.coins);
   const unlocked = badges.filter((b) => b.value >= b.goal).length;
   const net = games?.reduce((sum, g) => sum + g.coinChange + g.bonus, 0) ?? 0;
+  // this season's division; everyone starts at Bronze (older servers send null before a ranked game)
+  const division = divisionOf(user.rank?.points ?? 0);
 
   return (
     <FullPage title="Profile" onBack={onClose}>
@@ -82,17 +88,13 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
           <span className="level-badge">Lv {lvl.level}</span>
         </div>
         <h2 className="profile-name">{user.displayName}</h2>
-        {!user.avatar && (
-          <button className="link-btn avatar-nudge" onClick={() => setAvatarOpen(true)}>
-            Pick your avatar ✨
-          </button>
-        )}
         <p className="muted">
           @{user.username} · Joined {monthYear(user.createdAt)}
           {user.role === 'admin' && <span className="tag">Admin</span>}
         </p>
+        {/* this season's ranked division, not the level title */}
         <p className="level-title">
-          {lvl.emoji} {lvl.title}
+          {division.emoji} {division.name}
         </p>
         <div className="xp-bar" aria-label={`${lvl.toNext} XP to level ${lvl.level + 1}`}>
           <i style={{ width: `${Math.round(lvl.progress * 100)}%` }} />
@@ -105,181 +107,200 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
         </button>
       </section>
 
-      {/* older servers send no rank */}
-      {user.rank !== undefined && <RankCard rank={user.rank} />}
+      <ProfileTabs tab={tab} onPick={setTab} requests={auth.friendRequests} />
 
-      <section className="wallet-card">
-        <div className="wallet-top">
-          <div>
-            <span className="label">Coins</span>
-            <b className="wallet-amount">
-              🪙 <Rolling value={user.coins} format={formatCoins} />
-            </b>
-          </div>
-          {overview && (
-            <span className="rank-chip">
-              #{overview.coinRank}
-              <small>of {overview.players}</small>
+      {tab === 'stats' && (
+        <div className="profile-pane" role="tabpanel">
+          {/* older servers send no rank */}
+          {user.rank !== undefined && <RankCard rank={user.rank} />}
+          <section className="wallet-card">
+            <div className="wallet-top">
+              <div>
+                <span className="label">Coins</span>
+                <b className="wallet-amount">
+                  🪙 <Rolling value={user.coins} format={formatCoins} />
+                </b>
+              </div>
+              {overview && (
+                <span className="rank-chip">
+                  #{overview.coinRank}
+                  <small>of {overview.players}</small>
+                </span>
+              )}
+            </div>
+            <span className={cx('reward', overview?.loginBonusToday && 'done')}>
+              🎁 Daily login +{LOGIN_BONUS}
+              <small>{overview?.loginBonusToday ? '✓ received today' : 'open the app every day'}</small>
             </span>
-          )}
+            {overview && <DailyLadder gamesToday={overview.gamesToday} />}
+            {games && games.length > 0 && (
+              <p className="muted small">
+                Last {games.length} games: <b className={net >= 0 ? 'up' : 'down'}>{signedCoins(net)} coins</b>
+              </p>
+            )}
+          </section>
+          <MissionsButton auth={auth} />
+          <section className="panel stack-tight">
+            <h3 className="section-title">Record</h3>
+            <div className="record-row">
+              <div className="win-ring" style={{ '--p': (winRate ?? 0) / 100 } as CSSProperties}>
+                <b>{winRate === null ? '–' : `${winRate}%`}</b>
+                <span>win rate</span>
+              </div>
+              <div className="record-numbers">
+                <div>
+                  <b>{s.gamesPlayed}</b>
+                  <span>games</span>
+                </div>
+                <div>
+                  <b>{s.wins}</b>
+                  <span>wins</span>
+                </div>
+                <div>
+                  <b>{s.losses}</b>
+                  <span>losses</span>
+                </div>
+                <div>
+                  <b>{games ? winStreak(games) : '–'}</b>
+                  <span>win streak</span>
+                </div>
+              </div>
+            </div>
+            {games && games.length > 0 && (
+              <>
+                <p className="label">Recent form</p>
+                <FormStrip games={games} />
+              </>
+            )}
+          </section>
+          <section className="panel stack-tight">
+            <h3 className="section-title">Play style</h3>
+            <Meter
+              emoji="🤥"
+              label="Bluffs that got away"
+              value={percent(s.bluffs - s.bluffsCaught, s.bluffs)}
+              detail={`${plural(s.bluffs, 'bluff')} · caught ${plural(s.bluffsCaught, 'time')}`}
+            />
+            <Meter
+              emoji="🕵️"
+              label="Right bluff calls"
+              value={percent(s.goodCalls, s.goodCalls + s.wrongCalls)}
+              detail={`${s.goodCalls} right · ${s.wrongCalls} wrong`}
+            />
+            <p className="muted small">
+              🧲 {plural(s.cardsPickedUp, 'card')} picked up
+              {s.gamesPlayed > 0 && ` · ${Math.round(s.cardsPickedUp / s.gamesPlayed)} per game`}
+            </p>
+          </section>
+          <section className="panel stack-tight">
+            <button type="button" className="fold-head" aria-expanded={badgesOpen} onClick={() => setBadgesOpen((open) => !open)}>
+              <h3 className="section-title">
+                🏅 Achievements{' '}
+                <span className="muted">
+                  {unlocked}/{badges.length}
+                </span>
+              </h3>
+              <span className={cx('fold-btn', badgesOpen && 'open')}>
+                {badgesOpen ? 'Hide' : 'Show'} <i aria-hidden>▾</i>
+              </span>
+            </button>
+            {/* folded: just the badges earned so far */}
+            {!badgesOpen && unlocked > 0 && (
+              <p className="badge-strip" aria-label="Achievements earned">
+                {badges
+                  .filter((b) => b.value >= b.goal)
+                  .map((b) => (
+                    <span key={b.title} title={b.title}>
+                      {b.emoji}
+                    </span>
+                  ))}
+              </p>
+            )}
+            {badgesOpen && (
+            <div className="badge-grid">
+              {badges.map((b, i) => {
+                const done = b.value >= b.goal;
+                return (
+                  <div key={b.title} className={cx('badge-tile', done && 'done')} style={{ '--i': i } as CSSProperties}>
+                    <span className="badge-emoji">{b.emoji}</span>
+                    <b>{b.title}</b>
+                    <span className="badge-desc">{b.desc}</span>
+                    {!done && (
+                      <div className="badge-progress" aria-label={`${b.value} of ${b.goal}`}>
+                        <i style={{ width: `${Math.min(100, (b.value / b.goal) * 100)}%` }} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            )}
+          </section>
+
+          <section className="stack-tight">
+            <h3 className="section-title">Recent games</h3>
+            <GameList games={games} empty="No games yet. Finish a game while logged in." />
+          </section>
         </div>
-        <span className={cx('reward', overview?.loginBonusToday && 'done')}>
-          🎁 Daily login +{LOGIN_BONUS}
-          <small>{overview?.loginBonusToday ? '✓ received today' : 'open the app every day'}</small>
-        </span>
-        {overview && <DailyLadder gamesToday={overview.gamesToday} />}
-        {games && games.length > 0 && (
-          <p className="muted small">
-            Last {games.length} games: <b className={net >= 0 ? 'up' : 'down'}>{signedCoins(net)} coins</b>
-          </p>
-        )}
-      </section>
+      )}
 
-      <MissionsButton auth={auth} />
-      <LeagueButton auth={auth} />
-      <ShopButton auth={auth} />
+      {tab === 'social' && (
+        <div className="profile-pane" role="tabpanel">
+          {onJoin && <OnlineFriends auth={auth} onJoin={onJoin} />}
+          <div className="quick-actions">
+            <button className="btn" onClick={() => setFriendsOpen(true)}>
+              👥 Friends{overview ? ` · ${overview.friends}` : ''}
+              {auth.friendRequests > 0 && <span className="req-pill">{auth.friendRequests} new</span>}
+            </button>
+          </div>
+          <RivalsList auth={auth} />
+          <LeagueButton auth={auth} />
+        </div>
+      )}
 
-      <div className="quick-actions">
-        <button className="btn" onClick={() => setFriendsOpen(true)}>
-          👥 Friends{overview ? ` · ${overview.friends}` : ''}
-          {auth.friendRequests > 0 && <span className="req-pill">{auth.friendRequests} new</span>}
-        </button>
-        {user.role === 'admin' && onOpenAdmin && (
+      {tab === 'looks' && (
+        <div className="profile-pane" role="tabpanel">
+          <button className="btn block" onClick={() => setAvatarOpen(true)}>
+            🙂 Change avatar
+          </button>
+          <LookPicker auth={auth} />
+          <ShopButton auth={auth} />
+        </div>
+      )}
+
+      {tab === 'settings' && (
+        <div className="profile-pane" role="tabpanel">
+          <NotifyRow auth={auth} />
+          <FriendAlertsRow auth={auth} />
+          {user.role === 'admin' && onOpenAdmin && (
+            <div className="quick-actions">
+              <button
+                className="btn"
+                onClick={() => {
+                  onClose();
+                  onOpenAdmin();
+                }}
+              >
+                🛠 Admin
+              </button>
+            </div>
+          )}
+          {user.role === 'admin' && (
+            <button className="btn block rules-btn" onClick={() => setRulesOpen(true)}>
+              📖 Rules & features <span className="tag">Admin</span>
+            </button>
+          )}
           <button
-            className="btn"
+            className="btn ghost block"
             onClick={() => {
               onClose();
-              onOpenAdmin();
+              void auth.logout();
             }}
           >
-            🛠 Admin
+            Log out
           </button>
-        )}
-      </div>
-      {user.role === 'admin' && (
-        <button className="btn block rules-btn" onClick={() => setRulesOpen(true)}>
-          📖 Rules & features <span className="tag">Admin</span>
-        </button>
+        </div>
       )}
-      <NotifyRow auth={auth} />
-      <FriendAlertsRow auth={auth} />
-      <RivalsList auth={auth} />
-
-      <section className="panel stack-tight">
-        <h3 className="section-title">Record</h3>
-        <div className="record-row">
-          <div className="win-ring" style={{ '--p': (winRate ?? 0) / 100 } as CSSProperties}>
-            <b>{winRate === null ? '–' : `${winRate}%`}</b>
-            <span>win rate</span>
-          </div>
-          <div className="record-numbers">
-            <div>
-              <b>{s.gamesPlayed}</b>
-              <span>games</span>
-            </div>
-            <div>
-              <b>{s.wins}</b>
-              <span>wins</span>
-            </div>
-            <div>
-              <b>{s.losses}</b>
-              <span>losses</span>
-            </div>
-            <div>
-              <b>{games ? winStreak(games) : '–'}</b>
-              <span>win streak</span>
-            </div>
-          </div>
-        </div>
-        {games && games.length > 0 && (
-          <>
-            <p className="label">Recent form</p>
-            <FormStrip games={games} />
-          </>
-        )}
-      </section>
-
-      <section className="panel stack-tight">
-        <h3 className="section-title">Play style</h3>
-        <Meter
-          emoji="🤥"
-          label="Bluffs that got away"
-          value={percent(s.bluffs - s.bluffsCaught, s.bluffs)}
-          detail={`${plural(s.bluffs, 'bluff')} · caught ${plural(s.bluffsCaught, 'time')}`}
-        />
-        <Meter
-          emoji="🕵️"
-          label="Right bluff calls"
-          value={percent(s.goodCalls, s.goodCalls + s.wrongCalls)}
-          detail={`${s.goodCalls} right · ${s.wrongCalls} wrong`}
-        />
-        <p className="muted small">
-          🧲 {plural(s.cardsPickedUp, 'card')} picked up
-          {s.gamesPlayed > 0 && ` · ${Math.round(s.cardsPickedUp / s.gamesPlayed)} per game`}
-        </p>
-      </section>
-
-      <section className="panel stack-tight">
-        <button type="button" className="fold-head" aria-expanded={badgesOpen} onClick={() => setBadgesOpen((open) => !open)}>
-          <h3 className="section-title">
-            🏅 Achievements{' '}
-            <span className="muted">
-              {unlocked}/{badges.length}
-            </span>
-          </h3>
-          <span className={cx('fold-btn', badgesOpen && 'open')}>
-            {badgesOpen ? 'Hide' : 'Show'} <i aria-hidden>▾</i>
-          </span>
-        </button>
-        {/* folded: just the badges earned so far */}
-        {!badgesOpen && unlocked > 0 && (
-          <p className="badge-strip" aria-label="Achievements earned">
-            {badges
-              .filter((b) => b.value >= b.goal)
-              .map((b) => (
-                <span key={b.title} title={b.title}>
-                  {b.emoji}
-                </span>
-              ))}
-          </p>
-        )}
-        {badgesOpen && (
-        <div className="badge-grid">
-          {badges.map((b, i) => {
-            const done = b.value >= b.goal;
-            return (
-              <div key={b.title} className={cx('badge-tile', done && 'done')} style={{ '--i': i } as CSSProperties}>
-                <span className="badge-emoji">{b.emoji}</span>
-                <b>{b.title}</b>
-                <span className="badge-desc">{b.desc}</span>
-                {!done && (
-                  <div className="badge-progress" aria-label={`${b.value} of ${b.goal}`}>
-                    <i style={{ width: `${Math.min(100, (b.value / b.goal) * 100)}%` }} />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        )}
-      </section>
-
-      <LookPicker auth={auth} />
-
-      <section className="stack-tight">
-        <h3 className="section-title">Recent games</h3>
-        <GameList games={games} empty="No games yet. Finish a game while logged in." />
-      </section>
-
-      <button
-        className="btn ghost block"
-        onClick={() => {
-          onClose();
-          void auth.logout();
-        }}
-      >
-        Log out
-      </button>
 
       {guideOpen && <XpGuide level={lvl.level} xp={lvl.xp} onClose={() => setGuideOpen(false)} />}
       {rulesOpen && <RulesPage onClose={() => setRulesOpen(false)} />}

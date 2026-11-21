@@ -11,6 +11,7 @@ import { LeagueButton } from './LeaguePage';
 import { MissionsButton } from './MissionsPage';
 import { ShopButton } from './ShopPage';
 import { NotifyCard } from './NotifyCard';
+import { OnlineFriends } from './OnlineFriends';
 import { LessonChooser } from './tutorial/LessonOffer';
 import { TutorialPage } from './tutorial/TutorialPage';
 import { markTutorialSeen } from '../lib/tutorial';
@@ -233,6 +234,7 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
         </>
       )}
 
+      <OnlineFriends auth={auth} onJoin={(userId, watch) => actions.joinFriend(userId, watch, auth.user?.displayName ?? name)} />
       <MissionsButton auth={auth} online={online} />
       <LeagueButton auth={auth} online={online} />
       <ShopButton auth={auth} online={online} />

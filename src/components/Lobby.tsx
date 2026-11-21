@@ -73,6 +73,7 @@ import { VoiceButton, VoiceMuteRow } from './Voice';
 import { LessonOffer } from './tutorial/LessonOffer';
 import { TutorialPage } from './tutorial/TutorialPage';
 import { Avatar } from './Avatar';
+import { useOnlineFriends } from '../lib/onlineFriends';
 
 /** per-phone voice choice; Girl is the default */
 function VoicePicker({ sample }: { sample: string }) {
@@ -302,6 +303,7 @@ function StakePicker({ stake, players, config, bots, isHost, onPick }: { stake: 
 
 export function Lobby({ view, actions, auth }: { view: RoomView; actions: Actions; auth: Auth }) {
   const [friendsOpen, setFriendsOpen] = useState(false);
+  const friendsNow = useOnlineFriends(auth.user ? auth.token : null);
   const isHost = view.hostId === view.meId;
   // anyone can sit out and watch, or take a free seat again
   const meWatching = view.watchers.find((w) => w.id === view.meId);
@@ -473,7 +475,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         </div>
         <VoiceButton view={view} onSend={actions.sendVoice} onToast={actions.toast} />
         <QuickChat onSend={actions.chat} />
-        <AccountCorner auth={auth} roomCode={view.code} onInvite={actions.invite} onJoin={joinFriend} />
+        <AccountCorner auth={auth} roomCode={view.code} onInvite={actions.invite} onJoin={joinFriend} showOnline={false} />
       </header>
 
       {view.players.length + view.watchers.length < ROOM_LIMIT && (
@@ -482,6 +484,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           onToast={actions.toast}
           onFriends={auth.user ? () => setFriendsOpen(true) : undefined}
           requests={auth.friendRequests}
+          online={friendsNow ? friendsNow.filter((f) => f.online && f.inRoom !== 'here').length : 0}
         />
       )}
 

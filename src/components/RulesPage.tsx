@@ -12,7 +12,6 @@ import {
   CRAZY7_HAND_SIZES,
   CRAZY7_MAX_PICKS,
   DAILY_GAME_REWARDS,
-  DOSTI_LEVELS,
   LEAGUE_CROWNS,
   LEAGUE_POINTS,
   LOGIN_BONUS,
@@ -22,9 +21,10 @@ import {
   MISSIONS,
   MISSIONS_PER_SET,
   RANK_DAILY_CAP,
-  RANK_LOSS_SHARE,
   RANK_DIVISIONS,
-  RIVAL_MIN_GAMES,
+  RANK_PROTECTION,
+  RANK_SEASON_DROP,
+  SEASON_START_DELAY_DAYS,
   SAZA_BADGES,
   SECRET_MISSIONS,
   SECRET_XP,
@@ -523,22 +523,14 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         </ul>
       </Section>
 
-      <Section icon="⚔️" title="Rivals & Dosti">
+      <Section icon="❤️" title="Games together">
         <ul>
           <li>
-            Open a friend's card to see your record against them ("You vs Rahul 14–9"), from every finished game of{' '}
-            {MIN_REWARD_GAME_SEC / 60} minute or more you both played while logged in. You're ahead when you won and they didn't, or finished in a better place.
+            A friend's card shows ❤️ and how many games you finished together (every finished game of {MIN_REWARD_GAME_SEC / 60} minute or
+            more you both played while logged in).
           </li>
-          <li>Who caught whom lying counts from games played since this came in.</li>
-          <li>
-            Dosti meter: games finished together, never goes down.{' '}
-            {DOSTI_LEVELS.map((d) => `${d.name} (${d.games}+ game${d.games === 1 ? '' : 's'})`).join(', ')}.
-          </li>
-          <li>
-            Tags after {RIVAL_MIN_GAMES} games where one of you finished ahead: ⚔️ Rival when it's close (40–60%), 😈 Nemesis when they
-            finish ahead 60% of the time or more.
-          </li>
-          <li>Your profile lists your records with friends. Bots, guests and players removed by the host never count.</li>
+          <li>The friend you've played with most gets a glowing 💖 Most played. When someone else passes them, the 💖 moves to that friend.</li>
+          <li>Your profile (👥 Social) lists your friends by games together. Bots, guests and players removed by the host never count.</li>
         </ul>
       </Section>
 
@@ -553,16 +545,25 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             players moves you up most. The order everyone finished in counts.
           </li>
           <li>
-            Divisions: {RANK_DIVISIONS.map((d) => `${d.emoji} ${d.name} (${formatCoins(d.min)})`).join(', ')}. Once you reach a division
-            you can't drop below its start for the rest of the season.
+            Divisions: {RANK_DIVISIONS.map((d) => `${d.emoji} ${d.name} (${formatCoins(d.min)})`).join(', ')}. You keep showing a
+            division until your points are {RANK_PROTECTION} below its start; past that you drop to the one below. Points never go below 0.
           </li>
-          <li>A loss costs {Math.round(RANK_LOSS_SHARE * 100)}% of what the same win would give, so wins count for more. A 🛡️ Rank Shield from the coin shop makes one loss cost nothing.</li>
+          <li>
+            The higher your division, the slower you climb: a win gives{' '}
+            {RANK_DIVISIONS.map((d) => `${Math.round(d.win * 100)}%`).join(' → ')} of its points from Bronze up to Bluff Badshah, and a
+            loss weighs {RANK_DIVISIONS.map((d) => `1:${(d.win / d.loss).toFixed(1).replace(/\.0$/, '')}`).join(' → ')} against a win.
+            A 🛡️ Rank Shield from the coin shop makes one loss cost nothing.
+          </li>
           <li>Your points can move at most {RANK_DAILY_CAP} either way in a day, so one night can't make or break a season.</li>
           <li>
             Points a loss would have taken but the floor or the daily limit held off are owed: your next wins pay them back first, so
             taking turns to win doesn't lift both players. In 2v2 the winning pair plays the losing pair.
           </li>
-          <li>Your division shows on your profile and your player card. An admin can start a new season, and everyone starts again.</li>
+          <li>Everyone starts at {RANK_DIVISIONS[0].emoji} {RANK_DIVISIONS[0].name}. Your division shows on your profile and your player card, with your best and last 3 past seasons (tap All for every season).</li>
+          <li>
+            Seasons run about a month. An admin books the next one {SEASON_START_DELAY_DAYS} days ahead and everyone sees "ends in N days".
+            When it starts, everyone drops {RANK_SEASON_DROP} divisions (never below 0) and the old season goes into their history.
+          </li>
         </ul>
       </Section>
 
@@ -619,6 +620,11 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             off in Profile (per phone).
           </li>
           <li>
+            🟢 Online now: Home shows which friends are online right now (free, in a lobby or in a game); tap one for Friends, or Join to take a
+            seat in their lobby. A green count by your avatar opens Friends in one tap; in a lobby the count sits on the Friends button. Friends
+            lists online friends first.
+          </li>
+          <li>
             Join a friend from Friends: while they're in a lobby, tap Join (take a seat) or 👀 Watch. Once their game has started, tap 👀 Ask
             to watch and the host decides.
           </li>
@@ -630,7 +636,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             Friends and profiles. Guests and players who haven't picked one keep their first letter. Character art: Avataaars by Pablo Stanley and
             Notionists by Zoish.
           </li>
-          <li>Your own Profile: level ring, coins and rank, rewards, record, play style, achievements and the last 10 games.</li>
+          <li>Your own Profile: level ring, XP and your ranked division this season on top, then four tabs (the last one used opens next time on that phone): 📊 Stats (rank, coins and rewards, missions, record, play style, achievements, the last 10 games), 👥 Social (online friends, Friends, rivals, league), 🎨 Looks (avatar, table and cards, coin shop) and ⚙️ Settings (notifications, friend alerts, admin, log out).</li>
         </ul>
       </Section>
 

@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { cx } from '../lib/cards';
-import { DOSTI_LEVELS, dostiOf, MIN_REWARD_GAME_SEC, type RivalRecord } from '../types';
+import { MIN_REWARD_GAME_SEC, type RivalRecord } from '../types';
 import type { Auth } from '../useAuth';
 import { Avatar } from './Avatar';
 import { LevelBadge } from './LevelBadge';
@@ -9,128 +9,70 @@ import { PlayerSheet } from './PlayerSheet';
 /** friends the profile lists before "Show all" */
 const TOP = 3;
 
-/** the two tags; there's none for being far ahead, so nobody is mocked */
-const TAGS = {
-  rival: { emoji: '⚔️', name: 'Rival', note: 'neck and neck' },
-  nemesis: { emoji: '😈', name: 'Nemesis', note: 'usually ahead of you' },
-} as const;
 
 const gamesText = (n: number) => `${n} game${n === 1 ? '' : 's'}`;
 
-/** the Dosti level for games together, the next one, and how far the bar is towards it */
-function dostiInfo(games: number) {
-  const level = dostiOf(games);
-  const next = DOSTI_LEVELS.find((d) => d.games > games) ?? null;
-  const from = level?.games ?? 0;
-  return { name: level?.name ?? 'Dosti', next, progress: next ? (games - from) / (next.games - from) : 1 };
-}
+/** the most games I've played with any one friend; the friends on it are my special ones */
+const topGames = (records: RivalRecord[]) => Math.max(0, ...records.map((r) => r.games));
 
-/** the Dosti meter: level, games together, and the bar to the next level */
-function DostiMeter({ games }: { games: number }) {
-  const { name, next, progress } = dostiInfo(games);
+/** ❤️ and the games we finished together; it glows for the friend(s) I've played with most */
+function Heart({ games, top }: { games: number; top: boolean }) {
   return (
-    <div className="dosti">
-      <div className="dosti-head">
-        <b>🤝 {name}</b>
-        <span className="muted">{gamesText(games)} together</span>
-      </div>
-      <div className="dosti-bar" aria-hidden>
-        <i style={{ width: `${Math.round(Math.min(1, Math.max(0, progress)) * 100)}%` }} />
-      </div>
-      <p className="muted small">{next ? `${next.games - games} more to ${next.name}` : 'Top Dosti level 💖'}</p>
-    </div>
+    <p className={cx('heart-line', top && 'top')} aria-label={`${gamesText(games)} together${top ? ', your most played friend' : ''}`}>
+      <span className="heart" aria-hidden>
+        {top ? '💖' : '❤️'}
+      </span>
+      <b>{games}</b> {games === 1 ? 'game' : 'games'} together
+      {top && <small>most played</small>}
+    </p>
   );
 }
 
-/** my record against one friend: score, tag, who caught whom and the Dosti meter */
-function RivalCard({ record: r }: { record: RivalRecord }) {
-  const tag = r.tag ? TAGS[r.tag] : null;
-  return (
-    <section className="rival-panel" aria-label={`You against ${r.displayName}`}>
-      <div className="rival-head">
-        <span className="rival-vs">You vs {r.displayName}</span>
-        <b className="rival-score" title="Games you finished ahead – behind">
-          {r.ahead}–{r.behind}
-        </b>
-      </div>
-      {tag && (
-        <p className={cx('rival-tag', `is-${r.tag}`)}>
-          {tag.emoji} <b>{tag.name}</b> · {tag.note}
-        </p>
-      )}
-      {r.iCaught + r.theyCaught > 0 ? (
-        <div className="rival-catches">
-          <div>
-            <b>{r.iCaught}×</b>
-            <span>you caught {r.displayName}</span>
-          </div>
-          <div>
-            <b>{r.theyCaught}×</b>
-            <span>{r.displayName} caught you</span>
-          </div>
-        </div>
-      ) : (
-        <p className="muted small">🕵️ No lies caught between you yet</p>
-      )}
-      <DostiMeter games={r.games} />
-    </section>
-  );
-}
-
-/** me against one friend, on their player card */
+/** on a friend's card: just the heart with our games together */
 export function RivalPanel({ auth, username }: { auth: Auth; username: string }) {
   const userId = auth.user?.id ?? null;
-  /** undefined while loading; null: no games together; 'off': an older server, or it failed */
-  const [record, setRecord] = useState<RivalRecord | null | 'off' | undefined>(undefined);
+  /** undefined while loading; 'off': an older server, or it failed */
+  const [records, setRecords] = useState<RivalRecord[] | 'off' | undefined>(undefined);
 
   useEffect(() => {
-    setRecord(undefined);
+    setRecords(undefined);
     if (!userId) return;
     let live = true;
+    // the whole list, so the card knows whether this is my most played friend
     auth
-      .rivalOf(username)
-      .then((r) => live && setRecord(r ?? null))
-      .catch(() => live && setRecord('off'));
+      .rivals()
+      .then((r) => live && setRecords(r.records ?? []))
+      .catch(() => live && setRecords('off'));
     return () => {
       live = false;
     };
   }, [userId, username]);
 
-  if (!userId || record === undefined || record === 'off') return null;
-  if (record === null) return <p className="rival-empty">🤝 No games together yet. Finish one of {MIN_REWARD_GAME_SEC / 60} min or more to start your Dosti meter!</p>;
-  return <RivalCard record={record} />;
+  if (!userId || records === undefined || records === 'off') return null;
+  const mine = records.find((r) => r.username === username);
+  if (!mine) return <p className="heart-line empty">🤍 No games together yet. Finish one of {MIN_REWARD_GAME_SEC / 60} min or more.</p>;
+  return <Heart games={mine.games} top={mine.games === topGames(records)} />;
 }
 
-/** one friend on my profile: record, Dosti level and tag; tap for their card */
-function RivalRow({ record: r, index, onOpen }: { record: RivalRecord; index: number; onOpen: () => void }) {
-  const tag = r.tag ? TAGS[r.tag] : null;
+/** one friend on my profile: name and our games together; tap for their card */
+function RivalRow({ record: r, index, top, onOpen }: { record: RivalRecord; index: number; top: boolean; onOpen: () => void }) {
   return (
-    <li className="rival-row" style={{ '--i': index } as CSSProperties}>
+    <li className={cx('rival-row', top && 'top')} style={{ '--i': index } as CSSProperties}>
       <button type="button" className="row-open" onClick={onOpen}>
         <Avatar name={r.displayName} avatar={r.avatar} size="sm" />
         <div className="grow">
           <b>{r.displayName}</b> <LevelBadge level={r.level} />
-          <p className="rival-meta">
-            <span>🤝 {dostiInfo(r.games).name}</span>
-            {tag && (
-              <span className={cx('rival-chip', `is-${r.tag}`)}>
-                {tag.emoji} {tag.name}
-              </span>
-            )}
-          </p>
+          {top && <p className="rival-meta">💖 Most played</p>}
         </div>
-        <span className="rival-side">
-          <b className="rival-score" aria-label={`you ${r.ahead}, ${r.displayName} ${r.behind}`}>
-            {r.ahead}–{r.behind}
-          </b>
-          <small>{gamesText(r.games)}</small>
+        <span className={cx('heart-count', top && 'top')} aria-label={`${gamesText(r.games)} together`}>
+          {top ? '💖' : '❤️'} {r.games}
         </span>
       </button>
     </li>
   );
 }
 
-/** my records against friends (Rival and Nemesis tags, Dosti meter), for my profile */
+/** friends I've played with, most games first, for my profile */
 export function RivalsList({ auth }: { auth: Auth }) {
   const userId = auth.user?.id ?? null;
   /** null until loaded; an older server or a failed load keeps the section hidden */
@@ -156,14 +98,14 @@ export function RivalsList({ auth }: { auth: Auth }) {
 
   if (!userId || !records || records.length === 0) return null;
   const shown = showAll ? records : records.slice(0, TOP);
+  const most = topGames(records);
   return (
     <>
       <section className="panel stack-tight rivals">
-        <h3 className="section-title">⚔️ Rivals & Dosti</h3>
-        <p className="muted small">Who finished ahead in your games together (you–them)</p>
+        <h3 className="section-title">❤️ Games together</h3>
         <ul className="rival-list">
           {shown.map((r, i) => (
-            <RivalRow key={r.id} record={r} index={i} onOpen={() => setViewing(r)} />
+            <RivalRow key={r.id} record={r} index={i} top={r.games === most} onOpen={() => setViewing(r)} />
           ))}
         </ul>
         {records.length > TOP && (

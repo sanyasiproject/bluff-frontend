@@ -197,6 +197,10 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
     </li>
   );
 
+  // online friends at the top; otherwise the server's order (stable sort)
+  const friendsOnlineFirst = data ? [...data.friends].sort((a, b) => Number(b.online) - Number(a.online)) : [];
+  const onlineCount = friendsOnlineFirst.filter((f) => f.online).length;
+
   return (
     <Backdrop onClose={onClose}>
       <h3>Friends</h3>
@@ -247,7 +251,10 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
         </>
       )}
 
-      <p className="label">Your friends {data ? `(${data.friends.length})` : ''}</p>
+      <p className="label">
+        Your friends {data ? `(${data.friends.length})` : ''}
+        {onlineCount > 0 && <span className="online-note"> · 🟢 {onlineCount} online</span>}
+      </p>
       {roomCode && (
         <p className="muted small">
           Friends who aren't in a room get a popup to join room {roomCode}
@@ -258,7 +265,7 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
       {data?.friends.length === 0 && <p className="muted small">No friends yet. Search for someone above and tap + Add.</p>}
       {data && data.friends.length > 0 && (
         <ul className="friend-list">
-          {data.friends.map((f) =>
+          {friendsOnlineFirst.map((f) =>
             person(
               f,
               <div className="row-actions">

@@ -193,3 +193,85 @@
 .rivals-more {
   align-self: center;
 }
+
+/* ❤️ games together on a friend's card; 💖 glows for the friend(s) played with most */
+.heart-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 15px;
+}
+
+.heart-line b {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.heart-line small {
+  margin-left: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(255, 105, 160, 0.2);
+  color: #ff8fbd;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.heart-line.empty {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.heart-line.top {
+  background: rgba(255, 105, 160, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(255, 105, 160, 0.5),
+    0 0 18px rgba(255, 105, 160, 0.35);
+}
+
+.heart-line.top .heart,
+.heart-count.top {
+  animation: heart-beat 1.6s ease-in-out infinite;
+}
+
+.heart-count {
+  display: inline-block;
+  flex: none;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.heart-count.top {
+  color: #ff8fbd;
+}
+
+.rival-row.top {
+  box-shadow: inset 0 0 0 1px rgba(255, 105, 160, 0.45);
+}
+
+@keyframes heart-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.2);
+  }
+  30% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heart-line.top .heart,
+  .heart-count.top {
+    animation: none;
+  }
+}

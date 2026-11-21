@@ -221,3 +221,122 @@
     transform: scaleX(0);
   }
 }
+
+/* "· ends in 5 days" next to the season on the rank card */
+.season-timing {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.season-timing.ending {
+  color: var(--gold);
+}
+
+/* earlier seasons: best one named, the last 3 as chips, the full list folded */
+.past-seasons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--faint);
+}
+
+.past-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 8px;
+}
+
+.past-best {
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.past-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.past-chips .rank-pill {
+  padding: 2px 10px;
+  font-size: 12px;
+}
+
+/* the full list: one tight row per season */
+.past-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.past-list li {
+  display: grid;
+  grid-template-columns: 34px 1fr auto 64px;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.past-list li:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.past-list li.best {
+  box-shadow: inset 0 0 0 1px rgba(var(--rank-rgb), 0.6);
+}
+
+.past-list b {
+  color: var(--muted);
+}
+
+.past-div {
+  overflow: hidden;
+  color: rgb(var(--rank-rgb));
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.past-points {
+  font-weight: 800;
+}
+
+.past-list small {
+  color: var(--muted);
+  text-align: right;
+}
+
+.past-more {
+  align-self: center;
+}
+
+.player-card .past-seasons {
+  width: 100%;
+  text-align: left;
+}
+
+/* about a month in and nothing booked: the season row stands out until the admin books the next one */
+.season-row.due {
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(246, 196, 83, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(246, 196, 83, 0.5);
+}
+
+.season-row.due .btn.primary {
+  animation: pop 0.4s var(--spring) backwards;
+}
