@@ -6313,3 +6313,11 @@ body::after {
     animation: none;
   }
 }
+
+/* profile: the admins' way into the admin page, under their name */
+.admin-entry {
+  align-self: center;
+  margin: 6px 0 2px;
+  border: 1px solid rgba(246, 196, 83, 0.6);
+  color: var(--gold);
+}

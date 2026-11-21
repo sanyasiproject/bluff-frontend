@@ -92,6 +92,21 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
           @{user.username} · Joined {monthYear(user.createdAt)}
           {user.role === 'admin' && <span className="tag">Admin</span>}
         </p>
+        {/* admins: the way in, on every tab; the admin page opens from Home only, not while in a room */}
+        {user.role === 'admin' &&
+          (onOpenAdmin ? (
+            <button
+              className="btn small admin-entry"
+              onClick={() => {
+                onClose();
+                onOpenAdmin();
+              }}
+            >
+              🛠 Admin panel
+            </button>
+          ) : (
+            <p className="muted small">🛠 Admin panel: leave this room, then open your profile from Home</p>
+          ))}
         {/* this season's ranked division, not the level title */}
         <p className="level-title">
           {division.emoji} {rankName(user.rank?.points ?? 0, division.id)}
