@@ -11,6 +11,7 @@ import { LeagueButton } from './LeaguePage';
 import { MissionsButton } from './MissionsPage';
 import { ShopButton } from './ShopPage';
 import { NotifyCard } from './NotifyCard';
+import { HomeNameCard } from './NameCard';
 import { OnlineFriends } from './OnlineFriends';
 import { LessonChooser } from './tutorial/LessonOffer';
 import { TutorialPage } from './tutorial/TutorialPage';
@@ -241,6 +242,7 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
       <button className="btn ghost block how-to-btn" onClick={() => setChooser(true)}>
         📘 How to play
       </button>
+      <HomeNameCard auth={auth} />
       <NotifyCard auth={auth} />
       <InstallCard />
       {accountSheet && <AccountSheet initial={accountSheet} auth={auth} onClose={() => setAccountSheet(null)} />}

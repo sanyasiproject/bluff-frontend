@@ -16,6 +16,7 @@ import { MissionsButton } from './MissionsPage';
 import { ShopButton } from './ShopPage';
 import { RankCard } from './Ranked';
 import { RivalsList } from './Rivals';
+import { NameCard } from './NameCard';
 import { NotifyRow } from './NotifyRow';
 import { OnlineFriends } from './OnlineFriends';
 import { RulesPage } from './RulesPage';
@@ -285,6 +286,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
 
       {tab === 'settings' && (
         <div className="profile-pane" role="tabpanel">
+          <NameCard auth={auth} />
           <NotifyRow auth={auth} />
           <FriendAlertsRow auth={auth} />
           {user.role === 'admin' && onOpenAdmin && (

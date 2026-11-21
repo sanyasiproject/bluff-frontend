@@ -138,6 +138,11 @@ export function useAuth() {
       signIn(await api<AuthResponse>('/auth/login', { body: { username, password } })),
     register: async (username: string, password: string, displayName: string) =>
       signIn(await api<AuthResponse>('/auth/register', { body: { username, password, displayName } })),
+    /** the player's own display name; throws with the server's reason (e.g. when the next change is allowed) */
+    changeName: async (displayName: string) => {
+      const res = await api<{ user: PublicUser }>('/me/name', { body: { displayName }, token });
+      setUser(res.user);
+    },
     /** a new avatar ("face.bg"), or null for the first letter; throws with the server's reason (e.g. a level too low) */
     setAvatar: async (avatar: string | null) => {
       const res = await api<{ user: PublicUser }>('/me/avatar', { body: { avatar }, token });

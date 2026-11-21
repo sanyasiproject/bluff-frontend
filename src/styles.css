@@ -6321,3 +6321,21 @@ body::after {
   border: 1px solid rgba(246, 196, 83, 0.6);
   color: var(--gold);
 }
+
+/* your name: Settings, and once on Home after login */
+.name-locked {
+  margin: 0;
+  font-size: 14px;
+}
+
+.home-name-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.home-name-card .name-card {
+  align-self: stretch;
+  border-color: rgba(246, 196, 83, 0.5);
+}
