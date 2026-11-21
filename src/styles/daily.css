@@ -1,0 +1,272 @@
+/* turn timer, win streak, login streak and the daily spin */
+
+/* seconds left on a turn; a ring that drains as time runs out */
+.turn-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: conic-gradient(rgba(0, 0, 0, 0.55) calc(var(--p, 1) * 360deg), rgba(0, 0, 0, 0.2) 0);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.your-turn .turn-clock {
+  margin-left: 4px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--gold-ink);
+}
+
+.turn-clock.low {
+  background: #e5484d;
+  color: #fff;
+  animation: clock-tick 1s ease-in-out infinite;
+}
+
+.your-turn .turn-clock.low {
+  background: #e5484d;
+  color: #fff;
+}
+
+/* on an opponent's seat: under the box, on its turn border */
+.seat-clock {
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+@keyframes clock-tick {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+.seat-clock.low {
+  animation: seat-clock-tick 1s ease-in-out infinite;
+}
+
+@keyframes seat-clock-tick {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.12);
+  }
+}
+
+/* wins in a row: zooms in and out so everyone notices */
+.streak-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 0 6px 0 4px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff9a3c, #e5484d);
+  box-shadow: 0 0 10px rgba(255, 120, 60, 0.55);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 18px;
+  vertical-align: middle;
+  animation: streak-zoom 1.2s ease-in-out infinite;
+}
+
+.streak-mark b {
+  font-variant-numeric: tabular-nums;
+}
+
+/* the seat's top-left corner (the eye badge's spot is free unless watching) */
+.seat-streak {
+  position: absolute;
+  top: -9px;
+  left: -6px;
+  z-index: 2;
+}
+
+@keyframes streak-zoom {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.22);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .streak-mark,
+  .turn-clock.low,
+  .seat-clock.low {
+    animation: none;
+  }
+}
+
+/* Home: login streak and the daily spin */
+.daily-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-color: rgba(255, 140, 60, 0.45);
+}
+
+.daily-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.daily-streak {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.daily-streak b {
+  color: #ff9a3c;
+}
+
+.streak-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.streak-days li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.streak-days li b {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.streak-days li.got {
+  background: rgba(255, 154, 60, 0.14);
+  color: #ffb36b;
+}
+
+.streak-days li.today {
+  border-color: #ff9a3c;
+  background: linear-gradient(135deg, rgba(255, 154, 60, 0.35), rgba(229, 72, 77, 0.35));
+  color: #fff;
+  box-shadow: 0 0 12px rgba(255, 120, 60, 0.4);
+}
+
+.spin-cta {
+  animation: pulse-soft 1.6s ease-in-out infinite;
+}
+
+.spin-pop {
+  align-items: center;
+}
+
+.spin-wheel-wrap {
+  position: relative;
+  width: min(72vw, 260px);
+  margin: 6px auto 10px;
+  aspect-ratio: 1;
+}
+
+.spin-wheel {
+  width: 100%;
+  height: 100%;
+  border: 4px solid var(--gold);
+  border-radius: 50%;
+  box-shadow: 0 0 24px rgba(246, 196, 83, 0.35);
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.17, 0.67, 0.12, 1);
+}
+
+.spin-label {
+  fill: #fff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.spin-icon {
+  font-size: 12px;
+}
+
+/* the pointer at the top: the slice under it is the prize */
+.spin-pointer {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  z-index: 1;
+  width: 0;
+  height: 0;
+  border-top: 22px solid var(--gold);
+  border-right: 12px solid transparent;
+  border-left: 12px solid transparent;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+}
+
+.spin-prize {
+  color: var(--gold);
+  font-size: 20px;
+  font-weight: 900;
+  animation: pop-big 0.4s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin-cta {
+    animation: none;
+  }
+}
+
+/* mute just for me */
+.mute-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mute-btn small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.mute-btn.on {
+  border-color: rgba(229, 72, 77, 0.6);
+}
+
+.mute-mark {
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+/* on a seat: the avatar's bottom-left corner */
+.seat-mute {
+  position: absolute;
+  bottom: -4px;
+  left: -6px;
+  padding: 1px 3px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.7);
+  font-size: 10px;
+}

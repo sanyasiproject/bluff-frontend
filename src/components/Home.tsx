@@ -13,6 +13,8 @@ import { ShopButton } from './ShopPage';
 import { NotifyCard } from './NotifyCard';
 import { HomeNameCard } from './NameCard';
 import { OnlineFriends } from './OnlineFriends';
+import { LangToggle } from './LangToggle';
+import { SpinButton } from './DailyCard';
 import { LessonChooser } from './tutorial/LessonOffer';
 import { TutorialPage } from './tutorial/TutorialPage';
 import { markTutorialSeen } from '../lib/tutorial';
@@ -74,7 +76,7 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
 
   const nameField = auth.user ? (
     <p className="playing-as">
-      Playing as <b>{auth.user.displayName}</b>
+      Playing as <b data-no-translate>{auth.user.displayName}</b>
     </p>
   ) : (
     <>
@@ -236,12 +238,14 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
       )}
 
       <OnlineFriends auth={auth} onJoin={(userId, watch) => actions.joinFriend(userId, watch, auth.user?.displayName ?? name)} />
+      <SpinButton auth={auth} />
       <MissionsButton auth={auth} online={online} />
       <LeagueButton auth={auth} online={online} />
       <ShopButton auth={auth} online={online} />
       <button className="btn ghost block how-to-btn" onClick={() => setChooser(true)}>
         📘 How to play
       </button>
+      <LangToggle />
       <HomeNameCard auth={auth} />
       <NotifyCard auth={auth} />
       <InstallCard />

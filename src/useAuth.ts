@@ -9,13 +9,17 @@ import type {
   GameSummary,
   LeagueResponse,
   MissionsResponse,
+  PassClaimResponse,
+  PassResponse,
   ProfileOverview,
   PublicUser,
+  ReplayResponse,
   RivalRecord,
   RivalsResponse,
   ServerInfo,
   ShopLookKind,
   ShopResponse,
+  SpinResponse,
 } from './types';
 
 /** the logged-in account (null = guest) and account actions */
@@ -143,6 +147,10 @@ export function useAuth() {
       const res = await api<{ user: PublicUser }>('/me/name', { body: { displayName }, token });
       setUser(res.user);
     },
+    /** today's free spin; the caller shows the wheel stop, then takeUser(res.user). Throws when already spun today */
+    spin: async () => api<SpinResponse>('/me/spin', { method: 'POST', token }),
+    /** an account read elsewhere (e.g. after the spin wheel stops) */
+    takeUser: (u: PublicUser) => setUser(u),
     /** a new avatar ("face.bg"), or null for the first letter; throws with the server's reason (e.g. a level too low) */
     setAvatar: async (avatar: string | null) => {
       const res = await api<{ user: PublicUser }>('/me/avatar', { body: { avatar }, token });
@@ -181,11 +189,21 @@ export function useAuth() {
       await api('/auth/logout', { method: 'POST', token: old }).catch(() => undefined);
     },
     myGames: async () => (await api<{ games: GameSummary[] }>('/me/games?limit=10', { token })).games,
+    /** one of my games move by move */
+    replay: (id: string) => api<ReplayResponse>(`/me/games/${encodeURIComponent(id)}/replay`, { token }),
     overview: () => api<ProfileOverview>('/me/overview', { token }),
     /** today's and this week's missions; a new day or week brings a fresh set */
     missions: () => api<MissionsResponse>('/me/missions', { token }),
     /** today's free swap of one unfinished mission; throws with the server's reason */
     swapMission: (id: string) => api<MissionsResponse>('/me/missions/swap', { body: { id }, token }),
+    /** the season pass for the ranked season now on */
+    pass: () => api<PassResponse>('/me/pass', { token }),
+    /** claim one reached pass tier; the account's coins update everywhere; throws with the server's reason */
+    claimPass: async (tier: number) => {
+      const res = await api<PassClaimResponse>('/me/pass/claim', { body: { tier }, token });
+      setUser(res.user);
+      return res;
+    },
     /** this week's friends league board and last week's */
     league: () => api<LeagueResponse>('/me/league', { token }),
     /** leave me off my friends' league boards, or put me back */

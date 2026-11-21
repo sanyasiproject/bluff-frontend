@@ -332,7 +332,7 @@ export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza, onS
             <li key={p.id} className={cx(lost(p.id) && 'loser', won(p.id) && 'winner')} style={{ '--i': i } as CSSProperties}>
               <span className="medal">{medal(p)}</span>
               <span className="grow">
-                {p.name}
+                <span data-no-translate>{p.name}</span>
                 {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} /> <SazaTag badge={p.saza} />
               </span>
               <span className="muted">{label(p)}</span>
@@ -342,7 +342,7 @@ export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza, onS
             <li key={p.id} className="loser" style={{ '--i': ranked.length + i } as CSSProperties}>
               <span className="medal">🚪</span>
               <span className="grow">
-                {p.name} <LevelBadge level={p.level} />
+                <span data-no-translate>{p.name}</span> <LevelBadge level={p.level} />
               </span>
               <span className="muted">Left · Lost</span>
             </li>
@@ -437,6 +437,11 @@ function MissionLines({ result }: { result: CoinResult }) {
       {boostCoins > 0 && (
         <p className="mission-line boost" style={{ '--i': done.length + 2 } as CSSProperties}>
           <span className="mission-line-title">🪙 +{formatCoins(boostCoins)} from Coin Magnet</span>
+        </p>
+      )}
+      {(result.passXp ?? 0) > 0 && (
+        <p className="mission-line" style={{ '--i': done.length + 3 } as CSSProperties}>
+          <span className="mission-line-title">🎟️ +{result.passXp} season pass XP</span>
         </p>
       )}
     </>
@@ -554,7 +559,7 @@ export function PlayersSheet({
           <li key={p.id} className="player-row">
             <Avatar name={p.name} avatar={p.avatar} bot={p.bot} size="sm" />
             <span className="grow">
-              {p.name}
+              <span data-no-translate>{p.name}</span>
               <LevelBadge level={p.level} />
               {p.bot && <span className="muted"> · bot</span>}
               {p.watching && <span className="muted"> · watching</span>}

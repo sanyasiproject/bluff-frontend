@@ -1,0 +1,265 @@
+/* ---------- game replay (ReplayPage) and the ▶ Replay button on recent games ---------- */
+
+.replay-btn {
+  flex: none;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(246, 196, 83, 0.5);
+  border-radius: 999px;
+  background: rgba(246, 196, 83, 0.12);
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.replay-btn:active {
+  transform: scale(0.96);
+}
+
+.replay-when {
+  margin-top: -6px;
+}
+
+.replay-seats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.replay-seat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.replay-seat-name {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.replay-seat-count {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.replay-seat.turn {
+  border-color: var(--gold);
+}
+
+.replay-seat.claimed .replay-seat-count {
+  color: var(--ink);
+}
+
+.replay-seat.caller {
+  border-color: var(--new-card);
+}
+
+.replay-seat.out {
+  opacity: 0.6;
+}
+
+.replay-table {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 150px;
+  padding: 14px 12px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.18);
+  text-align: center;
+}
+
+.replay-pile {
+  font-size: 15px;
+}
+
+.replay-top {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.replay-claim {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.replay-verdict {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.replay-verdict.lie {
+  background: var(--danger);
+  color: #fff;
+}
+
+.replay-verdict.true {
+  background: var(--ok);
+  color: #04261a;
+}
+
+.replay-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.replay-cards .replay-fake {
+  outline: 3px solid var(--danger);
+  outline-offset: 1px;
+  transform: translateY(-4px);
+}
+
+.replay-call {
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.replay-call.caught {
+  background: rgba(229, 72, 77, 0.22);
+}
+
+.replay-call.true {
+  background: rgba(60, 207, 145, 0.2);
+}
+
+.replay-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 64px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--panel);
+  font-size: 14px;
+  list-style: none;
+}
+
+.replay-lines li {
+  animation: replay-line-in 0.2s ease-out backwards;
+}
+
+@keyframes replay-line-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.replay-controls {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 calc(4px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--felt-deep) 70%, transparent);
+}
+
+.replay-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.replay-progress input[type='range'] {
+  flex: 1;
+  height: 28px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.replay-progress input[type='range']::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--gold) var(--p, 0%), var(--faint) var(--p, 0%));
+}
+
+.replay-progress input[type='range']::-moz-range-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--gold) var(--p, 0%), var(--faint) var(--p, 0%));
+}
+
+.replay-progress input[type='range']::-webkit-slider-thumb {
+  width: 22px;
+  height: 22px;
+  margin-top: -7px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  -webkit-appearance: none;
+}
+
+.replay-progress input[type='range']::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+.replay-count {
+  flex: none;
+  min-width: 56px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.replay-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.replay-buttons .btn.small {
+  min-width: 52px;
+  min-height: 48px;
+  font-size: 18px;
+}
+
+.replay-play {
+  flex: 1;
+  max-width: 180px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .replay-lines li {
+    animation: none;
+  }
+
+  .replay-cards .replay-fake {
+    transform: none;
+  }
+}

@@ -29,7 +29,11 @@ import {
   type GameKind,
   type PublicPlayer,
   type RoomView,
+  TURN_SECONDS,
+  TURN_TIMER,
+  type TurnSeconds,
 } from '../types';
+import { StreakMark } from './TurnTimer';
 
 /** what a bot level lets the table stake, in a few words */
 const capText = (cap: number) => (cap === 0 ? 'Free only' : `Up to 🪙 ${compactCoins(cap)}`);
@@ -76,6 +80,7 @@ import { TutorialPage } from './tutorial/TutorialPage';
 import { Avatar } from './Avatar';
 import { LiveMark, LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { useOnlineFriends } from '../lib/onlineFriends';
+import { MuteMark } from './MuteButton';
 
 /** per-phone voice choice; Girl is the default */
 function VoicePicker({ sample }: { sample: string }) {
@@ -559,7 +564,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                 <span className="row-open">
                   <Avatar name={p.name} bot size="sm" member={p.id} />
                   <span className="grow">
-                    {p.name} <SazaTag badge={p.saza} />
+                    <span data-no-translate>{p.name}</span> <SazaTag badge={p.saza} />
                   </span>
                 </span>
                 <span className="tag dim">Bot</span>
@@ -572,8 +577,8 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                   <LiveMark player={p} />
                 </Avatar>
                 <span className="grow">
-                  {p.name}
-                  {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} /> <SazaTag badge={p.saza} />
+                  <span data-no-translate>{p.name}</span>
+                  {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} /> <SazaTag badge={p.saza} /> <StreakMark player={p} /> <MuteMark player={p} />
                   {ranked && p.rank && <RankMini rank={p.rank} />}
                   {coinsOn && (
                     <span className={cx('player-coins', ((!p.registered && mustLogIn) || (stake > 0 && (p.coins ?? 0) < stake)) && 'warn')}>
@@ -674,6 +679,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               </>
             )}
             {view.config.voice === false && <span>🔇 No voice</span>}
+            {view.config.turnTimer && <span>⏰ {view.config.turnSec ?? TURN_TIMER.turnSec}s turns</span>}
           </div>
           {stake > 0 && <p className="muted small">Winner takes 🪙 {formatCoins(pot)}</p>}
           {bots.length > 0 && <p className="muted small">🤖 Bots put in nothing · coins lost to a bot are gone</p>}
@@ -829,6 +835,28 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           </>
         )}
       </section>}
+
+      {/* older servers have no turn timer */}
+      {isHost && view.config.turnTimer !== undefined && (
+        <section className="panel">
+          <div className="setting-row stacked">
+            <div className="grow">
+              <b>⏰ Turn timer</b>
+              <span>{`Seconds a turn. Time up: the bot brain plays for you. Miss ${TURN_TIMER.missesToAway} in a row and you're away (${TURN_TIMER.awaySec}s turns)`}</span>
+            </div>
+            {/* older servers have only on (30 s) or off */}
+            {view.config.turnSec === undefined ? (
+              <Choice value={view.config.turnTimer} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ turnTimer: on })} />
+            ) : (
+              <Choice<number>
+                value={view.config.turnTimer ? view.config.turnSec : 0}
+                options={[[0, 'Off'], ...TURN_SECONDS.map((n): [number, string] => [n, `${n}s`])]}
+                onPick={(n) => set(n === 0 ? { turnTimer: false } : { turnTimer: true, turnSec: n as TurnSeconds })}
+              />
+            )}
+          </div>
+        </section>
+      )}
 
       {/* older servers have no voice notes */}
       {isHost && view.config.voice !== undefined && (

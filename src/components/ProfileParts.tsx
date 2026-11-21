@@ -16,7 +16,7 @@ function result(g: GameSummary): [string, string] {
 const minutes = (sec: number) => (sec < 60 ? `${sec}s` : `${Math.round(sec / 60)} min`);
 
 /** one past game; tap to see the players' details */
-function GameCard({ g }: { g: GameSummary }) {
+function GameCard({ g, onReplay }: { g: GameSummary; onReplay?: (g: GameSummary) => void }) {
   const [icon, text] = result(g);
   // older games have no game name: they're Bluff
   const crazy7 = g.game === 'crazy7';
@@ -33,6 +33,19 @@ function GameCard({ g }: { g: GameSummary }) {
           </div>
           {g.stake > 0 && g.status === 'finished' && !g.kicked && (
             <span className={cx('coin-change', g.coinChange >= 0 ? 'up' : 'down')}>🪙 {signedCoins(g.coinChange)}</span>
+          )}
+          {onReplay && g.hasReplay && (
+            <button
+              className="replay-btn"
+              aria-label="Replay this game"
+              onClick={(e) => {
+                // a tap here opens the replay, not the card
+                e.preventDefault();
+                onReplay(g);
+              }}
+            >
+              ▶ Replay
+            </button>
           )}
           <span className="chevron" aria-hidden>
             ›
@@ -94,13 +107,13 @@ function GameCard({ g }: { g: GameSummary }) {
   );
 }
 
-export function GameList({ games, empty }: { games: GameSummary[] | null; empty: string }) {
+export function GameList({ games, empty, onReplay }: { games: GameSummary[] | null; empty: string; onReplay?: (g: GameSummary) => void }) {
   if (games === null) return <p className="muted small">Loading…</p>;
   if (games.length === 0) return <p className="muted small">{empty}</p>;
   return (
     <ul className="game-list">
       {games.map((g) => (
-        <GameCard key={g.id} g={g} />
+        <GameCard key={g.id} g={g} onReplay={onReplay} />
       ))}
     </ul>
   );

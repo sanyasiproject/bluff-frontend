@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type { LiveVoiceJoin, RoomView, RtcSignal } from '../types';
 import { request, socket } from './socket';
+import { mutedMember, onMuteChange } from './mute';
 
 /**
  * Live voice: phones talk to each other directly (WebRTC, one connection per other seated player in voice); the server only
@@ -144,7 +145,7 @@ function newPeer(id: string): Peer {
   const audio = document.createElement('audio');
   audio.autoplay = true;
   audio.setAttribute('playsinline', '');
-  audio.muted = !hear;
+  audio.muted = !hear || mutedMember(lastView, id);
   audioHome().appendChild(audio);
   const peer: Peer = { pc, audio, state: 'connecting', since: Date.now(), retries };
   peers.set(id, peer);
@@ -274,6 +275,11 @@ function watchForNotice(): void {
   }, NOTICE_MS);
 }
 
+// muting or unmuting someone takes effect on their sound at once
+onMuteChange(() => {
+  for (const [id, p] of peers) if (p.audio) p.audio.muted = !hear || mutedMember(lastView, id);
+});
+
 /** 🔊 hearing the others on or off; an error message to show, or null */
 export async function setHear(on: boolean): Promise<string | null> {
   if (busy) return null;
@@ -282,9 +288,9 @@ export async function setHear(on: boolean): Promise<string | null> {
     emit();
     if (on && !isOn()) await join();
     hear = on;
-    for (const p of peers.values()) {
+    for (const [id, p] of peers) {
       if (!p.audio) continue;
-      p.audio.muted = !hear;
+      p.audio.muted = !hear || mutedMember(lastView, id);
       // this tap lets the phone start the sound
       if (hear) void p.audio.play().catch(() => undefined);
     }

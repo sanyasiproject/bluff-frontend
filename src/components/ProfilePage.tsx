@@ -13,13 +13,17 @@ import { FullPage } from './FullPage';
 import { FriendAlertsRow } from './FriendAlertsRow';
 import { LeagueButton } from './LeaguePage';
 import { MissionsButton } from './MissionsPage';
+import { SeasonPassButton } from './SeasonPassPage';
 import { ShopButton } from './ShopPage';
 import { RankCard } from './Ranked';
+import { LoginStreakCard } from './DailyCard';
 import { RivalsList } from './Rivals';
 import { NameCard } from './NameCard';
 import { NotifyRow } from './NotifyRow';
+import { LangRow } from './LangRow';
 import { OnlineFriends } from './OnlineFriends';
 import { RulesPage } from './RulesPage';
+import { ReplayPage } from './ReplayPage';
 import { XpGuide } from './XpGuide';
 import { DailyLadder, FormStrip, GameList, Meter } from './ProfileParts';
 import { LookPicker } from './LookPicker';
@@ -46,6 +50,8 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
+  /** the game whose replay is open */
+  const [replayOf, setReplayOf] = useState<GameSummary | null>(null);
   const [avatarOpen, setAvatarOpen] = useState(false);
   /** achievements fold away; the Show button opens them */
   const [badgesOpen, setBadgesOpen] = useState(false);
@@ -88,7 +94,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
           </button>
           <span className="level-badge">Lv {lvl.level}</span>
         </div>
-        <h2 className="profile-name">{user.displayName}</h2>
+        <h2 className="profile-name" data-no-translate>{user.displayName}</h2>
         <p className="muted">
           @{user.username} · Joined {monthYear(user.createdAt)}
           {user.role === 'admin' && <span className="tag">Admin</span>}
@@ -155,7 +161,9 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
               </p>
             )}
           </section>
+          <LoginStreakCard auth={auth} />
           <MissionsButton auth={auth} />
+          <SeasonPassButton auth={auth} />
           <section className="panel stack-tight">
             <h3 className="section-title">Record</h3>
             <div className="record-row">
@@ -255,7 +263,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
 
           <section className="stack-tight">
             <h3 className="section-title">Recent games</h3>
-            <GameList games={games} empty="No games yet. Finish a game while logged in." />
+            <GameList games={games} empty="No games yet. Finish a game while logged in." onReplay={setReplayOf} />
           </section>
         </div>
       )}
@@ -289,6 +297,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
           <NameCard auth={auth} />
           <NotifyRow auth={auth} />
           <FriendAlertsRow auth={auth} />
+          <LangRow />
           {user.role === 'admin' && onOpenAdmin && (
             <div className="quick-actions">
               <button
@@ -321,6 +330,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
 
       {guideOpen && <XpGuide level={lvl.level} xp={lvl.xp} onClose={() => setGuideOpen(false)} />}
       {rulesOpen && <RulesPage onClose={() => setRulesOpen(false)} />}
+      {replayOf && <ReplayPage game={replayOf} load={auth.replay} onClose={() => setReplayOf(null)} />}
       {avatarOpen && <AvatarPicker auth={auth} onClose={() => setAvatarOpen(false)} />}
       {friendsOpen && <FriendsSheet auth={auth} roomCode={roomCode} onInvite={onInvite} onJoin={onJoin} onClose={() => setFriendsOpen(false)} />}
     </FullPage>

@@ -1,0 +1,233 @@
+/* ---------- season pass: Profile button, Season pass page and its 30-tier track ---------- */
+
+/* the Profile button: missions-entry look, with a red dot when a tier waits to be claimed */
+.pass-entry {
+  border-color: rgba(124, 196, 255, 0.5);
+}
+
+.pass-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 0 2px rgba(229, 72, 77, 0.3);
+}
+
+/* header: season, tier, total progress, days left */
+.panel.pass-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 12px;
+}
+
+.pass-head-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pass-head-tier {
+  display: block;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.pass-head-tier small {
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.pass-ready-pill {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(246, 196, 83, 0.18);
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pass-bar,
+.pass-tier-bar {
+  overflow: hidden;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--faint);
+}
+
+.pass-bar i,
+.pass-tier-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gold-deep), var(--gold));
+}
+
+.pass-tier-bar {
+  height: 6px;
+  margin-top: 6px;
+}
+
+.pass-head-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pass-how {
+  margin: 0;
+}
+
+.pass-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(60, 207, 145, 0.14);
+  color: var(--ok);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* the track: one row per tier, joined by a line */
+.pass-track {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pass-tier {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 8px 10px;
+  border: 1px solid var(--faint);
+  border-radius: 14px;
+  background: var(--panel);
+}
+
+/* the line between tier numbers */
+.pass-tier:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 27px;
+  bottom: -9px;
+  width: 2px;
+  height: 10px;
+  background: var(--faint);
+}
+
+.pass-tier.reached:not(:last-child)::after {
+  background: var(--gold);
+}
+
+.pass-tier-num {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--faint);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.pass-tier.reached .pass-tier-num {
+  background: var(--gold);
+  color: var(--gold-ink);
+}
+
+.pass-tier-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.pass-tier-reward {
+  display: block;
+  font-size: 15px;
+}
+
+.pass-tier-note {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.pass-tier-state {
+  flex: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.pass-tier-state.done {
+  color: var(--ok);
+}
+
+.pass-tier.claimed {
+  opacity: 0.7;
+}
+
+/* a reward waiting to be claimed */
+.pass-tier.ready {
+  border-color: rgba(246, 196, 83, 0.7);
+  background: rgba(246, 196, 83, 0.1);
+}
+
+.btn.small.pass-claim {
+  flex: none;
+  min-width: 76px;
+}
+
+/* the tier being filled now */
+.pass-tier.current {
+  border-color: rgba(124, 196, 255, 0.7);
+  box-shadow: 0 0 0 2px rgba(124, 196, 255, 0.18);
+}
+
+.pass-tier.current .pass-tier-num {
+  box-shadow: 0 0 0 2px #7cc4ff;
+}
+
+/* the big coin prizes at 10, 20 and 30, and the shields */
+.pass-tier.big .pass-tier-reward {
+  color: var(--gold);
+  font-size: 17px;
+}
+
+.pass-tier.shield .pass-tier-reward {
+  color: #9fd3ff;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pass-tier.ready .pass-claim {
+    animation: pass-nudge 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes pass-nudge {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}

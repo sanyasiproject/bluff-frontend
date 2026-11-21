@@ -15,6 +15,11 @@ import {
   LEAGUE_CROWNS,
   LEAGUE_POINTS,
   LOGIN_BONUS,
+  LOGIN_STREAK_REWARDS,
+  SPIN_PRIZES,
+  TURN_SECONDS,
+  TURN_TIMER,
+  WIN_STREAK_SHOWN,
   MAX_BLUFF_CALLS_IN_A_ROW,
   MAX_PEEKS,
   MIN_REWARD_GAME_SEC,
@@ -36,6 +41,8 @@ import {
   type MissionDef,
   type SecretMissionDef,
 } from '../types';
+import { DM_MAX_LENGTH } from '../types';
+import { MAX_SHIELDS, PASS_SHIELD_COINS, PASS_TIER_XP, PASS_TIERS, PASS_XP } from '../types';
 import { FullPage } from './FullPage';
 
 /** the levels a catalog's locked items open at, lowest first */
@@ -194,6 +201,12 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>
             <b>🎧 Live voice</b> (both games): On (default) or Off.
           </li>
+          <li>
+            <b>⏰ Turn timer</b> (both games): Off (default), {TURN_SECONDS.join(', ')} seconds a turn. The server waits 5 more seconds after the
+            clock shows 0 (and longer if it was itself stuck), so a short hiccup never costs a turn. Time up: the same brain the bots use plays the
+            turn (it may lie or call; it never peeks; Crazy 7 always says last card). {TURN_TIMER.missesToAway} timeouts in a row: 💤 away,
+            with {TURN_TIMER.awaySec}-second turns until they move again. Bots never have a clock.
+          </li>
           <li>Players who aren't the host see all settings as chips in the lobby.</li>
         </ul>
       </Section>
@@ -259,6 +272,24 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             was caught, survived a call or got away, plus the cards they still held at the end.
           </li>
           <li>Nothing is shown while a game is on. With it off, every lie stays secret.</li>
+        </ul>
+      </Section>
+
+      <Section icon="▶️" title="Game replay">
+        <ul>
+          <li>
+            Every Bluff and Crazy 7 game is saved move by move (also when the host ends or stops it early). Profile → Recent games shows
+            ▶ Replay on games saved since replays came in.
+          </li>
+          <li>
+            The replay shows each seat's card count, whose turn it was, the pile, what the table heard, Bluff's claims and calls, and
+            Crazy 7's top card. Play/pause, step back or forward, 1x/2x/4x speed, and tap or drag the bar to jump.
+          </li>
+          <li>
+            Bluff: the real cards of each play (fakes marked) show only if the lie reveal was on. With lies kept secret, no played card is
+            ever shown. Nobody's hand is shown, only how many cards they held.
+          </li>
+          <li>Only the players of that game (and admins) can open it. Very long games keep up to 800 steps.</li>
         </ul>
       </Section>
 
@@ -411,7 +442,18 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
       <Section icon="🪙" title="Coins & daily rewards">
         <ul>
           <li>New accounts start with coins (1,000 by default) plus the first daily bonus.</li>
-          <li>+{LOGIN_BONUS} every day you open the app.</li>
+          <li>
+            🔥 Login streak: every day you open the app pays more, day 1 to 7: {LOGIN_STREAK_REWARDS.join(', ')}. Day 8 starts the week again (the
+            streak count keeps going). Miss a day and it starts at day 1 ({LOGIN_BONUS}).
+          </li>
+          <li>
+            🎡 Daily spin: one free spin a day (India time) on Home: {SPIN_PRIZES.map((p) => (p.kind === 'coins' ? `${p.amount} coins` : `${p.amount} XP`)).join(', ')}.
+            The bigger the prize, the rarer it is.
+          </li>
+          <li>
+            🔥 Win streak: finished games won in a row (any game, a 2v2 team win counts). From {WIN_STREAK_SHOWN} it pulses on the player's seat
+            and lobby row. Any finished game not won starts it again; stopped games don't count.
+          </li>
           <li>
             Daily games ladder: {ladder}. Up to {formatCoins(maxDaily)} a day, win or lose. Only games of {MIN_REWARD_GAME_SEC / 60} minute or
             more count; it starts again at midnight (India time).
@@ -462,6 +504,29 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>
             <b>Weekly</b>:<ul>{MISSIONS.filter((m) => m.period === 'weekly').map(missionLine)}</ul>
           </li>
+        </ul>
+      </Section>
+
+      <Section icon="🎟️" title="Season pass">
+        <ul>
+          <li>
+            A free pass for logged-in players (🎟️ Season pass in Profile → Stats). It runs for the ranked season now on and starts again from
+            0 when a new season starts.
+          </li>
+          <li>
+            Pass XP comes from games that count (finished, {MIN_REWARD_GAME_SEC / 60} minute or more, logged in, not removed), Bluff and Crazy
+            7: +{PASS_XP.game} a game, +{PASS_XP.win} more for a win, +{PASS_XP.mission} for each daily or weekly mission it finished.
+          </li>
+          <li>
+            {PASS_TIERS.length} tiers of {PASS_TIER_XP} pass XP each. Each reached tier is claimed by tapping Claim (never automatic), once.
+          </li>
+          <li>
+            Rewards: coins growing along the track, some bonus XP tiers, a 🛡️ Rank Shield at tiers{' '}
+            {PASS_TIERS.flatMap((t, i) => (t.kind === 'shield' ? [i + 1] : [])).join(', ')} (🪙 {formatCoins(PASS_SHIELD_COINS)} instead when you
+            already hold {MAX_SHIELDS}), and big coin prizes at 10, 20 and 30 (
+            {[10, 20, 30].map((n) => `🪙 ${formatCoins(PASS_TIERS[n - 1].amount)}`).join(', ')}).
+          </li>
+          <li>The game-over screen shows the pass XP a game gave. Unclaimed rewards from an old season are gone when the new one starts.</li>
         </ul>
       </Section>
 
@@ -630,6 +695,18 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             Notionists by Zoish.
           </li>
           <li>Your own Profile: level ring, XP and your ranked division this season on top, then four tabs (the last one used opens next time on that phone): 📊 Stats (rank, coins and rewards, missions, record, play style, achievements, the last 10 games), 👥 Social (online friends, Friends, rivals, league), 🎨 Looks (avatar, table and cards, coin shop) and ⚙️ Settings (notifications, friend alerts, admin, log out).</li>
+        </ul>
+      </Section>
+
+      <Section icon="💬" title="Private messages">
+        <ul>
+          <li>Friends (accepted requests only) can message each other one to one: tap 💬 on a friend in Friends to open the chat.</li>
+          <li>
+            Messages are 1 to {DM_MAX_LENGTH} characters and arrive at once on every phone where the app is open. At most 20 a minute per
+            sender; blocked accounts can't send or get messages.
+          </li>
+          <li>A red count on 💬 shows unread messages from that friend, and a 💬 pill at the top right shows the total. Opening a chat marks it read and shows "Seen" to the sender.</li>
+          <li>The last 200 messages of each pair are kept; older ones are deleted. After unfriending, the chat is closed both ways.</li>
         </ul>
       </Section>
 

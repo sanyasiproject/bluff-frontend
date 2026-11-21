@@ -27,8 +27,10 @@ import { QuickChat } from './QuickChat';
 import { Avatar } from './Avatar';
 import { SazaTag } from './Saza';
 import { SeatRank } from './Ranked';
+import { StreakMark, TurnCountdown, useTurnEndsAt } from './TurnTimer';
 import { LiveMark, LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { SecretChip } from './SecretMissions';
+import { MuteButton, MuteMark } from './MuteButton';
 
 interface SeatProps {
   player: PublicPlayer;
@@ -53,12 +55,16 @@ interface SeatProps {
   extra?: string;
   /** a ranked table: the seat shows the player's division */
   ranked?: boolean;
+  /** turn timer: when this player's turn runs out (only on their turn) */
+  turnEndsAt?: number | null;
+  /** turn timer: the room's seconds a turn */
+  turnSec?: number;
 }
 
-export function Seat({ player, turn, passed, viewing, action, bubble, onClick, label, seatRef, team, partner, tag, extra, ranked }: SeatProps) {
+export function Seat({ player, turn, passed, viewing, action, bubble, onClick, label, seatRef, team, partner, tag, extra, ranked, turnEndsAt, turnSec }: SeatProps) {
   // the shop aura everyone sees round this player's seat, drawn live (AuraCanvas)
   const aura = player.shop?.aura ?? undefined;
-  const badge = player.place ? placeLabel(player.place) : !player.connected ? 'offline' : passed ? 'pass' : null;
+  const badge = player.place ? placeLabel(player.place) : !player.connected ? 'offline' : player.away ? '💤' : passed ? 'pass' : null;
   const className = cx(
     'seat',
     turn && 'turn',
@@ -73,14 +79,17 @@ export function Seat({ player, turn, passed, viewing, action, bubble, onClick, l
     <>
       <AuraCanvas aura={aura} />
       {viewing && <span className="eye-badge">👁</span>}
+      {!viewing && <StreakMark player={player} className="seat-streak" />}
+      {turn && turnEndsAt && <TurnCountdown endsAt={turnEndsAt} away={player.away} sec={turnSec} className="seat-clock" />}
       {badge && <span className={cx('badge', player.place && 'gold')}>{badge}</span>}
       <Avatar name={player.name} avatar={player.avatar} bot={player.bot}>
         {player.level && <span className="seat-lv">{player.level}</span>}
         <SazaTag badge={player.saza} className="seat-saza" />
         <LiveMark player={player} />
+        <MuteMark player={player} className="mute-mark seat-mute" />
         {ranked && player.rank && <SeatRank rank={player.rank} />}
       </Avatar>
-      <span className="seat-name">
+      <span className="seat-name" data-no-translate>
         {partner && '🤝 '}
         {player.name}
       </span>
@@ -94,7 +103,7 @@ export function Seat({ player, turn, passed, viewing, action, bubble, onClick, l
       {action && <span className="seat-action">{action}</span>}
       {tag}
       {bubble && (
-        <span key={bubble.key} className="seat-bubble">
+        <span key={bubble.key} className="seat-bubble" data-no-translate>
           {bubble.text}
         </span>
       )}
@@ -145,6 +154,7 @@ export function SeatSheet({ player, auth, onThrow, onClose }: { player: PublicPl
         }}
       />
       {friend && <GiftRow auth={auth} name={player.name} target={{ memberId: player.id }} />}
+      {!player.bot && <MuteButton player={player} />}
       <button className="btn ghost block" onClick={onClose}>
         Close
       </button>
@@ -360,6 +370,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
     setLevelUp(myLevel);
   }, [view.phase, myLevel]);
   const myTurn = playing && view.turnId === view.meId;
+  const turnEndsAt = useTurnEndsAt(view);
   const lp = view.lastPlay;
   // house twists; older servers send neither
   const kismat = view.kismat ?? null;
@@ -656,6 +667,8 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
             partner={p.id === partnerId}
             extra={cx(oneCard.includes(p.id) && 'spot')}
             ranked={view.config.ranked}
+            turnEndsAt={p.id === view.turnId ? turnEndsAt : null}
+            turnSec={view.config.turnSec}
             seatRef={(el) => {
               if (el) seatEls.current.set(p.id, el);
               else seatEls.current.delete(p.id);
@@ -772,10 +785,12 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
         </div>
         <div className="hand-head">
           {myTurn ? (
-            <span className="your-turn">YOUR TURN</span>
+            <span className="your-turn">
+              YOUR TURN {turnEndsAt && <TurnCountdown endsAt={turnEndsAt} away={me?.away} sec={view.config.turnSec} />}
+            </span>
           ) : (
             <span>
-              Your cards · {view.hand.length} <SazaTag badge={me?.saza} />
+              Your cards · {view.hand.length} <SazaTag badge={me?.saza} /> <StreakMark player={me} />
             </span>
           )}
           {myTurn && <span className="turn-hint">{status}</span>}

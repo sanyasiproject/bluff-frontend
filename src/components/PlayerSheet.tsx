@@ -12,6 +12,7 @@ import { GiftRow, ThrowRow } from './PlayerActions';
 import { Avatar } from './Avatar';
 import { PastSeasons, RankChip } from './Ranked';
 import { RivalPanel } from './Rivals';
+import { MuteButton } from './MuteButton';
 
 const pct = (n: number | null) => (n === null ? '–' : `${n}%`);
 
@@ -167,6 +168,8 @@ export function PlayerSheet({ auth, name, username, level, avatar = null, childr
         <GiftRow auth={auth} name={p.displayName} target={memberId ? { memberId } : { userId: p.id }} />
       )}
       {error && <p className="form-error">{error}</p>}
+      {/* in a room, someone else: mute them just for me */}
+      {memberId && onThrow && <MuteButton player={{ id: memberId, username, name }} />}
       {children}
       <button className="btn ghost block" onClick={onClose}>
         Close

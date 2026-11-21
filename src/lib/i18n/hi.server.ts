@@ -1,0 +1,56 @@
+import type { Pattern } from './types';
+import { CLAIM, ORD, claimHi } from './hi.cards';
+
+const BADGE: Record<string, string> = { Joker: 'जोकर', Murga: 'मुर्गा', Kachua: 'कछुआ', Aloo: 'आलू', Bandar: 'बंदर', Mirchi: 'मिर्ची' };
+const and = (s: string) => s.replace(/ and /g, ' और ');
+
+// lines the server announces (rooms.ts describe, socket.ts note), and useBluff toasts
+export const P: Pattern[] = [
+  [new RegExp(`^(.+) played ${CLAIM}(?:\\. Pick (\\d+)!)?$`), (m) => `${m[1]} ने ${claimHi(m[2])} ${/^(one|1) | of /.test(m[2]) ? 'चला' : 'चले'}${m[3] ? `। ${m[3]} उठाओ!` : ''}`],
+  [/^(.+) passed$/, '$1 ने पास किया'],
+  [/^(.+) called bluff\. Caught! (.+) picks up (\d+) cards(?:\. (.+) pays (\d+) coins)?$/, (m) => `${m[1]} ने Bluff बोला। पकड़ा गया! ${m[2]} ${m[3]} पत्ते उठाएँगे${m[4] ? `। ${m[4]} ${m[5]} सिक्के देंगे` : ''}`],
+  [/^(.+) called bluff\. It was true! (.+) picks up (\d+) cards(?:\. (.+) pays (\d+) coins)?$/, (m) => `${m[1]} ने Bluff बोला। सच था! ${m[2]} ${m[3]} पत्ते उठाएँगे${m[4] ? `। ${m[4]} ${m[5]} सिक्के देंगे` : ''}`],
+  [/^Everyone passed\. (.+) starts a new round$/, 'सबने पास किया। $1 नया राउंड शुरू करेंगे'],
+  [/^(.+) starts a new round$/, '$1 नया राउंड शुरू करेंगे'],
+  [/^(.+) finished (1st|2nd|3rd|4th|5th)$/, (m) => `${m[1]} ${ORD[m[2]]} नंबर पर रहे`],
+  [/^Game stopped, a team lost a player\. No coins moved$/, 'गेम रुका, एक टीम का खिलाड़ी चला गया। सिक्के नहीं कटे'],
+  [/^Game stopped, not enough players left\. No coins moved$/, 'गेम रुका, खिलाड़ी कम बचे। सिक्के नहीं कटे'],
+  [/^The host ended the game\. (.+) wins?$/, (m) => `होस्ट ने गेम ख़त्म किया। ${and(m[1])} जीते`],
+  [/^Game over\. Only bots are left playing(?:\. (.+) wins)?$/, (m) => `गेम ख़त्म। सिर्फ़ बॉट बचे${m[1] ? `। ${m[1]} जीते` : ''}`],
+  [/^Game over\. (.+) is the loser(?:\. Biggest liar: (.+))?$/, (m) => `गेम ख़त्म। ${m[1]} हारे${m[2] ? `। सबसे बड़ा झूठा: ${and(m[2])}` : ''}`],
+  [/^Game over\. Biggest liar: (.+)$/, (m) => `गेम ख़त्म। सबसे बड़ा झूठा: ${and(m[1])}`],
+  [/^Nobody can play and the deck is empty\. (.+) wins with the fewest cards$/, 'कोई चल नहीं सकता और गड्डी ख़ाली है। सबसे कम पत्तों के साथ $1 जीते'],
+  [/^Game over\. (.+) wins?$/, (m) => `गेम ख़त्म। ${and(m[1])} जीते`],
+  [/^(.+) picks (\d+) and misses a turn$/, '$1 $2 उठाएँगे और एक बारी जाएगी'],
+  [/^(.+) picks (\d+)$/, '$1 $2 उठाएँगे'],
+  [/^(.+): last card!$/, '$1: आख़िरी पत्ता!'],
+  [/^Caught! (.+) didn't say last card$/, 'पकड़ा गया! $1 ने आख़िरी पत्ता नहीं बोला'],
+  [/^The pile was shuffled into a new deck$/, 'ढेर को फेंटकर नई गड्डी बनी'],
+  [/^(.+) had no match and passed$/, '$1 के पास मिलता पत्ता नहीं था, पास किया'],
+  [/^(.+) won and the saza comes off!$/, '$1 जीते और saza उतर गई!'],
+  [/^(.+) gets the (\w+) saza (.+)$/, (m) => `${m[1]} को ${BADGE[m[2]] ?? m[2]} saza मिली ${m[3]}`],
+  [/^(.+) gave (.+) the (\w+) saza (.+)$/, (m) => `${m[1]} ने ${m[2]} को ${BADGE[m[3]] ?? m[3]} saza दी ${m[4]}`],
+  [/^(.+) used a peek 🔍$/, '$1 ने झाँका 🔍'],
+  [/^(Game started|Rematch)\. (.+) goes first(?:\. Pot: (.+) coins)?$/, (m) => `${m[1] === 'Rematch' ? 'फिर से गेम' : 'गेम शुरू'}। पहले ${m[2]} चलेंगे${m[3] ? `। कुल दांव: ${m[3]} सिक्के` : ''}`],
+  [/^(.+) is watching$/, '$1 देख रहे हैं'],
+  [/^(.+) is playing$/, '$1 खेल रहे हैं'],
+  [/^(.+) left the game$/, '$1 ने गेम छोड़ा'],
+  [/^(.+) left$/, '$1 चले गए'],
+  [/^🏅 (.+) made this a ranked game$/, '🏅 $1 ने इसे रैंक्ड गेम बनाया'],
+  [/^🎮 (.+) made this a casual game$/, '🎮 $1 ने इसे कैज़ुअल गेम बनाया'],
+  [/^(.+) stopped the game\. No coins moved$/, '$1 ने गेम रोका। सिक्के नहीं कटे'],
+  [/^(.+) moved (.+) to (watching|playing)$/, (m) => `${m[1]} ने ${m[2]} को ${m[3] === 'watching' ? 'दर्शक' : 'खिलाड़ी'} बनाया`],
+  [/^(.+) added (.+) 🤖$/, '$1 ने $2 🤖 को जोड़ा'],
+  [/^(.+) and (.+) swapped places$/, '$1 और $2 ने जगह बदली'],
+  [/^(.+) asked (.+) to swap places$/, '$1 ने $2 से जगह बदलने को कहा'],
+  [/^(.+) said no to swapping$/, '$1 ने जगह बदलने से मना किया'],
+  [/^(.+) shuffled the teams$/, '$1 ने टीमें मिलाईं'],
+  [/^(.+) made (.+) the host$/, '$1 ने $2 को होस्ट बनाया'],
+  [/^(.+) was removed by the host$/, 'होस्ट ने $1 को हटाया'],
+  [/^Stake lowered to (.+) for (\w+) bots$/, '$2 बॉट के लिए दांव घटाकर $1 किया'],
+  [/^(\w+) bots play only free games, so this game is now free$/, '$1 बॉट सिर्फ़ फ़्री गेम खेलते हैं, इसलिए यह गेम अब फ़्री है'],
+  // useBluff toasts
+  [/^(.+) didn't let you into room ([A-Z]{4}) this time$/, '$1 ने इस बार आपको कमरा $2 में नहीं आने दिया'],
+  [/^🎁 (.+) sent you 🪙 (.+)$/, '🎁 $1 ने आपको 🪙 $2 भेजे'],
+  [/^You were removed from room ([A-Z]{4}) by the host$/, 'होस्ट ने आपको कमरा $1 से हटा दिया'],
+];

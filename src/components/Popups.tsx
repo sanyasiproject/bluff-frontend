@@ -1,15 +1,21 @@
-import { DAILY_GAME_REWARDS } from '../types';
+import { DAILY_GAME_REWARDS, loginRewardOf } from '../types';
 import type { Invite } from '../useBluff';
 import { Backdrop } from './Overlays';
 
 /** 🎁 shown once when the daily login bonus lands */
-export function BonusPopup({ amount, onClose }: { amount: number; onClose: () => void }) {
+export function BonusPopup({ amount, streak, onClose }: { amount: number; streak?: number; onClose: () => void }) {
   return (
     <Backdrop center onClose={onClose}>
       <div className="reveal popup">
         <span className="popup-emoji">🎁</span>
         <h3 className="reveal-title">+{amount} coins</h3>
         <p>Daily login bonus. Come back tomorrow for more!</p>
+        {/* the login streak: each day in a row pays more, up to day 7 */}
+        {streak !== undefined && streak > 0 && (
+          <p className="gold-text">
+            🔥 Day {streak} in a row · tomorrow +{loginRewardOf(streak + 1)}
+          </p>
+        )}
         <p className="muted small">
           Play games today for more: +{DAILY_GAME_REWARDS[0].coins} after your first game, +{DAILY_GAME_REWARDS[1].coins} at{' '}
           {DAILY_GAME_REWARDS[1].games} games, and more up to {DAILY_GAME_REWARDS[DAILY_GAME_REWARDS.length - 1].games}.

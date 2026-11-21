@@ -116,7 +116,7 @@ export default function App() {
           onIgnore={() => actions.dismissInvite(invite.key)}
         />
       )}
-      {auth.bonus > 0 && !invite && <BonusPopup amount={auth.bonus} onClose={auth.clearBonus} />}
+      {auth.bonus > 0 && !invite && <BonusPopup amount={auth.bonus} streak={auth.user?.loginStreak} onClose={auth.clearBonus} />}
     </>
   );
 }

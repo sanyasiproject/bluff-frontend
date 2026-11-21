@@ -22,6 +22,7 @@ import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
 import { LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
+import { StreakMark, TurnCountdown, useTurnEndsAt } from './TurnTimer';
 import { Avatar } from './Avatar';
 import { SecretChip } from './SecretMissions';
 
@@ -149,6 +150,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
   const watching = !me;
   const playing = view.phase === 'playing';
   const myTurn = playing && !!c7 && view.turnId === view.meId;
+  const turnEndsAt = useTurnEndsAt(view);
   const isHost = view.hostId === view.meId;
   // the server lets anyone stop a game whose host is offline, so it can't hang forever
   const hostOffline = ![...view.players, ...view.watchers].find((p) => p.id === view.hostId)?.connected;
@@ -435,6 +437,8 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
               </>
             }
             extra={cx(playing && p.cardCount === 1 && 'c7-one spot', playing && c7.penalty > 0 && p.id === view.turnId && 'c7-hit')}
+            turnEndsAt={p.id === view.turnId ? turnEndsAt : null}
+            turnSec={view.config.turnSec}
             seatRef={(el) => {
               if (el) seatEls.current.set(p.id, el);
               else seatEls.current.delete(p.id);
@@ -497,7 +501,15 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
           <SecretChip view={view} />
         </div>
         <div className="hand-head">
-          {myTurn ? <span className="your-turn">YOUR TURN</span> : <span>Your cards · {view.hand.length}</span>}
+          {myTurn ? (
+            <span className="your-turn">
+              YOUR TURN {turnEndsAt && <TurnCountdown endsAt={turnEndsAt} away={me?.away} sec={view.config.turnSec} />}
+            </span>
+          ) : (
+            <span>
+              Your cards · {view.hand.length} <StreakMark player={me} />
+            </span>
+          )}
           {myTurn && <span className="turn-hint">{status}</span>}
           {newIds.length > 0 && <span className="new-chip">+{newIds.length} new</span>}
           {!myTurn && c7.called.includes(view.meId) && view.hand.length === 1 && <span className="c7-tag call">📢 Said it</span>}

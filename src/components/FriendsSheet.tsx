@@ -5,7 +5,9 @@ import { presenceText } from '../lib/dates';
 import type { FriendsResponse, FriendView, PlayerSearchResult } from '../types';
 import type { Auth } from '../useAuth';
 import type { InviteAck } from '../useBluff';
+import { useDmUnread } from '../lib/dm';
 import { ConfirmBox } from './ConfirmBox';
+import { DmPage } from './DmPage';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
 import { PlayerSheet } from './PlayerSheet';
@@ -46,6 +48,9 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
   const [viewing, setViewing] = useState<Person | null>(null);
   /** a friend about to be removed, waiting for a yes */
   const [unfriend, setUnfriend] = useState<FriendView | null>(null);
+  /** a friend whose private chat is open */
+  const [chatWith, setChatWith] = useState<FriendView | null>(null);
+  const unread = useDmUnread(auth.token);
 
   const load = useCallback(async () => {
     try {
@@ -183,7 +188,7 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
           {showOnline && f.online !== null && <i className={cx('presence', f.online && 'on')} />}
         </Avatar>
         <div className="grow">
-          <b>{f.displayName}</b> <LevelBadge level={f.level} />
+          <b data-no-translate>{f.displayName}</b> <LevelBadge level={f.level} />
           <p className="muted small">@{f.username}</p>
           {/* its own line, so it never breaks mid-phrase beside the Invite button */}
           {showOnline && (f.online !== null || where(f)) && (
@@ -270,6 +275,10 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
             person(
               f,
               <div className="row-actions">
+                <button className="btn small dm-btn" aria-label={`Message ${f.displayName}`} onClick={() => setChatWith(f)}>
+                  💬
+                  {(unread.byFriend[f.id] ?? 0) > 0 && <span className="req-dot">{unread.byFriend[f.id]}</span>}
+                </button>
                 {roomCode && onInvite && f.inRoom === 'here' && <span className="tag dim">In this room</span>}
                 {joinActions(f)}
                 {roomCode && onInvite && !onJoin && f.inRoom === 'other' && <span className="tag dim">In a room</span>}
@@ -330,6 +339,7 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
           }}
         />
       )}
+      {chatWith && <DmPage auth={auth} friend={chatWith} onClose={() => setChatWith(null)} />}
       {viewing && (
         <PlayerSheet
           auth={auth}

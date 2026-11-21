@@ -4,6 +4,7 @@ import { levelOf } from '../types';
 import type { Auth } from '../useAuth';
 import type { InviteAck } from '../useBluff';
 import { useOnlineFriends } from '../lib/onlineFriends';
+import { useDmUnread } from '../lib/dm';
 import { AccountSheet } from './AccountSheet';
 import { FriendsSheet } from './FriendsSheet';
 import { ProfilePage } from './ProfilePage';
@@ -27,6 +28,7 @@ interface Props {
 export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite, onJoin, showOnline = true }: Props) {
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const friends = useOnlineFriends(auth.user && showOnline ? auth.token : null);
+  const unread = useDmUnread(auth.user ? auth.token : null);
   const close = () => setSheet(null);
   if (!auth.accountsOn || auth.checking) return null;
 
@@ -39,6 +41,12 @@ export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite, onJoin, s
         <button className="online-pill" aria-label={`${onlineCount} friends online`} onClick={() => setSheet('friends')}>
           <i className="live-dot on" aria-hidden />
           {onlineCount}
+        </button>
+      )}
+      {/* unread private messages; one tap opens Friends, where each friend's 💬 shows theirs */}
+      {user && unread.total > 0 && (
+        <button className="online-pill dm-pill" aria-label={`${unread.total} unread messages`} onClick={() => setSheet('friends')}>
+          💬 {unread.total}
         </button>
       )}
       {user ? (

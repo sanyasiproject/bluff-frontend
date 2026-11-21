@@ -55,7 +55,7 @@ export function OnlineFriends({ auth, onJoin }: Props) {
                 <Avatar name={f.displayName} avatar={f.avatar} size="sm">
                   <i className="presence on" />
                 </Avatar>
-                <b>{f.displayName}</b>
+                <b data-no-translate>{f.displayName}</b>
                 <span className={cx('online-where', f.inRoom === null && 'free')}>{status(f)}</span>
               </button>
               {/* a friend in a lobby: ask to join in one tap; a game in progress goes through Friends */}

@@ -6375,3 +6375,133 @@ body::after {
   gap: 6px;
   margin-left: auto;
 }
+
+/* ---------- private messages: 💬 button, unread counts, chat thread ---------- */
+
+.dm-btn {
+  position: relative;
+}
+
+.dm-btn .req-dot {
+  top: -8px;
+  right: -8px;
+}
+
+.dm-pill {
+  position: relative;
+}
+
+.dm-thread {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  /* fills the screen, so the box to type in sits at the bottom */
+  min-height: calc(100vh - 170px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  min-height: calc(100dvh - 170px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  justify-content: flex-end;
+}
+
+.dm-older {
+  align-self: center;
+  margin-bottom: 6px;
+}
+
+.dm-empty {
+  margin: 24px 0;
+  text-align: center;
+}
+
+.dm-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.dm-day {
+  align-self: center;
+  margin: 10px 0 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dm-bubble {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 2px 8px;
+  max-width: 80%;
+  padding: 7px 11px;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.dm-bubble.mine {
+  align-self: flex-end;
+  border-bottom-right-radius: 5px;
+  background: var(--gold);
+  color: var(--gold-ink);
+}
+
+.dm-bubble.theirs {
+  align-self: flex-start;
+  border-bottom-left-radius: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--ink);
+}
+
+.dm-text {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.dm-time {
+  margin-left: auto;
+  font-size: 10px;
+  opacity: 0.65;
+}
+
+.dm-seen {
+  align-self: flex-end;
+  margin: 2px 4px 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.dm-compose {
+  position: sticky;
+  bottom: 0;
+  margin: 0 -16px calc(-28px - env(safe-area-inset-bottom));
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(5, 38, 26, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.dm-compose-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.dm-input {
+  height: auto;
+  min-height: 46px;
+  max-height: 120px;
+  padding: 11px 14px;
+  font-size: 16px;
+  resize: none;
+}
+
+.dm-left {
+  margin: 4px 0 0;
+  text-align: right;
+}
+
+.dm-left.over {
+  color: var(--danger);
+}

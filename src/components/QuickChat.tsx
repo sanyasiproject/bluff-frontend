@@ -28,7 +28,7 @@ export function QuickChat({ onSend }: { onSend: (kind: ChatKind, index: number) 
                 </button>
               ))}
             </div>
-            <div className="message-pills">
+            <div className="message-pills" data-no-translate>
               {QUICK_MESSAGES.map((text, i) => (
                 <button key={text} className="message-pill" onClick={() => send('message', i)}>
                   {text}

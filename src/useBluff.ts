@@ -22,6 +22,7 @@ import {
   type SazaBadge,
   type ThrowEvent,
 } from './types';
+import { mutedMember } from './lib/mute';
 
 export interface Invite extends InviteEvent {
   key: number;
@@ -166,6 +167,8 @@ export function useBluff() {
     // chat is shown, never spoken, so the voice stays for game moves
     const onChat = (c: ChatEvent) => {
       const v = viewRef.current;
+      // muted by me: nothing from them reaches me
+      if (mutedMember(v, c.from)) return;
       const who =
         c.from === v?.meId ? 'You' : ([...(v?.players ?? []), ...(v?.watchers ?? [])].find((p) => p.id === c.from)?.name ?? 'Someone');
       const text = QUICK_MESSAGES[c.index] ?? '';
@@ -184,6 +187,7 @@ export function useBluff() {
       else setReactions((prev) => [...prev.slice(-12), { key: ++noteSeq, emoji: '', text, who, at: Date.now() }]);
     };
     const onThrow = (t: ThrowEvent) => {
+      if (mutedMember(viewRef.current, t.from)) return;
       setFlyers((prev) => [...prev.slice(-8), { key: ++noteSeq, from: t.from, to: t.to, emoji: THROWS[t.index] ?? '❓', count: 1 }]);
     };
     const onGift = (g: GiftEvent) => {
