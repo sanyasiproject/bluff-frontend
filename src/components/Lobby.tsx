@@ -19,6 +19,8 @@ import {
   BOT_STAKE_CAPS,
   botStakeCap,
   CRAZY7_MAX_PICKS,
+  RANK_DIVISIONS,
+  rankName,
   STAKES,
   type BotLevel,
   type FriendsResponse,
@@ -69,11 +71,10 @@ import { SazaTag } from './Saza';
 import { Backdrop } from './Overlays';
 import { PlayerSheet } from './PlayerSheet';
 import { QuickChat } from './QuickChat';
-import { VoiceButton, VoiceMuteRow } from './Voice';
 import { LessonOffer } from './tutorial/LessonOffer';
 import { TutorialPage } from './tutorial/TutorialPage';
 import { Avatar } from './Avatar';
-import { LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
+import { LiveMark, LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { useOnlineFriends } from '../lib/onlineFriends';
 
 /** per-phone voice choice; Girl is the default */
@@ -141,6 +142,30 @@ function Choice<T>({ value, options, onPick }: { value: T; options: [T, string][
         </button>
       ))}
     </div>
+  );
+}
+
+/** a player's division and tier, small, for lobby rows at a ranked table */
+function RankMini({ rank }: { rank: NonNullable<PublicPlayer['rank']> }) {
+  const d = RANK_DIVISIONS.find((x) => x.id === rank.division) ?? RANK_DIVISIONS[0];
+  return (
+    <span className={cx('rank-mini', `rank-${d.id}`)}>
+      {d.emoji} {rankName(rank.points, d.id)}
+    </span>
+  );
+}
+
+/** the gold strip at the top of a ranked lobby: what it is, and where you stand */
+function RankedBanner({ view }: { view: RoomView }) {
+  const me = view.players.find((p) => p.id === view.meId);
+  const d = me?.rank ? (RANK_DIVISIONS.find((x) => x.id === me.rank!.division) ?? RANK_DIVISIONS[0]) : null;
+  return (
+    <section className={cx('mode-banner ranked', d && `rank-${d.id}`)}>
+      <b>🏅 RANKED GAME</b>
+      <span>
+        {me?.rank && d ? `You: ${d.emoji} ${rankName(me.rank.points, d.id)} · win to climb` : me ? 'Log in to play ranked' : 'Watching a ranked game'}
+      </span>
+    </section>
   );
 }
 
@@ -474,10 +499,12 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             ))}
           </p>
         </div>
-        <VoiceButton view={view} onSend={actions.sendVoice} onToast={actions.toast} />
         <QuickChat onSend={actions.chat} />
         <AccountCorner auth={auth} roomCode={view.code} onInvite={actions.invite} onJoin={joinFriend} showOnline={false} />
       </header>
+
+      {/* everyone sees at a glance whether this table is ranked or just for fun (older servers: nothing) */}
+      {rankedKnown && !crazy7 && (ranked ? <RankedBanner view={view} /> : <p className="mode-banner casual">🎮 Casual game · no rank points</p>)}
 
       {/* live voice for seated players; a row of its own, since the header is full */}
       {view.config.voice && view.players.some((p) => p.id === view.meId && p.registered) && (
@@ -486,7 +513,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             🎧 Live voice
             <small>{view.players.filter((p) => p.live).length > 0 ? ` · ${view.players.filter((p) => p.live).length} in` : ' · players only'}</small>
           </span>
-          <LiveVoiceButtons view={view} onToast={actions.toast} />
+          <LiveVoiceButtons view={view} onToast={actions.toast} wide />
         </section>
       )}
       <LiveVoiceNotice />
@@ -541,10 +568,13 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             ) : (
             <li key={p.id} className={cx('player-row', !p.connected && 'offline')}>
               <button type="button" className="row-open" aria-label={`${p.name}'s profile`} onClick={() => openPlayer(p.id)}>
-                <Avatar name={p.name} avatar={p.avatar} size="sm" member={p.id} />
+                <Avatar name={p.name} avatar={p.avatar} size="sm" member={p.id}>
+                  <LiveMark player={p} />
+                </Avatar>
                 <span className="grow">
                   {p.name}
                   {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} /> <SazaTag badge={p.saza} />
+                  {ranked && p.rank && <RankMini rank={p.rank} />}
                   {coinsOn && (
                     <span className={cx('player-coins', ((!p.registered && mustLogIn) || (stake > 0 && (p.coins ?? 0) < stake)) && 'warn')}>
                       {p.registered ? `🪙 ${compactCoins(p.coins ?? 0)}` : 'guest'}
@@ -643,7 +673,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                 {bots.length > 0 && <span>🤖 {BOT_LEVEL_NAMES[view.config.botLevel ?? 'expert']} bots</span>}
               </>
             )}
-            {view.config.voice === false && <span>🔇 No voice notes</span>}
+            {view.config.voice === false && <span>🔇 No voice</span>}
           </div>
           {stake > 0 && <p className="muted small">Winner takes 🪙 {formatCoins(pot)}</p>}
           {bots.length > 0 && <p className="muted small">🤖 Bots put in nothing · coins lost to a bot are gone</p>}
@@ -671,6 +701,19 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               onClick={() => set({ game: 'crazy7' })}
             />
           </div>
+          {/* Bluff only: casual or ranked, as big as the game choice */}
+          {!crazy7 && coinsOn && rankedKnown && (
+            <div className="seg mode-seg">
+              <Option on={!ranked} disabled={false} title="🎮 Casual" desc="Just for fun · no rank points" onClick={() => ranked && set({ ranked: false })} />
+              <Option
+                on={ranked}
+                disabled={bots.length > 0 && !ranked}
+                title="🏅 Ranked"
+                desc={bots.length > 0 && !ranked ? 'People only: remove the bots first' : 'Rank points move · logged-in players, no bots'}
+                onClick={() => !ranked && set({ ranked: true })}
+              />
+            </div>
+          )}
         </section>
       )}
 
@@ -760,14 +803,6 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         <SettingRow title="🤥 Lie reveal" desc="When the game ends, show the lies nobody caught">
           <Choice value={!(view.config.secretLies ?? false)} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ secretLies: !on })} />
         </SettingRow>
-        {coinsOn && rankedKnown && (
-          <SettingRow
-            title="🏅 Ranked"
-            desc={bots.length > 0 && !ranked ? 'Rated game for people only. Remove the bots to turn it on' : 'Rated game · logged-in players only, no bots'}
-          >
-            <Choice value={ranked} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ ranked: on })} />
-          </SettingRow>
-        )}
         {/* older servers have no house twists */}
         {view.config.kismat !== undefined && (
           <>
@@ -798,7 +833,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
       {/* older servers have no voice notes */}
       {isHost && view.config.voice !== undefined && (
         <section className="panel">
-          <SettingRow title="🎤 Voice notes" desc="Logged-in players hold the mic to send a short clip to the table. Never saved">
+          <SettingRow title="🎧 Live voice" desc="Logged-in players in the game can talk and hear each other. Never recorded">
             <Choice value={view.config.voice} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ voice: on })} />
           </SettingRow>
         </section>
@@ -908,7 +943,6 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           onThrow={viewing.id !== view.meId ? (i) => void actions.throwAt(viewing.id, i) : undefined}
           onClose={() => setViewingId(null)}
         >
-          {view.config.voice && viewing.id !== view.meId && viewing.username && <VoiceMuteRow name={viewing.name} username={viewing.username} />}
           {isHost && viewing.id !== view.meId && (
             <div className="host-tools">
               <p className="label">Host tools</p>

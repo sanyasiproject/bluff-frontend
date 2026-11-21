@@ -31,8 +31,6 @@ import {
   SHOP_ITEMS,
   STAKES,
   THROWS,
-  VOICE_GAP_MS,
-  VOICE_MAX_MS,
   XP_RULES,
   xpForLevel,
   type MissionDef,
@@ -194,7 +192,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             <b>🪜 Seedhi</b> (Bluff): Off (default) or On.
           </li>
           <li>
-            <b>🎤 Voice notes</b> (both games): On (default) or Off.
+            <b>🎧 Live voice</b> (both games): On (default) or Off.
           </li>
           <li>Players who aren't the host see all settings as chips in the lobby.</li>
         </ul>
@@ -544,17 +542,17 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             players moves you up most. The order everyone finished in counts.
           </li>
           <li>
-            Divisions: {RANK_DIVISIONS.map((d) => `${d.emoji} ${d.name} (${formatCoins(d.min)})`).join(', ')}. You keep showing a
+            Divisions: {RANK_DIVISIONS.map((d) => `${d.emoji} ${d.name} (${formatCoins(d.min)})`).join(', ')}. Each is split into tiers
+            that climb from 1: Bronze and Silver 1–3, Gold and Platinum 1–4, Diamond 1–5 (Bluff Badshah has none). Tiers are just a
+            marker of how far into a division you are. You keep showing a
             division until your points are {RANK_PROTECTION} below its start; past that you drop to the one below. Points never go below 0.
           </li>
           <li>
-            The higher your division, the slower you climb: a win gives{' '}
-            {RANK_DIVISIONS.map((d) => `${Math.round(d.win * 100)}%`).join(' → ')} of its points from Bronze up to Bluff Badshah, and a
-            loss weighs {RANK_DIVISIONS.map((d) => `1:${(d.win / d.loss).toFixed(1).replace(/\.0$/, '')}`).join(' → ')} against a win.
-            A 🛡️ Rank Shield from the coin shop makes one loss cost nothing.
+            The higher your division, the slower you climb: wins give a little less and losses take a little more. A 🛡️ Rank Shield from
+            the coin shop makes one loss cost nothing.
           </li>
           <li>No daily limit: every win adds and every loss takes away, as many games as you play. Points never go below 0, and a loss at 0 costs nothing. In 2v2 the winning pair plays the losing pair.</li>
-          <li>Everyone starts at {RANK_DIVISIONS[0].emoji} {RANK_DIVISIONS[0].name}. Your division shows on your profile and your player card, with your best and last 3 past seasons (tap All for every season).</li>
+          <li>The host picks 🎮 Casual or 🏅 Ranked right under the game choice; everyone sees a gold RANKED banner in the lobby and a gold room code in the game. Everyone starts at {RANK_DIVISIONS[0].emoji} {RANK_DIVISIONS[0].name}. Your division shows on your profile and your player card, with your best and last 3 past seasons (tap All for every season).</li>
           <li>
             Seasons run about a month. An admin books the next one {SEASON_START_DELAY_DAYS} days ahead and everyone sees "ends in N days".
             When it starts, everyone drops {RANK_SEASON_DROP} divisions (never below 0) and the old season goes into their history.
@@ -647,24 +645,6 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             your phone can't hear them right now. It keeps trying quietly; nothing pops up over the game.
           </li>
           <li>The phone asks for the mic the first time. On iPhone, voice stops while the screen is locked or the app is in the background.</li>
-        </ul>
-      </Section>
-
-      <Section icon="🎤" title="Voice notes">
-        <ul>
-          <li>
-            Hold 🎤 (top bar, lobby and game) and talk; let go to send. Up to {VOICE_MAX_MS / 1000} seconds; slide up before letting go to
-            cancel. Everyone else in the room hears it at once.
-          </li>
-          <li>
-            Logged-in players only, seated or watching; guests can listen. One note every {VOICE_GAP_MS / 1000} seconds per player. The
-            phone asks for the mic the first time.
-          </li>
-          <li>Notes are passed straight on and never saved: not on the server, not in the game history.</li>
-          <li>
-            Don't want to hear someone? Tap 🔇 on their note, or on their card in the lobby. ⋯ → Voice notes mutes everyone; Sound off
-            mutes them too. The host can turn voice notes off for the room in the lobby.
-          </li>
         </ul>
       </Section>
 

@@ -24,10 +24,9 @@ import { Backdrop, BetSheet, GameOver, PeekSheet, PickSheet, PlayersSheet, RankS
 import { GiftRow, ThrowRow } from './PlayerActions';
 import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
-import { stopVoice } from '../lib/voice';
-import { HearVoiceButton, VoiceButton } from './Voice';
 import { Avatar } from './Avatar';
 import { SazaTag } from './Saza';
+import { SeatRank } from './Ranked';
 import { LiveMark, LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { SecretChip } from './SecretMissions';
 
@@ -52,9 +51,11 @@ interface SeatProps {
   tag?: ReactNode;
   /** extra class names for the seat */
   extra?: string;
+  /** a ranked table: the seat shows the player's division */
+  ranked?: boolean;
 }
 
-export function Seat({ player, turn, passed, viewing, action, bubble, onClick, label, seatRef, team, partner, tag, extra }: SeatProps) {
+export function Seat({ player, turn, passed, viewing, action, bubble, onClick, label, seatRef, team, partner, tag, extra, ranked }: SeatProps) {
   // the shop aura everyone sees round this player's seat, drawn live (AuraCanvas)
   const aura = player.shop?.aura ?? undefined;
   const badge = player.place ? placeLabel(player.place) : !player.connected ? 'offline' : passed ? 'pass' : null;
@@ -77,6 +78,7 @@ export function Seat({ player, turn, passed, viewing, action, bubble, onClick, l
         {player.level && <span className="seat-lv">{player.level}</span>}
         <SazaTag badge={player.saza} className="seat-saza" />
         <LiveMark player={player} />
+        {ranked && player.rank && <SeatRank rank={player.rank} />}
       </Avatar>
       <span className="seat-name">
         {partner && '🤝 '}
@@ -251,7 +253,6 @@ export function GameMenu({
         <button className="btn block" onClick={onToggleSound}>
           {sound ? '🔊 Sound on · tap to mute' : '🔇 Sound off · tap to turn on'}
         </button>
-        {c.voice && <HearVoiceButton />}
         {onPeople && (
           <button className="btn block" onClick={onPeople}>
             👥 People in this room
@@ -576,8 +577,6 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
   const toggleSound = () => {
     unlockSpeech();
     setSoundOn(!sound);
-    // Sound off silences voice notes too, including one playing now
-    if (sound) stopVoice();
     setSound(!sound);
   };
 
@@ -609,9 +608,13 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
   else if (playing) status = `${name(view.turnId)}'s turn`;
 
   return (
-    <main className={cx('table', crowded && 'crowded')}>
+    <main className={cx('table', crowded && 'crowded', view.config.ranked && 'ranked-table')}>
       <header className="topbar">
-        <span className="code-chip">{view.code}</span>
+        {/* a ranked table says so for the whole game: the room code turns gold (no extra width on a full top bar) */}
+        <span className={cx('code-chip', view.config.ranked && 'ranked-code')} aria-label={view.config.ranked ? `Ranked game, room ${view.code}` : undefined}>
+          {view.config.ranked && '🏅 '}
+          {view.code}
+        </span>
         {partnerId && (
           <span className={cx('team-chip', `team-${teamOf(view.meId)}`)}>
             {teamOf(view.meId) === 'a' ? '🔵' : '🟠'} with {name(partnerId)}
@@ -629,7 +632,6 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
             </button>
           )}
           <LiveVoiceButtons view={view} onToast={actions.toast} />
-          <VoiceButton view={view} onSend={actions.sendVoice} onToast={actions.toast} />
           <QuickChat onSend={actions.chat} />
           <button className="icon-btn" aria-label="Game menu" onClick={() => setPanel('menu')}>
             ⋯
@@ -653,6 +655,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
             team={teamOf(p.id)}
             partner={p.id === partnerId}
             extra={cx(oneCard.includes(p.id) && 'spot')}
+            ranked={view.config.ranked}
             seatRef={(el) => {
               if (el) seatEls.current.set(p.id, el);
               else seatEls.current.delete(p.id);

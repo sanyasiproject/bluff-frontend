@@ -3,7 +3,7 @@ import { cx } from '../lib/cards';
 import { formatCoins, signedCoins } from '../lib/coins';
 import { monthYear } from '../lib/dates';
 import { achievementsOf, levelInfo, percent, winStreak } from '../lib/progress';
-import { divisionOf, LOGIN_BONUS, type GameSummary, type ProfileOverview } from '../types';
+import { divisionOf, LOGIN_BONUS, RANK_DIVISIONS, rankName, type GameSummary, type ProfileOverview } from '../types';
 import type { Auth } from '../useAuth';
 import type { InviteAck } from '../useBluff';
 import { Avatar } from './Avatar';
@@ -72,7 +72,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
   const unlocked = badges.filter((b) => b.value >= b.goal).length;
   const net = games?.reduce((sum, g) => sum + g.coinChange + g.bonus, 0) ?? 0;
   // this season's division; everyone starts at Bronze (older servers send null before a ranked game)
-  const division = divisionOf(user.rank?.points ?? 0);
+  const division = RANK_DIVISIONS.find((d) => d.id === user.rank?.division) ?? divisionOf(user.rank?.points ?? 0);
 
   return (
     <FullPage title="Profile" onBack={onClose}>
@@ -94,7 +94,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
         </p>
         {/* this season's ranked division, not the level title */}
         <p className="level-title">
-          {division.emoji} {division.name}
+          {division.emoji} {rankName(user.rank?.points ?? 0, division.id)}
         </p>
         <div className="xp-bar" aria-label={`${lvl.toNext} XP to level ${lvl.level + 1}`}>
           <i style={{ width: `${Math.round(lvl.progress * 100)}%` }} />

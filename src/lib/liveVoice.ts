@@ -237,11 +237,11 @@ async function onSignal(s: RtcSignal): Promise<void> {
 
 socket.on('rtc:signal', (s: RtcSignal) => void onSignal(s));
 
-/** asks the server to put this player in voice; how to reach the others comes back */
-async function join(): Promise<void> {
+/** asks the server to put this player in voice (and says whether the mic is on); how to reach the others comes back */
+async function join(withMic = mic): Promise<void> {
   joining = true;
   try {
-    const res = await request<LiveVoiceJoin>('voice:live', { on: true });
+    const res = await request<LiveVoiceJoin>('voice:live', { on: true, mic: withMic });
     iceServers = res.iceServers;
   } finally {
     joining = false;
@@ -312,7 +312,9 @@ export async function setMic(on: boolean): Promise<string | null> {
       } catch {
         return 'Allow the microphone to talk';
       }
-      if (!isOn()) await join();
+      // in voice already: just tell everyone the mic is on; otherwise join with it on
+      if (!isOn()) await join(true);
+      else await request('voice:live', { on: true, mic: true });
       mic = true;
       watchForNotice();
     } else {
@@ -320,6 +322,8 @@ export async function setMic(on: boolean): Promise<string | null> {
       stopMic();
       window.clearTimeout(noticeTimer);
       notice = null;
+      // still listening: everyone sees the mic is off
+      if (hear) await request('voice:live', { on: true, mic: false }).catch(() => undefined);
     }
     for (const p of peers.values()) if (p.pc) await sendMic(p.pc);
     if (!isOn()) turnOff(true);

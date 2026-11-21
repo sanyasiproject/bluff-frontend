@@ -20,8 +20,6 @@ import { LevelBadge } from './LevelBadge';
 import { Backdrop, GameOver, PlayersSheet } from './Overlays';
 import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
-import { stopVoice } from '../lib/voice';
-import { VoiceButton } from './Voice';
 import { LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
 import { Avatar } from './Avatar';
@@ -357,8 +355,6 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
   const toggleSound = () => {
     unlockSpeech();
     setSoundOn(!sound);
-    // Sound off silences voice notes too, including one playing now
-    if (sound) stopVoice();
     setSound(!sound);
   };
 
@@ -412,7 +408,6 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
             </button>
           )}
           <LiveVoiceButtons view={view} onToast={actions.toast} />
-          <VoiceButton view={view} onSend={actions.sendVoice} onToast={actions.toast} />
           <QuickChat onSend={actions.chat} />
           <button className="icon-btn" aria-label="Game menu" onClick={() => setPanel('menu')}>
             ⋯

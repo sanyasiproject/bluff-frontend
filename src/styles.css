@@ -6164,69 +6164,103 @@ body::after {
   }
 }
 
-/* ---------- live voice: 🔊 hear and 🎙️ talk, seat marks, one quiet line ---------- */
+/* ---------- live voice: 🔊 hear and 🎙️ talk saying ON / OFF, mic marks on boxes, one quiet line ---------- */
 .live-voice {
   display: inline-flex;
-  gap: 2px;
-  padding: 2px;
-  border-radius: 12px;
-  background: var(--panel);
+  gap: 4px;
 }
 
 .live-btn {
   position: relative;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 36px;
-  padding: 0;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  font-size: 17px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 42px;
+  height: 40px;
+  padding: 0 4px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: var(--panel);
+  color: var(--muted);
   line-height: 1;
-  opacity: 0.6;
 }
 
+.live-btn small {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.live-icon {
+  position: relative;
+  display: inline-block;
+  font-size: 16px;
+}
+
+/* on: green and clear */
 .live-btn.on {
+  border-color: rgba(60, 207, 145, 0.8);
   background: rgba(60, 207, 145, 0.22);
-  box-shadow: inset 0 0 0 1px rgba(60, 207, 145, 0.6);
-  opacity: 1;
+  color: var(--ok);
+}
+
+/* off: grey with red OFF */
+.live-btn.off small {
+  color: var(--danger);
+}
+
+.live-btn.off .live-icon {
+  opacity: 0.55;
 }
 
 .live-btn.talking {
   animation: live-glow 1.6s ease-in-out infinite;
 }
 
-/* the mic button crossed out while it's off */
-.live-slash {
-  position: absolute;
-  inset: 8px;
-  background: linear-gradient(135deg, transparent 46%, var(--danger) 46%, var(--danger) 56%, transparent 56%);
-  pointer-events: none;
+.live-btn:disabled {
+  opacity: 0.4;
 }
 
-.live-btn:disabled {
-  opacity: 0.35;
+/* lobby: the same switches, wider, with words */
+.live-voice.wide .live-btn {
+  flex-direction: row;
+  gap: 6px;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+}
+
+.live-voice.wide .live-btn small {
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+/* a red line through a mic that's off (the button, and a player's box) */
+.live-slash {
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(135deg, transparent 44%, var(--danger) 44%, var(--danger) 58%, transparent 58%);
+  pointer-events: none;
 }
 
 @keyframes live-glow {
   0%,
   100% {
-    box-shadow: inset 0 0 0 1px rgba(60, 207, 145, 0.6);
+    box-shadow: 0 0 0 rgba(60, 207, 145, 0);
   }
   50% {
-    box-shadow:
-      inset 0 0 0 1px rgba(60, 207, 145, 0.9),
-      0 0 10px rgba(60, 207, 145, 0.5);
+    box-shadow: 0 0 10px rgba(60, 207, 145, 0.55);
   }
 }
 
 /* lobby: its own row under the header */
 .live-voice-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px 10px;
   padding: 8px 10px 8px 14px;
   border-radius: 14px;
   background: var(--panel);
@@ -6238,18 +6272,32 @@ body::after {
   font-weight: 600;
 }
 
-/* a seat's corner: 🎧 in voice, 🔇 can't hear them right now */
+/* a player's box: their mic, bottom left of the avatar */
 .seat-live {
   position: absolute;
   left: -6px;
   bottom: -5px;
-  font-size: 13px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--felt-deep);
+  border-radius: 50%;
+  font-size: 11px;
   line-height: 1;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+}
+
+.seat-live.mic-on {
+  background: var(--ok);
+  box-shadow: 0 0 6px rgba(60, 207, 145, 0.7);
+}
+
+.seat-live.mic-off {
+  background: #3a4741;
 }
 
 .seat-live.stuck {
-  opacity: 0.85;
+  background: #5a4a1a;
 }
 
 /* the one quiet line, never a popup */

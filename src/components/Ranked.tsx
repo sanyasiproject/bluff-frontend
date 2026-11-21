@@ -1,7 +1,8 @@
 import { useState, type CSSProperties } from 'react';
 import { cx } from '../lib/cards';
 import { formatCoins, signedCoins } from '../lib/coins';
-import { divisionOf, RANK_DIVISIONS, RANK_PROTECTION, type CoinResult, type PublicProfile, type RankDivisionId, type RankView, type SeasonResult } from '../types';
+import { divisionOf, nextRankStep, RANK_DIVISIONS, RANK_PROTECTION, rankName, rankTier, tierStarts, type CoinResult, type PublicProfile, type RankDivisionId, type RankView, type SeasonResult } from '../types';
+import { RankGuide } from './RankGuide';
 import { Rolling } from './Rolling';
 
 type Division = (typeof RANK_DIVISIONS)[number];
@@ -13,8 +14,6 @@ const divisionFor = (id: RankDivisionId | undefined, points: number): Division =
 /** the division before this one; null at the bottom */
 const prevDivision = (d: Division): Division | null => RANK_DIVISIONS[RANK_DIVISIONS.findIndex((x) => x.id === d.id) - 1] ?? null;
 
-/** the division after this one; null at the top */
-const nextDivision = (d: Division): Division | null => RANK_DIVISIONS[RANK_DIVISIONS.findIndex((x) => x.id === d.id) + 1] ?? null;
 
 const plural = (n: number, word: string) => `${formatCoins(n)} ${word}${n === 1 ? '' : 's'}`;
 
@@ -45,7 +44,7 @@ export function PastSeasons({ seasons }: { seasons: SeasonResult[] | undefined }
         <span className="label">Past seasons</span>
         {seasons.length > 1 && (
           <span className="past-best">
-            Best: S{best.season} {bestDiv.emoji} {bestDiv.name}
+            Best: S{best.season} {bestDiv.emoji} {rankName(best.points, bestDiv.id)}
           </span>
         )}
       </div>
@@ -57,7 +56,7 @@ export function PastSeasons({ seasons }: { seasons: SeasonResult[] | undefined }
               <li key={h.season} className={cx(`rank-${d.id}`, h === best && seasons.length > 1 && 'best')}>
                 <b>S{h.season}</b>
                 <span className="past-div">
-                  {d.emoji} {d.name}
+                  {d.emoji} {rankName(h.points, d.id)}
                 </span>
                 <span className="past-points">{formatCoins(h.points)}</span>
                 <small>
@@ -90,12 +89,15 @@ export function PastSeasons({ seasons }: { seasons: SeasonResult[] | undefined }
 
 /** my ranked standing this season, for my profile; everyone starts at Bronze */
 export function RankCard({ rank: given }: { rank: RankView | null }) {
+  const [guide, setGuide] = useState(false);
   // older servers send null before a ranked game: that's Bronze 0
   const rank: RankView = given ?? { season: 1, points: 0, division: 'bronze', floor: 0, games: 0, wins: 0, today: 0 };
   const timing = seasonTiming(rank);
   const div = divisionFor(rank.division, rank.points);
-  const next = nextDivision(div);
-  const progress = next ? Math.min(1, Math.max(0, (rank.points - div.min) / (next.min - div.min))) : 1;
+  // the bar fills towards the next tier (or division) from the start of the one you're in
+  const step = nextRankStep(rank.points, div.id);
+  const from = [...tierStarts(div.id)].reverse().find((at) => at <= rank.points) ?? div.min;
+  const progress = step ? Math.min(1, Math.max(0, (rank.points - from) / (step.at - from))) : 1;
   const below = prevDivision(div);
   // under the division's start but within its protection: how many points are left before it drops
   const graceLeft = rank.points < div.min ? rank.points - (div.min - RANK_PROTECTION) : null;
@@ -109,7 +111,7 @@ export function RankCard({ rank: given }: { rank: RankView | null }) {
         <span className="rank-emoji" aria-hidden>
           {div.emoji}
         </span>
-        <b className="rank-division grow">{div.name}</b>
+        <b className="rank-division grow">{rankName(rank.points, div.id)}</b>
         <b className="rank-points">
           <Rolling value={rank.points} format={formatCoins} />
           <small>points</small>
@@ -118,14 +120,14 @@ export function RankCard({ rank: given }: { rank: RankView | null }) {
       <div
         className="rank-bar"
         role="progressbar"
-        aria-label={next ? `Progress to ${next.name}` : 'Top division'}
+        aria-label={step ? `Progress to ${step.name}` : 'Top division'}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(progress * 100)}
       >
         <i style={{ '--p': progress } as CSSProperties} />
       </div>
-      <p className="muted small">{next ? `${formatCoins(next.min - rank.points)} more for ${next.emoji} ${next.name}` : 'Top division. Stay on top!'}</p>
+      <p className="muted small">{step ? `${formatCoins(step.at - rank.points)} more for ${step.emoji} ${step.name}` : 'Top division. Stay on top!'}</p>
       <ul className="rank-facts">
         <li>
           🛡️{' '}
@@ -142,7 +144,11 @@ export function RankCard({ rank: given }: { rank: RankView | null }) {
           🎮 {plural(rank.games, 'game')} · {plural(rank.wins, 'win')}
         </li>
       </ul>
+      <button type="button" className="link-btn rank-guide-link" onClick={() => setGuide(true)}>
+        How ranks work ›
+      </button>
       <PastSeasons seasons={rank.history} />
+      {guide && <RankGuide points={rank.points} division={rank.division} onClose={() => setGuide(false)} />}
     </section>
   );
 }
@@ -154,10 +160,20 @@ export function RankChip({ rank: given }: { rank: PublicProfile['rank'] }) {
   const div = divisionFor(rank.division, rank.points);
   return (
     <p className="rank-pill-row">
-      <span className={cx('rank-pill', `rank-${div.id}`)} aria-label={`Ranked: ${div.name}, ${rank.points} points`}>
-        {div.emoji} {div.name} · {formatCoins(rank.points)}
+      <span className={cx('rank-pill', `rank-${div.id}`)} aria-label={`Ranked: ${rankName(rank.points, div.id)}, ${rank.points} points`}>
+        {div.emoji} {rankName(rank.points, div.id)} · {formatCoins(rank.points)}
       </span>
     </p>
+  );
+}
+
+/** a seat's division emoji at a ranked table, with its name for screen readers */
+export function SeatRank({ rank }: { rank: NonNullable<PublicProfile['rank']> }) {
+  const d = divisionFor(rank.division, rank.points);
+  return (
+    <span className={cx('seat-rank', `rank-${d.id}`)} title={rankName(rank.points, d.id)} aria-label={rankName(rank.points, d.id)}>
+      {d.emoji}
+    </span>
   );
 }
 
@@ -170,6 +186,8 @@ export function RankedLine({ result }: { result: CoinResult }) {
   const div = divisionFor(rank.division, rank.after);
   // a new division: up from below it (not from inside its protection)
   const promoted = change > 0 && div.min > 0 && rank.after >= div.min && rank.before < div.min - RANK_PROTECTION;
+  // a higher tier inside the same division
+  const tierUp = !promoted && change > 0 && rank.before >= div.min && (rankTier(rank.after, div.id) ?? 0) > (rankTier(rank.before, div.id) ?? 0);
   // older servers sent only "capped": treat it as the daily limit
   const held = rank.held ?? ((rank as { capped?: boolean }).capped ? 'cap' : null);
   const note = !held
@@ -186,16 +204,22 @@ export function RankedLine({ result }: { result: CoinResult }) {
             : '📅 Daily limit reached';
   return (
     <div className={cx('daily-line ranked-line', `rank-${div.id}`, promoted && 'promoted')}>
+      <span className="label ranked-label">🏅 Ranked result</span>
       <p>
         🏅 Ranked{' '}
         <b className={cx('rank-change', change > 0 && 'up', change < 0 && 'down')}>
           <Rolling value={change} format={signedCoins} />
         </b>{' '}
-        · {div.emoji} {div.name} {formatCoins(rank.after)}
+        · {div.emoji} {rankName(rank.after, div.id)} {formatCoins(rank.after)}
       </p>
       {promoted && (
         <p className="rank-note">
-          🎉 Up to {div.emoji} {div.name}! You keep it down to {formatCoins(div.min - RANK_PROTECTION)}
+          🎉 Up to {div.emoji} {rankName(rank.after, div.id)}! You keep {div.name} down to {formatCoins(div.min - RANK_PROTECTION)}
+        </p>
+      )}
+      {tierUp && (
+        <p className="rank-note">
+          ⬆️ Up to {div.emoji} {rankName(rank.after, div.id)}
         </p>
       )}
       {note && <p className="rank-note">{note}</p>}
