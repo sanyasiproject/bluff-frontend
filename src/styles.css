@@ -6163,3 +6163,105 @@ body::after {
     min-height: 150px;
   }
 }
+
+/* ---------- live voice: 🔊 hear and 🎙️ talk, seat marks, one quiet line ---------- */
+.live-voice {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.live-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 17px;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+.live-btn.on {
+  background: rgba(60, 207, 145, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(60, 207, 145, 0.6);
+  opacity: 1;
+}
+
+.live-btn.talking {
+  animation: live-glow 1.6s ease-in-out infinite;
+}
+
+/* the mic button crossed out while it's off */
+.live-slash {
+  position: absolute;
+  inset: 8px;
+  background: linear-gradient(135deg, transparent 46%, var(--danger) 46%, var(--danger) 56%, transparent 56%);
+  pointer-events: none;
+}
+
+.live-btn:disabled {
+  opacity: 0.35;
+}
+
+@keyframes live-glow {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(60, 207, 145, 0.6);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 1px rgba(60, 207, 145, 0.9),
+      0 0 10px rgba(60, 207, 145, 0.5);
+  }
+}
+
+/* lobby: its own row under the header */
+.live-voice-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 14px;
+  border-radius: 14px;
+  background: var(--panel);
+  font-weight: 700;
+}
+
+.live-voice-row small {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* a seat's corner: 🎧 in voice, 🔇 can't hear them right now */
+.seat-live {
+  position: absolute;
+  left: -6px;
+  bottom: -5px;
+  font-size: 13px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+}
+
+.seat-live.stuck {
+  opacity: 0.85;
+}
+
+/* the one quiet line, never a popup */
+.live-notice {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-btn.talking {
+    animation: none;
+  }
+}

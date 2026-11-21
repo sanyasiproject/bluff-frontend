@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react';
 import { cx } from '../lib/cards';
 import { formatCoins, signedCoins } from '../lib/coins';
-import { divisionOf, RANK_DAILY_CAP, RANK_DIVISIONS, RANK_PROTECTION, type CoinResult, type PublicProfile, type RankDivisionId, type RankView, type SeasonResult } from '../types';
+import { divisionOf, RANK_DIVISIONS, RANK_PROTECTION, type CoinResult, type PublicProfile, type RankDivisionId, type RankView, type SeasonResult } from '../types';
 import { Rolling } from './Rolling';
 
 type Division = (typeof RANK_DIVISIONS)[number];
@@ -99,7 +99,6 @@ export function RankCard({ rank: given }: { rank: RankView | null }) {
   const below = prevDivision(div);
   // under the division's start but within its protection: how many points are left before it drops
   const graceLeft = rank.points < div.min ? rank.points - (div.min - RANK_PROTECTION) : null;
-  const atCap = Math.abs(rank.today) >= RANK_DAILY_CAP;
   return (
     <section className={cx('panel rank-card', `rank-${div.id}`)}>
       <span className="label">
@@ -136,9 +135,8 @@ export function RankCard({ rank: given }: { rank: RankView | null }) {
               ? `You keep ${div.name} down to ${formatCoins(div.min - RANK_PROTECTION)}`
               : `Each division keeps you ${RANK_PROTECTION} points below its start before you drop`}
         </li>
-        <li className={cx(atCap && 'at-cap')}>
+        <li>
           📅 Today <b className={cx('rank-change', rank.today > 0 && 'up', rank.today < 0 && 'down')}>{signedCoins(rank.today)}</b>
-          {atCap ? ' · daily limit reached' : ` · up to ±${RANK_DAILY_CAP} a day`}
         </li>
         <li>
           🎮 {plural(rank.games, 'game')} · {plural(rank.wins, 'win')}
@@ -182,9 +180,10 @@ export function RankedLine({ result }: { result: CoinResult }) {
         ? `🛡️ Still ${div.emoji} ${div.name}: ${formatCoins(rank.after - (div.min - RANK_PROTECTION))} points of protection left`
         : held === 'shield'
           ? '🛡️ Rank Shield used: this loss cost no points'
-          : held === 'debt'
-            ? '↩️ This win first paid back points the daily limit or 0 points kept you from losing'
-            : `📅 Daily limit reached: points move up to ±${RANK_DAILY_CAP} a day`;
+          : // older servers: the daily limit or owed points held it back
+            held === 'debt'
+            ? '↩️ This win first paid back points you were owed'
+            : '📅 Daily limit reached';
   return (
     <div className={cx('daily-line ranked-line', `rank-${div.id}`, promoted && 'promoted')}>
       <p>

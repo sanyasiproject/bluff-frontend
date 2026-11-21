@@ -73,6 +73,7 @@ import { VoiceButton, VoiceMuteRow } from './Voice';
 import { LessonOffer } from './tutorial/LessonOffer';
 import { TutorialPage } from './tutorial/TutorialPage';
 import { Avatar } from './Avatar';
+import { LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { useOnlineFriends } from '../lib/onlineFriends';
 
 /** per-phone voice choice; Girl is the default */
@@ -477,6 +478,18 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         <QuickChat onSend={actions.chat} />
         <AccountCorner auth={auth} roomCode={view.code} onInvite={actions.invite} onJoin={joinFriend} showOnline={false} />
       </header>
+
+      {/* live voice for seated players; a row of its own, since the header is full */}
+      {view.config.voice && view.players.some((p) => p.id === view.meId && p.registered) && (
+        <section className="live-voice-row">
+          <span className="grow">
+            🎧 Live voice
+            <small>{view.players.filter((p) => p.live).length > 0 ? ` · ${view.players.filter((p) => p.live).length} in` : ' · players only'}</small>
+          </span>
+          <LiveVoiceButtons view={view} onToast={actions.toast} />
+        </section>
+      )}
+      <LiveVoiceNotice />
 
       {view.players.length + view.watchers.length < ROOM_LIMIT && (
         <InvitePanel

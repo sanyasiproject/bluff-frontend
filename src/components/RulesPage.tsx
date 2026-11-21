@@ -20,7 +20,6 @@ import {
   MIN_REWARD_GAME_SEC,
   MISSIONS,
   MISSIONS_PER_SET,
-  RANK_DAILY_CAP,
   RANK_DIVISIONS,
   RANK_PROTECTION,
   RANK_SEASON_DROP,
@@ -428,7 +427,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         <ul>
           <li>🛍️ Coin shop on Home and Profile. Everything is rented for a day or a week; nothing is kept for good.</li>
           <li>XP boosts (1.25x / 1.5x / 2x for a day, 1.25x / 1.5x for a week) multiply only a game's own XP, in games of {MIN_REWARD_GAME_SEC / 60} min or more.</li>
-          <li>🛡️ Rank Shield (🪙 300 each, hold up to 5): used up on your next ranked loss, which then costs no rank points and nothing is owed. Kept if the floor already stops the loss.</li>
+          <li>🛡️ Rank Shield (🪙 300 each, hold up to 5): used up on your next ranked loss, which then costs no rank points. Kept if you're at 0 points, where a loss costs nothing anyway.</li>
           <li>🪙 Coin Magnet: +25% on daily ladder and mission coins for 7 days.</li>
           <li>Auras show on your seat, card backs and profile. Win bursts and entry flashes are seen by everyone at the table.</li>
           <li>One XP boost and one coin boost at a time. Buying again adds time, up to 28 days ahead.</li>
@@ -554,11 +553,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             loss weighs {RANK_DIVISIONS.map((d) => `1:${(d.win / d.loss).toFixed(1).replace(/\.0$/, '')}`).join(' → ')} against a win.
             A 🛡️ Rank Shield from the coin shop makes one loss cost nothing.
           </li>
-          <li>Your points can move at most {RANK_DAILY_CAP} either way in a day, so one night can't make or break a season.</li>
-          <li>
-            Points a loss would have taken but the floor or the daily limit held off are owed: your next wins pay them back first, so
-            taking turns to win doesn't lift both players. In 2v2 the winning pair plays the losing pair.
-          </li>
+          <li>No daily limit: every win adds and every loss takes away, as many games as you play. Points never go below 0, and a loss at 0 costs nothing. In 2v2 the winning pair plays the losing pair.</li>
           <li>Everyone starts at {RANK_DIVISIONS[0].emoji} {RANK_DIVISIONS[0].name}. Your division shows on your profile and your player card, with your best and last 3 past seasons (tap All for every season).</li>
           <li>
             Seasons run about a month. An admin books the next one {SEASON_START_DELAY_DAYS} days ahead and everyone sees "ends in N days".
@@ -637,6 +632,21 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             Notionists by Zoish.
           </li>
           <li>Your own Profile: level ring, XP and your ranked division this season on top, then four tabs (the last one used opens next time on that phone): 📊 Stats (rank, coins and rewards, missions, record, play style, achievements, the last 10 games), 👥 Social (online friends, Friends, rivals, league), 🎨 Looks (avatar, table and cards, coin shop) and ⚙️ Settings (notifications, friend alerts, admin, log out).</li>
+        </ul>
+      </Section>
+
+      <Section icon="🎧" title="Live voice">
+        <ul>
+          <li>
+            🔊 turns hearing the others on or off; 🎙️ turns your mic on or off. They're in the game's top bar and in a row in the lobby.
+            While 🎙️ is on you talk freely, no time limit.
+          </li>
+          <li>Only logged-in players with a seat can talk or hear; watchers and guests never. The host's voice switch in the lobby covers it too.</li>
+          <li>
+            Phones talk to each other directly; the server only helps them find each other. A seat shows 🎧 for someone in voice, or 🔇 when
+            your phone can't hear them right now. It keeps trying quietly; nothing pops up over the game.
+          </li>
+          <li>The phone asks for the mic the first time. On iPhone, voice stops while the screen is locked or the app is in the background.</li>
         </ul>
       </Section>
 

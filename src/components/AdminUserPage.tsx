@@ -39,6 +39,7 @@ export function AdminUserPage({ auth, userId, onBack }: { auth: Auth; userId: st
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [amount, setAmount] = useState('500');
   const [reason, setReason] = useState('');
   const [password, setPassword] = useState('');
@@ -52,6 +53,7 @@ export function AdminUserPage({ auth, userId, onBack }: { auth: Auth; userId: st
     const d = await api<AdminUserDetail>(`/admin/users/${userId}`, { token: auth.token });
     setData(d);
     setName(d.user.displayName);
+    setUsername(d.user.username);
     setHistory({ page: 1, items: d.history, total: d.historyTotal });
   };
 
@@ -246,6 +248,37 @@ export function AdminUserPage({ auth, userId, onBack }: { auth: Auth; userId: st
             Save
           </button>
         </div>
+        <label className="label" htmlFor="admin-username">
+          Username
+        </label>
+        <div className="join-row">
+          <input
+            id="admin-username"
+            className="input"
+            maxLength={20}
+            autoCapitalize="none"
+            autoComplete="off"
+            spellCheck={false}
+            value={username}
+            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+          />
+          <button
+            className="btn"
+            disabled={busy || username.length < 3 || username === u.username}
+            onClick={() =>
+              setConfirm({
+                title: `Change @${u.username} to @${username}?`,
+                body: `${u.displayName} will log in with @${username} from now on and friends find them by it. They stay logged in on their devices.`,
+                action: 'Change',
+                danger: false,
+                run: () => void update({ username }, 'Username saved'),
+              })
+            }
+          >
+            Save
+          </button>
+        </div>
+        <p className="muted small">3 to 20 letters, numbers or _</p>
       </section>
 
       <section className="panel stack-tight">

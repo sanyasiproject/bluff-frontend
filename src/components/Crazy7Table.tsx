@@ -22,6 +22,7 @@ import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
 import { stopVoice } from '../lib/voice';
 import { VoiceButton } from './Voice';
+import { LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
 import { Avatar } from './Avatar';
 import { SecretChip } from './SecretMissions';
@@ -410,6 +411,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
               👀<span className="req-dot">{view.watchRequests.length}</span>
             </button>
           )}
+          <LiveVoiceButtons view={view} onToast={actions.toast} />
           <VoiceButton view={view} onSend={actions.sendVoice} onToast={actions.toast} />
           <QuickChat onSend={actions.chat} />
           <button className="icon-btn" aria-label="Game menu" onClick={() => setPanel('menu')}>
@@ -417,6 +419,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
           </button>
         </div>
       </header>
+      <LiveVoiceNotice />
 
       <section className="seats">
         {opponents.map((p) => (

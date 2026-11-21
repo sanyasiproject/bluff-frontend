@@ -28,6 +28,7 @@ import { stopVoice } from '../lib/voice';
 import { HearVoiceButton, VoiceButton } from './Voice';
 import { Avatar } from './Avatar';
 import { SazaTag } from './Saza';
+import { LiveMark, LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { SecretChip } from './SecretMissions';
 
 interface SeatProps {
@@ -75,6 +76,7 @@ export function Seat({ player, turn, passed, viewing, action, bubble, onClick, l
       <Avatar name={player.name} avatar={player.avatar} bot={player.bot}>
         {player.level && <span className="seat-lv">{player.level}</span>}
         <SazaTag badge={player.saza} className="seat-saza" />
+        <LiveMark player={player} />
       </Avatar>
       <span className="seat-name">
         {partner && '🤝 '}
@@ -626,6 +628,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
               👀<span className="req-dot">{view.watchRequests.length}</span>
             </button>
           )}
+          <LiveVoiceButtons view={view} onToast={actions.toast} />
           <VoiceButton view={view} onSend={actions.sendVoice} onToast={actions.toast} />
           <QuickChat onSend={actions.chat} />
           <button className="icon-btn" aria-label="Game menu" onClick={() => setPanel('menu')}>
@@ -633,6 +636,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
           </button>
         </div>
       </header>
+      <LiveVoiceNotice />
 
       <section className="seats">
         {opponents.map((p) => (
