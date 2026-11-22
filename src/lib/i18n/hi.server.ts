@@ -6,6 +6,7 @@ const and = (s: string) => s.replace(/ and /g, ' और ');
 
 // lines the server announces (rooms.ts describe, socket.ts note), and useBluff toasts
 export const P: Pattern[] = [
+  [new RegExp(`^(.+) played ${CLAIM} with a Card Shield 🔒$`), (m) => `${m[1]} ने कार्ड शील्ड 🔒 के साथ ${claimHi(m[2])} ${/^(one|1) | of /.test(m[2]) ? 'चला' : 'चले'}`],
   [new RegExp(`^(.+) played ${CLAIM}(?:\\. Pick (\\d+)!)?$`), (m) => `${m[1]} ने ${claimHi(m[2])} ${/^(one|1) | of /.test(m[2]) ? 'चला' : 'चले'}${m[3] ? `। ${m[3]} उठाओ!` : ''}`],
   [/^(.+) passed$/, '$1 ने पास किया'],
   [/^(.+) called bluff\. Caught! (.+) picks up (\d+) cards(?:\. (.+) pays (\d+) coins)?$/, (m) => `${m[1]} ने Bluff बोला। पकड़ा गया! ${m[2]} ${m[3]} पत्ते उठाएँगे${m[4] ? `। ${m[4]} ${m[5]} सिक्के देंगे` : ''}`],

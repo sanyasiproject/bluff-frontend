@@ -354,7 +354,9 @@ export function useBluff() {
       makeHost: (memberId: string) => run(() => request('room:host', { memberId })),
       // memberId: the host moving someone else; omitted for yourself
       setWatching: (watching: boolean, memberId?: string) => run(() => request('room:watch', { watching, memberId })),
-      play: async (cardIds: string[], rank?: Rank) => (await run(() => request('game:play', { cardIds, rank }))) !== null,
+      /** shield: 🔒 Card Shield, nobody can call or peek at this play */
+      play: async (cardIds: string[], rank?: Rank, shield = false) =>
+        (await run(() => request('game:play', { cardIds, rank, ...(shield && { shield: true }) }))) !== null,
       pass: () => run(() => request('game:pass')),
       bluff: (playId: string, cardIndex?: number, bet = 0) => run(() => request('game:bluff', { playId, cardIndex, bet })),
       /** the card comes back only to me; null if the peek was refused */

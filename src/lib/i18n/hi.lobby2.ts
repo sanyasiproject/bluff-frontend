@@ -11,6 +11,7 @@ export const D: Dict = {
   'Secretly see one played card before calling': 'बोलने से पहले चुपके से एक चला हुआ पत्ता देखें',
   'Peeks per player': 'हर खिलाड़ी की झाँक',
   'How many each player gets per game': 'हर खिलाड़ी को एक गेम में कितनी मिलें',
+  'Card Shield': 'कार्ड शील्ड',
   'Bet your call': 'अपनी कॉल पर शर्त',
   'Bet coins on your Bluff calls': 'अपनी Bluff कॉल पर सिक्कों की शर्त लगाएँ',
   'Partners play together, both must finish': 'जोड़ीदार साथ खेलते हैं, दोनों को ख़त्म करना होगा',
@@ -81,4 +82,6 @@ export const P: Pattern[] = [
   [/^You may pick more \(up to (\d+) a turn\) or Pass to stop early; at the limit you must play a card that fits\.$/, ' आप और उठा सकते हैं (हर बारी अधिकतम $1) या पास करके रुक सकते हैं; सीमा पर मिलता पत्ता चलना होगा।'],
   [/^Start · (\d+) players(?: · 🪙 (.+))?$/, (m) => `शुरू करें · ${m[1]} खिलाड़ी${m[2] ? ` · 🪙 ${m[2]}` : ''}`],
   [/^⏳ Waiting for (\d+) players?$/, '⏳ $1 खिलाड़ियों का इंतज़ार'],
+  [/^Lock a play of up to (\d+) cards: nobody can call or peek it\. Not on your last cards$/, 'ज़्यादा से ज़्यादा $1 पत्तों की चाल लॉक करें: कोई Bluff नहीं बोल सकता, न झाँक सकता। आख़िरी पत्तों पर नहीं'],
+  [/^🔒 (\d+) shields?$/, '🔒 $1 शील्ड'],
 ];

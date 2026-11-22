@@ -22,6 +22,8 @@ export const D: Dict = {
   Kismat: 'Kismat',
   'put down': 'ने रखे',
   'Bluff locked': 'Bluff बंद',
+  '🔒 Shield on · not your last cards': '🔒 शील्ड चालू · आख़िरी पत्तों पर नहीं',
+  '🔒 Card Shield: nobody can call or peek at this play': '🔒 कार्ड शील्ड: इस चाल पर कोई Bluff नहीं बोल सकता, न झाँक सकता',
   'Play or pass first': 'पहले चलें या पास करें',
   '1 call left': '1 कॉल बाकी',
   Peek: 'झाँकें',
@@ -108,4 +110,6 @@ export const P: Pattern[] = [
   [/^Mic · (On|Off)$/, (m) => `माइक · ${m[1] === 'On' ? 'चालू' : 'बंद'}`],
   [/^Can't hear (.+) right now$/, 'अभी $1 को नहीं सुन सकते'],
   [/^(.+)'s mic is (on|off)$/, (m) => `${m[1]} का माइक ${m[2] === 'on' ? 'चालू' : 'बंद'} है`],
+  [/^🔒 Card Shield · (\d+)$/, '🔒 कार्ड शील्ड · $1'],
+  [/^🔒 Shield on(?: · max (\d+) cards)?$/, (m) => `🔒 शील्ड चालू${m[1] ? ` · ज़्यादा से ज़्यादा ${m[1]} पत्ते` : ''}`],
 ];

@@ -11,7 +11,7 @@ import { useNewCards } from '../lib/newCards';
 import { useOneCardAlert } from '../lib/spotlight';
 import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
-import { backsClaim, claimsAllowed, DEFAULT_CARD_BACK, type Card, type FriendsResponse, type PublicPlayer, type Rank, type RoomView } from '../types';
+import { backsClaim, claimsAllowed, DEFAULT_CARD_BACK, SHIELD_MAX_CARDS, type Card, type FriendsResponse, type PublicPlayer, type Rank, type RoomView } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions, ChatBubble } from '../useBluff';
 import { ConfirmBox } from './ConfirmBox';
@@ -315,6 +315,8 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
   const [showReveal, setShowReveal] = useState(false);
   const [sound, setSound] = useState(isSoundOn);
   const [busy, setBusy] = useState(false);
+  /** 🔒 Card Shield on for my next play */
+  const [shieldOn, setShieldOn] = useState(false);
   /** watcher stuck to one player; null follows whoever's turn it is */
   const [pinned, setPinned] = useState<string | null>(null);
   const [panel, setPanel] = useState<'menu' | 'people' | 'requests' | null>(null);
@@ -382,7 +384,16 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
     view.teams?.[0].includes(id) ? 'a' : view.teams?.[1].includes(id) ? 'b' : null;
   const myTeam = view.teams?.find((t) => t.includes(view.meId));
   const partnerId = myTeam?.find((id) => id !== view.meId) ?? null;
-  const canBluff = playing && !!lp && lp.playerId !== view.meId && lp.playerId !== partnerId && (me?.cardCount ?? 0) > 0;
+  // a play under a Card Shield can't be called or peeked at
+  const canBluff = playing && !!lp && !lp.shielded && lp.playerId !== view.meId && lp.playerId !== partnerId && (me?.cardCount ?? 0) > 0;
+  const shieldedNow = playing && !!lp?.shielded && lp.playerId !== view.meId;
+  // Card Shield: up to SHIELD_MAX_CARDS, never the cards that would empty my hand
+  const shieldReady = myTurn && view.config.shields > 0 && view.shieldsLeft > 0;
+  const shieldWhy =
+    selected.length > SHIELD_MAX_CARDS ? `max ${SHIELD_MAX_CARDS} cards` : selected.length > 0 && selected.length >= view.hand.length ? 'not your last cards' : null;
+  const shieldNow = shieldReady && shieldOn && selected.length > 0 && !shieldWhy;
+  const shieldBlocked = shieldReady && shieldOn && !!shieldWhy;
+  const lock = shieldNow ? ' 🔒' : '';
   // a bet only counts while I can still afford it
   const betNow = bet <= view.betLimit ? bet : 0;
   const peekedNow = lp ? peeked.filter((p) => p.playId === lp.id) : [];
@@ -552,13 +563,19 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
     toggle(id);
   };
 
+  // the shield toggle is for this turn only
+  useEffect(() => {
+    if (!myTurn) setShieldOn(false);
+  }, [myTurn]);
+
   const play = async (rank?: Rank) => {
     setBusy(true);
-    const ok = await actions.play(selected, rank);
+    const ok = await actions.play(selected, rank, shieldNow);
     setBusy(false);
     if (ok) {
       setSelected([]);
       setSheet(null);
+      setShieldOn(false);
     }
   };
 
@@ -659,7 +676,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
             turn={p.id === view.turnId}
             passed={view.passedIds.includes(p.id)}
             viewing={watching && p.id === followId}
-            action={lp?.playerId === p.id ? `${lp.count} × ${lp.rank}` : null}
+            action={lp?.playerId === p.id ? `${lp.count} × ${lp.rank}${lp.shielded ? ' 🔒' : ''}` : null}
             bubble={bubbleOf(p.id)}
             onClick={watching ? () => setPinned(pinnedId === p.id ? null : p.id) : () => setTarget(p.id)}
             label={watching ? `See ${p.name}'s cards` : `Throw an emoji at ${p.name}`}
@@ -700,8 +717,10 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
         {lp && (
           <p className="last-play">
             <b>{name(lp.playerId)}</b> put down <b>{claimText(lp.count, lp.rank)}</b>
+            {lp.shielded && <span className="shield-tag"> 🔒</span>}
           </p>
         )}
+        {shieldedNow && <p className="shield-note">🔒 Card Shield: nobody can call or peek at this play</p>}
         {watching && lp && view.watch?.lastPlayCards && <TruthRow cards={view.watch.lastPlayCards} claim={lp.rank} kismat={kismat} />}
         {!myTurn && status && <p className="turn-status">{status}</p>}
         {canBluff && lp && (
@@ -782,6 +801,11 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
             </button>
           )}
           <SecretChip view={view} />
+          {shieldReady && (
+            <button className={cx('shield-chip', shieldOn && 'on', shieldBlocked && 'blocked')} aria-pressed={shieldOn} onClick={() => setShieldOn(!shieldOn)}>
+              {shieldOn ? `🔒 Shield on${shieldWhy ? ` · ${shieldWhy}` : ''}` : `🔒 Card Shield · ${view.shieldsLeft}`}
+            </button>
+          )}
         </div>
         <div className="hand-head">
           {myTurn ? (
@@ -812,8 +836,8 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
             <button className="btn" disabled={busy} onClick={pass}>
               Pass
             </button>
-            <button className="btn primary grow" disabled={busy || selected.length === 0} onClick={() => play()}>
-              {selected.length ? `Play ${claimText(selected.length, view.roundRank)}` : 'Tap cards to select'}
+            <button className="btn primary grow" disabled={busy || selected.length === 0 || shieldBlocked} onClick={() => play()}>
+              {selected.length ? `Play ${claimText(selected.length, view.roundRank)}${lock}` : 'Tap cards to select'}
             </button>
           </>
         )}
@@ -832,8 +856,8 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
                   <button
                     key={r}
                     className={cx('btn claim-btn', honestFor(r) && 'honest')}
-                    disabled={busy}
-                    aria-label={`Play ${claimText(selected.length, r)}`}
+                    disabled={busy || shieldBlocked}
+                    aria-label={`Play ${claimText(selected.length, r)}${lock}`}
                     onClick={() => play(r)}
                   >
                     <b>{r}</b>
@@ -845,8 +869,8 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
           </>
         )}
         {myTurn && !view.roundRank && (
-          <button className="btn primary grow" disabled={busy || selected.length === 0} onClick={() => setSheet('rank')}>
-            {selected.length ? `Put down ${selected.length} · call a rank` : 'Tap cards to select'}
+          <button className="btn primary grow" disabled={busy || selected.length === 0 || shieldBlocked} onClick={() => setSheet('rank')}>
+            {selected.length ? `Put down ${selected.length} · call a rank${lock}` : 'Tap cards to select'}
           </button>
         )}
         {!myTurn && (

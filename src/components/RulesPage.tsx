@@ -22,6 +22,9 @@ import {
   WIN_STREAK_SHOWN,
   MAX_BLUFF_CALLS_IN_A_ROW,
   MAX_PEEKS,
+  REPLAY_KEEP_DAYS,
+  MAX_CARD_SHIELDS,
+  SHIELD_MAX_CARDS,
   MIN_REWARD_GAME_SEC,
   MISSIONS,
   MISSIONS_PER_SET,
@@ -178,6 +181,9 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             <b>🔍 Peek power</b>: No (default) or Yes with 1–{MAX_PEEKS} peeks per player per game.
           </li>
           <li>
+            <b>🔒 Card Shield</b>: Off (default) or 1–{MAX_CARD_SHIELDS} shields per player per game.
+          </li>
+          <li>
             <b>🎲 Bet your call</b> (coin games only): Off (default) or On.
           </li>
           <li>
@@ -220,6 +226,18 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>Before calling bluff, tap 🔍 Peek and choose one face-down card of the last play to see it.</li>
           <li>Only you see the card. Everyone else sees "Ravi used a peek".</li>
           <li>You can't peek at your own play, and peeks don't carry over to the next game.</li>
+        </ul>
+      </Section>
+
+      <Section icon="🔒" title="Card Shield">
+        <ul>
+          <li>When it's on, each player gets the chosen number of shields (1–{MAX_CARD_SHIELDS}) for the whole game.</li>
+          <li>
+            On your turn, tap 🔒 Card Shield above your hand, then play up to {SHIELD_MAX_CARDS} cards. Nobody can call bluff on that play or
+            peek at it, so it always stands.
+          </li>
+          <li>Not on your last cards: a play that would empty your hand can't be shielded, so going out can always be called.</li>
+          <li>Everyone sees the 🔒 on a shielded play. Shields don't carry over to the next game, and bots don't use them.</li>
         </ul>
       </Section>
 
@@ -292,7 +310,10 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             Bluff: the real cards of each play (fakes marked) show only if the lie reveal was on. With lies kept secret, no played card is
             ever shown. Nobody's hand is shown, only how many cards they held.
           </li>
-          <li>Only the players of that game (and admins) can open it. Very long games keep up to 800 steps.</li>
+          <li>
+            Only the players of that game (and admins) can open it. Very long games keep up to 800 steps. A replay is kept for{' '}
+            {REPLAY_KEEP_DAYS} days; after that only the result stays.
+          </li>
         </ul>
       </Section>
 

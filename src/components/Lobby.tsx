@@ -21,6 +21,7 @@ import {
   CRAZY7_MAX_PICKS,
   RANK_DIVISIONS,
   rankName,
+  SHIELD_MAX_CARDS,
   STAKES,
   type BotLevel,
   type FriendsResponse,
@@ -669,6 +670,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                 {ranked && <span className="ranked-chip">🏅 Ranked</span>}
                 <span>{view.config.bluffRule === 'one' ? '👆 Pick one card' : '🃏 Show all cards'}</span>
                 {view.config.peeks > 0 && <span>🔍 {view.config.peeks} peek{view.config.peeks > 1 ? 's' : ''}</span>}
+                {view.config.shields > 0 && <span>🔒 {view.config.shields} shield{view.config.shields > 1 ? 's' : ''}</span>}
                 {view.config.bets && <span>🎲 Bets on calls</span>}
                 {view.config.teams && <span>👥 2 vs 2</span>}
                 {view.config.saza && <span>🤡 Saza for the loser</span>}
@@ -795,6 +797,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             <Choice value={view.config.peeks} options={[[1, '1'], [2, '2'], [3, '3']]} onPick={(n) => set({ peeks: n })} />
           </SettingRow>
         )}
+        <SettingRow title="🔒 Card Shield" desc={`Lock a play of up to ${SHIELD_MAX_CARDS} cards: nobody can call or peek it. Not on your last cards`}>
+          <Choice value={view.config.shields ?? 0} options={[[0, 'Off'], [1, '1'], [2, '2'], [3, '3']]} onPick={(n) => set({ shields: n })} />
+        </SettingRow>
         {coinsOn && stake > 0 && (
           <SettingRow title="🎲 Bet your call" desc="Bet coins on your Bluff calls">
             <Choice value={view.config.bets} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ bets: on })} />

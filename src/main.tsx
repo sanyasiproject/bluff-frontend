@@ -23,6 +23,7 @@ import './styles/replay.css';
 // avatar rings, shine and picker layout, last so they win
 import './styles/avatars.css';
 import './styles/lang.css';
+import './styles/shield.css';
 
 for (const type of ['click', 'touchend'] as const) {
   window.addEventListener(type, unlockSpeech, { once: true, capture: true });
