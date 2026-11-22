@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useBack } from '../lib/back';
-import { QUICK_MESSAGES, REACTIONS, type ChatKind } from '../types';
+import { QUICK_MESSAGES, REACTIONS, type ChatKind, type RoomView } from '../types';
+import { RoomChatInput, RoomChatList, useRoomChat } from './RoomChat';
 
-/** 💬 opens a small tray: one row of emoji, then short message pills; tap outside to close */
-export function QuickChat({ onSend }: { onSend: (kind: ChatKind, index: number) => void }) {
+/** 💬 opens a small tray: the room's chat list and a typing box (with a view), one row of emoji, then short message pills; tap outside to close */
+export function QuickChat({ onSend, view }: { onSend: (kind: ChatKind, index: number) => void; view?: RoomView }) {
   const [open, setOpen] = useState(false);
   useBack(open ? () => setOpen(false) : undefined);
+  const { list, unread } = useRoomChat(view, open);
 
   const send = (kind: ChatKind, index: number) => {
     onSend(kind, index);
@@ -14,13 +16,16 @@ export function QuickChat({ onSend }: { onSend: (kind: ChatKind, index: number) 
 
   return (
     <>
-      <button className="icon-btn" aria-label="Quick chat" aria-expanded={open} onClick={() => setOpen(true)}>
+      <button className="icon-btn chat-btn" aria-label={unread > 0 ? `Chat, ${unread} new` : 'Chat'} aria-expanded={open} onClick={() => setOpen(true)}>
         💬
+        {unread > 0 && <span className="req-dot">{unread > 99 ? '99+' : unread}</span>}
       </button>
       {open && (
         <div className="tray-backdrop" onClick={() => setOpen(false)}>
-          <div className="chat-tray" role="dialog" aria-label="Quick chat" onClick={(e) => e.stopPropagation()}>
+          <div className={view ? 'chat-tray with-list' : 'chat-tray'} role="dialog" aria-label="Chat" onClick={(e) => e.stopPropagation()}>
             <div className="tray-handle" />
+            {view && <RoomChatList list={list} meId={view.meId} />}
+            {view && <RoomChatInput />}
             <div className="reaction-row">
               {REACTIONS.map((emoji, i) => (
                 <button key={emoji} className="reaction-btn" aria-label={`React ${emoji}`} onClick={() => send('reaction', i)}>

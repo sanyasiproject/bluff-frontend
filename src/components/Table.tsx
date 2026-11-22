@@ -643,7 +643,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
             </button>
           )}
           <LiveVoiceButtons view={view} onToast={actions.toast} />
-          <QuickChat onSend={actions.chat} />
+          <QuickChat onSend={actions.chat} view={view} />
           <button className="icon-btn" aria-label="Game menu" onClick={() => setPanel('menu')}>
             ⋯
           </button>

@@ -698,6 +698,15 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         </ul>
       </Section>
 
+      <Section icon="🗨️" title="Room chat">
+        <ul>
+          <li>The 💬 button in the lobby and at the table opens the room's chat: type a line (up to 200 characters) or use Quick Chat; both go into one list for everyone in the room, players and watchers.</li>
+          <li>Someone who joins later sees the whole list. A red count on 💬 shows new lines since you last opened it.</li>
+          <li>One room, one list: it keeps the last 500 lines, stays through every game in the room, and is gone when the room closes (never saved). A server restart clears it too.</li>
+          <li>People you muted don't show in your list. A short wait between typed lines stops spam.</li>
+        </ul>
+      </Section>
+
       <Section icon="💬" title="Private messages">
         <ul>
           <li>Friends (accepted requests only) can message each other one to one: tap 💬 on a friend in Friends to open the chat.</li>

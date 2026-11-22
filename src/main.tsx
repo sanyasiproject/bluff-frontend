@@ -16,6 +16,7 @@ import './styles/league.css';
 import './styles/rivals.css';
 import './styles/ranked.css';
 import './styles/daily.css';
+import './styles/room-chat.css';
 import './styles/voice.css';
 import './styles/twists.css';
 import './styles/replay.css';

@@ -504,7 +504,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             ))}
           </p>
         </div>
-        <QuickChat onSend={actions.chat} />
+        <QuickChat onSend={actions.chat} view={view} />
         <AccountCorner auth={auth} roomCode={view.code} onInvite={actions.invite} onJoin={joinFriend} showOnline={false} />
       </header>
 
