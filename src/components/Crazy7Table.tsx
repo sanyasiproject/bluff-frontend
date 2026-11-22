@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
-import { cx, isRed, SUIT_SYMBOL } from '../lib/cards';
+import { cx, isRed, SUIT_NAME, SUIT_SYMBOL } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
 import { auraOf } from '../lib/aura';
@@ -9,7 +9,7 @@ import { useNewCards } from '../lib/newCards';
 import { useOneCardAlert } from '../lib/spotlight';
 import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
-import type { Card, Crazy7View, RoomView } from '../types';
+import { SUITS, type Card, type Crazy7View, type RoomView, type Suit } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions, ChatBubble } from '../useBluff';
 import { FlyingCards, type Flight } from './FlyingCards';
@@ -85,12 +85,19 @@ function Pile({ c7, boxRef }: { c7: Crazy7View; boxRef: RefObject<HTMLDivElement
   );
 }
 
-/** what the next card must match */
-function MatchHint({ c7 }: { c7: Crazy7View }) {
+/** what the next card must match; with power cards a J's suit, or a 7 or 2 passing a pick on */
+function MatchHint({ c7, power }: { c7: Crazy7View; power: boolean }) {
   const top = c7.top;
   if (!top) return null;
   if (c7.penalty > 0) {
-    return <p className="c7-hint">Only a 7 can pass it on</p>;
+    return <p className="c7-hint">{power ? 'Only a 7 or a 2 can pass it on' : 'Only a 7 can pass it on'}</p>;
+  }
+  if (power && c7.wish) {
+    return (
+      <p className="c7-hint">
+        Match <b className={cx('c7-suit', isRed(c7.wish) && 'red')}>{SUIT_SYMBOL[c7.wish]}</b> or a <b>J</b>
+      </p>
+    );
   }
   return (
     <p className="c7-hint">
@@ -130,6 +137,8 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
   const [target, setTarget] = useState<string | null>(null);
   /** I tapped Pick myself this turn (so an automatic pick can be told apart) */
   const tappedPick = useRef(false);
+  /** power cards: the J waiting for me to name a suit */
+  const [jackId, setJackId] = useState<string | null>(null);
   /** my "last card" request is on its way */
   const [calling, setCalling] = useState(false);
   /** when "Wait for your turn" was last shown */
@@ -157,8 +166,9 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
   // seats start from the player after me, so the order round the table reads left to right
   const myIndex = view.players.findIndex((p) => p.id === view.meId);
   const opponents = myIndex < 0 ? view.players : [...view.players.slice(myIndex + 1), ...view.players.slice(0, myIndex)];
-  /** who plays after me: my 7 hits them, and their move closes my last-card window */
-  const nextId = myIndex < 0 ? null : (opponents.find((p) => p.cardCount > 0)?.id ?? null);
+  const power = !!view.config.c7Power;
+  /** who plays after me (the other way round after an A): my 7 hits them, and their move closes my last-card window */
+  const nextId = myIndex < 0 ? null : ((c7?.dir === -1 ? [...opponents].reverse() : opponents).find((p) => p.cardCount > 0)?.id ?? null);
   // players who left mid-game still count for names and the pot
   const name = (id: string | null) =>
     id === view.meId ? 'You' : ([...view.players, ...view.leftPlayers].find((p) => p.id === id)?.name ?? 'Someone');
@@ -331,15 +341,24 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
       actions.toast(
         c7.penalty > 0
           ? view.config.stack7
-            ? `Only a 7 now, or pick ${c7.penalty}`
+            ? `Only a ${power ? '7 or a 2' : '7'} now, or pick ${c7.penalty}`
             : `Pick ${c7.penalty} first`
-          : top
-            ? `That card doesn't match ${SUIT_SYMBOL[top.suit]} or ${top.rank}`
-            : "That card can't go now",
+          : power && c7.wish
+            ? `Only ${SUIT_SYMBOL[c7.wish]} or a J now`
+            : top
+              ? `That card doesn't match ${SUIT_SYMBOL[top.suit]} or ${top.rank}`
+              : "That card can't go now",
       );
       return;
     }
+    // a power J names a suit first
+    if (power && view.hand.find((x) => x.id === id)?.rank === 'J') return setJackId(id);
     void act(() => actions.c7Play(id));
+  };
+  const playJack = (suit: Suit) => {
+    const id = jackId;
+    setJackId(null);
+    if (id) void act(() => actions.c7Play(id, suit));
   };
 
   const pick = () => {
@@ -370,7 +389,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
     else status = myTurn ? 'Still no match · your turn passes…' : `${who}: still no match · passing…`;
   } else if (c7 && playing) {
     if (myTurn) {
-      if (c7.penalty > 0) status = c7.playable.length > 0 ? `Pick ${c7.penalty} or play a 7` : `Pick ${c7.penalty}`;
+      if (c7.penalty > 0) status = c7.playable.length > 0 ? `Pick ${c7.penalty} or play a ${power ? '7 or 2' : '7'}` : `Pick ${c7.penalty}`;
       else if (c7.picks > 0) {
         const head = c7.picks === 1 && !tappedPick.current ? 'No match, we picked one for you' : `Picked ${c7.picks} of ${view.config.maxPicks}`;
         // Pass only stops picking early; at the limit a card that fits must be played
@@ -452,13 +471,14 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
           <div key={`${c7.penalty}-${view.turnId}`} className={cx('c7-banner', myTurn && 'mine')} role="status">
             {myTurn
               ? view.config.stack7 && c7.playable.length > 0
-                ? `Pick ${c7.penalty} or play a 7!`
+                ? `Pick ${c7.penalty} or play a ${power ? '7 or 2' : '7'}!`
                 : `Pick ${c7.penalty}!`
-              : `${name(view.turnId)} must pick ${c7.penalty}${view.config.stack7 ? ' or play a 7' : ''}`}
+              : `${name(view.turnId)} must pick ${c7.penalty}${view.config.stack7 ? ` or play a ${power ? '7 or 2' : '7'}` : ''}`}
           </div>
         ) : (
           <div className="round-chip set c7-rules-chip">
             Up to <b>{view.config.maxPicks}</b> pick{view.config.maxPicks > 1 ? 's' : ''} a turn{view.config.stack7 ? ' · 7s stack' : ''}
+            {power && ' · ⚡ power cards'}
           </div>
         )}
         <div className="c7-board">
@@ -467,12 +487,24 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
             <Pile c7={c7} boxRef={pileRef} />
           </PileReact>
         </div>
+        {power && playing && (
+          <div className="c7p-row">
+            <span key={c7.dir} className={cx('c7p-dir', c7.dir === -1 && 'back')} role="img" aria-label={c7.dir === 1 ? 'Play goes round in seat order' : 'Play goes the other way round'}>
+              {c7.dir === 1 ? '↻' : '↺'}
+            </span>
+            {c7.wish && (
+              <span key={c7.wish} className={cx('c7p-wish', isRed(c7.wish) && 'red')} role="status">
+                J → <b>{SUIT_SYMBOL[c7.wish]}</b> {SUIT_NAME[c7.wish]}
+              </span>
+            )}
+          </div>
+        )}
         {c7.top && c7.topBy && (
           <p className="c7-played">
             <b>{name(c7.topBy)}</b> played <b className={cx(isRed(c7.top.suit) && 'red')}>{short(c7.top)}</b>
           </p>
         )}
-        {playing && <MatchHint c7={c7} />}
+        {playing && <MatchHint c7={c7} power={power} />}
         {!myTurn && status && <p className="turn-status">{status}</p>}
       </section>
 
@@ -567,6 +599,23 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
         <GameOver view={view} onLobby={actions.toLobby} onRematch={isHost ? actions.rematch : undefined} startLevel={startLevel.current} />
       )}
       {levelUp !== null && <LevelUp level={levelUp} from={startLevel.current} onClose={() => setLevelUp(null)} />}
+      {jackId && myTurn && c7.playable.includes(jackId) && (
+        <Backdrop onClose={() => setJackId(null)}>
+          <h3>Name a suit for your J</h3>
+          <p className="muted small">The next player must play this suit or another J.</p>
+          <div className="c7p-suits">
+            {SUITS.map((s) => (
+              <button key={s} className={cx('rank-btn c7p-suit', isRed(s) && 'red')} disabled={busy} onClick={() => playJack(s)}>
+                <b>{SUIT_SYMBOL[s]}</b>
+                <span>{SUIT_NAME[s]}</span>
+              </button>
+            ))}
+          </div>
+          <button className="btn ghost block" onClick={() => setJackId(null)}>
+            Cancel
+          </button>
+        </Backdrop>
+      )}
       {targetPlayer && (
         <SeatSheet player={targetPlayer} auth={auth} onThrow={(i) => void actions.throwAt(targetPlayer.id, i)} onClose={() => setTarget(null)} />
       )}

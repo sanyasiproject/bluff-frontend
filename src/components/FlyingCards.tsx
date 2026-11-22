@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef } from 'react';
 import { reducedMotion } from '../lib/motion';
-import type { Card } from '../types';
+import type { Card, RangCard as RangCardData } from '../types';
 import { PlayingCard } from './PlayingCard';
+import { RangCard } from './RangCard';
 
 export interface Flight {
   key: string;
@@ -14,6 +15,8 @@ export interface Flight {
   vanish?: boolean;
   /** shown face up (the card played in Crazy 7) instead of face-down backs */
   card?: Card;
+  /** Rang: the card played, shown face up */
+  rangCard?: RangCardData;
   /** size of the flying cards */
   size?: 'sm' | 'md' | 'lg';
   /** face-down cards' backs, one per card (repeating): their owners'; omit for this phone's own back */
@@ -73,7 +76,9 @@ export function FlyingCards({ flight, onDone }: { flight: Flight; onDone: () => 
           }}
           className="fly-card"
         >
-          {flight.card ? (
+          {flight.rangCard ? (
+            <RangCard card={flight.rangCard} size={flight.size ?? 'sm'} />
+          ) : flight.card ? (
             <PlayingCard card={flight.card} size={flight.size ?? 'sm'} />
           ) : (
             <PlayingCard

@@ -251,8 +251,10 @@ export function GameMenu({
     <Backdrop onClose={onClose}>
       <h3>Room {view.code}</h3>
       <p className="game-rules-line">
-        {c.decks === 2 ? '2 decks' : '1 deck'} ·{' '}
-        {c.game === 'crazy7'
+        {c.game !== 'rang' && `${c.decks === 2 ? '2 decks' : '1 deck'} · `}
+        {c.game === 'rang'
+          ? ['Rang', `up to ${c.rangPicks} pick${c.rangPicks > 1 ? 's' : ''} a turn`, c.rangStack && '+2/+4 stack', c.rangChallenge && 'Challenge +4', c.rangSwap && '7-0 swap'].filter(Boolean).join(' · ')
+          : c.game === 'crazy7'
           ? `Crazy 7 · ${c.handSize} cards each · up to ${c.maxPicks} pick${c.maxPicks > 1 ? 's' : ''}${c.stack7 ? ' · 7s stack' : ''}`
           : `${c.bluffRule === 'one' ? 'Pick one card' : 'Show all cards'}${view.kismat ? ` · 🍀 ${rankPlural(view.kismat)} wild` : c.kismat ? ' · 🍀 Kismat card' : ''}${c.seedhi ? ' · 🪜 Seedhi' : ''}`}{' '}
         ·{' '}

@@ -18,6 +18,8 @@ import {
   type InviteEvent,
   type PlayerPlays,
   type Rank,
+  type RangColor,
+  type Suit,
   type RoomView,
   type SazaBadge,
   type ThrowEvent,
@@ -363,7 +365,16 @@ export function useBluff() {
       peek: async (playId: string, cardIndex: number) =>
         (await run(() => request<{ card: Card }>('game:peek', { playId, cardIndex })))?.card ?? null,
       /** Crazy 7: put one card on the pile */
-      c7Play: async (cardId: string) => (await run(() => request('c7:play', { cardId }))) !== null,
+      /** suit: the suit named with a J (power cards) */
+      c7Play: async (cardId: string, suit?: Suit) => (await run(() => request('c7:play', { cardId, ...(suit && { suit }) }))) !== null,
+      /** Rang: color names the colour for a wild; targetId picks who to swap hands with for a 7 (7-0 on) */
+      /** extraIds: doubles, the other cards of the same number put down with it (the last one ends on top) */
+      rangPlay: async (cardId: string, color?: RangColor, targetId?: string, extraIds?: string[]) =>
+        (await run(() => request('rang:play', { cardId, ...(color && { color }), ...(targetId && { targetId }), ...(extraIds?.length && { extraIds }) }))) !== null,
+      rangPick: () => run(() => request('rang:pick')),
+      rangPass: () => run(() => request('rang:pass')),
+      rangCall: () => run(() => request('rang:call')),
+      rangChallenge: () => run(() => request('rang:challenge')),
       /** Crazy 7: pick a card, or take the 7 penalty when one waits */
       c7Pick: () => run(() => request('c7:pick')),
       c7Pass: () => run(() => request('c7:pass')),

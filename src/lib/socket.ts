@@ -9,8 +9,8 @@ export const SERVER_URL = envUrl || `${location.protocol}//${location.hostname}:
 export const socket = io(SERVER_URL, {
   reconnectionDelayMax: 4000,
   // ready: this app has the lobby's Ready button (older apps never hold up a start)
-  // twists: this app shows the Kismat card and makes Seedhi claims
-  auth: (cb) => cb({ token: loadAuthToken() ?? '', ready: true, twists: true }),
+  // twists: this app shows the Kismat card and makes Seedhi claims; rang: it plays Rang and Crazy 7's power cards
+  auth: (cb) => cb({ token: loadAuthToken() ?? '', ready: true, twists: true, rang: true }),
 });
 
 /** reconnect so the server picks up a login or logout */

@@ -20,6 +20,7 @@ function GameCard({ g, onReplay }: { g: GameSummary; onReplay?: (g: GameSummary)
   const [icon, text] = result(g);
   // older games have no game name: they're Bluff
   const crazy7 = g.game === 'crazy7';
+  const rang = g.game === 'rang';
   return (
     <li>
       <details className="game-card">
@@ -28,7 +29,7 @@ function GameCard({ g, onReplay }: { g: GameSummary; onReplay?: (g: GameSummary)
           <div className="grow">
             <b>{text}</b>
             <p className="muted small">
-              {crazy7 ? '7️⃣ Crazy 7' : '🃏 Bluff'} · {dateTime(g.endedAt)} · {minutes(g.durationSec)}
+              {crazy7 ? '7️⃣ Crazy 7' : rang ? '🌈 Rang' : '🃏 Bluff'} · {dateTime(g.endedAt)} · {minutes(g.durationSec)}
             </p>
           </div>
           {g.stake > 0 && g.status === 'finished' && !g.kicked && (
@@ -63,18 +64,23 @@ function GameCard({ g, onReplay }: { g: GameSummary; onReplay?: (g: GameSummary)
           ))}
         </p>
         <p className="game-meta">
-          <span>🎴 {g.decks} deck{g.decks > 1 ? 's' : ''}</span>
+          {!rang && (
+            <span>
+              🎴 {g.decks} deck{g.decks > 1 ? 's' : ''}
+            </span>
+          )}
           <span>{g.stake > 0 ? `🪙 ${formatCoins(g.stake)} stake` : 'Free game'}</span>
           {g.bonus > 0 && <span className="bonus">🎯 +{formatCoins(g.bonus)} daily reward</span>}
         </p>
-        {g.my && crazy7 && (
+        {/* Crazy 7 and Rang have no bluffs: just the cards picked from the deck */}
+        {g.my && (crazy7 || rang) && (g.my.picks != null || crazy7) && (
           <div className="mini-stats">
             <span>
-              <b>{g.my.pickedUp}</b> cards picked
+              🂠 <b>{g.my.picks ?? g.my.pickedUp}</b> picked
             </span>
           </div>
         )}
-        {g.my && !crazy7 && (
+        {g.my && !crazy7 && !rang && (
           <div className="mini-stats">
             <span>
               <b>{g.my.bluffs}</b> bluffs

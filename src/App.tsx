@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AdminPanel } from './components/AdminPanel';
 import { Crazy7Table } from './components/Crazy7Table';
+import { RangTable } from './components/RangTable';
 import { Flyers } from './components/Flyers';
 import { FriendOnline } from './components/FriendOnline';
 import { Home } from './components/Home';
@@ -86,6 +87,8 @@ export default function App() {
     );
   } else if (view.phase === 'lobby') {
     screen = <Lobby view={view} actions={actions} auth={auth} />;
+  } else if (view.config.game === 'rang') {
+    screen = <RangTable view={view} actions={actions} bubbles={bubbles} auth={auth} />;
   } else if (view.config.game === 'crazy7') {
     screen = <Crazy7Table view={view} actions={actions} bubbles={bubbles} auth={auth} />;
   } else {

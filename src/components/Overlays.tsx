@@ -296,15 +296,15 @@ export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza, onS
   const winnersOnly = !!view.teams;
   const medal = (p: PublicPlayer) =>
     won(p.id) ? '🥇' : lost(p.id) || !p.place || winnersOnly ? '🙈' : (['🥇', '🥈', '🥉'][p.place - 1] ?? placeLabel(p.place));
-  // still holding cards when it ended: ranked by their value (A 1 … K 13)
-  const left = (p: PublicPlayer) => (p.cardCount > 0 && p.handValue !== null ? ` · ${p.handValue} value` : '');
+  // still holding cards when it ended: ranked by their value (A 1 … K 13), or Rang card points
+  const left = (p: PublicPlayer) => (p.cardCount > 0 && p.handValue !== null ? ` · ${p.handValue} ${view.rang ? 'pts' : 'value'}` : '');
   const label = (p: PublicPlayer) =>
     won(p.id)
       ? `${p.place ? `${placeLabel(p.place)} · ` : ''}Winner`
       : lost(p.id)
         ? winnersOnly
           ? 'Lost'
-          : p.cardCount > 0 && (view.endedEarly || view.crazy7)
+          : p.cardCount > 0 && (view.endedEarly || view.crazy7 || view.rang)
             ? `Lost${left(p)}`
             : 'Loser'
         : p.place

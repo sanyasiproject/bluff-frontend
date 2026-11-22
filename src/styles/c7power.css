@@ -1,0 +1,123 @@
+/* Crazy 7 power cards: the J's suit, the direction of play, and the J's suit picker */
+
+.c7p-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 30px;
+}
+
+/* play goes round this way; turns over when an A flips it */
+.c7p-dir {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(124, 196, 255, 0.16);
+  color: #b9dcff;
+  font-size: 18px;
+  font-weight: 800;
+  animation: c7p-spin 0.45s ease-out;
+}
+
+.c7p-dir.back {
+  background: rgba(255, 196, 92, 0.18);
+  color: var(--gold);
+}
+
+/* the suit a J named */
+.c7p-wish {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid var(--gold);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  animation: c7p-pop 0.3s ease-out;
+}
+
+.c7p-wish b {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--card-face);
+  color: var(--suit-black);
+  font-size: 15px;
+}
+
+.c7p-wish.red b {
+  color: var(--suit-red);
+}
+
+/* the J's suit picker: four big buttons */
+.c7p-suits {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+
+.c7p-suit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 72px;
+}
+
+.c7p-suit b {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: var(--card-face);
+  color: var(--suit-black);
+  font-size: 24px;
+}
+
+.c7p-suit.red b {
+  color: var(--suit-red);
+}
+
+.c7p-suit span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+@keyframes c7p-spin {
+  from {
+    transform: rotate(-180deg) scale(0.7);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes c7p-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c7p-dir,
+  .c7p-wish {
+    animation: none;
+  }
+}

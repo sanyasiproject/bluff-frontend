@@ -1,0 +1,647 @@
+/* ---------- Rang cards: a white card, a bold colour panel, big outlined numbers ---------- */
+
+/* colour tokens: base, light and deep */
+.rg-red {
+  --rg-ink: #fff;
+  --rg: #e2342f;
+  --rg-light: #ff6a5c;
+  --rg-deep: #a81b17;
+}
+
+.rg-blue {
+  --rg-ink: #fff;
+  --rg: #1f74e0;
+  --rg-light: #4fa3ff;
+  --rg-deep: #12479a;
+}
+
+.rg-green {
+  --rg-ink: #fff;
+  --rg: #21a150;
+  --rg-light: #4fd47c;
+  --rg-deep: #11692f;
+}
+
+.rg-yellow {
+  --rg-ink: #2b2100;
+  --rg: #f6b80c;
+  --rg-light: #ffdb4d;
+  --rg-deep: #c98400;
+}
+
+/* the card: white stock with a thin shadow, the colour panel set inside it */
+.card.rang-card {
+  border: 0;
+  border-radius: calc(var(--cw) * 0.14);
+  background: #fdfdfd;
+  color: #fff;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.rang-card .rg-face {
+  position: absolute;
+  inset: calc(var(--cw) * 0.065);
+  border-radius: calc(var(--cw) * 0.09);
+  background:
+    linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.22) 46%, transparent 56%),
+    radial-gradient(130% 90% at 30% 10%, var(--rg-light) 0%, var(--rg) 48%, var(--rg-deep) 100%);
+  box-shadow: inset 0 0 0 max(1px, calc(var(--cw) * 0.018)) rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+/* big white numbers and signs with a dark outline: easy to read on every colour, yellow too */
+.rang-card .rg-big,
+.rang-card .rg-corner {
+  color: #fff;
+  font-family: 'Arial Black', 'Helvetica Neue', system-ui, sans-serif;
+  font-weight: 900;
+  line-height: 1;
+  paint-order: stroke fill;
+  -webkit-text-stroke: calc(var(--cw) * 0.045) rgba(20, 10, 0, 0.72);
+  text-shadow: 0 calc(var(--cw) * 0.035) 0 rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.rang-card .rg-big {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--cw) * 0.72);
+  letter-spacing: -0.04em;
+}
+
+.rang-card.rg-wide .rg-big {
+  font-size: calc(var(--cw) * 0.5);
+}
+
+/* 6 and 9 are underlined so they read the right way up */
+.rang-card .rg-big.under {
+  text-decoration: underline;
+  text-decoration-thickness: calc(var(--cw) * 0.05);
+  text-underline-offset: calc(var(--cw) * 0.05);
+}
+
+.rang-card .rg-corner {
+  position: absolute;
+  font-size: calc(var(--cw) * 0.24);
+  -webkit-text-stroke-width: calc(var(--cw) * 0.03);
+}
+
+.rang-card .rg-corner.tl {
+  top: calc(var(--cw) * 0.1);
+  left: calc(var(--cw) * 0.11);
+}
+
+.rang-card .rg-corner.br {
+  right: calc(var(--cw) * 0.11);
+  bottom: calc(var(--cw) * 0.1);
+  rotate: 180deg;
+}
+
+/* action signs are drawn, so they look the same on every phone */
+.rang-card .rg-icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--cw) * 0.66);
+  height: calc(var(--cw) * 0.66);
+  translate: -50% -50%;
+  filter: drop-shadow(0 calc(var(--cw) * 0.03) 0 rgba(0, 0, 0, 0.35));
+  pointer-events: none;
+}
+
+.rang-card .rg-corner svg {
+  width: calc(var(--cw) * 0.22);
+  height: calc(var(--cw) * 0.22);
+}
+
+/* wilds: a black panel with a four-colour disc; +4 adds four fanned cards */
+.card.rang-card.rg-wild .rg-face {
+  background:
+    linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.12) 46%, transparent 56%),
+    radial-gradient(130% 90% at 30% 10%, #3a3a44 0%, #16161b 60%, #08080a 100%);
+}
+
+.rang-card .rg-disc {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--cw) * 0.62);
+  height: calc(var(--cw) * 0.62);
+  border-radius: 50%;
+  background: conic-gradient(#e2342f 0 25%, #1f74e0 0 50%, #21a150 0 75%, #f6b80c 0);
+  box-shadow:
+    0 0 0 calc(var(--cw) * 0.035) #fff,
+    0 calc(var(--cw) * 0.04) calc(var(--cw) * 0.08) rgba(0, 0, 0, 0.5);
+  translate: -50% -50%;
+}
+
+.rang-card .rg-fan {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--cw) * 0.62);
+  height: calc(var(--cw) * 0.62);
+  translate: -50% -50%;
+}
+
+.rang-card .rg-fan i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--cw) * 0.24);
+  height: calc(var(--cw) * 0.36);
+  border-radius: calc(var(--cw) * 0.04);
+  box-shadow:
+    0 0 0 calc(var(--cw) * 0.02) #fff,
+    0 1px 2px rgba(0, 0, 0, 0.5);
+  translate: -50% -50%;
+}
+
+.rang-card .rg-fan i:nth-child(1) {
+  background: #e2342f;
+  rotate: -36deg;
+  margin-left: calc(var(--cw) * -0.16);
+}
+
+.rang-card .rg-fan i:nth-child(2) {
+  background: #1f74e0;
+  rotate: -12deg;
+  margin-left: calc(var(--cw) * -0.05);
+}
+
+.rang-card .rg-fan i:nth-child(3) {
+  background: #21a150;
+  rotate: 12deg;
+  margin-left: calc(var(--cw) * 0.05);
+}
+
+.rang-card .rg-fan i:nth-child(4) {
+  background: #f6b80c;
+  rotate: 36deg;
+  margin-left: calc(var(--cw) * 0.16);
+}
+
+/* +4: the fan up top, the sign below it */
+.rang-card.rg-wild .rg-fan {
+  top: 34%;
+  scale: 0.9;
+}
+
+.rang-card.rg-wild .rg-big {
+  place-items: end center;
+  padding-bottom: calc(var(--cw) * 0.32);
+  font-size: calc(var(--cw) * 0.4);
+}
+
+/* 7-0 swap on: a 0 (hands pass round) and a 7 (swap with one player) carry a white badge in the top right */
+.rang-card .rg-swap {
+  position: absolute;
+  top: calc(var(--cw) * 0.07);
+  right: calc(var(--cw) * 0.07);
+  display: grid;
+  place-items: center;
+  width: calc(var(--cw) * 0.3);
+  height: calc(var(--cw) * 0.3);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 0 calc(var(--cw) * 0.02) rgba(20, 10, 0, 0.55),
+    0 calc(var(--cw) * 0.02) calc(var(--cw) * 0.05) rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.rang-card .rg-swap svg {
+  width: 72%;
+  height: 72%;
+  fill: none;
+  stroke: var(--rg-deep, #222);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* the badge turns now and then, so a switch card stands out in the hand */
+@media (prefers-reduced-motion: no-preference) {
+  .rang-card .rg-swap.rotate svg {
+    animation: rg-swap-turn 3.2s ease-in-out infinite;
+  }
+
+  .rang-card .rg-swap.switch svg {
+    animation: rg-swap-slide 3.2s ease-in-out infinite;
+  }
+}
+
+@keyframes rg-swap-turn {
+  0%,
+  70% {
+    rotate: 0deg;
+  }
+  100% {
+    rotate: 360deg;
+  }
+}
+
+@keyframes rg-swap-slide {
+  0%,
+  70%,
+  100% {
+    translate: 0;
+  }
+  85% {
+    translate: 8% 0;
+  }
+}
+
+/* a wild on the pile: a ring in the colour named with it */
+.rang-card .rg-chosen {
+  position: absolute;
+  inset: calc(var(--cw) * 0.03);
+  border: calc(var(--cw) * 0.05) solid var(--chosen);
+  border-radius: calc(var(--cw) * 0.12);
+  pointer-events: none;
+}
+
+/* ---------- Rang table ---------- */
+
+.rg-game-chip {
+  background: rgba(245, 197, 24, 0.16);
+  color: #ffe58a;
+}
+
+/* the top card sits in a ring of the colour to match; it pulses when the colour changes */
+.rg-pile {
+  --rg-now: transparent;
+}
+
+.rg-top {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  border-radius: calc(72px * 0.16);
+  translate: -50% -50%;
+  animation: c7-land 0.4s var(--spring) 0.25s backwards;
+}
+
+.rg-top .card {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+.rg-top.ringed::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: 17px;
+  box-shadow: 0 0 0 4px var(--rg-now), 0 0 22px var(--rg-now);
+  pointer-events: none;
+  animation: rg-ring-in 0.7s ease-out 0.4s backwards;
+}
+
+/* a +2 / +4 on top: a red shock ring, like a 7 in Crazy 7 */
+.rg-top.hit::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border: 3px solid var(--danger);
+  border-radius: 19px;
+  pointer-events: none;
+  animation: c7-shock 0.8s ease-out 0.55s both;
+}
+
+/* colour to match and direction, side by side under the board */
+.rg-colorbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.rg-color {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 14px 5px 8px;
+  border-radius: 999px;
+  background: var(--rg);
+  color: var(--rg-ink);
+  font-size: 15px;
+  font-weight: 900;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25), 0 0 18px var(--rg);
+  animation: pop-big 0.4s ease-out;
+}
+
+.rg-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--rg-light);
+  box-shadow: 0 0 0 2px var(--rg-ink);
+}
+
+.rg-dir {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+  animation: rg-spin 0.6s var(--spring);
+}
+
+.rg-dir.ccw {
+  animation-name: rg-spin-back;
+}
+
+/* a tiny card chip: seat labels and "who played it" */
+.rg-chip {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 22px;
+  margin: 0 3px;
+  padding: 0 3px;
+  border-radius: 5px;
+  background: linear-gradient(160deg, var(--rg-light, #888), var(--rg, #555));
+  color: var(--rg-ink, #fff);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+  vertical-align: middle;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.rg-chip.wild:not(.rg-red):not(.rg-blue):not(.rg-green):not(.rg-yellow) {
+  background: conic-gradient(from 45deg, #e2342f 0 25%, #1f74e0 0 50%, #21a150 0 75%, #f6b80c 0);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+/* a wild that took a colour: the wheel edge shows it was a wild */
+.rg-chip.wild {
+  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.seat .rg-chip {
+  height: 18px;
+  min-width: 15px;
+  font-size: 10px;
+}
+
+/* hand extras */
+.rg-points {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.rg-zero-hint,
+.rg-challenge-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.rg-challenge-hint {
+  max-width: 320px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--ink);
+}
+
+.rg-challenge {
+  background: linear-gradient(180deg, #b9a4ff, #7c5cf0);
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 4px 0 #4e35b0;
+}
+
+.rg-actions {
+  flex-wrap: wrap;
+}
+
+/* sheets: colour picker and who to swap with */
+.rg-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.rg-sheet-head h3 {
+  margin: 0;
+}
+
+.rg-colors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.rg-color-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 76px;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(160deg, var(--rg-light), var(--rg) 55%, var(--rg-deep));
+  color: var(--rg-ink);
+  font-size: 18px;
+  box-shadow: 0 4px 0 var(--rg-deep);
+}
+
+.rg-color-btn small {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.rg-color-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--rg-deep);
+}
+
+.rg-targets {
+  margin: 10px 0 12px;
+}
+
+.rg-target {
+  width: 100%;
+  border: 0;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+}
+
+.rg-target:active {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.rg-target-count {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* doubles sheet: the tapped card first, then the same-number cards; numbered in the order they go down */
+.rg-doubles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px 0 8px;
+}
+
+.rg-dbl {
+  position: relative;
+  opacity: 0.45;
+  transform: translateY(6px) scale(0.94);
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.rg-dbl.on {
+  opacity: 1;
+  transform: none;
+}
+
+.rg-dbl.first .card {
+  box-shadow: 0 0 0 3px var(--accent, #ffd34d), 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.rg-dbl-n {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  color: #222;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.rg-dbl-next {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.rg-dbl-next .rg-dot {
+  background: var(--rg);
+}
+
+/* doubles: pick the colour that comes next, among the chosen cards' colours */
+.rg-dbl-colors {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+
+.rg-dbl-color {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 42px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.rg-dbl-color .rg-dot {
+  background: var(--rg);
+}
+
+.rg-dbl-color.on {
+  border-color: var(--rg);
+  background: color-mix(in srgb, var(--rg) 30%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rg) 25%, transparent);
+}
+
+/* 2v2: the team chip shares the top bar, so it shortens on small phones */
+.rg-team-chip {
+  overflow: hidden;
+  max-width: 42vw;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* narrow phones: a little less gap round the board */
+@media (max-width: 380px) {
+  .rg-table .c7-board {
+    gap: 20px;
+  }
+}
+
+@keyframes rg-ring-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes rg-spin {
+  from {
+    transform: rotate(-180deg);
+  }
+  to {
+    transform: rotate(0);
+  }
+}
+
+@keyframes rg-spin-back {
+  from {
+    transform: rotate(180deg);
+  }
+  to {
+    transform: rotate(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rg-top,
+  .rg-top.ringed::before,
+  .rg-top.hit::after,
+  .rg-color,
+  .rg-dir {
+    animation: none;
+  }
+}

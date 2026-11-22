@@ -22,6 +22,10 @@ import {
   WIN_STREAK_SHOWN,
   MAX_BLUFF_CALLS_IN_A_ROW,
   MAX_PEEKS,
+  RANG_HAND_SIZE,
+  RANG_MAX_PICKS,
+  RANG_MISSED_PENALTY,
+  TWO_PENALTY,
   REPLAY_KEEP_DAYS,
   MAX_CARD_SHIELDS,
   SHIELD_MAX_CARDS,
@@ -114,9 +118,60 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         </ul>
       </Section>
 
+      <Section icon="🌈" title="Rang (third game)">
+        <ul>
+          <li>Our own colour-card game: 4 colours (🔴 🔵 🟢 🟡), numbers 0–9 and action cards. Same rooms, seats (2–5), bots, coins and tools.</li>
+          <li>Everyone gets {RANG_HAND_SIZE} cards. The first card on the pile is always a number.</li>
+          <li>On your turn play one card that matches the colour or the number/symbol on top (on a red 5: any red card or any 5).</li>
+          <li>
+            <b>⊘ Skip</b>: the next player misses a turn · <b>⇄ Reverse</b>: play turns the other way (with 2 players it works like a skip) ·{' '}
+            <b>+2</b>: the next player picks 2 and misses a turn.
+          </li>
+          <li>
+            <b>✦ Wild</b>: goes on anything; name the next colour · <b>+4 Wild</b>: name the colour, and the next player picks 4 and misses a
+            turn.
+          </li>
+          <li>
+            <b>Picks per turn</b> (1 to {RANG_MAX_PICKS}, host's choice, 1 by default): nothing fits, so a card is picked for you; you can keep
+            picking until one fits, up to the limit, or Pass once you've picked.
+          </li>
+          <li>
+            <b>➕ Stack</b> (on by default): answer a +2 with a +2 or a +4, and a +4 with a +4; the next player picks the total.
+          </li>
+          <li>
+            <b>⚔️ Challenge the +4</b> (on by default): hit by a single +4? Challenge it. If its player held the colour in play, they pick 4
+            and you play on; if the +4 was fair, you pick 6.
+          </li>
+          <li>
+            <b>🔄 7-0 swap</b> (off by default): a 7 swaps your hand with a player you pick; a 0 passes every hand on in the direction of play.
+            Not when it's your last card: then you simply win.
+          </li>
+          <li>
+            <b>👯 Doubles</b> (off by default): put down 2 or more number cards of the same number in one go. The first must fit; the last
+            one's colour is next. A doubled 7 or 0 swaps once.
+          </li>
+          <li>
+            <b>⚡ Force play</b> (off by default): a card you pick that fits is played at once (a wild names the colour you hold most; a 7
+            swaps with the smallest hand).
+          </li>
+          <li>
+            <b>🃏 Cards each</b>: 5, 7 (default) or 10 · <b>📢 Forgot last card</b>: pick 1, 2 (default) or 4.
+          </li>
+          <li>
+            <b>👥 2 vs 2</b> (off by default, exactly 4 players): partners sit opposite and play alternate turns with the other team. When one
+            of you empties their hand, your team wins and splits the pot. A kick stops the game; a walk-out loses it for that team.
+          </li>
+          <li>📢 Last card works as in Crazy 7; forget it and you pick {RANG_MISSED_PENALTY} (or what the host set) and miss a turn.</li>
+          <li>
+            The first player to empty their hand wins. The rest are ranked by points left (numbers their face value, Skip/Reverse/+2 20, wilds
+            50; lower is better); only the highest loses. Coins: everyone pays the stake, the winner takes the pot.
+          </li>
+        </ul>
+      </Section>
+
       <Section icon="7️⃣" title="Crazy 7 (second game)">
         <ul>
-          <li>The host picks the game at the top of the lobby: 🃏 Bluff (default) or 7️⃣ Crazy 7. Same rooms, seats (2–5), bots, coins and tools.</li>
+          <li>The host picks the game at the top of the lobby: 🃏 Bluff (default), 7️⃣ Crazy 7 or 🌈 Rang. Same rooms, seats (2–5), bots, coins and tools.</li>
           <li>
             Everyone gets {CRAZY7_HAND_SIZES.join(' or ')} cards (host's choice, 7 by default). The rest is the deck; its top card starts the pile.
             A 7 is never the starting card.
@@ -145,6 +200,12 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             pays the stake, the winner takes the pot.
           </li>
           <li>If nobody can play and nothing is left to pick, the game ends and the player with the fewest cards wins.</li>
+          <li>
+            <b>⚡ Power cards</b> (host's choice, off by default): <b>J</b> goes on anything and you name the next suit (the next card must be
+            that suit or another J) · <b>8</b> skips the next player · <b>A</b> reverses the direction (with 2 players it works like a skip) ·{' '}
+            <b>2</b> makes the next player pick {TWO_PENALTY}; with Stack 7s on, a 2 or a 7 answers either, and the total grows. The first card
+            on the pile is never a power card.
+          </li>
           <li>Leaving mid-game is a loss (you still pay); in a 2-player game the other player wins straight away.</li>
           <li>Host tools: Stop game and Play again work as in Bluff. There's no End game (the first one out already ends it).</li>
           <li>
@@ -161,7 +222,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
       <Section icon="⚙️" title="Room settings (host)">
         <ul>
           <li>
-            <b>Game</b>: 🃏 Bluff or 7️⃣ Crazy 7, picked at the top of the lobby. The settings below follow the game.
+            <b>Game</b>: 🃏 Bluff, 7️⃣ Crazy 7 or 🌈 Rang, picked at the top of the lobby. The settings below follow the game.
           </li>
           <li>
             <b>Crazy 7</b>: cards each (5 or 7), picks per turn (1–{CRAZY7_MAX_PICKS}), Stack 7s (On/Off), 1 or 2 decks, coins at stake.
@@ -300,7 +361,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
       <Section icon="▶️" title="Game replay">
         <ul>
           <li>
-            Every Bluff and Crazy 7 game is saved move by move (also when the host ends or stops it early). Profile → Recent games shows
+            Every Bluff, Crazy 7 and Rang game is saved move by move (also when the host ends or stops it early). Profile → Recent games shows
             ▶ Replay on games saved since replays came in.
           </li>
           <li>
@@ -346,14 +407,15 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>The host taps 🤖 Add a bot in the lobby; each tap seats one bot in a free seat. Remove one with ✕. A person must always be playing.</li>
           <li>
             Bots play Crazy 7 too: they keep track of the cards played and of who had nothing to match, think ahead before each move, and
-            usually say Last card (now and then they forget). Like a person, they only know their own cards. When a person has just gone down to
+            usually say Last card (now and then they forget). Rang bots do the same, and also name colours, pick who to swap with and decide
+            whether to challenge a +4 from what everyone could see. Like a person, they only know their own cards. When a person has just gone down to
             one card without saying it, bots wait at least 3.5 seconds before their move, so there's time to tap the button.
           </li>
           <li>
             🤖 Bot level (Bluff, host, at the top of Game settings once a bot is seated): Normal, Hard or Expert (the default). Normal is
             beatable and full of character; Expert counts every card, uses your saved habits and makes the fewest mistakes. The level also sets
             the most you can stake against them (free only / 🪙 {compactCoins(BOT_STAKE_CAPS.hard)} / 🪙 {compactCoins(BOT_STAKE_CAPS.expert)}).
-            Crazy 7 bots always play their best.
+            Crazy 7 and Rang bots always play their best.
           </li>
           <li>
             Every bot gets its own style (careful, wild liar, detective, sneaky, gambler…) with its own random numbers, and its mood shifts
@@ -560,7 +622,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
       <Section icon="🤫" title="Secret missions">
         <ul>
           <li>
-            When a Bluff or Crazy 7 game starts, every person at the table gets a secret mission card for that game, at random (different cards
+            When a Bluff, Crazy 7 or Rang game starts, every person at the table gets a secret mission card for that game, at random (different cards
             when there are enough). Bots and watchers don't get one.
           </li>
           <li>
@@ -573,6 +635,9 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>
             <b>Crazy 7 cards</b>:<ul>{SECRET_MISSIONS.filter((s) => s.game === 'crazy7').map(secretLine)}</ul>
+          </li>
+          <li>
+            <b>Rang cards</b>:<ul>{SECRET_MISSIONS.filter((s) => s.game === 'rang').map(secretLine)}</ul>
           </li>
           <li>
             With 🤥 Lie reveal off, only Bluff cards that can't give a lie away are dealt (catching liars, putting down 4 cards). With Stack 7s
@@ -601,7 +666,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             catch, +{LEAGUE_POINTS.cleanBluff} for each lie nobody catches (catches and lies count in Bluff). Coins never count.
           </li>
           <li>
-            Only games of {MIN_REWARD_GAME_SEC / 60} minute or more with at least 2 logged-in players count, finished, Bluff or Crazy 7.
+            Only games of {MIN_REWARD_GAME_SEC / 60} minute or more with at least 2 logged-in players count, finished, Bluff, Crazy 7 or Rang.
             Bots, guests and players removed by the host don't count, and games against only bots don't count.
           </li>
           <li>

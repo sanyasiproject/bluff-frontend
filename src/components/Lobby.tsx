@@ -19,6 +19,7 @@ import {
   BOT_STAKE_CAPS,
   botStakeCap,
   CRAZY7_MAX_PICKS,
+  RANG_MAX_PICKS,
   RANK_DIVISIONS,
   rankName,
   SHIELD_MAX_CARDS,
@@ -290,7 +291,7 @@ function StakePicker({ stake, players, config, bots, isHost, onPick }: { stake: 
   const pot = stake * Math.max(players, 2);
   const cap = botStakeCap(config);
   // Crazy 7 bots always play their best; Bluff's are named by their level
-  const who = config.game === 'crazy7' ? 'Bots' : `${BOT_LEVEL_NAMES[config.botLevel ?? 'expert']} bots`;
+  const who = config.game === 'crazy7' || config.game === 'rang' ? 'Bots' : `${BOT_LEVEL_NAMES[config.botLevel ?? 'expert']} bots`;
   return (
     <>
       <p className="label">🪙 Coins at stake (per player)</p>
@@ -353,10 +354,16 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   };
   const coinsOn = auth.accountsOn === true;
   const crazy7 = view.config.game === 'crazy7';
+  const rang = view.config.game === 'rang';
+  // Bluff's own settings (ranked, teams, twists…) only show for Bluff
+  const isBluff = !crazy7 && !rang;
+  // 2v2 is for Bluff and Rang
+  const teamGame = view.config.teams && !crazy7;
   // practice lessons: offered once the first time someone plays a game, open any time from How to play
   const [lesson, setLesson] = useState<GameKind | null>(null);
   const [, setSeenTick] = useState(0);
-  const offerLesson = !auth.checking && !lesson && !tutorialSeen(auth, view.config.game);
+  // Rang has no practice lesson yet
+  const offerLesson = !auth.checking && !lesson && view.config.game !== 'rang' && !tutorialSeen(auth, view.config.game);
   const lessonSeen = (game: GameKind) => {
     markTutorialSeen(auth, game);
     setSeenTick((n) => n + 1);
@@ -369,7 +376,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   const rankedKnown = typeof view.config.ranked === 'boolean';
   // house twists preset: Classic (both off), Chaos (both on), or neither when mixed
   const twists = !view.config.kismat && !view.config.seedhi ? 'classic' : view.config.kismat && view.config.seedhi ? 'chaos' : null;
-  const ranked = !crazy7 && view.config.ranked === true;
+  const ranked = isBluff && view.config.ranked === true;
   // ranked needs everyone seated logged in, at any stake
   const mustLogIn = stake > 0 || ranked;
   const rankedGuests = ranked ? view.players.filter((p) => !p.registered && !p.bot) : [];
@@ -382,7 +389,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
       ? 'Need at least 2 players'
       : bots.length === view.players.length
         ? 'Someone has to play with the bots'
-      : !crazy7 && view.config.teams && view.players.length !== 4
+      : teamGame && view.players.length !== 4
         ? 'Teams need exactly 4 players'
         : rankedGuests.length > 0
         ? `Ranked games need everyone logged in: ${names(rankedGuests)}`
@@ -510,7 +517,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
       </header>
 
       {/* everyone sees at a glance whether this table is ranked or just for fun (older servers: nothing) */}
-      {rankedKnown && !crazy7 && (ranked ? <RankedBanner view={view} /> : <p className="mode-banner casual">🎮 Casual game · no rank points</p>)}
+      {rankedKnown && isBluff && (ranked ? <RankedBanner view={view} /> : <p className="mode-banner casual">🎮 Casual game · no rank points</p>)}
 
       {/* live voice for seated players; a row of its own, since the header is full */}
       {view.config.voice && view.players.some((p) => p.id === view.meId && p.registered) && (
@@ -615,7 +622,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         )}
       </section>
 
-      {!crazy7 && view.config.teams && <TeamSlots view={view} actions={actions} isHost={isHost} />}
+      {teamGame && <TeamSlots view={view} actions={actions} isHost={isHost} />}
 
       {view.watchers.length > 0 && (
         <section className="panel">
@@ -654,16 +661,31 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         <section className="panel settings-summary">
           <h2 className="section-title">Game settings</h2>
           <div className="summary-chips">
-            <span className="game-chip">{crazy7 ? '7️⃣ Crazy 7' : '🃏 Bluff'}</span>
+            <span className="game-chip">{crazy7 ? '7️⃣ Crazy 7' : rang ? '🌈 Rang' : '🃏 Bluff'}</span>
             <span>{stake > 0 ? `🪙 ${formatCoins(stake)} each` : '🆓 Free game'}</span>
-            <span>🎴 {view.config.decks === 2 ? '2 decks' : '1 deck'}</span>
-            {crazy7 ? (
+            {!rang && <span>🎴 {view.config.decks === 2 ? '2 decks' : '1 deck'}</span>}
+            {rang ? (
+              <>
+                <span>
+                  🂠 Up to {view.config.rangPicks ?? 1} pick{(view.config.rangPicks ?? 1) > 1 ? 's' : ''}
+                </span>
+                <span>{view.config.rangStack !== false ? '➕ +2/+4 stack' : '➕ No stacking'}</span>
+                {view.config.rangChallenge !== false && <span>⚔️ Challenge +4</span>}
+                {view.config.rangSwap && <span>🔄 7-0 swap</span>}
+                {view.config.rangDoubles && <span>👯 Doubles</span>}
+                {view.config.rangForce && <span>⚡ Force play</span>}
+                {(view.config.rangHand ?? 7) !== 7 && <span>🃏 {view.config.rangHand} cards each</span>}
+                {(view.config.rangMissed ?? 2) !== 2 && <span>📢 Miss last card: pick {view.config.rangMissed}</span>}
+                {view.config.teams && <span>👥 2 vs 2</span>}
+              </>
+            ) : crazy7 ? (
               <>
                 <span>🃏 {view.config.handSize} cards each</span>
                 <span>
                   🂠 Up to {view.config.maxPicks} pick{view.config.maxPicks > 1 ? 's' : ''}
                 </span>
                 <span>{view.config.stack7 ? '7️⃣ 7s stack' : '7️⃣ No stacking'}</span>
+                {view.config.c7Power && <span>⚡ Power cards</span>}
               </>
             ) : (
               <>
@@ -694,7 +716,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <h2 className="section-title">Game</h2>
           <div className="seg game-seg">
             <Option
-              on={!crazy7}
+              on={isBluff}
               disabled={false}
               title="🃏 Bluff"
               desc="Lie about your cards, catch the liars"
@@ -708,9 +730,16 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               desc="Match suit or number; a 7 makes the next player pick 2"
               onClick={() => set({ game: 'crazy7' })}
             />
+            <Option
+              on={rang}
+              disabled={false}
+              title="🌈 Rang"
+              desc="Match colour or number; Skip, Reverse, +2 and wilds"
+              onClick={() => set({ game: 'rang' })}
+            />
           </div>
           {/* Bluff only: casual or ranked, as big as the game choice */}
-          {!crazy7 && coinsOn && rankedKnown && (
+          {isBluff && coinsOn && rankedKnown && (
             <div className="seg mode-seg">
               <Option on={!ranked} disabled={false} title="🎮 Casual" desc="Just for fun · no rank points" onClick={() => ranked && set({ ranked: false })} />
               <Option
@@ -750,8 +779,11 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               ))}
             </div>
           </div>
-          <SettingRow title="7️⃣ Stack 7s" desc="Answer a 7 with a 7: the next player picks 4, then 6…">
+          <SettingRow title="7️⃣ Stack 7s" desc={view.config.c7Power ? 'Answer a 7 or a 2 with a 7 or a 2: the next player picks the total' : 'Answer a 7 with a 7: the next player picks 4, then 6…'}>
             <Choice value={view.config.stack7} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ stack7: on })} />
+          </SettingRow>
+          <SettingRow title="⚡ Power cards" desc="J changes the suit · 8 skips the next player · A reverses · 2 makes the next player pick 2">
+            <Choice value={view.config.c7Power === true} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ c7Power: on })} />
           </SettingRow>
           <p className="label">Cards</p>
           <div className="seg">
@@ -761,7 +793,56 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         </section>
       )}
 
-      {isHost && !crazy7 && <section className="panel">
+      {isHost && rang && (
+        <section className="panel">
+          <h2 className="section-title">Game settings</h2>
+          {coinsOn && <StakePicker stake={stake} players={view.players.length} config={view.config} bots={bots.length > 0} isHost={isHost} onPick={(n) => set({ stake: n })} />}
+          <div className="setting-row stacked">
+            <div className="grow">
+              <b>🂠 Picks per turn</b>
+              <span>Nothing fits? Keep picking until a card fits, up to this many. At 1 you pick one card: play it if it fits, else your turn ends.</span>
+            </div>
+            <div className="mini-seg pick-seg" role="group" aria-label="Picks per turn">
+              {Array.from({ length: RANG_MAX_PICKS }, (_, i) => i + 1).map((n) => (
+                <button
+                  key={n}
+                  className={cx((view.config.rangPicks ?? 1) === n && 'on')}
+                  aria-pressed={(view.config.rangPicks ?? 1) === n}
+                  onClick={() => (view.config.rangPicks ?? 1) !== n && set({ rangPicks: n })}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+          <SettingRow title="➕ Stack +2 and +4" desc="Answer a +2 with a +2 or +4, a +4 with a +4: the next player picks the total">
+            <Choice value={view.config.rangStack !== false} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ rangStack: on })} />
+          </SettingRow>
+          <SettingRow title="⚔️ Challenge the +4" desc="Hit by a +4? Challenge it: if they held the colour, they pick 4; if not, you pick 6">
+            <Choice value={view.config.rangChallenge !== false} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ rangChallenge: on })} />
+          </SettingRow>
+          <SettingRow title="🔄 7-0 swap" desc="A 7 swaps hands with a player you pick · a 0 passes every hand on">
+            <Choice value={view.config.rangSwap === true} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ rangSwap: on })} />
+          </SettingRow>
+          <SettingRow title="👯 Doubles" desc="Put down 2 or more number cards of the same number at once; the first must fit">
+            <Choice value={view.config.rangDoubles === true} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ rangDoubles: on })} />
+          </SettingRow>
+          <SettingRow title="⚡ Force play" desc="A card you pick that fits is played at once">
+            <Choice value={view.config.rangForce === true} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ rangForce: on })} />
+          </SettingRow>
+          <SettingRow title="🃏 Cards each" desc="Dealt to every player at the start">
+            <Choice<5 | 7 | 10> value={view.config.rangHand ?? 7} options={[[5, '5'], [7, '7'], [10, '10']]} onPick={(n) => set({ rangHand: n })} />
+          </SettingRow>
+          <SettingRow title="📢 Forgot last card" desc="Cards picked by a player caught not saying last card">
+            <Choice<1 | 2 | 4> value={view.config.rangMissed ?? 2} options={[[1, '1'], [2, '2'], [4, '4']]} onPick={(n) => set({ rangMissed: n })} />
+          </SettingRow>
+          <SettingRow title="👥 Teams" desc="2 vs 2: partners sit opposite; when one goes out, both win">
+            <Choice value={view.config.teams} options={[[false, 'Off'], [true, '2 vs 2']]} onPick={(on) => set({ teams: on })} />
+          </SettingRow>
+        </section>
+      )}
+
+      {isHost && isBluff && <section className="panel">
         <h2 className="section-title">Game settings</h2>
         {/* the bots' level comes first: it sets how much can be staked */}
         {bots.length > 0 && <BotLevelPicker value={view.config.botLevel ?? 'expert'} onPick={(level) => set({ botLevel: level })} />}
@@ -872,12 +953,32 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         </section>
       )}
 
-      <button className="link-btn tut-link" onClick={() => setLesson(view.config.game)}>
-        📘 How to play: 1-minute practice game
-      </button>
+      {!rang && (
+        <button className="link-btn tut-link" onClick={() => setLesson(view.config.game)}>
+          📘 How to play: 1-minute practice game
+        </button>
+      )}
       <details className="panel rules">
-        <summary>How to play {crazy7 ? 'Crazy 7' : 'Bluff'}</summary>
-        {crazy7 ? (
+        <summary>How to play {crazy7 ? 'Crazy 7' : rang ? 'Rang' : 'Bluff'}</summary>
+        {rang ? (
+          <ul>
+            <li>Play one card that matches the colour or the number/symbol on top (on a red 5: any red card or any 5).</li>
+            <li>⊘ Skip: the next player misses a turn. ⇄ Reverse: play turns the other way. +2: the next player picks 2 and misses a turn.</li>
+            <li>✦ Wild: name the next colour. +4 Wild: name the colour and the next player picks 4 and misses a turn.</li>
+            <li>
+              Nothing fits? One card is picked for you
+              {(view.config.rangPicks ?? 1) > 1 ? `; keep picking (up to ${view.config.rangPicks} a turn) or Pass once you've picked.` : ', then your turn ends if it doesn\'t fit.'}
+            </li>
+            {view.config.rangStack !== false && <li>➕ Hit by a +2 or +4? Answer with your own (+2 on +2, +4 on either) and the next player picks the total.</li>}
+            {view.config.rangChallenge !== false && <li>⚔️ Hit by a +4? Challenge it: if they held the colour in play, they pick 4; if not, you pick 6.</li>}
+            {view.config.rangSwap && <li>🔄 A 7 swaps hands with a player you pick; a 0 passes every hand on in the direction of play.</li>}
+            {view.config.rangDoubles && <li>👯 Doubles: put down 2 or more number cards of the same number at once; the first must fit, the last one's colour is next.</li>}
+            {view.config.rangForce && <li>⚡ Force play: a card you pick that fits is played at once.</li>}
+            {view.config.teams && <li>👥 2 vs 2: partners sit opposite. When one of you goes out, your team wins.</li>}
+            <li>With 2 cards on your turn, tap 📢 Last card, then play. Forget it and someone moves first: you pick {view.config.rangMissed ?? 2} and miss a turn.</li>
+            <li>First to empty their hand wins. The rest are ranked by points left (numbers face value, Skip/Reverse/+2 20, wilds 50); the highest loses.</li>
+          </ul>
+        ) : crazy7 ? (
           <ul>
             <li>Play one card that matches the top card's suit or number (on 5♥: any ♥ or any 5).</li>
             <li>
@@ -890,6 +991,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               A 7 makes the next player pick 2 and miss their turn
               {view.config.stack7 ? ', unless they answer with their own 7 (then 4, 6…). Hit by a 7? Tap Pick 2 (or play a 7)' : ''}.
             </li>
+            {view.config.c7Power && <li>⚡ Power cards: J goes on anything and you name the next suit · 8 skips the next player · A reverses the direction · 2 makes the next player pick 2 (answer it with a 2 or a 7).</li>}
             <li>
               With 2 cards on your turn, tap 📢 Last card, then play. Forget it and someone moves before you say it: you pick 1 and miss your next
               turn.
@@ -912,7 +1014,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         )}
       </details>
 
-      <VoicePicker sample={crazy7 ? `${me?.name ?? 'Ravi'} played seven of spades. Priya picks 2` : `${me?.name ?? 'Ravi'} played four Queens`} />
+      <VoicePicker sample={rang ? `${me?.name ?? 'Ravi'} played a red seven. Priya is skipped` : crazy7 ? `${me?.name ?? 'Ravi'} played seven of spades. Priya picks 2` : `${me?.name ?? 'Ravi'} played four Queens`} />
 
       <div className="lobby-actions">
         {isHost ? (

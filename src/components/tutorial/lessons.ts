@@ -331,4 +331,5 @@ const CRAZY7: Step[] = [
   },
 ];
 
-export const LESSONS: Record<GameKind, Step[]> = { bluff: BLUFF, crazy7: CRAZY7 };
+// Rang has no lesson yet: an empty list offers none
+export const LESSONS: Record<GameKind, Step[]> = { bluff: BLUFF, crazy7: CRAZY7, rang: [] };

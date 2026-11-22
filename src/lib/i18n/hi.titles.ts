@@ -58,6 +58,7 @@ export const D: Dict = {
   'Trust issues': 'भरोसे की कमी',
   'Card collector': 'पत्ते जमा करने वाला',
   'Sevens master': 'सत्ते का उस्ताद',
+  'Stack attack': 'जोड़ का वार',
   'Forgot to call': 'बोलना भूले',
 };
 
@@ -76,5 +77,6 @@ export const P: Pattern[] = [
   [/^([\d,]+) wrong calls?$/, '$1 ग़लत कॉल'],
   [/^picked up ([\d,]+) cards?$/, '$1 पत्ते उठाए'],
   [/^played ([\d,]+) sevens?$/, '$1 सत्ते चले'],
+  [/^answered ([\d,]+) draw cards? with their own$/, '$1 उठाने वाले पत्तों का जवाब अपने पत्ते से दिया'],
   [/^missed last card ([\d,]+) times?$/, '$1 बार आख़िरी पत्ता बोलना भूले'],
 ];

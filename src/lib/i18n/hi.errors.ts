@@ -1,5 +1,8 @@
 import type { Dict, Pattern } from './types';
 
+// Rang colours as the server writes them in errors
+const RANG_HI: Record<string, string> = { red: 'लाल', blue: 'नीला', green: 'हरा', yellow: 'पीला' };
+
 // server error toasts players can hit in normal play
 export const D: Dict = {
   'Connection dropped. Ask to join again': 'कनेक्शन टूट गया। फिर से जुड़ने के लिए पूछें',
@@ -22,6 +25,10 @@ export const D: Dict = {
   'Getting ready is for the lobby': 'तैयार होना लॉबी में होता है',
   'Guest play is off right now. Log in to play': 'अभी मेहमान के रूप में खेलना बंद है। खेलने के लिए लॉग इन करें',
   'In Crazy 7 the first player out wins. Use Stop game instead': 'Crazy 7 में पहले पत्ते ख़त्म करने वाला जीतता है। इसके बजाय गेम रोकें',
+  'In Rang the first player out wins. Use Stop game instead': 'रंग में पहले पत्ते ख़त्म करने वाला जीतता है। इसके बजाय गेम रोकें',
+  'No Rang game in progress': 'कोई रंग गेम नहीं चल रहा',
+  'Pick a player to swap with': 'जिससे पत्ते बदलने हैं वो खिलाड़ी चुनें',
+  'Only a +4 played on you can be challenged': 'सिर्फ़ आप पर चले +4 को ही चुनौती दे सकते हैं',
   'Join a room first': 'पहले किसी कमरे से जुड़ें',
   'Lies are kept secret in this room': 'इस कमरे में झूठ छुपे रहते हैं',
   'Log in to invite friends': 'दोस्तों को बुलाने के लिए लॉग इन करें',
@@ -108,4 +115,9 @@ export const P: Pattern[] = [
   [/^You picked (\d+)\. Play a card that fits$/, 'आपने $1 उठाए। मिलता पत्ता चलें'],
   [/^(.+) is watching, not playing$/, '$1 देख रहे हैं, खेल नहीं रहे'],
   [/^A Card Shield covers up to (\d+) cards$/, 'कार्ड शील्ड ज़्यादा से ज़्यादा $1 पत्तों पर लगती है'],
+  [/^Play a \+4 or pick (\d+) cards$/, '+4 चलें या $1 पत्ते उठाएँ'],
+  [/^Play a \+2 or \+4, or pick (\d+) cards$/, '+2 या +4 चलें, या $1 पत्ते उठाएँ'],
+  [/^Pick (\d+) cards$/, '$1 पत्ते उठाएँ'],
+  [/^Play a (red|blue|green|yellow) card, a (.+) or a wild$/, (m) => `${RANG_HI[m[1]]} पत्ता, ${m[2]} या वाइल्ड चलें`],
+  [/^Play a (red|blue|green|yellow) card or a wild$/, (m) => `${RANG_HI[m[1]]} पत्ता या वाइल्ड चलें`],
 ];

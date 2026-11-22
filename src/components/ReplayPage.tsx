@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { RangCard } from './RangCard';
 import { cx, rankName } from '../lib/cards';
 import { dateTime } from '../lib/dates';
 import type { Card, GameSummary, Rank, ReplayResponse, ReplayStep } from '../types';
@@ -39,7 +40,7 @@ export function ReplayPage({ game, load, onClose }: { game: GameSummary; load: (
     return () => window.clearTimeout(t);
   }, [playing, at, speed, replay, last]);
 
-  const title = game.game === 'crazy7' ? '▶ Replay · Crazy 7' : '▶ Replay · Bluff';
+  const title = game.game === 'crazy7' ? '▶ Replay · Crazy 7' : game.game === 'rang' ? '▶ Replay · Rang' : '▶ Replay · Bluff';
   if (failed) {
     return (
       <FullPage title={title} onBack={onClose}>
@@ -156,7 +157,11 @@ function ReplayTable({ replay, step }: { replay: ReplayResponse; step: ReplaySte
         🂠 <b>{step.pile}</b> in the pile
         {replay.wild ? <span className="muted"> · 🍀 {rankName(replay.wild)} wild</span> : null}
       </p>
-      {replay.game === 'crazy7' ? (
+      {replay.game === 'rang' ? (
+        <div className="replay-top">
+          {step.rangTop ? <RangCard card={step.rangTop} size="md" chosen={step.rangColor ?? null} /> : <span className="muted small">No card yet</span>}
+        </div>
+      ) : replay.game === 'crazy7' ? (
         <div className="replay-top">
           {step.top ? <PlayingCard card={step.top} size="md" /> : <span className="muted small">No card yet</span>}
         </div>

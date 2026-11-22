@@ -1,6 +1,7 @@
 import * as cards from './hi.cards';
 import * as common from './hi.common';
 import * as crazy7 from './hi.crazy7';
+import * as rang from './hi.rang';
 import * as errors from './hi.errors';
 import * as extra from './hi.extra';
 import * as home from './hi.home';
@@ -18,7 +19,7 @@ import * as titles from './hi.titles';
 import type { Dict, Pattern } from './types';
 
 // later files win on the same exact line
-const dicts: Dict[] = [common.D, cards.D, titles.D, home.D, lobby1.D, lobby2.D, table.D, over.D, crazy7.D, profile.D, social.D, missions.D, shop.D, league.D, extra.D, errors.D];
+const dicts: Dict[] = [common.D, cards.D, titles.D, home.D, lobby1.D, lobby2.D, table.D, over.D, crazy7.D, rang.D, profile.D, social.D, missions.D, shop.D, league.D, extra.D, errors.D];
 
 export const HI_DICT = new Map<string, string>(dicts.flatMap((d) => Object.entries(d)));
 
@@ -26,6 +27,8 @@ export const HI_DICT = new Map<string, string>(dicts.flatMap((d) => Object.entri
 export const HI_PATTERNS: Pattern[] = [
   ...cards.P,
   ...table.P,
+  // before Crazy 7's, whose card patterns would match Rang's lines first
+  ...rang.P,
   ...crazy7.P,
   ...over.P,
   ...lobby2.P,

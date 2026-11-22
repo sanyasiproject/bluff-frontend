@@ -24,6 +24,8 @@ import './styles/replay.css';
 import './styles/avatars.css';
 import './styles/lang.css';
 import './styles/shield.css';
+import './styles/c7power.css';
+import './styles/rang.css';
 
 for (const type of ['click', 'touchend'] as const) {
   window.addEventListener(type, unlockSpeech, { once: true, capture: true });

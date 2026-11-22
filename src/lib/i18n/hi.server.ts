@@ -4,8 +4,36 @@ import { CLAIM, ORD, claimHi } from './hi.cards';
 const BADGE: Record<string, string> = { Joker: 'जोकर', Murga: 'मुर्गा', Kachua: 'कछुआ', Aloo: 'आलू', Bandar: 'बंदर', Mirchi: 'मिर्ची' };
 const and = (s: string) => s.replace(/ and /g, ' और ');
 
+// Rang cards as the server says them ("red seven", "a wild +4"), and the extra sentences after a Rang or power-card play
+const RANG_COLOR: Record<string, string> = { red: 'लाल', blue: 'नीला', green: 'हरा', yellow: 'पीला', Red: 'लाल', Blue: 'नीला', Green: 'हरा', Yellow: 'पीला' };
+const RANG_NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+const RANG_CARD = `(a wild \\+4|a wild|(?:red|blue|green|yellow) (?:${RANG_NUM.join('|')}|skip|reverse|\\+2))`;
+const SUIT_HI: Record<string, string> = { spades: 'हुकुम', hearts: 'पान', diamonds: 'ईंट', clubs: 'चिड़ी' };
+function rangCardHi(text: string): string {
+  if (text === 'a wild') return 'वाइल्ड';
+  if (text === 'a wild +4') return 'वाइल्ड +4';
+  const [color, what] = text.split(' ');
+  const n = RANG_NUM.indexOf(what);
+  return `${RANG_COLOR[color] ?? color} ${n >= 0 ? n : what === 'skip' ? 'स्किप' : what === 'reverse' ? 'रिवर्स' : what}`;
+}
+function afterPlayHi(part: string): string {
+  let m: RegExpMatchArray | null;
+  if ((m = part.match(/^(Red|Blue|Green|Yellow) next$/))) return `अगला रंग ${RANG_COLOR[m[1]]}`;
+  if ((m = part.match(/^(.+) is skipped$/))) return `${m[1]} की बारी छूटी`;
+  if (part === 'Every hand moves on') return 'सबके पत्ते आगे खिसके';
+  if (part === 'Play turns the other way') return 'दिशा उलटी';
+  if ((m = part.match(/^(.+) goes again$/))) return `${m[1]} फिर से चलेंगे`;
+  if ((m = part.match(/^Next card must be (spades|hearts|diamonds|clubs)$/))) return `अगला पत्ता ${SUIT_HI[m[1]]} का होना चाहिए`;
+  if ((m = part.match(/^Pick (\d+)!$/))) return `${m[1]} उठाओ!`;
+  return part;
+}
+
 // lines the server announces (rooms.ts describe, socket.ts note), and useBluff toasts
 export const P: Pattern[] = [
+  [new RegExp(`^(.+?) played (?:(two|three|\\d+) × )?${RANG_CARD}( \\(picked and played\\))?(?: and swaps hands with (.+?))?((?:\\. .+)*)$`), (m) => `${m[1]} ने ${m[2] ? `${m[2] === 'two' ? 2 : m[2] === 'three' ? 3 : m[2]} × ` : ''}${rangCardHi(m[3])} ${m[4] ? 'उठाकर ' : ''}चला${m[5] ? ` और ${m[5]} से पत्ते बदले` : ''}${m[6] ? '। ' + m[6].slice(2).split('. ').map(afterPlayHi).join('। ') : ''}`],
+  [new RegExp(`^(.+?) played ${CLAIM}((?:\\. (?:Next card must be|Play turns|.+ is skipped|.+ goes again)[^]*))$`), (m) => `${m[1]} ने ${claimHi(m[2])} चला। ${m[3].slice(2).split('. ').map(afterPlayHi).join('। ')}`],
+  [/^(.+) challenged the \+4\. Caught! (.+) had the colour and picks (\d+)$/, '$1 ने +4 को चुनौती दी। पकड़ा गया! $2 के पास वो रंग था, वो $3 उठाएँगे'],
+  [/^(.+) challenged the \+4, but it was fair\. (.+) picks (\d+)$/, '$1 ने +4 को चुनौती दी, पर वो सही था। $2 $3 उठाएँगे'],
   [new RegExp(`^(.+) played ${CLAIM} with a Card Shield 🔒$`), (m) => `${m[1]} ने कार्ड शील्ड 🔒 के साथ ${claimHi(m[2])} ${/^(one|1) | of /.test(m[2]) ? 'चला' : 'चले'}`],
   [new RegExp(`^(.+) played ${CLAIM}(?:\\. Pick (\\d+)!)?$`), (m) => `${m[1]} ने ${claimHi(m[2])} ${/^(one|1) | of /.test(m[2]) ? 'चला' : 'चले'}${m[3] ? `। ${m[3]} उठाओ!` : ''}`],
   [/^(.+) passed$/, '$1 ने पास किया'],

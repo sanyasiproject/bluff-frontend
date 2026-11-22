@@ -17,4 +17,4 @@ export function markTutorialSeen(auth: Auth, game: GameKind): void {
   if (auth.user) void auth.markTutorial(game);
 }
 
-export const gameName = (game: GameKind) => (game === 'crazy7' ? 'Crazy 7' : 'Bluff');
+export const gameName = (game: GameKind) => (game === 'crazy7' ? 'Crazy 7' : game === 'rang' ? 'Rang' : 'Bluff');
