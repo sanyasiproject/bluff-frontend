@@ -44,6 +44,10 @@ export interface LiveVoiceSnapshot {
 }
 
 let hear = false;
+/** this room: the player turned 🔊 off themselves, so it stays off here (a new room or a new app start turns it on again) */
+let hearOffHere = false;
+/** this room: 🔊 was already turned on by itself once (it never retries in a loop) */
+let autoHeard = false;
 let mic = false;
 let busy = false;
 let joining = false;
@@ -275,14 +279,25 @@ function watchForNotice(): void {
   }, NOTICE_MS);
 }
 
+// 🔊 can come on by itself before any tap, and a phone may hold the sound back until one: the first tap starts it
+if (typeof document !== 'undefined') {
+  const unlock = () => {
+    if (!hear) return;
+    for (const p of peers.values()) if (p.audio && !p.audio.muted) void p.audio.play().catch(() => undefined);
+  };
+  document.addEventListener('pointerdown', unlock, { passive: true });
+}
+
 // muting or unmuting someone takes effect on their sound at once
 onMuteChange(() => {
   for (const [id, p] of peers) if (p.audio) p.audio.muted = !hear || mutedMember(lastView, id);
 });
 
 /** 🔊 hearing the others on or off; an error message to show, or null */
-export async function setHear(on: boolean): Promise<string | null> {
+export async function setHear(on: boolean, auto = false): Promise<string | null> {
   if (busy) return null;
+  // the player's own choice to stop hearing holds for this room
+  if (!auto) hearOffHere = !on;
   try {
     busy = on && !isOn();
     emit();
@@ -352,6 +367,8 @@ export function syncLiveVoice(view: RoomView | null): void {
     if (isOn()) turnOff(!!view);
     roomCode = view?.code ?? null;
     noticeUsed = false;
+    hearOffHere = false;
+    autoHeard = false;
   }
   if (!view) {
     emit();
@@ -359,6 +376,12 @@ export function syncLiveVoice(view: RoomView | null): void {
   }
   meId = view.meId;
   if (!isOn()) {
+    // 🔊 is on by default: once per room for a seated, logged-in player while the room allows voice (the mic stays off)
+    const seat = view.players.find((p) => p.id === meId);
+    if (!autoHeard && !hearOffHere && !busy && !joining && seat?.registered && view.config.voice) {
+      autoHeard = true;
+      void setHear(true, true);
+    }
     emit();
     return;
   }

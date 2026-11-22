@@ -822,6 +822,8 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         <ul>
           <li>
             🔊 turns hearing the others on or off; 🎙️ turns your mic on or off. They're in the game's top bar and in a row in the lobby.
+            🔊 comes on by itself when you join a room; turn it off and it stays off there, until you open the app again or go to another
+            room. 🎙️ only comes on when you tap it.
             While 🎙️ is on you talk freely, no time limit.
           </li>
           <li>Only logged-in players with a seat can talk or hear; watchers and guests never. The host's voice switch in the lobby covers it too.</li>
