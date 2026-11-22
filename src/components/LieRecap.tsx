@@ -108,6 +108,7 @@ export function LieRecapBox({ view, nameOf, onShowPlays }: LieRecapProps) {
           <p className="lie-claim">
             <b>{who(l.playerId)}</b> said {claimText(l.cards.length, l.rank)}
             {l.survivedCall && <span className="lie-tag away">survived a call</span>}
+            {l.shielded && <span className="lie-tag shield">🔒 shielded</span>}
           </p>
           <MarkedCards cards={l.cards} rank={l.rank} kismat={kismat} flipFrom={250 + i * 160} />
         </div>

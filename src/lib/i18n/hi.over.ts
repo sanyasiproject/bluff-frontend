@@ -43,6 +43,8 @@ export const D: Dict = {
   "1st place's team wins, everyone else loses": 'पहले नंबर वाले की टीम जीती, बाकी सब हारे',
   '1st place wins, the rest by card value left (A 1 … K 13)': 'पहले नंबर वाला जीता, बाकी बचे पत्तों की वैल्यू से (A 1 … K 13)',
   'Left · Lost': 'छोड़ा · हारे',
+  '🔒 shielded': '🔒 शील्ड के साथ',
+  '🔒 Card Shield': '🔒 कार्ड शील्ड',
   Awards: 'इनाम',
   'Play again': 'फिर से खेलें',
   'Waiting for the host to play again…': 'होस्ट के फिर से खेलने का इंतज़ार…',

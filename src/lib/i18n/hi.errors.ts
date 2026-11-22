@@ -8,6 +8,11 @@ export const D: Dict = {
   'Finish your current game first': 'पहले अपना मौजूदा गेम पूरा करें',
   'Already starting': 'शुरू हो रहा है',
   'Bets are off in this room': 'इस कमरे में शर्त बंद है',
+  'Card Shields are off in this room': 'इस कमरे में कार्ड शील्ड बंद है',
+  'No Card Shields left this game': 'इस गेम में कोई कार्ड शील्ड नहीं बची',
+  "Your last cards can't be shielded": 'आख़िरी पत्तों पर शील्ड नहीं लग सकती',
+  'That play has a Card Shield 🔒': 'इस चाल पर कार्ड शील्ड 🔒 है',
+  "That play has a Card Shield 🔒 You can't call it": 'इस चाल पर कार्ड शील्ड 🔒 है, इस पर Bluff नहीं बोल सकते',
   'Bots always play. Remove the bot instead': 'बॉट हमेशा खेलते हैं। इसके बजाय बॉट हटाएँ',
   'Bots can only join in the lobby': 'बॉट सिर्फ़ लॉबी में जुड़ सकते हैं',
   'Choose a rank to start the round': 'राउंड शुरू करने के लिए रैंक चुनें',
@@ -102,4 +107,5 @@ export const P: Pattern[] = [
   [/^You picked (\d+) this turn\. Play a card or pass$/, 'इस बारी आपने $1 उठाए। पत्ता चलें या पास करें'],
   [/^You picked (\d+)\. Play a card that fits$/, 'आपने $1 उठाए। मिलता पत्ता चलें'],
   [/^(.+) is watching, not playing$/, '$1 देख रहे हैं, खेल नहीं रहे'],
+  [/^A Card Shield covers up to (\d+) cards$/, 'कार्ड शील्ड ज़्यादा से ज़्यादा $1 पत्तों पर लगती है'],
 ];

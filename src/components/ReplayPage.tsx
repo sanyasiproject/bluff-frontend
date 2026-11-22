@@ -124,6 +124,7 @@ function ReplayClaim({ replay, step }: { replay: ReplayResponse; step: ReplaySte
     <div className="replay-claim">
       <p>
         <b>{nameIn(replay, claim.playerId)}</b> claims {claim.count} × {rankName(claim.rank)}
+        {claim.shielded && <span className="replay-shield"> 🔒 Card Shield</span>}
         {lie !== null && <span className={cx('replay-verdict', lie ? 'lie' : 'true')}>{lie ? 'Lie' : 'True'}</span>}
       </p>
       {claim.cards ? (

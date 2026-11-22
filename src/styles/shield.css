@@ -36,3 +36,14 @@
   font-weight: 700;
   text-align: center;
 }
+
+/* a shielded lie in the game-over reveal, and a shielded claim in a replay */
+.lie-tag.shield {
+  background: rgba(70, 130, 220, 0.28);
+  color: #dcecff;
+}
+
+.replay-shield {
+  color: #9ccfff;
+  font-weight: 800;
+}
