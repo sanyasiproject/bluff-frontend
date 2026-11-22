@@ -94,6 +94,7 @@ export const P: Pattern[] = [
   [/^(\d+) selected · play on your turn$/, '$1 चुने · अपनी बारी पर चलें'],
   [/^(.+) finished 1st, so their team wins\. The other team loses$/, '$1 पहले नंबर पर रहे, इसलिए उनकी टीम जीती। दूसरी टीम हारी'],
   [/^(.+) finished 1st and wins\. Everyone else loses$/, '$1 पहले नंबर पर रहे और जीते। बाकी सब हारे'],
+  [/^(.+) finished 1st and wins\. The rest are ranked by card value left \(A 1 … K 13\); the highest loses$/, '$1 पहले नंबर पर रहे और जीते। बाकी बचे पत्तों की वैल्यू से (A 1 … K 13), सबसे ज़्यादा वाला हारा'],
   [/^and the 🪙 (.+) pot is split by their team$/, 'और 🪙 $1 का दांव उनकी टीम में बँटेगा'],
   [/^and the 🪙 (.+) pot goes to (.+)$/, 'और 🪙 $1 का दांव $2 को मिलेगा'],
   [/^and you still pay your 🪙 (.+) stake$/, 'और आपको फिर भी 🪙 $1 का दांव देना होगा'],

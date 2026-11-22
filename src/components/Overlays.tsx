@@ -288,26 +288,27 @@ export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza, onS
     // the trophy and fireworks for everyone, a crown on the winner's seat, 🙈 over the losers
     winnerMoment(view.winnerIds, [...view.loserIds.filter((id) => !view.winnerIds.includes(id))]);
   }, []);
-  // Crazy 7: everyone but the winner, fewest cards left first
-  const ranked = [...view.players].sort((a, b) => (a.place ?? 99) - (b.place ?? 99) || (view.crazy7 ? a.cardCount - b.cardCount : 0));
+  // finishing order, then whoever still held cards, lowest card value first
+  const ranked = [...view.players].sort((a, b) => (a.place ?? 99) - (b.place ?? 99));
   const lost = (id: string) => view.loserIds.includes(id);
   const won = (id: string) => view.winnerIds.includes(id);
-  // teams, or the host ending early: only the winners win and everyone else lost
-  // Crazy 7 too: the first player out wins and everyone else loses
-  const winnersOnly = view.endedEarly || !!view.teams || view.config.game === 'crazy7';
+  // 2v2: the winning team wins and everyone else lost
+  const winnersOnly = !!view.teams;
   const medal = (p: PublicPlayer) =>
-    won(p.id) ? '🥇' : p.place && !winnersOnly ? (['🥇', '🥈', '🥉'][p.place - 1] ?? placeLabel(p.place)) : '🙈';
+    won(p.id) ? '🥇' : lost(p.id) || !p.place || winnersOnly ? '🙈' : (['🥇', '🥈', '🥉'][p.place - 1] ?? placeLabel(p.place));
+  // still holding cards when it ended: ranked by their value (A 1 … K 13)
+  const left = (p: PublicPlayer) => (p.cardCount > 0 && p.handValue !== null ? ` · ${p.handValue} value` : '');
   const label = (p: PublicPlayer) =>
     won(p.id)
       ? `${p.place ? `${placeLabel(p.place)} · ` : ''}Winner`
       : lost(p.id)
         ? winnersOnly
-          ? view.crazy7
-            ? `Lost · ${p.cardCount} left`
-            : 'Lost'
-          : 'Loser'
+          ? 'Lost'
+          : p.cardCount > 0 && (view.endedEarly || view.crazy7)
+            ? `Lost${left(p)}`
+            : 'Loser'
         : p.place
-          ? placeLabel(p.place)
+          ? `${placeLabel(p.place)}${left(p)}`
           : '';
   const winningTeam = view.teams && view.winnerIds.length > 0 ? (view.teams[0].includes(view.winnerIds[0]) ? '🔵' : '🟠') : null;
   // players who used Leave game are still part of this game's result
@@ -324,7 +325,7 @@ export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza, onS
         )}
         {view.endedEarly && (
           <p className="muted small">
-            The host ended it: {view.teams ? "1st place's team wins" : '1st place wins'}, everyone else loses
+            The host ended it: {view.teams ? "1st place's team wins, everyone else loses" : '1st place wins, the rest by card value left (A 1 … K 13)'}
           </p>
         )}
         <ol className="results">

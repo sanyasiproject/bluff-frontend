@@ -889,7 +889,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               With 2 cards on your turn, tap 📢 Last card, then play. Forget it and someone moves before you say it: you pick 1 and miss your next
               turn.
             </li>
-            <li>The first player to empty their hand wins. Everyone else loses. Stuck with nothing to play or pick: fewest cards wins.</li>
+            <li>The first player to empty their hand wins. The rest are ranked by card value left (A 1 … K 13); the highest loses. Stuck with nothing to play or pick: fewest cards wins.</li>
           </ul>
         ) : (
           <ul>

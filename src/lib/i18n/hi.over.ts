@@ -40,6 +40,8 @@ export const D: Dict = {
   "1st place's team wins": 'पहले नंबर वाले की टीम जीती',
   '1st place wins': 'पहले नंबर वाला जीता',
   ', everyone else loses': ', बाकी सब हारे',
+  "1st place's team wins, everyone else loses": 'पहले नंबर वाले की टीम जीती, बाकी सब हारे',
+  '1st place wins, the rest by card value left (A 1 … K 13)': 'पहले नंबर वाला जीता, बाकी बचे पत्तों की वैल्यू से (A 1 … K 13)',
   'Left · Lost': 'छोड़ा · हारे',
   Awards: 'इनाम',
   'Play again': 'फिर से खेलें',
@@ -95,6 +97,8 @@ export const D: Dict = {
 export const P: Pattern[] = [
   [/^(1st|2nd|3rd|4th|5th) · Winner$/, (m) => `${ORD[m[1]]} · विजेता`],
   [/^Lost · (\d+) left$/, 'हारे · $1 बचे'],
+  [/^(1st|2nd|3rd|4th|5th) · (\d+) value$/, (m) => `${ORD[m[1]]} · वैल्यू ${m[2]}`],
+  [/^Lost · (\d+) value$/, 'हारे · वैल्यू $1'],
   [/^Finished (1st|2nd|3rd|4th|5th)$/, (m) => `${ORD[m[1]]} नंबर पर`],
   [/^Your 🍀 Kismat cards? backs? up any rank you call\.$/, 'आपके 🍀 Kismat पत्ते आपकी बोली हर रैंक को सच बनाते हैं।'],
   [/^Your cards really are (.+?)(?: \(🍀 wild ones count\))?, or bluff with any other rank\.$/, (m, tr) => `आपके पत्ते सच में ${tr(m[1])} हैं, या किसी और रैंक से झूठ बोलें।`],

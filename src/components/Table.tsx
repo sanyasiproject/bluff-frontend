@@ -983,7 +983,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
             <p className="muted">
               {view.teams
                 ? `${winner.name} finished 1st, so their team wins. The other team loses`
-                : `${winner.name} finished 1st and wins. Everyone else loses`}
+                : `${winner.name} finished 1st and wins. The rest are ranked by card value left (A 1 … K 13); the highest loses`}
               {view.config.stake > 0
                 ? ` and the 🪙 ${formatCoins(pot)} pot ${view.teams ? 'is split by their team' : `goes to ${winner.name}`}`
                 : ''}

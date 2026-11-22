@@ -106,7 +106,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>Caught lying: the liar picks up the whole pile. It was true: the caller picks it up. The winner of the call starts the next round.</li>
           <li>
             You can call bluff at most {MAX_BLUFF_CALLS_IN_A_ROW} times in a row; playing or passing your turn unlocks it. A player's last
-            cards can always be called, even then.
+            cards can always be called, even then. With only 2 players left holding cards there's no limit.
           </li>
         </ul>
       </Section>
@@ -137,7 +137,10 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>Bots usually say last card, but now and then they forget too, so you can catch them.</li>
           <li>When the deck runs out, the pile (except its top card) is shuffled into a new deck.</li>
-          <li>The first player to empty their hand wins at once; everyone else loses. Coins: everyone pays the stake, the winner takes the pot.</li>
+          <li>
+            The first player to empty their hand wins at once. The rest are ranked by the value of cards left (A 1, 2–10 face value, J 11, Q 12, K 13; lower is better); only the highest loses. Coins: everyone
+            pays the stake, the winner takes the pot.
+          </li>
           <li>If nobody can play and nothing is left to pick, the game ends and the player with the fewest cards wins.</li>
           <li>Leaving mid-game is a loss (you still pay); in a 2-player game the other player wins straight away.</li>
           <li>Host tools: Stop game and Play again work as in Bluff. There's no End game (the first one out already ends it).</li>
@@ -392,8 +395,10 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         <ul>
           <li>Normal end: when only one player (or one team) is left, the game is over.</li>
           <li>
-            <b>End game</b> (host): once someone has finished 1st, the host can end it. 1st place (or their team) wins, everyone else
-            loses. It counts as a finished game.
+            <b>End game</b> (host): once someone has finished 1st, the host can end it. 1st place wins; those still holding cards are
+            ranked by the value of cards left (A 1, 2–10 face value, J 11, Q 12, K 13; lower is better, equal values share a place) and only
+            the highest loses. 2 vs 2: 1st place's team wins, the
+            other team loses. It counts as a finished game.
           </li>
           <li>
             <b>Stop game</b> (host, ⋯ menu): ends it with no winner. No coins, XP or stats move.

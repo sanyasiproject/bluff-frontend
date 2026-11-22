@@ -436,6 +436,7 @@ function AuraPreview({ item, auth, onClose }: { item: ShopItem; auth: Auth; onCl
     back: u?.cardBack ?? 'classic',
     table: u?.tableTheme ?? 'classic',
     cardCount: 13,
+    handValue: null,
     connected: true,
     place: null,
     registered: true,

@@ -31,6 +31,7 @@ export const D: Dict = {
   ', unless they answer with their own 7 (then 4, 6…). Hit by a 7? Tap Pick 2 (or play a 7)': ', जब तक वो अपना 7 न चले (फिर 4, 6…)। आप पर 7 आया? 2 उठाएँ दबाएँ (या 7 चलें)',
   'With 2 cards on your turn, tap 📢 Last card, then play. Forget it and someone moves before you say it: you pick 1 and miss your next turn.': 'अपनी बारी पर 2 पत्ते हों तो 📢 आख़िरी पत्ता दबाएँ, फिर चलें। भूल गए और किसी ने चल दिया: आप 1 उठाएँगे और अगली बारी जाएगी।',
   'The first player to empty their hand wins. Everyone else loses. Stuck with nothing to play or pick: fewest cards wins.': 'जिसके पत्ते पहले ख़त्म, वो जीता। बाकी सब हारे। चलने या उठाने को कुछ न बचे: सबसे कम पत्ते वाला जीतता है।',
+  'The first player to empty their hand wins. The rest are ranked by card value left (A 1 … K 13); the highest loses. Stuck with nothing to play or pick: fewest cards wins.': 'जिसके पत्ते पहले ख़त्म, वो जीता। बाकी बचे पत्तों की वैल्यू से (A 1 … K 13), सबसे ज़्यादा वाला हारा। चलने या उठाने को कुछ न बचे: सबसे कम पत्ते वाला जीतता है।',
   'On your turn put one or more cards face down and call a rank. You can lie.': 'अपनी बारी पर एक या ज़्यादा पत्ते उल्टे रखें और एक रैंक बोलें। आप झूठ बोल सकते हैं।',
   'Everyone after you calls one rank down, the same, or one up from the last call (K and A wrap), or passes.': 'आपके बाद हर कोई पिछली कॉल से एक रैंक नीचे, वही, या एक ऊपर बोलता है (K के बाद A), या पास करता है।',
   'Everyone after you must call the same rank, or pass.': 'आपके बाद सबको वही रैंक बोलना होगा, या पास।',
