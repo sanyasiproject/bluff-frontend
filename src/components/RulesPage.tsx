@@ -139,7 +139,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             <b>➕ Stack</b> (on by default): answer a +2 with a +2 or a +4, and a +4 with a +4; the next player picks the total.
           </li>
           <li>
-            <b>⚔️ Challenge the +4</b> (on by default): hit by a single +4? Challenge it. If its player held the colour in play, the +4 goes back to them (the pile and colour return to what they were) and they pick 4
+            <b>⚔️ Challenge the +4</b> (on by default): hit by a single +4? Challenge it. If its player held the colour in play, the +4 goes back to them and they pick 4; the colour they named stays in play
             and you play on; if the +4 was fair, you pick 6.
           </li>
           <li>
@@ -161,6 +161,12 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <li>
             <b>👥 2 vs 2</b> (off by default, exactly 4 players): partners sit opposite and play alternate turns with the other team. When one
             of you empties their hand, your team wins and splits the pot. A kick stops the game; a walk-out loses it for that team.
+          </li>
+          <li>
+            <b>⏱ Game time</b>: no limit (default), 3 or 5 minutes, with a clock in the top bar. If nobody has gone out when it runs
+            out, the game ends and everyone is ranked by the points they still hold, fewest first: numbers count their face value,
+            Skip/Reverse/+2 20, wilds 50. Equal points share the place, so two players level on the fewest both win and split the pot.
+            In 2 vs 2 the team with fewer points between them wins.
           </li>
           <li>📢 Last card works as in Crazy 7; forget it and you pick {RANG_MISSED_PENALTY} (or what the host set) and miss a turn.</li>
           <li>
@@ -776,7 +782,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             lists online friends first.
           </li>
           <li>
-            Join a friend from Friends or Online now: tap Ask to join (or 👀 Watch). Nobody goes straight in: that friend gets a card at the
+            Join a friend from Friends or Online now: tap Join (or ⋯ → 👀 Ask to watch). Nobody goes straight in: that friend gets a card at the
             top right and taps Let in or No. Room codes and invite links still let people straight in.
           </li>
           <li>Tap anyone in the lobby or Friends to see their public card: level, record and badges. Never coins or private data.</li>

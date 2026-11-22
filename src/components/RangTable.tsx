@@ -288,6 +288,24 @@ function DoublesSheet({
   );
 }
 
+/** game time left, ticking each second from the server's ms left (each view resets it) */
+function GameClock({ msLeft }: { msLeft: number }) {
+  const [endsAt, setEndsAt] = useState(() => Date.now() + msLeft);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => setEndsAt(Date.now() + msLeft), [msLeft]);
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(t);
+  }, []);
+  const left = Math.max(0, Math.ceil((endsAt - now) / 1000));
+  const text = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
+  return (
+    <span className={cx('rg-clock', left <= 30 && 'low')} role="timer" aria-label={`${text} of game time left`}>
+      ⏱ {text}
+    </span>
+  );
+}
+
 type TableProps = { view: RoomView; actions: Actions; bubbles: ChatBubble[]; auth: Auth };
 
 /** the Rang table; with 7-0 swap on, every 0 and 7 on it shows its swap badge */
@@ -684,6 +702,8 @@ function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
         )}
         {!partnerId && watching && view.teams && <span className="team-chip rg-team-chip">🔵 vs 🟠</span>}
         {view.config.stake > 0 && <span className="pot-chip">🪙 Pot {compactCoins(pot)}</span>}
+        {/* game time: when it runs out, the fewest points win */}
+        {rg && rg.msLeft !== null && view.phase === 'playing' && <GameClock msLeft={rg.msLeft} />}
         <span className="grow" />
         <div className="topbar-actions">
           {isHost && view.watchRequests.length > 0 && (

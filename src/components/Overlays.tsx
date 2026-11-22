@@ -317,7 +317,8 @@ export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza, onS
   return (
     <Backdrop center>
       <div className="reveal gameover" ref={box}>
-        <h3 className="reveal-title">{view.stopped ? 'Game stopped' : view.endedEarly ? 'Game ended' : 'Game over'}</h3>
+        <h3 className="reveal-title">{view.stopped ? 'Game stopped' : view.endedEarly ? 'Game ended' : view.rang?.timedOut ? "⏱ Time's up" : 'Game over'}</h3>
+        {view.rang?.timedOut && !view.stopped && <p className="muted small">Ranked by points left: fewest first, equal points share the place</p>}
         {winningTeam && (
           <p className="team-win">
             {winningTeam} Team {view.winnerIds.map(nameOf).join(' & ')} {view.winnerIds.includes(view.meId) ? 'win! 🎉' : 'win'}

@@ -35,6 +35,15 @@ const ASK_AGAIN_MS = 10_000;
 export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Props) {
   const [data, setData] = useState<FriendsResponse | null>(null);
   const [query, setQuery] = useState('');
+  /** the friend whose ⋯ menu is open */
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+  // Escape closes the ⋯ menu
+  useEffect(() => {
+    if (!menuFor) return;
+    const close = (e: KeyboardEvent) => e.key === 'Escape' && setMenuFor(null);
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, [menuFor]);
   /** null while there is nothing to search or a search is running */
   const [found, setFound] = useState<PlayerSearchResult[] | null>(null);
   const [searching, setSearching] = useState(false);
@@ -157,29 +166,86 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
     setTimeout(() => setAsked((prev) => new Set([...prev].filter((id) => id !== f.id))), ASK_AGAIN_MS);
   };
 
-  /** ask to join or watch a friend's room (both in a lobby, only watch once their game is on); they say yes or no */
-  const joinActions = (f: FriendView) => {
-    if (!onJoin || !f.online || f.inRoom !== 'other') return null;
-    if (f.roomPhase === 'playing') {
+  /** they're online in another room we may ask to get into */
+  const canAsk = (f: FriendView) => !!onJoin && f.online && f.inRoom === 'other';
+
+  /** the one thing to do with a friend right now: ask to join (or watch, once their game is on), invite, or where they are */
+  const mainAction = (f: FriendView) => {
+    if (canAsk(f)) {
+      const watch = f.roomPhase === 'playing';
       return (
-        <button className="btn small" disabled={asked.has(f.id)} onClick={() => void join(f, true)}>
-          {asked.has(f.id) ? 'Asked ✓' : '👀 Ask to watch'}
+        <button className={cx('btn small', !watch && 'primary')} disabled={asked.has(f.id)} onClick={() => void join(f, watch)}>
+          {asked.has(f.id) ? 'Asked ✓' : watch ? '👀 Watch' : 'Join'}
         </button>
       );
     }
-    return (
-      <>
-        <button className="btn small primary" disabled={asked.has(f.id)} onClick={() => void join(f, false)}>
-          {asked.has(f.id) ? 'Asked ✓' : 'Ask to join'}
+    if (roomCode && onInvite && f.inRoom === 'here') return <span className="tag dim">Here</span>;
+    if (roomCode && onInvite && f.inRoom === 'other') return <span className="tag dim">In a room</span>;
+    if (roomCode && onInvite && !f.inRoom) {
+      // offline friends can still be invited when invite notifications are on
+      return (
+        <button className="btn small primary" disabled={(!f.online && auth.pushInvites !== true) || invited.has(f.id)} onClick={() => void invite(f)}>
+          {invited.has(f.id) ? 'Invited ✓' : f.online ? 'Invite' : '🔔 Invite'}
         </button>
-        {!asked.has(f.id) && (
-          <button className="btn small" onClick={() => void join(f, true)}>
-            👀 Watch
-          </button>
-        )}
-      </>
-    );
+      );
+    }
+    return null;
   };
+
+  /** the rest, behind ⋯: watch instead of join, the profile, and removing them */
+  const moreMenu = (f: FriendView) => (
+    <>
+      <button
+        type="button"
+        className="icon-btn friend-more"
+        aria-label={`More for ${f.displayName}`}
+        aria-haspopup="menu"
+        aria-expanded={menuFor === f.id}
+        onClick={() => setMenuFor(menuFor === f.id ? null : f.id)}
+      >
+        ⋯
+      </button>
+      {menuFor === f.id && (
+        <>
+          {/* a tap anywhere else closes it */}
+          <div className="friend-menu-catch" onClick={() => setMenuFor(null)} />
+          <div className="friend-menu" role="menu">
+            {canAsk(f) && f.roomPhase !== 'playing' && !asked.has(f.id) && (
+              <button
+                role="menuitem"
+                onClick={() => {
+                  setMenuFor(null);
+                  void join(f, true);
+                }}
+              >
+                👀 Ask to watch
+              </button>
+            )}
+            <button
+              role="menuitem"
+              onClick={() => {
+                setMenuFor(null);
+                setViewing(f);
+              }}
+            >
+              👤 View profile
+            </button>
+            <button
+              role="menuitem"
+              className="danger"
+              disabled={busy}
+              onClick={() => {
+                setMenuFor(null);
+                setUnfriend(f);
+              }}
+            >
+              Remove friend
+            </button>
+          </div>
+        </>
+      )}
+    </>
+  );
 
   const person = (f: Person, actions: React.ReactNode, showOnline = true) => (
     <li key={f.id} className="friend-row">
@@ -188,7 +254,10 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
           {showOnline && f.online !== null && <i className={cx('presence', f.online && 'on')} />}
         </Avatar>
         <div className="grow">
-          <b data-no-translate>{f.displayName}</b> <LevelBadge level={f.level} />
+          {/* name and level on one line; a long name ends in … */}
+          <span className="friend-name">
+            <b data-no-translate>{f.displayName}</b> <LevelBadge level={f.level} />
+          </span>
           <p className="muted small">@{f.username}</p>
           {/* its own line, so it never breaks mid-phrase beside the Invite button */}
           {showOnline && (f.online !== null || where(f)) && (
@@ -274,31 +343,14 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
           {friendsOnlineFirst.map((f) =>
             person(
               f,
-              <div className="row-actions">
+              // one line: 💬, the one main action, and ⋯ for the rest
+              <div className="row-actions friend-acts">
                 <button className="btn small dm-btn" aria-label={`Message ${f.displayName}`} onClick={() => setChatWith(f)}>
                   💬
                   {(unread.byFriend[f.id] ?? 0) > 0 && <span className="req-dot">{unread.byFriend[f.id]}</span>}
                 </button>
-                {roomCode && onInvite && f.inRoom === 'here' && <span className="tag dim">In this room</span>}
-                {joinActions(f)}
-                {roomCode && onInvite && !onJoin && f.inRoom === 'other' && <span className="tag dim">In a room</span>}
-                {roomCode && onInvite && !f.inRoom && (
-                  // offline friends can still be invited when invite notifications are on
-                  <button
-                    className="btn small primary"
-                    disabled={(!f.online && auth.pushInvites !== true) || invited.has(f.id)}
-                    onClick={() => void invite(f)}
-                  >
-                    {invited.has(f.id) ? 'Invited ✓' : f.online ? 'Invite' : '🔔 Invite'}
-                  </button>
-                )}
-                <button
-                  className="link-btn danger-link"
-                  disabled={busy}
-                  onClick={() => setUnfriend(f)}
-                >
-                  Remove
-                </button>
+                {mainAction(f)}
+                {moreMenu(f)}
               </div>,
             ),
           )}

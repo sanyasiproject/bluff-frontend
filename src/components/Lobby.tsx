@@ -674,6 +674,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                 {view.config.rangSwap && <span>🔄 7-0 swap</span>}
                 {view.config.rangDoubles && <span>👯 Doubles</span>}
                 {view.config.rangForce && <span>⚡ Force play</span>}
+                {(view.config.rangTime ?? 0) > 0 && <span>⏱ {view.config.rangTime} min game</span>}
                 {(view.config.rangHand ?? 7) !== 7 && <span>🃏 {view.config.rangHand} cards each</span>}
                 {(view.config.rangMissed ?? 2) !== 2 && <span>📢 Miss last card: pick {view.config.rangMissed}</span>}
                 {view.config.teams && <span>👥 2 vs 2</span>}
@@ -836,6 +837,20 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <SettingRow title="📢 Forgot last card" desc="Cards picked by a player caught not saying last card">
             <Choice<1 | 2 | 4> value={view.config.rangMissed ?? 2} options={[[1, '1'], [2, '2'], [4, '4']]} onPick={(n) => set({ rangMissed: n })} />
           </SettingRow>
+          {/* stacked: three wide choices leave the text no room beside them */}
+          <div className="setting-row stacked">
+            <div className="grow">
+              <b>⏱ Game time</b>
+              <span>When time runs out, the fewest points left win; equal points share the place</span>
+            </div>
+            <div className="mini-seg" role="group" aria-label="Game time">
+              {([[0, 'No limit'], [3, '3 min'], [5, '5 min']] as const).map(([n, label]) => (
+                <button key={n} className={cx((view.config.rangTime ?? 0) === n && 'on')} aria-pressed={(view.config.rangTime ?? 0) === n} onClick={() => (view.config.rangTime ?? 0) !== n && set({ rangTime: n })}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
           <SettingRow title="👥 Teams" desc="2 vs 2: partners sit opposite; when one goes out, both win">
             <Choice value={view.config.teams} options={[[false, 'Off'], [true, '2 vs 2']]} onPick={(on) => set({ teams: on })} />
           </SettingRow>
@@ -975,6 +990,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             {view.config.rangDoubles && <li>👯 Doubles: when the top card is a number, put down all your cards of that number at once and pick which colour goes on top. On any other card, one card at a time.</li>}
             {view.config.rangForce && <li>⚡ Force play: a card you pick that fits is played at once.</li>}
             {view.config.teams && <li>👥 2 vs 2: partners sit opposite. When one of you goes out, your team wins.</li>}
+            {(view.config.rangTime ?? 0) > 0 && <li>⏱ {view.config.rangTime} minute game: if nobody is out by then, the fewest points left win (equal points share the place).</li>}
             <li>With 2 cards on your turn, tap 📢 Last card, then play. Forget it and someone moves first: you pick {view.config.rangMissed ?? 2} and miss a turn.</li>
             <li>First to empty their hand wins. The rest are ranked by points left (numbers face value, Skip/Reverse/+2 20, wilds 50); the highest loses.</li>
           </ul>

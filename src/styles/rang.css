@@ -654,3 +654,34 @@
   font-weight: 700;
   opacity: 0.85;
 }
+
+/* game time left in the top bar; the last 30 seconds pulse red */
+.rg-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rg-clock.low {
+  background: rgba(229, 72, 77, 0.3);
+  color: #ffd2d2;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rg-clock.low {
+    animation: rg-clock-pulse 1s ease-in-out infinite;
+  }
+}
+
+@keyframes rg-clock-pulse {
+  50% {
+    scale: 1.08;
+  }
+}

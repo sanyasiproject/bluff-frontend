@@ -16,6 +16,8 @@ const cardHi = (text: string): string => {
 };
 
 export const D: Dict = {
+  "⏱ Time's up": '⏱ समय ख़त्म',
+  'Ranked by points left: fewest first, equal points share the place': 'बचे अंकों से क्रम: सबसे कम पहले, बराबर अंक वाले बराबर स्थान पर',
   Rang: 'रंग',
   Red: 'लाल',
   Blue: 'नीला',
