@@ -582,7 +582,9 @@ function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
       return;
     }
     // doubles: same-number cards in hand open the sheet to put them down together
-    const partners = doublesOn && isNumber(card) ? hand.filter((c) => c.id !== id && c.value === card.value) : [];
+    // doubles only on the same number: on a green 8, a green 4 goes alone even with other 4s in hand
+    const sameAsTop = !!rg.top && rg.top.value === card.value;
+    const partners = doublesOn && isNumber(card) && sameAsTop ? hand.filter((c) => c.id !== id && c.value === card.value) : [];
     if (partners.length > 0) {
       setChoice({ kind: 'doubles', card, partners });
       return;

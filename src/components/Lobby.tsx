@@ -800,7 +800,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <div className="setting-row stacked">
             <div className="grow">
               <b>🂠 Picks per turn</b>
-              <span>Nothing fits? Keep picking until a card fits, up to this many. At 1 you pick one card: play it if it fits, else your turn ends.</span>
+              <span>Nothing fits? Keep picking until a card fits, up to this many. At 1 you pick one card, then play it or pass.</span>
             </div>
             <div className="mini-seg pick-seg" role="group" aria-label="Picks per turn">
               {Array.from({ length: RANG_MAX_PICKS }, (_, i) => i + 1).map((n) => (
@@ -824,7 +824,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <SettingRow title="🔄 7-0 swap" desc="A 7 swaps hands with a player you pick · a 0 passes every hand on">
             <Choice value={view.config.rangSwap === true} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ rangSwap: on })} />
           </SettingRow>
-          <SettingRow title="👯 Doubles" desc="Put down 2 or more number cards of the same number at once; the first must fit">
+          <SettingRow title="👯 Doubles" desc="On a number, put down all your cards of that number at once (on a 4: every 4 you hold)">
             <Choice value={view.config.rangDoubles === true} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ rangDoubles: on })} />
           </SettingRow>
           <SettingRow title="⚡ Force play" desc="A card you pick that fits is played at once">
@@ -967,12 +967,12 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             <li>✦ Wild: name the next colour. +4 Wild: name the colour and the next player picks 4 and misses a turn.</li>
             <li>
               Nothing fits? One card is picked for you
-              {(view.config.rangPicks ?? 1) > 1 ? `; keep picking (up to ${view.config.rangPicks} a turn) or Pass once you've picked.` : ', then your turn ends if it doesn\'t fit.'}
+              {(view.config.rangPicks ?? 1) > 1 ? `; keep picking (up to ${view.config.rangPicks} a turn), play a card that fits, or Pass.` : '; play it if it fits, or Pass.'}
             </li>
             {view.config.rangStack !== false && <li>➕ Hit by a +2 or +4? Answer with your own (+2 on +2, +4 on either) and the next player picks the total.</li>}
             {view.config.rangChallenge !== false && <li>⚔️ Hit by a +4? Challenge it: if they held the colour in play, they pick 4; if not, you pick 6.</li>}
             {view.config.rangSwap && <li>🔄 A 7 swaps hands with a player you pick; a 0 passes every hand on in the direction of play.</li>}
-            {view.config.rangDoubles && <li>👯 Doubles: put down 2 or more number cards of the same number at once; the first must fit, the last one's colour is next.</li>}
+            {view.config.rangDoubles && <li>👯 Doubles: when the top card is a number, put down all your cards of that number at once and pick which colour goes on top. On any other card, one card at a time.</li>}
             {view.config.rangForce && <li>⚡ Force play: a card you pick that fits is played at once.</li>}
             {view.config.teams && <li>👥 2 vs 2: partners sit opposite. When one of you goes out, your team wins.</li>}
             <li>With 2 cards on your turn, tap 📢 Last card, then play. Forget it and someone moves first: you pick {view.config.rangMissed ?? 2} and miss a turn.</li>

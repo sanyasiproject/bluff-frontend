@@ -133,7 +133,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           </li>
           <li>
             <b>Picks per turn</b> (1 to {RANG_MAX_PICKS}, host's choice, 1 by default): nothing fits, so a card is picked for you; you can keep
-            picking until one fits, up to the limit, or Pass once you've picked.
+            picking until one fits, up to the limit. After any pick you may play a card that fits or Pass, even when the picked card fits.
           </li>
           <li>
             <b>➕ Stack</b> (on by default): answer a +2 with a +2 or a +4, and a +4 with a +4; the next player picks the total.
@@ -147,7 +147,8 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             Not when it's your last card: then you simply win.
           </li>
           <li>
-            <b>👯 Doubles</b> (off by default): put down 2 or more number cards of the same number in one go. The first must fit; the last
+            <b>👯 Doubles</b> (off by default): when the top card is a number, put down all your cards of that number in one go (on a 4:
+            every 4 you hold; on a green 8, a green 4 still goes alone). You pick which colour goes on top; the last
             one's colour is next. A doubled 7 or 0 swaps once.
           </li>
           <li>
