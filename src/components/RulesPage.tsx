@@ -139,7 +139,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             <b>➕ Stack</b> (on by default): answer a +2 with a +2 or a +4, and a +4 with a +4; the next player picks the total.
           </li>
           <li>
-            <b>⚔️ Challenge the +4</b> (on by default): hit by a single +4? Challenge it. If its player held the colour in play, they pick 4
+            <b>⚔️ Challenge the +4</b> (on by default): hit by a single +4? Challenge it. If its player held the colour in play, the +4 goes back to them (the pile and colour return to what they were) and they pick 4
             and you play on; if the +4 was fair, you pick 6.
           </li>
           <li>

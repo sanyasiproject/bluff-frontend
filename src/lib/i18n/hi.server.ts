@@ -32,7 +32,7 @@ function afterPlayHi(part: string): string {
 export const P: Pattern[] = [
   [new RegExp(`^(.+?) played (?:(two|three|\\d+) × )?${RANG_CARD}( \\(picked and played\\))?(?: and swaps hands with (.+?))?((?:\\. .+)*)$`), (m) => `${m[1]} ने ${m[2] ? `${m[2] === 'two' ? 2 : m[2] === 'three' ? 3 : m[2]} × ` : ''}${rangCardHi(m[3])} ${m[4] ? 'उठाकर ' : ''}चला${m[5] ? ` और ${m[5]} से पत्ते बदले` : ''}${m[6] ? '। ' + m[6].slice(2).split('. ').map(afterPlayHi).join('। ') : ''}`],
   [new RegExp(`^(.+?) played ${CLAIM}((?:\\. (?:Next card must be|Play turns|.+ is skipped|.+ goes again)[^]*))$`), (m) => `${m[1]} ने ${claimHi(m[2])} चला। ${m[3].slice(2).split('. ').map(afterPlayHi).join('। ')}`],
-  [/^(.+) challenged the \+4\. Caught! (.+) had the colour and picks (\d+)$/, '$1 ने +4 को चुनौती दी। पकड़ा गया! $2 के पास वो रंग था, वो $3 उठाएँगे'],
+  [/^(.+) challenged the \+4\. Caught! (.+) had the colour, takes the \+4 back and picks (\d+)$/, '$1 ने +4 को चुनौती दी। पकड़ा गया! $2 के पास वो रंग था, +4 वापस लेंगे और $3 उठाएँगे'],
   [/^(.+) challenged the \+4, but it was fair\. (.+) picks (\d+)$/, '$1 ने +4 को चुनौती दी, पर वो सही था। $2 $3 उठाएँगे'],
   [new RegExp(`^(.+) played ${CLAIM} with a Card Shield 🔒$`), (m) => `${m[1]} ने कार्ड शील्ड 🔒 के साथ ${claimHi(m[2])} ${/^(one|1) | of /.test(m[2]) ? 'चला' : 'चले'}`],
   [new RegExp(`^(.+) played ${CLAIM}(?:\\. Pick (\\d+)!)?$`), (m) => `${m[1]} ने ${claimHi(m[2])} ${/^(one|1) | of /.test(m[2]) ? 'चला' : 'चले'}${m[3] ? `। ${m[3]} उठाओ!` : ''}`],

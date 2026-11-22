@@ -645,3 +645,12 @@
     animation: none;
   }
 }
+
+/* a stacked penalty: how it adds up, under the banner text */
+.c7-banner .rg-chain {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.85;
+}

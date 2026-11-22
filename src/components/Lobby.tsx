@@ -818,7 +818,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <SettingRow title="➕ Stack +2 and +4" desc="Answer a +2 with a +2 or +4, a +4 with a +4: the next player picks the total">
             <Choice value={view.config.rangStack !== false} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ rangStack: on })} />
           </SettingRow>
-          <SettingRow title="⚔️ Challenge the +4" desc="Hit by a +4? Challenge it: if they held the colour, they pick 4; if not, you pick 6">
+          <SettingRow title="⚔️ Challenge the +4" desc="Hit by a +4? Challenge it: if they held the colour, they take the +4 back and pick 4; if not, you pick 6">
             <Choice value={view.config.rangChallenge !== false} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ rangChallenge: on })} />
           </SettingRow>
           <SettingRow title="🔄 7-0 swap" desc="A 7 swaps hands with a player you pick · a 0 passes every hand on">
@@ -970,7 +970,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               {(view.config.rangPicks ?? 1) > 1 ? `; keep picking (up to ${view.config.rangPicks} a turn), play a card that fits, or Pass.` : '; play it if it fits, or Pass.'}
             </li>
             {view.config.rangStack !== false && <li>➕ Hit by a +2 or +4? Answer with your own (+2 on +2, +4 on either) and the next player picks the total.</li>}
-            {view.config.rangChallenge !== false && <li>⚔️ Hit by a +4? Challenge it: if they held the colour in play, they pick 4; if not, you pick 6.</li>}
+            {view.config.rangChallenge !== false && <li>⚔️ Hit by a +4? Challenge it: if they held the colour in play, they take the +4 back and pick 4; if not, you pick 6.</li>}
             {view.config.rangSwap && <li>🔄 A 7 swaps hands with a player you pick; a 0 passes every hand on in the direction of play.</li>}
             {view.config.rangDoubles && <li>👯 Doubles: when the top card is a number, put down all your cards of that number at once and pick which colour goes on top. On any other card, one card at a time.</li>}
             {view.config.rangForce && <li>⚡ Force play: a card you pick that fits is played at once.</li>}

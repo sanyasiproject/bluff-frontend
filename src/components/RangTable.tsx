@@ -419,7 +419,8 @@ function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
     const to = id ? spotOf(id) : null;
     const p = view.players.find((x) => x.id === id);
     if (!deckRef.current || !to || count <= 0) return;
-    fly({ key: `pick-${++flightSeq.current}`, count: Math.min(count, 6), from: deckRef.current.getBoundingClientRect(), to: to.getBoundingClientRect(), delay, vanish: true, backs: p ? [p.back] : undefined, auras: p ? [p.shop?.aura ?? null] : undefined });
+    // every card picked flies, so a stack of 12 looks like 12
+    fly({ key: `pick-${++flightSeq.current}`, count: Math.min(count, 16), from: deckRef.current.getBoundingClientRect(), to: to.getBoundingClientRect(), delay, vanish: true, backs: p ? [p.back] : undefined, auras: p ? [p.shop?.aura ?? null] : undefined });
   };
   useEffect(() => {
     if (!rg) return;
@@ -485,13 +486,17 @@ function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
       say(by, { text: 'passed' });
     } else if (last.kind === 'challenge') {
       (last.guilty ? sfx.caught : sfx.truth)();
-      // guilty: the +4's player picks; fair: the challenger picks
+      // guilty: the +4 flies back to its player, who also picks; fair: the challenger picks
       const picker = last.guilty ? last.targetId : by;
-      pickFly(picker, last.count, 200);
+      const owner = last.guilty ? spotOf(last.targetId ?? '') : null;
+      if (owner && pileRef.current) {
+        fly({ key: `back-${++flightSeq.current}`, count: 1, from: pileRef.current.getBoundingClientRect(), to: owner.getBoundingClientRect(), vanish: true, rangCard: { id: 'returned', color: null, value: 'wild4' } });
+      }
+      pickFly(picker, last.count, last.guilty ? 500 : 200);
       if (last.count > 0) window.setTimeout(() => sfx.draw(), 320);
       if (last.guilty) {
         say(by, { text: 'challenged' });
-        say(last.targetId, { text: `+${last.count || 4} · caught` });
+        say(last.targetId, { text: `+4 back · +${last.count || 4}` });
       } else {
         say(by, { text: `+${last.count || 6} · fair +4` });
       }
@@ -739,6 +744,8 @@ function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
                 ? `Pick ${rg.penalty} or stack ${stackText}!`
                 : `Pick ${rg.penalty}!`
               : `${name(view.turnId)} must pick ${rg.penalty}${stackOn ? ` or stack ${stackText}` : ''}`}
+            {/* how a stacked penalty adds up: +2 +2 +4 +4 = 12 */}
+            {(rg.chain?.length ?? 0) > 1 && <small className="rg-chain">{`${rg.chain.map((n) => `+${n}`).join(' ')} = ${rg.penalty}`}</small>}
           </div>
         ) : (
           <div className="round-chip set c7-rules-chip">
@@ -756,7 +763,7 @@ function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
               .join(' · ')}
           </div>
         )}
-        {myTurn && rg.canChallenge && <p className="rg-challenge-hint">Challenge the +4: if they had the colour, they pick 4; if not, you pick 6</p>}
+        {myTurn && rg.canChallenge && <p className="rg-challenge-hint">Challenge the +4: if they had the colour, they take it back and pick 4; if not, you pick 6</p>}
         <div className="c7-board">
           <Deck count={rg.deckCount} live={myTurn && rg.canPick && !busy} penalty={rg.penalty} boxRef={deckRef} onPick={pick} />
           <PileReact onReact={(i) => void actions.reactOnPile(i)}>

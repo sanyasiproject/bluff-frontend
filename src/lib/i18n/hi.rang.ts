@@ -29,6 +29,8 @@ export const D: Dict = {
   'Only a +4 can pass it on': 'सिर्फ़ +4 ही इसे आगे बढ़ा सकता है',
   'Only a +2 or +4 can pass it on': 'सिर्फ़ +2 या +4 ही इसे आगे बढ़ा सकता है',
   'Play any card': 'कोई भी पत्ता चलें',
+  'Challenge the +4: if they had the colour, they take it back and pick 4; if not, you pick 6':
+    '+4 को चुनौती दें: अगर उनके पास वो रंग था तो वो उसे वापस लेंगे और 4 उठाएँगे; नहीं तो आप 6 उठाएँगे',
   'Challenge the +4: if they had the colour, they pick 4; if not, you pick 6':
     '+4 को चुनौती दें: उनके पास वह रंग था तो वे 4 उठाएँगे; नहीं था तो आप 6 उठाएँगे',
   Challenge: 'चुनौती',
@@ -75,6 +77,8 @@ export const P: Pattern[] = [
   [/^(.+) must pick (\d+) or stack a \+2 or \+4$/, '$1 को $2 उठाने होंगे या +2/+4 जोड़ें'],
   [/^missed · \+(\d+)$/, 'भूले · +$1'],
   [/^\+(\d+) · caught$/, '+$1 · पकड़े गए'],
+  [/^\+4 back · \+(\d+)$/, '+4 वापस · +$1'],
+  [/^((?:\+[24] )+)= (\d+)$/, '$1= $2'],
   [/^\+(\d+) · fair \+4$/, '+$1 · +4 सही था'],
   [/^(1st|2nd|3rd|4th|5th) · (\d+) pts$/, (m) => `${ORD[m[1]]} · ${m[2]} अंक`],
   [/^Lost · (\d+) pts$/, 'हारे · $1 अंक'],
