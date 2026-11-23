@@ -458,3 +458,24 @@
     animation: none;
   }
 }
+
+@media (orientation: landscape) {
+  /* empty deck: a short two-line note inside the dashed outline */
+  .rg-table .rg3-empty {
+    padding: 2px;
+    font-size: 9px;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  /* a +2/+4 with too few cards left: what really happens */
+  .rg-table .rg3-penalty .rg3-short {
+    margin-top: 1px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.35);
+    max-width: 82px;
+    white-space: normal;
+    text-align: center;
+  }
+}

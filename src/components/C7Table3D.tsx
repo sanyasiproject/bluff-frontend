@@ -5,7 +5,7 @@ import type { Crazy7View } from '../types';
 import { PlayingCard } from './PlayingCard';
 
 /** Crazy 7's deck as a real stack on the felt: paper layers that shrink as it empties, a back on top; tap to pick */
-export function Deck3D({ count, live, penalty, boxRef, onPick }: { count: number; live: boolean; penalty: number; boxRef: RefObject<HTMLButtonElement>; onPick: () => void }) {
+export function Deck3D({ count, live, penalty, refill, boxRef, onPick }: { count: number; live: boolean; penalty: number; refill?: boolean; boxRef: RefObject<HTMLButtonElement>; onPick: () => void }) {
   // one paper layer for every two cards, so a full deck stands tall
   const layers = Math.min(Math.ceil(Math.max(count - 1, 0) / 2), 30);
   return (
@@ -18,7 +18,8 @@ export function Deck3D({ count, live, penalty, boxRef, onPick }: { count: number
       onClick={onPick}
       style={{ ['--layers' as string]: layers } as CSSProperties}
     >
-      {count === 0 && <span className="c7-3d-empty">Empty</span>}
+      {/* empty: the pile shuffles back in on the next pick, or there's truly nothing left */}
+      {count === 0 && <span className="c7-3d-empty">{refill === undefined ? 'Empty' : refill ? 'Empty · pile shuffles in' : 'Empty · no cards left'}</span>}
       {live && <i className="c7-deck3d-glow" aria-hidden />}
       {paperSteps(layers).map((i) => (
         <i key={i} className="c7-3d-layer back" style={{ ['--i' as string]: i } as CSSProperties} />

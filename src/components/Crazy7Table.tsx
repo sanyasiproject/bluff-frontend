@@ -30,6 +30,7 @@ import { LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { useTableFx } from './TableFx';
 import { RangArrows } from './RangTable3D';
 import { useCardRects } from '../lib/cardRects';
+import { arrivingCss, useArrivals } from '../lib/arrivals';
 import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
 import { StreakMark, TurnCountdown, useTurnEndsAt } from './TurnTimer';
 import { Avatar } from './Avatar';
@@ -242,6 +243,15 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
 
   // what changed on the table: a card played flies face up to the pile, picked cards fly from the deck
   const flightSeq = useRef(0);
+  // cards I pick fly off the deck, turn face up and land on their own place in my hand
+  const arriving = useArrivals({
+    hand: view.hand,
+    handRef,
+    source: () => deckRef.current?.getBoundingClientRect(),
+    enabled: land && !watching && !dealing && playing,
+    launch: (card, from, to, delay, done) =>
+      fly({ key: `arr-${card.id}-${++flightSeq.current}`, count: 1, from, to, delay, arrive: { card }, backs: [backOf(view.players, view.meId)], after: done }),
+  });
   // Uno-style moments for the power cards and the 7: skip, reverse, +2, a J's suit, last card, caught
   const { fx, layer: fxLayer } = useTableFx();
   useEffect(() => {
@@ -294,10 +304,12 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
     for (const p of view.players) {
       const gained = p.cardCount - (before.get(p.id) ?? p.cardCount);
       if (gained <= 0) continue;
+      // my own picks fly into my hand card by card (useArrivals)
+      const mineLands = land && p.id === view.meId && !watching;
       picked = true;
       const from = deckRef.current;
       const to = spotOf(p.id);
-      if (from && to) {
+      if (from && to && !mineLands) {
         fly({
           key: `pick-${++flightSeq.current}`,
           count: Math.min(gained, 6),
@@ -315,6 +327,12 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
     }
     if (picked) window.setTimeout(() => sfx.draw(), delay);
     const last = c7.last;
+    // a 7's pick with no cards left anywhere: nothing is picked, the turn is just missed
+    if (last?.kind === 'penalty' && last.count === 0 && last.playerId) {
+      sfx.pass();
+      fx('skip', spotOf(last.playerId), { text: 'NO CARDS LEFT' });
+      next[last.playerId] = 'nothing to pick · turn missed';
+    }
     if (last?.kind === 'pass' && last.playerId) next[last.playerId] = next[last.playerId] ? `${next[last.playerId]} · passed` : 'passed';
     if (Object.keys(next).length > 0) setActs((prev) => ({ ...prev, ...next }));
   }, [view]);
@@ -455,17 +473,26 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
     setSound(!sound);
   };
 
+  // cards that can still be picked: the deck, plus the pile under its top card (shuffled back in when the deck runs out)
+  const pickable = c7 ? c7.deckCount + Math.max(0, c7.pileCount - 1) : 0;
+  // a 7's pick bigger than what's left: only what there is (nothing at all: the turn is simply missed)
+  const shortPick = !!c7 && c7.penalty > 0 && pickable < c7.penalty;
+  const shortText = pickable === 0 ? 'No cards left: turn missed' : `Only ${pickable} left`;
   let status = '';
   if (c7 && playing && c7.auto && view.turnId) {
     // the room is about to pick or pass for the player on turn, a moment later so everyone can follow
     const who = myTurn ? 'You' : name(view.turnId);
     if (c7.missed.includes(view.turnId)) status = myTurn ? 'Missed last card · picking 1 for you…' : `${who} missed last card · picking 1…`;
+    else if (c7.penalty > 0 && shortPick && pickable === 0) status = myTurn ? 'No cards left to pick · you miss this turn…' : `No cards left to pick · ${who} misses the turn…`;
+    else if (c7.penalty > 0 && shortPick) status = myTurn ? `Only ${pickable} left · picking them for you…` : `Only ${pickable} left · ${who} picks them…`;
     else if (c7.penalty > 0) status = myTurn ? `Picking ${c7.penalty} for you…` : `${who} picks ${c7.penalty}…`;
+    else if (c7.picks === 0 && pickable === 0) status = myTurn ? 'No match and no cards left to pick · your turn passes…' : `${who} has no match and nothing to pick · passing…`;
     else if (c7.picks === 0) status = myTurn ? 'No matching card · picking one for you…' : `${who} has no match · picking a card…`;
     else status = myTurn ? 'Still no match · your turn passes…' : `${who}: still no match · passing…`;
   } else if (c7 && playing) {
     if (myTurn) {
-      if (c7.penalty > 0) status = c7.playable.length > 0 ? `Pick ${c7.penalty} or play a ${power ? '7 or 2' : '7'}` : `Pick ${c7.penalty}`;
+      if (c7.penalty > 0 && shortPick) status = `${pickable === 0 ? 'No cards left to pick: miss your turn' : `Only ${pickable} left to pick`}${c7.playable.length > 0 ? ` or play a ${power ? '7 or 2' : '7'}` : ''}`;
+      else if (c7.penalty > 0) status = c7.playable.length > 0 ? `Pick ${c7.penalty} or play a ${power ? '7 or 2' : '7'}` : `Pick ${c7.penalty}`;
       else if (c7.picks > 0) {
         const head = c7.picks === 1 && !tappedPick.current ? 'No match, we picked one for you' : `Picked ${c7.picks} of ${view.config.maxPicks}`;
         // Pass only stops picking early; at the limit a card that fits must be played
@@ -496,6 +523,7 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
             ? `Pick ${c7.penalty} or play a ${power ? '7 or 2' : '7'}!`
             : `Pick ${c7.penalty}!`
           : `${name(view.turnId)} must pick ${c7.penalty}${view.config.stack7 ? ` or play a ${power ? '7 or 2' : '7'}` : ''}`}
+        {shortPick && <small className="rg-chain">{pickable === 0 ? 'No cards left to pick: the turn is missed' : `Only ${pickable} cards left to pick`}</small>}
       </div>
     ) : null;
   const rulesChip = (
@@ -631,7 +659,7 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
               </OnTable>
             )}
             <OnTable x={42} y={48} z={3} className="c7-deck-spot">
-              <Deck3D count={c7.deckCount} live={myTurn && c7.canPick && !busy} penalty={c7.penalty} boxRef={deckRef} onPick={pick} />
+              <Deck3D count={c7.deckCount} live={myTurn && c7.canPick && !busy} penalty={c7.penalty} refill={c7.pileCount > 1} boxRef={deckRef} onPick={pick} />
             </OnTable>
             <OnTable x={58} y={48} z={3} className="c7-pile-spot">
               <PileReact onReact={(i) => void actions.reactOnPile(i)}>
@@ -642,7 +670,9 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
               <OnTable x={71} y={52} stand className="felt-sign c7-signs">
                 {c7.penalty > 0 && (
                   <span key={`${c7.penalty}-${view.turnId}`} className={cx('c7-sign pick', myTurn && 'mine')} role="status">
-                    {`Pick ${c7.penalty}!`}
+                    {shortPick ? `+${c7.penalty}` : `Pick ${c7.penalty}!`}
+                    {/* fewer cards left than the pick: say what really happens */}
+                    {shortPick && <small className="c7-short">{shortText}</small>}
                   </span>
                 )}
                 {power && c7.wish && (
@@ -774,7 +804,7 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
         {!land && callBtn}
         {myTurn && c7.penalty > 0 && (
           <button className="btn danger grow" disabled={busy || !c7.canPick} onClick={pick}>
-            Pick {c7.penalty}
+            {shortPick ? (pickable === 0 ? 'Miss turn' : `Pick the last ${pickable}`) : `Pick ${c7.penalty}`}
           </button>
         )}
         {myTurn && c7.penalty === 0 && c7.canPick && (
@@ -828,6 +858,7 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
         <SeatSheet player={targetPlayer} auth={auth} onThrow={(i) => void actions.throwAt(targetPlayer.id, i)} onClose={() => setTarget(null)} />
       )}
       {fxLayer}
+      {arriving.length > 0 && <style>{arrivingCss(arriving)}</style>}
       {flights.map((f) => (
         <FlyingCards key={f.key} flight={f} onDone={() => setFlights((all) => all.filter((x) => x.key !== f.key))} />
       ))}

@@ -126,7 +126,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             <li>Laptops and tablets show the same sideways layout, bigger.</li>
             <li>The table is 3D: opponents round the far edge, the pile lying on the felt, your cards fanned at the bottom, Bluff / Play / Pass on the right.</li>
             <li>Rang and Crazy 7 power cards have Uno-style moments: SKIP!, a spinning REVERSE, a big +2 / +4 (the table shakes on +4), a colour wheel for a wild, LAST CARD! and CAUGHT!.</li>
-            <li>2 vs 2 (Bluff and Rang): your partner sits straight across from you and holds their cards up face up for you: Bluff sorted A to K with how many of each, Rang sorted by colour. Only you see them.</li>
+            <li>2 vs 2 (Bluff and Rang): your partner sits straight across from you and holds their cards up face up for you: Bluff sorted A to K with how many of each; Rang in straight rows in a fixed box, by colour, each card's sign and how many on its own edge (a big hand packs closer, then wraps onto another row, so it never covers the seats). Only you see them.</li>
             <li>The table only shows the players, the cards and your buttons. Tap ☰ (top left, with the room code) for your secret mission, this table's rules, your counts and the last moves.</li>
             <li>Tap a card to lift it out of the fan; the number on it is the order it goes down in.</li>
             <li>Bluff with a big hand (2 decks): the cards fold into one stack per rank. Tap a stack and choose how many of that rank to put down (1, 2 … All, or None). ▦ Stacks / 🂠 Fan switches.</li>
@@ -185,6 +185,11 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             </li>
             <li>📢 Last card works as in Crazy 7; forget it and you pick {RANG_MISSED_PENALTY} (or what the host set) and miss a turn.</li>
             <li>
+              When the deck runs out, the pile (except its top card) is shuffled into a new deck. A +2/+4 bigger than what's left: you pick
+              what there is; nothing left at all: you pick nothing and just miss the turn (the deck says “Empty · no cards left”, the button
+              Miss turn). If nobody can play and nothing is left, the fewest cards win.
+            </li>
+            <li>
               The first player to empty their hand wins. The rest are ranked by points left (numbers their face value, Skip/Reverse/+2 20, wilds
               50; lower is better); only the highest loses. Coins: everyone pays the stake, the winner takes the pot.
             </li>
@@ -216,7 +221,11 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
               still say it, or play your last card. Caught: on your next turn you pick 1 (plus any 7 waiting for you) and miss that turn.
             </li>
             <li>Bots usually say last card, but now and then they forget too, so you can catch them.</li>
-            <li>When the deck runs out, the pile (except its top card) is shuffled into a new deck.</li>
+            <li>
+              When the deck runs out, the pile (except its top card) is shuffled into a new deck. A 7's pick bigger than what's left: you pick
+              what there is; nothing left at all: you pick nothing and just miss the turn (the deck says “Empty · no cards left”, the button
+              Miss turn).
+            </li>
             <li>
               The first player to empty their hand wins at once. The rest are ranked by the value of cards left (A 1, 2–10 face value, J 11, Q 12, K 13; lower is better); only the highest loses. Coins: everyone
               pays the stake, the winner takes the pot.

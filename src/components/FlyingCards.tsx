@@ -31,6 +31,10 @@ export interface Flight {
   onTable?: boolean;
   /** the card starts at this width (its size in my hand), from `from` */
   startWidth?: number;
+  /** a card I picked: it leaves the deck face down, turns face up in the air and lands exactly on its place in my hand */
+  arrive?: { card?: Card; rangCard?: RangCardData };
+  /** called when the flight has landed */
+  after?: () => void;
 }
 
 // how far the table leans (land-world.css --tilt), so a landing card lies flat on it
@@ -49,9 +53,15 @@ export function FlyingCards({ flight, onDone }: { flight: Flight; onDone: () => 
   const cwOf = (i: number) => Math.round(flight.froms?.[i]?.width ?? flight.startWidth ?? 0);
   const sized = (i: number) => (cwOf(i) ? undefined : (flight.size ?? 'md'));
 
+  const arrive = flight.arrive ?? null;
+  const finish = () => {
+    flight.after?.();
+    onDone();
+  };
+
   useLayoutEffect(() => {
     if (reducedMotion()) {
-      onDone();
+      finish();
       return;
     }
     const tilt = flight.onTable ? TABLE_TILT : 0;
@@ -62,14 +72,32 @@ export function FlyingCards({ flight, onDone }: { flight: Flight; onDone: () => 
       const dy = src.top + src.height / 2 - y;
       // the arc's top: above both ends, higher for longer flights
       const lift = Math.min(150, 50 + Math.hypot(dx, dy) * 0.28);
+      const posed = (fx: number, fy: number, tiltX: number, turnY: number, spinZ: number, sc: number) =>
+        `${P} translate(-50%, -50%) translate(${fx}px, ${fy}px) rotateX(${tiltX}deg) rotateY(${turnY}deg) rotate(${spinZ}deg) scale(${sc})`;
+      // a card I picked: off the deck face down, up in an arc, turning face up, and down onto its place in my hand
+      if (arrive) {
+        const from0 = Math.max(0.35, Math.min(1, src.width / Math.max(to.width, 1)));
+        return el.animate(
+          [
+            { transform: posed(dx, dy, tilt * 0.6, 180, -8, from0), easing: 'cubic-bezier(0.3, 0.7, 0.4, 1)' },
+            { transform: posed(dx * 0.75, dy * 0.75 - lift * 0.6, tilt * 0.3, 180, -4, (from0 + 1.15) / 2), offset: 0.3, easing: 'ease-in-out' },
+            { transform: posed(dx * 0.35, dy * 0.35 - lift * 0.7, 0, 90, 0, 1.18), offset: 0.55, easing: 'ease-in-out' },
+            { transform: posed(0, -18, 0, 0, 0, 1.12), offset: 0.8, easing: 'cubic-bezier(0.3, 0.9, 0.4, 1.3)' },
+            { transform: posed(0, 0, 0, 0, 0, 1) },
+          ],
+          { duration: 760, delay: flight.delay ?? 0, fill: 'both' },
+        );
+      }
+      // someone else picked: the cards stay in plain sight all the way to them, settling in only at the end
       if (flight.vanish) {
         return el.animate(
           [
-            { transform: `${P} translate(-50%, -50%) translate(${dx}px, ${dy}px) rotateX(${tilt}deg) scale(0.75) rotate(${i * 9 - 18}deg)`, opacity: 1 },
-            { transform: `${P} translate(-50%, -50%) translate(${dx * 0.4}px, ${dy * 0.4 - lift * 0.5}px) rotateX(${tilt / 2}deg) scale(0.95) rotate(${i * 7 - 10}deg)`, opacity: 1, offset: 0.5 },
-            { transform: `${P} translate(-50%, -50%) scale(0.5)`, opacity: 0 },
+            { transform: posed(dx, dy, tilt, 0, i * 9 - 18, 0.75), opacity: 1, easing: 'cubic-bezier(0.3, 0.7, 0.4, 1)' },
+            { transform: posed(dx * 0.45, dy * 0.45 - lift * 0.55, tilt / 2, 0, i * 7 - 10, 1), opacity: 1, offset: 0.5 },
+            { transform: posed(0, 0, 0, 0, i * 4 - 6, 0.85), opacity: 1, offset: 0.86 },
+            { transform: posed(0, 0, 0, 0, 0, 0.6), opacity: 0 },
           ],
-          { duration: 560, delay: (flight.delay ?? 0) + i * 70, easing: 'cubic-bezier(0.4, 0, 0.3, 1)', fill: 'both' },
+          { duration: 680, delay: (flight.delay ?? 0) + i * 90, fill: 'both' },
         );
       }
       // a card from my hand starts at its real size and shrinks to the pile's as it lands
@@ -118,8 +146,8 @@ export function FlyingCards({ flight, onDone }: { flight: Flight; onDone: () => 
       );
     });
     const last = runs[runs.length - 1];
-    if (last) last.onfinish = onDone;
-    else onDone();
+    if (last) last.onfinish = finish;
+    else finish();
     return () => runs.forEach((a) => a?.cancel());
   }, [flight.key]);
 
@@ -131,11 +159,17 @@ export function FlyingCards({ flight, onDone }: { flight: Flight; onDone: () => 
           ref={(el) => {
             refs.current[i] = el;
           }}
-          className={faces ? 'fly-card fly-turn' : 'fly-card'}
-          // a card leaving my hand keeps its size at the start (its cards inherit --cw)
-          style={cwOf(i) ? ({ ['--cw' as string]: `${cwOf(i)}px` } as CSSProperties) : undefined}
+          className={faces || arrive ? 'fly-card fly-turn' : 'fly-card'}
+          // a card leaving my hand keeps its size at the start; a picked card is drawn at its size in my hand
+          style={arrive ? ({ ['--cw' as string]: `${Math.round(to.width)}px` } as CSSProperties) : cwOf(i) ? ({ ['--cw' as string]: `${cwOf(i)}px` } as CSSProperties) : undefined}
         >
-          {faces ? (
+          {arrive ? (
+            <>
+              {/* both sides: the deck's back first, the face turns in on the way */}
+              {arrive.rangCard ? <RangCard card={arrive.rangCard} className="fly-front" /> : arrive.card ? <PlayingCard card={arrive.card} className="fly-front" /> : null}
+              <PlayingCard faceDown back={flight.backs?.[0]} aura={flight.auras?.[0] ?? null} className="fly-back" />
+            </>
+          ) : faces ? (
             <>
               {/* both sides of the card: the face turns away and the owner's back turns in */}
               <PlayingCard card={faces[i]} size={sized(i)} className="fly-front" />

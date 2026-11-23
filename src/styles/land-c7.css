@@ -323,3 +323,33 @@
     animation: none;
   }
 }
+
+@media (orientation: landscape) {
+  /* empty deck: a short two-line note inside the dashed outline */
+  .c7-3d-empty {
+    padding: 2px;
+    font-size: 9px;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  /* a 7's pick with too few cards left: what really happens, under the sign */
+  .c7-sign.pick:has(.c7-short) {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.15;
+  }
+
+  .c7-sign .c7-short {
+    max-width: 82px;
+    margin-top: 1px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.35);
+    font-size: 9px;
+    font-weight: 800;
+    white-space: normal;
+    text-align: center;
+  }
+}

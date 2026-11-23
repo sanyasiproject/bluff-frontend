@@ -89,6 +89,8 @@ export function Pile3D({
 /** a fan of small face-up cards held up like a real hand, for my 2v2 partner (Bluff and Rang share it) */
 export function PartnerFan({ name, total, team, cards, wide }: { name: string; total: number; team: 'a' | 'b' | null; cards: { key: string; node: ReactNode; n?: number; tag?: string; tagColor?: string }[]; wide?: boolean }) {
   const m = cards.length;
+  // Rang: a fixed-size box of straight rows, so a big hand never spreads over the seats
+  if (wide) return <PartnerRows name={name} total={total} team={team} cards={cards} />;
   // wide (Rang): cards spread far enough apart that each one's colour and number show whole; fewer cards, wider gaps
   const step = wide ? Math.max(14, Math.min(26, 230 / Math.max(m - 1, 1))) : 17;
   // a gentle arc, flatter when spread wide so the cards stay upright and easy to read
@@ -137,5 +139,50 @@ export function PartnerCards({ cards, name, kismat, team }: { cards: Card[]; nam
       team={team}
       cards={groups.map((g) => ({ key: g[0].rank, n: g.length, node: <PlayingCard card={g[0]} wild={kismat === g[0].rank} /> }))}
     />
+  );
+}
+
+/** the most room my partner's Rang cards take across, whatever their count */
+const ROWS_WIDTH = 250;
+const ROWS_CARD = 24;
+/** the narrowest a card's visible edge gets before the cards wrap onto another row (its sign and count still fit) */
+const ROWS_MIN_STEP = 16;
+const ROWS_MAX_STEP = 24;
+
+/** how a partner's cards split into rows: as few rows as fit the box, the cards shared evenly between them */
+export function partnerRows(m: number) {
+  const perRow = Math.floor((ROWS_WIDTH - ROWS_CARD) / ROWS_MIN_STEP) + 1;
+  const rows = Math.max(1, Math.ceil(m / perRow));
+  const per = Math.ceil(m / rows);
+  const step = per > 1 ? Math.min(ROWS_MAX_STEP, (ROWS_WIDTH - ROWS_CARD) / (per - 1)) : ROWS_MAX_STEP;
+  return { rows, per, step };
+}
+
+/** 2v2 Rang: my partner's cards lying in straight rows, left to right by colour; each card's sign and count sit on its own visible edge */
+function PartnerRows({ name, total, team, cards }: { name: string; total: number; team: 'a' | 'b' | null; cards: { key: string; node: ReactNode; n?: number; tag?: string; tagColor?: string }[] }) {
+  const { rows, per, step } = partnerRows(cards.length);
+  const lines = Array.from({ length: rows }, (_, r) => cards.slice(r * per, r * per + per));
+  return (
+    <div className={`pfan prows-box${team ? ` team-${team}` : ''}`} aria-label={`${name}'s cards, ${total}`}>
+      <span className="pfan-tag" data-no-translate>
+        🤝 {name} · {total}
+      </span>
+      <div className="prows" style={{ ['--pcw' as string]: `${ROWS_CARD}px`, ['--step' as string]: `${step.toFixed(1)}px` } as CSSProperties}>
+        {cards.length === 0 && <span className="pfan-none">No cards left</span>}
+        {lines.map((line, r) => (
+          <div key={r} className="prow" style={{ ['--k' as string]: line.length, zIndex: r } as CSSProperties}>
+            {line.map((c, i) => (
+              <span key={c.key} className="prow-card" style={{ ['--i' as string]: i, zIndex: i } as CSSProperties}>
+                {c.node}
+                <b className="prow-sign" style={{ ['--chip' as string]: c.tagColor ?? '#222' } as CSSProperties}>
+                  {c.tag}
+                </b>
+                {c.n !== undefined && c.n > 1 && <b className="prow-n">×{c.n}</b>}
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

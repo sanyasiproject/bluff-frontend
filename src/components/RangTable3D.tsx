@@ -13,7 +13,7 @@ function tiltOf(id: string, n: number, range = 15) {
 }
 
 /** Rang's draw deck as a real stack on the felt: paper layers for the cards left, a few backs on top; tap to pick when it glows */
-export function RangDeck3D({ count, live, penalty, boxRef, onPick }: { count: number; live: boolean; penalty: number; boxRef: RefObject<HTMLButtonElement>; onPick: () => void }) {
+export function RangDeck3D({ count, live, penalty, refill, boxRef, onPick }: { count: number; live: boolean; penalty: number; refill?: boolean; boxRef: RefObject<HTMLButtonElement>; onPick: () => void }) {
   // one paper layer for every three cards, so a full deck stands tall
   const layers = Math.min(Math.ceil(Math.max(count - 2, 0) / 3), 32);
   const backs = Math.min(count, 2);
@@ -28,7 +28,8 @@ export function RangDeck3D({ count, live, penalty, boxRef, onPick }: { count: nu
       onClick={onPick}
     >
       {live && <span className="rg3-glow" aria-hidden />}
-      {count === 0 && <span className="rg3-empty">Empty</span>}
+      {/* empty: the pile shuffles back in on the next pick, or there's truly nothing left */}
+      {count === 0 && <span className="rg3-empty">{refill ? 'Empty · pile shuffles in' : 'Empty · no cards left'}</span>}
       {paperSteps(layers).map((i) => (
         <i key={i} className="rg3-layer" style={{ ['--i' as string]: i, rotate: `${((i * 37) % 5) - 2}deg` } as CSSProperties} aria-hidden />
       ))}
@@ -44,7 +45,7 @@ export function RangDeck3D({ count, live, penalty, boxRef, onPick }: { count: nu
           {count}
         </span>
       )}
-      {live && <span className="rg3-tip">{penalty > 0 ? `Pick ${penalty}` : 'Pick'}</span>}
+      {live && <span className="rg3-tip">{penalty > 0 ? `Pick ${penalty}` : count === 0 && !refill ? 'Miss turn' : 'Pick'}</span>}
     </button>
   );
 }

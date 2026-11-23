@@ -22,6 +22,7 @@ import { LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
 import { useTableFx } from './TableFx';
 import { useCardRects } from '../lib/cardRects';
+import { arrivingCss, useArrivals } from '../lib/arrivals';
 import { StreakMark, TurnCountdown, useTurnEndsAt } from './TurnTimer';
 import { Avatar } from './Avatar';
 import { SecretChip } from './SecretMissions';
@@ -489,12 +490,23 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
 
   // each new move: a seat label, a sound, and cards flying to the pile or from the deck
   const flightSeq = useRef(0);
+  // cards I pick fly off the deck, turn face up and land on their own place in my hand
+  const arriving = useArrivals({
+    hand,
+    handRef,
+    source: () => deckRef.current?.getBoundingClientRect(),
+    enabled: land && !watching && !dealing && playing,
+    launch: (card, from, to, delay, done) =>
+      fly({ key: `arr-${card.id}-${++flightSeq.current}`, count: 1, from, to, delay, arrive: { rangCard: card }, backs: [backOf(view.players, view.meId)], after: done }),
+  });
   // Uno-style moments: skip, reverse, +2/+4, a wild's colour, last card, caught
   const { fx, layer: fxLayer } = useTableFx();
   /** the move before the one being shown, so a Force play's pick isn't flown twice */
   const prevMove = useRef<Move | null>(null);
   /** face-down cards flying from the deck to whoever picked */
   const pickFly = (id: string | null | undefined, count: number, delay: number) => {
+    // my own picks fly into my hand card by card (useArrivals)
+    if (land && id === view.meId && !watching) return;
     const to = id ? spotOf(id) : null;
     const p = view.players.find((x) => x.id === id);
     if (!deckRef.current || !to || count <= 0) return;
@@ -590,6 +602,11 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
       // a +2/+4 penalty lands on its player
       if (last.kind === 'penalty' && !missed && last.count > 1) fx('draw', by ? spotOf(by) : null, { text: `+${last.count}` });
       say(by, { text: missed ? `missed · +${last.count}` : `+${last.count}` });
+    } else if (last.kind === 'penalty' && last.count === 0) {
+      // a +2/+4 with no cards left anywhere: nothing is picked, the turn is just missed
+      sfx.pass();
+      fx('skip', by ? spotOf(by) : null, { text: 'NO CARDS LEFT' });
+      say(by, { text: 'nothing to pick · turn missed' });
     } else if (last.kind === 'pass') {
       sfx.pass();
       say(by, { text: 'passed' });
@@ -703,6 +720,11 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
 
   /** cards that may answer a +2 / +4 right now */
   const stackText = rg?.top?.value === 'wild4' ? 'a +4' : 'a +2 or +4';
+  // cards that can still be picked: the deck, plus the pile under its top card (shuffled back in when the deck runs out)
+  const pickable = rg ? rg.deckCount + Math.max(0, rg.pileCount - 1) : 0;
+  // a +2/+4 bigger than what's left: the player picks only what there is (nothing at all: the turn is simply missed)
+  const shortPick = !!rg && rg.penalty > 0 && pickable < rg.penalty;
+  const pickWord = (n: number) => (shortPick ? (pickable === 0 ? 'Nothing left to pick' : `Pick the last ${pickable}`) : `Pick ${n}`);
 
   // one tap plays a glowing card; a wild asks for a colour, a 7 (7-0 on) asks who to swap with
   const tapCard = (id: string) => {
@@ -784,12 +806,16 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
     // the room is about to pick or pass for the player on turn, a moment later so everyone can follow
     const who = name(view.turnId);
     if (rg.missed.includes(view.turnId)) status = myTurn ? `Missed last card · picking ${missedPenalty} for you…` : `${who} missed last card · picking ${missedPenalty}…`;
+    else if (rg.penalty > 0 && shortPick && pickable === 0) status = myTurn ? 'No cards left to pick · you miss this turn…' : `No cards left to pick · ${who} misses the turn…`;
+    else if (rg.penalty > 0 && shortPick) status = myTurn ? `Only ${pickable} left · picking them for you…` : `Only ${pickable} left · ${who} picks them…`;
     else if (rg.penalty > 0) status = myTurn ? `Picking ${rg.penalty} for you…` : `${who} picks ${rg.penalty}…`;
+    else if (rg.picks === 0 && pickable === 0) status = myTurn ? 'No match and no cards left to pick · your turn passes…' : `${who} has no match and nothing to pick · passing…`;
     else if (rg.picks === 0) status = myTurn ? 'No matching card · picking one for you…' : `${who} has no match · picking a card…`;
     else status = myTurn ? 'Still no match · your turn passes…' : `${who}: still no match · passing…`;
   } else if (rg && playing) {
     if (myTurn) {
-      if (rg.penalty > 0) status = rg.playable.length > 0 ? `Pick ${rg.penalty} or stack ${stackText}` : `Pick ${rg.penalty}`;
+      if (rg.penalty > 0 && shortPick) status = `${pickable === 0 ? 'No cards left to pick: miss your turn' : `Only ${pickable} left to pick`}${rg.playable.length > 0 ? ` or stack ${stackText}` : ''}`;
+      else if (rg.penalty > 0) status = rg.playable.length > 0 ? `Pick ${rg.penalty} or stack ${stackText}` : `Pick ${rg.penalty}`;
       else if (rg.picks > 0) {
         const head = rg.picks === 1 && !tappedPick.current ? 'No match, we picked one for you' : `Picked ${rg.picks} of ${rg.maxPicks}`;
         const choices = [rg.playable.length > 0 && 'play a glowing card', rg.canPick && 'pick again', rg.canPass && 'pass'].filter(Boolean);
@@ -928,7 +954,7 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
               <RangRing rg={rg} />
             </OnTable>
             <OnTable x={41} y={47} z={3} className="rg3-deck-spot">
-              <RangDeck3D count={rg.deckCount} live={myTurn && rg.canPick && !busy} penalty={rg.penalty} boxRef={deckRef} onPick={pick} />
+              <RangDeck3D count={rg.deckCount} live={myTurn && rg.canPick && !busy} penalty={shortPick ? pickable : rg.penalty} refill={rg.pileCount > 1} boxRef={deckRef} onPick={pick} />
             </OnTable>
             <OnTable x={58} y={47} z={3} className="pile-spot rg3-pile-spot">
               <PileReact onReact={(i) => void actions.reactOnPile(i)}>
@@ -939,8 +965,10 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
             {playing && rg.penalty > 0 && (
               <OnTable x={24} y={51} stand className="felt-sign rg3-sign">
                 <div key={`${rg.penalty}-${view.turnId}`} className={cx('rg3-penalty', myTurn && 'mine')} role="status">
-                  {`Pick ${rg.penalty}!`}
+                  {shortPick ? `+${rg.penalty}` : `Pick ${rg.penalty}!`}
                   {(rg.chain?.length ?? 0) > 1 && <small>{rg.chain.map((n) => `+${n}`).join(' ')}</small>}
+                  {/* fewer cards left than the penalty: say what really happens */}
+                  {shortPick && <small className="rg3-short">{pickable === 0 ? 'No cards left: turn missed' : `Only ${pickable} left`}</small>}
                 </div>
               </OnTable>
             )}
@@ -1000,6 +1028,7 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
               : `${name(view.turnId)} must pick ${rg.penalty}${stackOn ? ` or stack ${stackText}` : ''}`}
             {/* how a stacked penalty adds up: +2 +2 +4 +4 = 12 */}
             {(rg.chain?.length ?? 0) > 1 && <small className="rg-chain">{`${rg.chain.map((n) => `+${n}`).join(' ')} = ${rg.penalty}`}</small>}
+            {shortPick && <small className="rg-chain">{pickable === 0 ? 'No cards left to pick: the turn is missed' : `Only ${pickable} cards left to pick`}</small>}
           </div>
         ) : (
           <div className="round-chip set c7-rules-chip">
@@ -1110,7 +1139,7 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
         )}
         {myTurn && rg.penalty > 0 && (
           <button className="btn danger grow rg-pick" disabled={busy || !rg.canPick} onClick={pick}>
-            {`Pick ${rg.penalty}`}
+            {shortPick && pickable === 0 ? 'Miss turn' : pickWord(rg.penalty)}
           </button>
         )}
         {myTurn && rg.penalty === 0 && rg.canPick && (
@@ -1193,6 +1222,7 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
         <SeatSheet player={targetPlayer} auth={auth} onThrow={(i) => void actions.throwAt(targetPlayer.id, i)} onClose={() => setTarget(null)} />
       )}
       {fxLayer}
+      {arriving.length > 0 && <style>{arrivingCss(arriving)}</style>}
       {flights.map((f) => (
         <FlyingCards key={f.key} flight={f} onDone={() => setFlights((all) => all.filter((x) => x.key !== f.key))} />
       ))}
