@@ -75,22 +75,46 @@ export function FlyingCards({ flight, onDone }: { flight: Flight; onDone: () => 
       // a card from my hand starts at its real size and shrinks to the pile's as it lands
       const startW = src.width > 8 && (flight.froms || flight.startWidth) ? src.width : 0;
       const endScale = startW ? Math.min(1.1, Math.max(0.45, to.width / startW)) : 0.92;
-      // my own Bluff cards start face up and turn over in the air
-      const turn = faces ? 180 : 0;
+      // every keyframe uses the same steps in the same order, so the browser turns the card through each angle
+      // (a mismatched list is blended as a matrix, which mirrors the card at 180° instead of turning it over)
+      const pose = (fx: number, fy: number, tiltX: number, turnY: number, spinZ: number, sc: number) =>
+        `${P} translate(-50%, -50%) translate(${fx}px, ${fy}px) rotateX(${tiltX}deg) rotateY(${turnY}deg) rotate(${spinZ}deg) scale(${sc})`;
+      // my own Bluff cards: show the face, flip over right there, then fly face down and land on the pile
+      if (faces) {
+        const spinF = ((i * 23) % 30) - 15;
+        const up = dy - 44;
+        return el.animate(
+          [
+            // in my hand, face up
+            { transform: pose(dx, dy, 0, 0, 0, 1), easing: 'cubic-bezier(0.2, 0.9, 0.3, 1.25)' },
+            // lifted up, the face clearly shown
+            { transform: pose(dx, up, 0, 0, 0, 1.15), offset: 0.2 },
+            { transform: pose(dx, up, 0, 0, 0, 1.15), offset: 0.3, easing: 'ease-in-out' },
+            // half way: edge on
+            { transform: pose(dx, up - 6, 0, 90, 0, 1.18), offset: 0.41, easing: 'ease-in-out' },
+            // flipped: the back is up
+            { transform: pose(dx, up, 0, 180, 0, 1.15), offset: 0.52, easing: 'ease-in' },
+            // face down, off along an arc to the pile
+            { transform: pose(dx * 0.45, dy * 0.45 - lift, tilt * 0.4, 180, spinF * 0.6, (1.15 + endScale) / 2), offset: 0.78, easing: 'ease-out' },
+            // lying on the pile
+            { transform: pose(0, 0, tilt, 180, spinF, endScale) },
+          ],
+          { duration: 1150, delay: (flight.delay ?? 0) + i * 110, fill: 'both' },
+        );
+      }
       const spin = ((i * 23) % 30) - 15;
-      const at = (fx: number, fy: number) => `${P} translate(-50%, -50%) translate(${fx}px, ${fy}px)`;
       return el.animate(
         [
           // still in the hand
-          { transform: `${at(dx, dy)} rotateY(0deg) rotate(${startW ? 0 : i * 9 - 18}deg) scale(${startW ? 1 : 0.8})`, opacity: startW ? 1 : 0.5, easing: 'ease-out' },
+          { transform: pose(dx, dy, 0, 0, startW ? 0 : i * 9 - 18, startW ? 1 : 0.8), opacity: startW ? 1 : 0.5, easing: 'ease-out' },
           // lifted out of the hand
-          { transform: `${at(dx, dy - 28)} rotateY(${turn * 0.08}deg) rotate(${spin * 0.2}deg) scale(${startW ? 1.08 : 0.95})`, opacity: 1, offset: 0.18, easing: 'ease-in-out' },
-          // over the top of the arc, turning
-          { transform: `${at(dx * 0.4, dy * 0.4 - lift)} rotateX(${tilt * 0.4}deg) rotateY(${turn * 0.7}deg) rotate(${spin * 0.7}deg) scale(${(1 + endScale) / 2 + 0.06})`, opacity: 1, offset: 0.6, easing: 'ease-out' },
+          { transform: pose(dx, dy - 28, 0, 0, spin * 0.2, startW ? 1.08 : 0.95), opacity: 1, offset: 0.18, easing: 'ease-in-out' },
+          // over the top of the arc
+          { transform: pose(dx * 0.4, dy * 0.4 - lift, tilt * 0.4, 0, spin * 0.7, (1 + endScale) / 2 + 0.06), opacity: 1, offset: 0.6, easing: 'ease-out' },
           // lying on the pile
-          { transform: `${at(0, 0)} rotateX(${tilt}deg) rotateY(${turn}deg) rotate(${spin}deg) scale(${endScale})`, opacity: 1 },
+          { transform: pose(0, 0, tilt, 0, spin, endScale), opacity: 1 },
         ],
-        { duration: faces ? 820 : 700, delay: (flight.delay ?? 0) + i * 90, fill: 'both' },
+        { duration: 700, delay: (flight.delay ?? 0) + i * 90, fill: 'both' },
       );
     });
     const last = runs[runs.length - 1];

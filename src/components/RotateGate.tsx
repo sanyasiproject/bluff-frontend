@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react';
 import { SHELL_FS_STATE } from '../lib/landscapeShell';
-import { canFullscreen, isStandalone, lockLandscape, toggleFullscreen } from '../lib/orientation';
+import { canFullscreen, toggleFullscreen } from '../lib/orientation';
 
 /** phones held upright: a full screen "turn your phone" card over the app (CSS shows it only in portrait on touch screens) */
 export function RotateGate() {
-  useEffect(() => {
-    if (isStandalone()) lockLandscape();
-  }, []);
   return (
     <div className="rotate-gate" role="alert" aria-live="polite">
       <div className="rotate-phone" aria-hidden>
@@ -18,7 +15,7 @@ export function RotateGate() {
       </div>
       <h2>Turn your phone</h2>
       <p>Bluff plays sideways, like a real card table.</p>
-      <p className="rotate-tip">Rotation lock on? Turn it off in your phone's quick settings.</p>
+      <p className="rotate-tip">Just hold the phone sideways.</p>
     </div>
   );
 }

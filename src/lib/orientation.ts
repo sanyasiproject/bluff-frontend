@@ -1,8 +1,6 @@
 // landscape play: full screen and the sideways lock where the phone allows it
 import { insideShell, SHELL_FS_ON, SHELL_FS_STATE, SHELL_FULLSCREEN } from './landscapeShell';
 
-type LockableOrientation = ScreenOrientation & { lock?: (o: string) => Promise<void> };
-
 /** the installed app (home screen icon) already runs full screen */
 export const isStandalone = () =>
   window.matchMedia?.('(display-mode: standalone)').matches ||
@@ -22,10 +20,9 @@ export const canFullscreen = () => {
   return !!document.documentElement.requestFullscreen && !isStandalone();
 };
 
-/** keeps the phone sideways; only works in full screen or the installed app, so failures are ignored */
+/** no orientation locks: they only hold in full screen and made the app flip upright and back (see landscapeShell.ts) */
 export function lockLandscape() {
-  const o = screen.orientation as LockableOrientation | undefined;
-  o?.lock?.('landscape').catch(() => {});
+  // kept as a no-op so older callers still compile
 }
 
 /** full screen on, or off when it already is */
@@ -38,7 +35,6 @@ export async function toggleFullscreen() {
     if (document.fullscreenElement) await document.exitFullscreen();
     else {
       await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
-      lockLandscape();
     }
   } catch {
     // refused (no tap, or the browser said no): stay as we are
@@ -66,6 +62,6 @@ export function autoFullscreen() {
   if (!document.documentElement.requestFullscreen || isStandalone()) return;
   window.addEventListener('pointerdown', () => {
     if (document.fullscreenElement) return;
-    document.documentElement.requestFullscreen({ navigationUI: 'hide' }).then(lockLandscape).catch(() => {});
+    document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
   }, { capture: true, passive: true });
 }

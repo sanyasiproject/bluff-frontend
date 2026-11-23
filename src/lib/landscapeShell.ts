@@ -9,12 +9,6 @@ export const SHELL_FS_STATE = 'bluff:fs';
 /** the game asks the shell to hide the phone's bars (full screen on), never off */
 export const SHELL_FS_ON = 'bluff:fs-on';
 
-/** opened from the home-screen icon (the installed app) */
-const installedApp = () =>
-  window.matchMedia?.('(display-mode: fullscreen)').matches ||
-  window.matchMedia?.('(display-mode: standalone)').matches ||
-  (navigator as Navigator & { standalone?: boolean }).standalone === true;
-
 /** this page is the game inside the shell's frame */
 export function insideShell() {
   try {
@@ -93,44 +87,45 @@ export function startShell() {
   window.visualViewport?.addEventListener('resize', settle);
   (screen.orientation as ScreenOrientation | undefined)?.addEventListener?.('change', settle);
 
-  // the installed app: ask the phone for landscape at once and every time it comes back to the front
-  const lock = () => (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> })?.lock?.('landscape').catch(() => {});
-  if (installedApp()) {
-    lock();
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        lock();
-        settle();
-      }
-    });
-  }
+  // No screen.orientation.lock anywhere: it only holds while in full screen, so leaving full screen (the back gesture,
+  // switching apps) let an app installed with the old portrait setting snap upright, and the next tap locked it again:
+  // the flip-flop with a blank moment at each turn. Landscape comes from turning the frame (above) or, once Chrome
+  // has updated the installed app, from the manifest. Coming back to the app just re-checks the size.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') settle();
+  });
 
-  // Android tells us which edge is down without asking; turn the game so it's never upside down
+  // Android says which edge is down; turn the game over only when the phone has clearly been turned the other way
+  // for a moment, so tilting it while playing never flips the screen
+  let want = side;
+  let since = 0;
   window.addEventListener('deviceorientation', (e) => {
-    if (e.gamma === null) return;
-    const next = e.gamma > 55 ? -90 : e.gamma < -55 ? 90 : side;
-    if (next !== side) {
-      side = next;
+    if (e.gamma === null || e.beta === null) return;
+    // held fairly upright and well over to one side; anything else keeps the current way round
+    const clear = Math.abs(e.gamma) > 68 && Math.abs(e.beta) < 50;
+    const next = !clear ? side : e.gamma > 0 ? -90 : 90;
+    const now = performance.now();
+    if (next !== want) {
+      want = next;
+      since = now;
+    }
+    if (want !== side && now - since > 700) {
+      side = want;
       fit();
     }
   });
 
-  // full screen is asked for by the game's ⛶ button; the shell does it so the turned frame stays inside it
+  // the game asks the shell to hide the phone's bars (full screen; never an orientation lock)
   window.addEventListener('message', (e) => {
     if (e.origin !== location.origin || (e.data !== SHELL_FULLSCREEN && e.data !== SHELL_FS_ON)) return;
     const done = () => frame.contentWindow?.postMessage({ type: SHELL_FS_STATE, on: !!document.fullscreenElement }, location.origin);
     if (document.fullscreenElement) {
       if (e.data === SHELL_FULLSCREEN) void document.exitFullscreen().catch(() => {});
-    } else
-      void document.documentElement
-        .requestFullscreen({ navigationUI: 'hide' })
-        .then(() => (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> })?.lock?.('landscape').catch(() => {}))
-        .catch(() => {});
+    } else void document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
     setTimeout(done, 400);
   });
   document.addEventListener('fullscreenchange', () => {
     frame.contentWindow?.postMessage({ type: SHELL_FS_STATE, on: !!document.fullscreenElement }, location.origin);
-    if (document.fullscreenElement || installedApp()) lock();
     settle();
   });
 }
