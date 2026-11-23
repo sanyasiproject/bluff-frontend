@@ -1013,3 +1013,94 @@
     margin-left: 28px;
   }
 }
+
+/* ---------- 💬 room chat tray: the messages get the room, not the quick buttons ---------- */
+@media (orientation: landscape) {
+  /* the message list fills whatever the tray has left, so earlier messages stay in view */
+  .chat-tray.with-list {
+    height: min(calc(100dvh - 16px), 640px);
+    overflow: hidden;
+  }
+
+  .chat-tray.with-list .room-chat-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .chat-tray.with-list > :not(.room-chat-list) {
+    flex: none;
+  }
+}
+
+/* phones: smaller emoji and the quick messages in one row you swipe sideways */
+@media (orientation: landscape) and (max-height: 599px) {
+  .chat-tray.with-list {
+    gap: 6px;
+  }
+
+  .chat-tray.with-list .reaction-btn {
+    min-height: 32px;
+    font-size: 18px;
+  }
+
+  .chat-tray.with-list .message-pills {
+    flex-wrap: nowrap;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  .chat-tray.with-list .message-pill {
+    flex: none;
+    min-height: 32px;
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+}
+
+/* tablets and laptops: the tray grows like the bar its button sits in (it no longer inherits that bar's zoom), still inside the screen */
+@media (orientation: landscape) and (min-width: 1000px) and (min-height: 600px) {
+  body:has(main.lobby-room) .chat-tray {
+    zoom: 1.25;
+    max-height: calc((100dvh - 16px) / 1.25);
+  }
+
+  body:has(main.lobby-room) .chat-tray.with-list {
+    height: min(calc((100dvh - 16px) / 1.25), 640px);
+  }
+}
+
+@media (orientation: landscape) and (min-width: 1300px) and (min-height: 760px) {
+  body:has(main.lobby-room) .chat-tray {
+    zoom: 1.45;
+    max-height: calc((100dvh - 16px) / 1.45);
+  }
+
+  body:has(main.lobby-room) .chat-tray.with-list {
+    height: min(calc((100dvh - 16px) / 1.45), 640px);
+  }
+}
+
+@media (orientation: landscape) and (min-height: 560px) {
+  body:has(main.table) .chat-tray {
+    zoom: 1.25;
+    max-height: calc((100dvh - 16px) / 1.25);
+  }
+
+  body:has(main.table) .chat-tray.with-list {
+    height: min(calc((100dvh - 16px) / 1.25), 640px);
+  }
+}
+
+@media (orientation: landscape) and (min-height: 760px) {
+  body:has(main.table) .chat-tray {
+    zoom: 1.5;
+    max-height: calc((100dvh - 16px) / 1.5);
+  }
+
+  body:has(main.table) .chat-tray.with-list {
+    height: min(calc((100dvh - 16px) / 1.5), 640px);
+  }
+}

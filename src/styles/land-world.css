@@ -1354,3 +1354,11 @@ body:has(main.lobby-room)::after {
     position: static;
   }
 }
+
+@media (orientation: landscape) {
+  /* the 💬 tray now sits at the page's top level: keep it plain dark glass at the table and in the room, like everything there */
+  body:has(main.table, main.lobby-room) :is(.tray-backdrop, .chat-tray) {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useBack } from '../lib/back';
 import { QUICK_MESSAGES, REACTIONS, type ChatKind, type RoomView } from '../types';
 import { RoomChatInput, RoomChatList, useRoomChat } from './RoomChat';
@@ -20,29 +21,32 @@ export function QuickChat({ onSend, view }: { onSend: (kind: ChatKind, index: nu
         💬
         {unread > 0 && <span className="req-dot">{unread > 99 ? '99+' : unread}</span>}
       </button>
-      {open && (
-        <div className="tray-backdrop" onClick={() => setOpen(false)}>
-          <div className={view ? 'chat-tray with-list' : 'chat-tray'} role="dialog" aria-label="Chat" onClick={(e) => e.stopPropagation()}>
-            <div className="tray-handle" />
-            {view && <RoomChatList list={list} meId={view.meId} />}
-            {view && <RoomChatInput />}
-            <div className="reaction-row">
-              {REACTIONS.map((emoji, i) => (
-                <button key={emoji} className="reaction-btn" aria-label={`React ${emoji}`} onClick={() => send('reaction', i)}>
-                  {emoji}
-                </button>
-              ))}
+      {/* drawn at the page's top level: inside a top bar with its own layer (the lobby's) seats and buttons would cover it */}
+      {open &&
+        createPortal(
+          <div className="tray-backdrop" onClick={() => setOpen(false)}>
+            <div className={view ? 'chat-tray with-list' : 'chat-tray'} role="dialog" aria-label="Chat" onClick={(e) => e.stopPropagation()}>
+              <div className="tray-handle" />
+              {view && <RoomChatList list={list} meId={view.meId} />}
+              {view && <RoomChatInput />}
+              <div className="reaction-row">
+                {REACTIONS.map((emoji, i) => (
+                  <button key={emoji} className="reaction-btn" aria-label={`React ${emoji}`} onClick={() => send('reaction', i)}>
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+              <div className="message-pills" data-no-translate>
+                {QUICK_MESSAGES.map((text, i) => (
+                  <button key={text} className="message-pill" onClick={() => send('message', i)}>
+                    {text}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="message-pills" data-no-translate>
-              {QUICK_MESSAGES.map((text, i) => (
-                <button key={text} className="message-pill" onClick={() => send('message', i)}>
-                  {text}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
