@@ -1038,3 +1038,35 @@
     bottom: calc((var(--safe-b) + 80px) / 1.5);
   }
 }
+
+/* ---------- a picked card pops straight up and keeps its place in the hand, like real cards ---------- */
+@media (orientation: landscape) {
+  /* no scale and no bringing it forward: it never covers the corners of the cards beside it */
+  .card.fan-card.selected,
+  .fan-hand.multi .card.fan-card.selected {
+    transform: translateY(calc(var(--cw) * -0.34));
+    box-shadow:
+      0 0 0 2.5px var(--gold),
+      0 0 14px rgba(246, 196, 83, 0.6),
+      0 12px 18px rgba(0, 0, 0, 0.45);
+  }
+
+  .fan-hand.multi .card.fan-card.selected {
+    transform: translateY(calc(var(--cw) * -0.12));
+  }
+
+  @media (hover: hover) {
+    .card.fan-card.tappable:hover:not(.selected) {
+      transform: translateY(calc(var(--cw) * -0.08));
+    }
+  }
+}
+
+/* the tap-order number sits just above the card's left corner, the part the next card never covers */
+@media (orientation: landscape) {
+  .card.fan-card .order-badge {
+    top: -12px;
+    left: 2px;
+    right: auto;
+  }
+}

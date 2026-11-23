@@ -136,7 +136,7 @@ export function FanHand({ cards, selected = [], onToggle, onSet, stackable, deal
               wild={!!kismat && card.rank === kismat}
               note={can ? ', playable' : undefined}
               className={cx('fan-card', deal && 'deal', fresh.includes(card.id) && 'fresh', can && 'playable', dimRest && playable && !can && 'dim')}
-              style={{ ...style, ['--cw' as string]: `${layout.cw}px`, animationDelay: deal ? `${i * 26}ms` : undefined, zIndex: pick !== -1 && layout.rows === 1 ? 900 + i : style.zIndex }}
+              style={{ ...style, ['--cw' as string]: `${layout.cw}px`, animationDelay: deal ? `${i * 26}ms` : undefined, zIndex: style.zIndex }}
             />
           );
         })}
