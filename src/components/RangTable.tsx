@@ -515,12 +515,14 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
         // my own cards leave from where they sat in my hand, at their own size
         down.forEach((c, i) => {
           const mine = by === view.meId ? cardRect(c.id) : undefined;
+          // my own cards already flew the moment I tapped
+          if (flown.current.delete(c.id)) return;
           fly({ key: `play-${++flightSeq.current}`, count: 1, rangCard: c, size: 'md', from: mine ?? box, startWidth: mine?.width, to, delay: playDelay + i * 140, onTable: land });
         });
       }
       window.setTimeout(() => {
         if (card.value === 'draw2' || card.value === 'wild4') sfx.seven();
-        else sfx.play(down.length);
+        else if (by !== view.meId) sfx.play(down.length);
       }, playDelay);
       // the card's big moment, once it has landed on the pile
       const landed = playDelay + 420;
@@ -646,6 +648,39 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
     await fn();
     setBusy(false);
   };
+  /** cards I just played, already flying; hidden from my hand until the server confirms */
+  const [sending, setSending] = useState<string[]>([]);
+  const flown = useRef(new Set<string>());
+  useEffect(() => {
+    setSending((ids) => (ids.length && ids.every((id) => hand.some((c) => c.id === id)) ? ids : []));
+  }, [hand]);
+  // play without waiting for the server: the cards fly now and come back if the server says no
+  const playNow = async (cardId: string, color?: RangColor, targetId?: string, extras?: string[]) => {
+    if (busy) return;
+    const ids = [...(extras ?? []), cardId];
+    const to = pileRef.current?.getBoundingClientRect();
+    if (to) {
+      ids.forEach((id, i) => {
+        const card = hand.find((c) => c.id === id);
+        const from = cardRect(id);
+        if (!card || !from) return;
+        fly({ key: `mine-${++flightSeq.current}`, count: 1, rangCard: card, size: 'md', from, startWidth: from.width, to, delay: i * 140, onTable: land });
+        flown.current.add(id);
+      });
+      sfx.play(ids.length);
+    }
+    setSending(ids);
+    setBusy(true);
+    const ok = await actions.rangPlay(cardId, color, targetId, extras);
+    setBusy(false);
+    if (!ok) {
+      ids.forEach((id) => flown.current.delete(id));
+      setSending([]);
+    }
+  };
+
+  // my hand without the cards on their way to the pile
+  const handNow = sending.length ? hand.filter((c) => !sending.includes(c.id)) : hand;
 
   /** cards that may answer a +2 / +4 right now */
   const stackText = rg?.top?.value === 'wild4' ? 'a +4' : 'a +2 or +4';
@@ -697,14 +732,14 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
       return;
     }
     setChoice(null);
-    void act(() => actions.rangPlay(card.id, undefined, undefined, extras.length > 0 ? extras : undefined));
+    void playNow(card.id, undefined, undefined, extras.length > 0 ? extras : undefined);
   };
 
   const playChoice = (color?: RangColor, targetId?: string) => {
     const c = choice;
     setChoice(null);
     const extras = c?.kind === 'target' && c.extras && c.extras.length > 0 ? c.extras : undefined;
-    if (c) void act(() => actions.rangPlay(c.card.id, color, targetId, extras));
+    if (c) void playNow(c.card.id, color, targetId, extras);
   };
   const pick = () => {
     tappedPick.current = true;
@@ -1011,10 +1046,10 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
         </div>
         {zeroHint && !land && <p className="rg-zero-hint">{`A 0 passes every hand on ${rg.dir === 1 ? '↻' : '↺'}`}</p>}
         {land ? (
-          <RangFanHand cards={hand} playable={myTurn ? rg.playable : undefined} dimRest={myTurn && !dealing} onTap={watching ? undefined : tapCard} deal={dealing} fresh={newIds} />
+          <RangFanHand cards={handNow} playable={myTurn ? rg.playable : undefined} dimRest={myTurn && !dealing} onTap={watching ? undefined : tapCard} deal={dealing} fresh={newIds} />
         ) : (
           <RangHand
-            cards={hand}
+            cards={handNow}
             playable={myTurn ? rg.playable : undefined}
             dimRest={myTurn && !dealing}
             // always tappable so cards don't remount each turn; taps count only on my turn

@@ -536,11 +536,13 @@ export function Table({ view, actions, bubbles, auth, notes = [] }: { view: Room
   // sounds and card motion follow what changed on the table
   useOnChange(lp?.id ?? null, (id) => {
     if (!id || !lp) return;
-    sfx.play(lp.count);
+    if (!(lp.playerId === view.meId && myPlay.current?.flown)) sfx.play(lp.count);
     const from = lp.playerId === view.meId ? handRef.current : seatEls.current.get(lp.playerId);
     const to = pileRef.current;
     const mine = lp.playerId === view.meId ? myPlay.current : null;
     myPlay.current = null;
+    // my own play already flew (and made its sound) the moment I tapped
+    if (mine?.flown) return;
     if (from && to && mine && mine.faces.length === lp.count) {
       // my own cards leave from their places in my hand, face up, and turn face down on the way to the pile
       fly({ key: id, count: lp.count, from: from.getBoundingClientRect(), to: to.getBoundingClientRect(), faces: mine.faces.slice(0, 8), froms: mine.froms.slice(0, 8), backs: [back(lp.playerId)], auras: [aura(lp.playerId)], onTable: land });
@@ -585,21 +587,41 @@ export function Table({ view, actions, bubbles, auth, notes = [] }: { view: Room
   }, [myTurn]);
 
   /** my play on its way: the cards and where each sat in my hand, for the flight to the pile */
-  const myPlay = useRef<{ faces: Card[]; froms: DOMRect[] } | null>(null);
+  const myPlay = useRef<{ faces: Card[]; froms: DOMRect[]; flown?: boolean } | null>(null);
+  /** cards I just put down, hidden from my hand while the server confirms the play */
+  const [sending, setSending] = useState<string[]>([]);
+  useEffect(() => {
+    // once the server's hand no longer has them, nothing needs hiding
+    setSending((ids) => (ids.length && ids.every((id) => view.hand.some((c) => c.id === id)) ? ids : []));
+  }, [view.hand]);
   const play = async (rank?: Rank) => {
+    const ids = selected;
     setBusy(true);
-    const faces = selected.map((id) => view.hand.find((c) => c.id === id)).filter((c): c is Card => !!c);
-    const froms = selected.map((id) => (handRef.current?.querySelector(`[data-card="${id}"]`) ?? handRef.current)?.getBoundingClientRect() ?? new DOMRect());
-    myPlay.current = { faces, froms };
-    const ok = await actions.play(selected, rank, shieldNow);
-    if (!ok) myPlay.current = null;
+    const faces = ids.map((id) => view.hand.find((c) => c.id === id)).filter((c): c is Card => !!c);
+    const froms = ids.map((id) => (handRef.current?.querySelector(`[data-card="${id}"]`) ?? handRef.current)?.getBoundingClientRect() ?? new DOMRect());
+    // no waiting for the server: the picker closes and my cards fly now; the server confirms in the background
+    setSheet(null);
+    setSelected([]);
+    setSending(ids);
+    const to = pileRef.current?.getBoundingClientRect();
+    const from = handRef.current?.getBoundingClientRect();
+    if (to && from && faces.length) {
+      sfx.play(faces.length);
+      fly({ key: `mine-${Date.now()}`, count: faces.length, from, to, faces: faces.slice(0, 8), froms: froms.slice(0, 8), backs: [back(view.meId)], auras: [aura(view.meId)], onTable: land });
+      myPlay.current = { faces, froms, flown: true };
+    } else myPlay.current = { faces, froms };
+    const ok = await actions.play(ids, rank, shieldNow);
     setBusy(false);
-    if (ok) {
-      setSelected([]);
-      setSheet(null);
-      setShieldOn(false);
+    if (ok) setShieldOn(false);
+    else {
+      // refused (the error is shown): the cards come back, still picked
+      myPlay.current = null;
+      setSending([]);
+      setSelected(ids);
     }
   };
+  // my hand without the cards on their way to the pile
+  const handNow = sending.length ? view.hand.filter((c) => !sending.includes(c.id)) : view.hand;
 
   const pass = async () => {
     setBusy(true);
@@ -932,9 +954,9 @@ export function Table({ view, actions, bubbles, auth, notes = [] }: { view: Room
           )}
         </div>
         {land ? (
-          <FanHand cards={view.hand} selected={selected} onToggle={tapCard} onSet={setSelected} stackable deal={dealing} fresh={newIds} kismat={kismat} />
+          <FanHand cards={handNow} selected={selected} onToggle={tapCard} onSet={setSelected} stackable deal={dealing} fresh={newIds} kismat={kismat} />
         ) : (
-          <Hand cards={view.hand} selected={selected} onToggle={tapCard} deal={dealing} fresh={newIds} kismat={kismat} />
+          <Hand cards={handNow} selected={selected} onToggle={tapCard} deal={dealing} fresh={newIds} kismat={kismat} />
         )}
       </section>
 

@@ -9,6 +9,12 @@ export const SHELL_FS_STATE = 'bluff:fs';
 /** the game asks the shell to hide the phone's bars (full screen on), never off */
 export const SHELL_FS_ON = 'bluff:fs-on';
 
+/** opened from the home-screen icon */
+const installed = () =>
+  window.matchMedia?.('(display-mode: fullscreen)').matches ||
+  window.matchMedia?.('(display-mode: standalone)').matches ||
+  (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
 /** this page is the game inside the shell's frame */
 export function insideShell() {
   try {
@@ -118,6 +124,8 @@ export function startShell() {
   // the game asks the shell to hide the phone's bars (full screen; never an orientation lock)
   window.addEventListener('message', (e) => {
     if (e.origin !== location.origin || (e.data !== SHELL_FULLSCREEN && e.data !== SHELL_FS_ON)) return;
+    // the installed app already runs full screen (manifest display: fullscreen); asking again only costs a back press
+    if (e.data === SHELL_FS_ON && installed()) return;
     const done = () => frame.contentWindow?.postMessage({ type: SHELL_FS_STATE, on: !!document.fullscreenElement }, location.origin);
     if (document.fullscreenElement) {
       if (e.data === SHELL_FULLSCREEN) void document.exitFullscreen().catch(() => {});

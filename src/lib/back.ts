@@ -69,3 +69,12 @@ export function useBack(onBack: (() => void) | undefined): void {
     };
   }, [enabled]);
 }
+
+/** one step back, as if the phone's back button reached us (it doesn't when it only leaves full screen) */
+export function stepBack(): boolean {
+  const top = stack[stack.length - 1];
+  if (!top) return false;
+  top.run();
+  setTimeout(sync, 0);
+  return true;
+}

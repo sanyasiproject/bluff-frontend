@@ -264,10 +264,12 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
       if (from && to) {
         // my own card leaves from where it sat in my hand, at its own size
         const mine = by === view.meId ? cardRect(top.id) : undefined;
-        fly({ key: `play-${++flightSeq.current}`, count: 1, card: top, size: 'md', from: mine ?? from.getBoundingClientRect(), startWidth: mine?.width, to: to.getBoundingClientRect(), onTable: land });
+        // my own card already flew the moment I tapped it
+        if (flown.current.has(top.id)) flown.current.delete(top.id);
+        else fly({ key: `play-${++flightSeq.current}`, count: 1, card: top, size: 'md', from: mine ?? from.getBoundingClientRect(), startWidth: mine?.width, to: to.getBoundingClientRect(), onTable: land });
       }
       if (top.rank === '7') sfx.seven();
-      else sfx.play(1);
+      else if (by !== view.meId) sfx.play(1);
       if (by) next[by] = `played ${short(top)}`;
       // the card's big moment, once it has landed
       const card = top;
@@ -369,6 +371,35 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
     await fn();
     setBusy(false);
   };
+  /** cards I just played, already flying; hidden from my hand until the server confirms */
+  const [sending, setSending] = useState<string[]>([]);
+  const flown = useRef(new Set<string>());
+  useEffect(() => {
+    setSending((ids) => (ids.length && ids.every((id) => view.hand.some((c) => c.id === id)) ? ids : []));
+  }, [view.hand]);
+  // play a card without waiting for the server: it flies now, comes back if the server says no
+  const playNow = async (id: string, suit?: Suit) => {
+    if (busy) return;
+    const card = view.hand.find((c) => c.id === id);
+    const from = cardRect(id);
+    const to = pileRef.current?.getBoundingClientRect();
+    if (card && from && to) {
+      sfx.play(1);
+      fly({ key: `mine-${++flightSeq.current}`, count: 1, card, size: 'md', from, startWidth: from.width, to, onTable: land });
+      flown.current.add(id);
+    }
+    setSending([id]);
+    setBusy(true);
+    const ok = await actions.c7Play(id, suit);
+    setBusy(false);
+    if (!ok) {
+      flown.current.delete(id);
+      setSending([]);
+    }
+  };
+
+  // my hand without the card on its way to the pile
+  const handNow = sending.length ? view.hand.filter((c) => !sending.includes(c.id)) : view.hand;
 
   // one tap plays a glowing card; a card that doesn't fit says why
   const tapCard = (id: string) => {
@@ -397,12 +428,12 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
     }
     // a power J names a suit first
     if (power && view.hand.find((x) => x.id === id)?.rank === 'J') return setJackId(id);
-    void act(() => actions.c7Play(id));
+    void playNow(id);
   };
   const playJack = (suit: Suit) => {
     const id = jackId;
     setJackId(null);
-    if (id) void act(() => actions.c7Play(id, suit));
+    if (id) void playNow(id, suit);
   };
 
   const pick = () => {
@@ -719,7 +750,7 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
         </div>
         {land ? (
           <FanHand
-            cards={view.hand}
+            cards={handNow}
             playable={myTurn ? c7.playable : undefined}
             dimRest={myTurn && !dealing}
             onToggle={watching ? undefined : tapCard}
@@ -728,7 +759,7 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
           />
         ) : (
           <Hand
-            cards={view.hand}
+            cards={handNow}
             playable={myTurn ? c7.playable : undefined}
             dimRest={myTurn && !dealing}
             // always tappable so cards don't remount each turn; taps count only on my turn
