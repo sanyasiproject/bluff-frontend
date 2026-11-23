@@ -28,6 +28,7 @@ import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
 import { LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { useTableFx } from './TableFx';
+import { useCardRects } from '../lib/cardRects';
 import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
 import { StreakMark, TurnCountdown, useTurnEndsAt } from './TurnTimer';
 import { Avatar } from './Avatar';
@@ -163,6 +164,8 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
   const pileRef = useRef<HTMLDivElement>(null);
   const deckRef = useRef<HTMLButtonElement>(null);
   const handRef = useRef<HTMLElement>(null);
+  // where each of my cards sat, so a played card flies from its own place
+  const cardRect = useCardRects(handRef);
   /** my level when this game started, to show a level up at the end */
   const startLevel = useRef<number | null>(null);
   const levelShown = useRef(false);
@@ -259,7 +262,9 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
       const from = by ? spotOf(by) : null;
       const to = pileRef.current;
       if (from && to) {
-        fly({ key: `play-${++flightSeq.current}`, count: 1, card: top, size: 'md', from: from.getBoundingClientRect(), to: to.getBoundingClientRect() });
+        // my own card leaves from where it sat in my hand, at its own size
+        const mine = by === view.meId ? cardRect(top.id) : undefined;
+        fly({ key: `play-${++flightSeq.current}`, count: 1, card: top, size: 'md', from: mine ?? from.getBoundingClientRect(), startWidth: mine?.width, to: to.getBoundingClientRect(), onTable: land });
       }
       if (top.rank === '7') sfx.seven();
       else sfx.play(1);

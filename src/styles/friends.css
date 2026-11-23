@@ -147,3 +147,12 @@
     animation: none;
   }
 }
+
+/* a friend's card or chat open on top: hide the Friends sheet under it so only one popup shows */
+.sheet.fr-covered {
+  visibility: hidden;
+}
+
+.sheet.fr-covered > :is(.backdrop, .page) {
+  visibility: visible;
+}

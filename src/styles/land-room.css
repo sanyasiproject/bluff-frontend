@@ -554,7 +554,7 @@
     font-weight: 700;
     line-height: 1.3;
     text-align: right;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
     transform-origin: 100% 100%;
   }
 

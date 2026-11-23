@@ -100,6 +100,8 @@ interface Props {
   back?: string;
   /** a face-down card's owner's shop aura */
   aura?: string | null;
+  /** the card's id on the element, so a flight can start from where it sits */
+  dataId?: string;
 }
 
 /** a face-down Rang card: the same backs players unlock and pick for Bluff and Crazy 7 */
@@ -108,7 +110,7 @@ export function RangCardBack({ size, className, style, back, aura }: { size?: 's
 }
 
 /** a Rang card: white stock, a bold colour panel, a big outlined number or a drawn sign; wilds on black with a four-colour disc */
-export function RangCard({ card, faceDown, size, chosen, onClick, className, style, note = '', back, aura }: Props) {
+export function RangCard({ card, faceDown, size, chosen, onClick, className, style, note = '', back, aura, dataId }: Props) {
   const swapOn = useContext(RangSwapContext);
   if (faceDown || !card) return <RangCardBack size={size} className={className} style={style} back={back} aura={aura} />;
   const swap = swapOn && (card.value === '0' || card.value === '7') ? card.value : null;
@@ -147,11 +149,11 @@ export function RangCard({ card, faceDown, size, chosen, onClick, className, sty
     </>
   );
   return onClick ? (
-    <button type="button" className={classes} style={style} onClick={onClick} aria-label={label}>
+    <button type="button" className={classes} style={style} onClick={onClick} aria-label={label} data-card={dataId}>
       {body}
     </button>
   ) : (
-    <div className={classes} style={style} role="img" aria-label={label}>
+    <div className={classes} style={style} role="img" aria-label={label} data-card={dataId}>
       {body}
     </div>
   );

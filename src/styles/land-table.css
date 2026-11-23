@@ -295,6 +295,31 @@
     gap: 6px;
   }
 
+  /* short phones: the left side above the hand is under the round sign on the felt, so the chips go right */
+  @media (max-height: 559px) {
+    .table .hand-area .hand-tags {
+      left: auto;
+      right: 4px;
+      bottom: 100%;
+    }
+
+    /* a tighter top-right corner (voice, chat, menu) so the right-hand far seat isn't under it */
+    .table .topbar .topbar-actions {
+      gap: 4px;
+    }
+
+    .table .topbar .topbar-actions .live-btn {
+      min-width: 36px;
+      height: 36px;
+    }
+
+    .table .topbar .topbar-actions > .icon-btn {
+      width: 36px;
+      min-width: 36px;
+      height: 36px;
+    }
+  }
+
   .table .hand-area.my-turn {
     box-shadow: none;
   }
@@ -544,14 +569,23 @@
 
   .side-actions .bluff-tools {
     display: flex;
-    gap: 6px;
+    gap: 4px;
   }
 
   .side-actions .bluff-tools .btn {
-    flex: 1;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    align-content: center;
+    row-gap: 0;
+    column-gap: 4px;
     min-height: 40px;
-    padding: 0 6px;
+    padding: 0 4px;
     font-size: 13px;
+  }
+
+  /* in a narrow corner the icon goes above the label, never "Peek · 1" split word by word */
+  .side-actions .bluff-tools .btn span {
+    white-space: nowrap;
   }
 
   .side-actions .peeked-line {

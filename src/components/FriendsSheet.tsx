@@ -277,7 +277,8 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
   const onlineCount = friendsOnlineFirst.filter((f) => f.online).length;
 
   return (
-    <Backdrop onClose={onClose}>
+    // a friend's card or chat opened from here hides this sheet, so the two never show stacked
+    <Backdrop onClose={onClose} panel={viewing || chatWith ? 'fr-covered' : undefined}>
       <h3>Friends</h3>
       {/* landscape: search and requests on the left, your friends on the right */}
       <div className="lp2-fr-cols">

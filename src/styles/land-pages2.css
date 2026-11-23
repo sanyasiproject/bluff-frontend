@@ -147,7 +147,8 @@
     overflow: visible;
     text-overflow: clip;
     white-space: normal;
-    overflow-wrap: anywhere;
+    /* break between words; a single very long name still wraps */
+    overflow-wrap: break-word;
   }
 
   /* a row never squeezes shorter than its text inside a scrolling list */
@@ -211,8 +212,8 @@
     }
   }
 
-  /* a wide sheet lists friends in two columns */
-  @container lp2fr (min-width: 900px) {
+  /* the friends column lists two per row only when it's wide enough for both */
+  @container lp2frmain (min-width: 640px) {
     .lp2-fr-list {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -329,7 +330,7 @@
     min-width: 0;
     font-size: 14px;
     line-height: 1.25;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
 
   .lp2-dm-friend:hover {
@@ -560,6 +561,22 @@
 
   .lp2-replay .replay-lines {
     max-height: calc(var(--u) * 18);
+  }
+}
+
+/* tablets: the felt grows into the height, so the bottom half of the screen isn't left empty */
+@media (orientation: landscape) and (min-height: 600px) {
+  /* the page body's usual 780px cap would squeeze the three columns */
+  .page-body:has(> .lp2-replay) {
+    max-width: min(1180px, 100%);
+  }
+
+  .lp2-replay {
+    grid-template-columns: minmax(120px, 0.5fr) minmax(0, 2.4fr) minmax(190px, 0.7fr);
+  }
+
+  .lp2-replay .replay-table {
+    min-height: min(calc(100dvh - 240px), calc(var(--u) * 60));
   }
 }
 
@@ -923,7 +940,8 @@
     overflow: visible;
     text-overflow: clip;
     white-space: normal;
-    overflow-wrap: anywhere;
+    /* break between words; a single very long name still wraps */
+    overflow-wrap: break-word;
     line-height: 1.2;
   }
 }

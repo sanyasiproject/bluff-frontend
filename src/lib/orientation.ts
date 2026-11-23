@@ -50,7 +50,7 @@ export async function toggleFullscreen() {
  * so on touch phones every tap while not full screen asks for it (Android; iPhone has no full screen for pages)
  */
 export function autoFullscreen() {
-  const touch = window.matchMedia?.('(pointer: coarse)').matches ?? false;
+  const touch = navigator.maxTouchPoints > 0 || (window.matchMedia?.('(any-pointer: coarse)').matches ?? false);
   if (!touch) return;
   if (insideShell()) {
     let on = false;

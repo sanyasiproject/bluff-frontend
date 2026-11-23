@@ -694,6 +694,19 @@
     column-gap: 18px;
   }
 
+  /* tablets: the box grows with its content, so a short result isn't a half-empty box; the columns still scroll */
+  @media (min-height: 600px) {
+    .lo-over .reveal.gameover {
+      height: auto;
+      max-height: min(calc(100dvh - 16px), 680px);
+    }
+
+    .lo-over .go-main,
+    .lo-over .go-side {
+      max-height: calc(min(calc(100dvh - 16px), 680px) - 150px);
+    }
+  }
+
   .lo-over .gameover:has(> .go-side:empty) .go-main > * {
     grid-column: 2;
   }
@@ -925,7 +938,7 @@
     overflow: visible;
     text-overflow: clip;
     white-space: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
 
   .lo-over .results li > .muted {

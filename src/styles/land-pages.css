@@ -60,7 +60,7 @@
     letter-spacing: 0.02em;
     line-height: 1.2;
     white-space: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
 
   .page-body {
@@ -175,7 +175,7 @@
   .lp-profile .profile-hero > .profile-meta,
   .lp-profile .profile-hero > .level-title {
     grid-column: 2;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
 
   .lp-profile .profile-hero > .profile-meta {
@@ -212,7 +212,7 @@
   .lp-profile .profile-hero > .profile-name {
     grid-row: 3;
     margin-top: 2px;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
 
   .lp-profile .profile-name {
@@ -852,7 +852,7 @@
     overflow: visible;
     text-overflow: clip;
     white-space: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
 
   .avatar-picker .char-name,

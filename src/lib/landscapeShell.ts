@@ -9,6 +9,12 @@ export const SHELL_FS_STATE = 'bluff:fs';
 /** the game asks the shell to hide the phone's bars (full screen on), never off */
 export const SHELL_FS_ON = 'bluff:fs-on';
 
+/** opened from the home-screen icon (the installed app) */
+const installedApp = () =>
+  window.matchMedia?.('(display-mode: fullscreen)').matches ||
+  window.matchMedia?.('(display-mode: standalone)').matches ||
+  (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
 /** this page is the game inside the shell's frame */
 export function insideShell() {
   try {
@@ -21,7 +27,8 @@ export function insideShell() {
 /** touch phones and tablets use the shell; laptops and desktops run the app directly (?flat skips it, for testing) */
 export function wantsShell() {
   if (new URLSearchParams(location.search).has('flat')) return false;
-  const touch = window.matchMedia?.('(pointer: coarse)').matches ?? false;
+  // any touch screen counts: an iPad with a keyboard and trackpad, or a tablet with a pen, reports a fine pointer
+  const touch = navigator.maxTouchPoints > 0 || (window.matchMedia?.('(any-pointer: coarse)').matches ?? false);
   return touch && Math.min(screen.width, screen.height) <= SHORT_SIDE_MAX;
 }
 
@@ -60,14 +67,43 @@ export function startShell() {
   let side = 90;
   const fit = () => {
     const r = box.getBoundingClientRect();
+    // a box with no size yet (mid-rotation on some tablets): try again next frame
+    if (r.width < 2 || r.height < 2) {
+      requestAnimationFrame(fit);
+      return;
+    }
     const upright = r.height > r.width;
     frame.style.width = `${upright ? r.height : r.width}px`;
     frame.style.height = `${upright ? r.width : r.height}px`;
     frame.style.transform = `translate(-50%, -50%) rotate(${upright ? side : 0}deg)`;
   };
+  // tablets report the new size at different moments while turning, so watch the box itself and check again for a while
+  const settle = () => {
+    const end = performance.now() + 800;
+    const tick = () => {
+      fit();
+      if (performance.now() < end) requestAnimationFrame(tick);
+    };
+    tick();
+  };
   fit();
-  window.addEventListener('resize', fit);
-  window.addEventListener('orientationchange', () => setTimeout(fit, 60));
+  new ResizeObserver(fit).observe(box);
+  window.addEventListener('resize', settle);
+  window.addEventListener('orientationchange', settle);
+  window.visualViewport?.addEventListener('resize', settle);
+  (screen.orientation as ScreenOrientation | undefined)?.addEventListener?.('change', settle);
+
+  // the installed app: ask the phone for landscape at once and every time it comes back to the front
+  const lock = () => (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> })?.lock?.('landscape').catch(() => {});
+  if (installedApp()) {
+    lock();
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        lock();
+        settle();
+      }
+    });
+  }
 
   // Android tells us which edge is down without asking; turn the game so it's never upside down
   window.addEventListener('deviceorientation', (e) => {
@@ -94,6 +130,7 @@ export function startShell() {
   });
   document.addEventListener('fullscreenchange', () => {
     frame.contentWindow?.postMessage({ type: SHELL_FS_STATE, on: !!document.fullscreenElement }, location.origin);
-    setTimeout(fit, 60);
+    if (document.fullscreenElement || installedApp()) lock();
+    settle();
   });
 }

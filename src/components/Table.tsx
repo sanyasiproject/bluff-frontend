@@ -747,12 +747,12 @@ export function Table({ view, actions, bubbles, auth, notes = [] }: { view: Room
         <div className="bluff-tools">
           {view.peeksLeft > 0 && (
             <button className="btn small" onClick={() => setSheet('peek')}>
-              🔍 Peek · {view.peeksLeft}
+              🔍 <span>Peek · {view.peeksLeft}</span>
             </button>
           )}
           {view.betLimit >= 50 && (
             <button className={cx('btn small', betNow > 0 && 'primary')} onClick={() => setSheet('bet')}>
-              🪙 {betNow > 0 ? `Bet ${compactCoins(betNow)}` : 'Bet'}
+              🪙 <span>{betNow > 0 ? `Bet ${compactCoins(betNow)}` : 'Bet'}</span>
             </button>
           )}
         </div>

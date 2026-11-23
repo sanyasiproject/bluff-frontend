@@ -531,6 +531,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   if (land) {
     return (
       <LobbyRoom
+        friendsOpen={friendsOpen}
         view={view}
         actions={actions}
         auth={auth}

@@ -222,6 +222,37 @@
     filter: grayscale(0.6);
   }
 
+  /* the pass / place badge stays in front of the avatar it sits on */
+  .seat-stand .seat > .badge {
+    z-index: 3;
+  }
+
+  /* short phones: a seat's tag (claim, last play) sits beside its card count, so the seat doesn't grow up off the
+     screen or under the top bar (Rang keeps its own tag row) */
+  @media (max-height: 559px) {
+    .table:not(.rg-table) .seat-stand .seat {
+      display: grid;
+      grid-template-columns: auto auto;
+      justify-content: center;
+      justify-items: center;
+      align-items: center;
+      gap: 2px 4px;
+    }
+
+    .table:not(.rg-table) .seat-stand .seat > * {
+      grid-column: 1 / -1;
+    }
+
+    .table:not(.rg-table) .seat-stand .seat > .seat-count:has(+ .seat-action) {
+      grid-column: 1;
+    }
+
+    .table:not(.rg-table) .seat-stand .seat > .seat-count + .seat-action {
+      grid-column: 2;
+      white-space: nowrap;
+    }
+  }
+
   /* whose turn: a pool of gold light on the felt at their place */
   .turn-spot i {
     display: block;
@@ -605,6 +636,13 @@
 @media (orientation: landscape) and (min-height: 760px) {
   .table .topbar .tinfo-btn {
     zoom: 1.5;
+  }
+}
+
+/* zoomed, the mission badge would poke above the screen's top edge */
+@media (orientation: landscape) and (min-height: 560px) {
+  .table .topbar .tinfo-badge {
+    top: -2px;
   }
 }
 

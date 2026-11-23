@@ -21,6 +21,7 @@ import { QuickChat } from './QuickChat';
 import { LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
 import { useTableFx } from './TableFx';
+import { useCardRects } from '../lib/cardRects';
 import { StreakMark, TurnCountdown, useTurnEndsAt } from './TurnTimer';
 import { Avatar } from './Avatar';
 import { SecretChip } from './SecretMissions';
@@ -173,6 +174,7 @@ function RangFanHand({ cards, onTap, deal, fresh = [], playable, dimRest }: { ca
           <RangCard
             key={card.id}
             card={card}
+            dataId={card.id}
             onClick={onTap ? () => onTap(card.id) : undefined}
             note={ok ? ', playable' : undefined}
             className={cx('fan-card', deal && 'deal', fresh.includes(card.id) && 'fresh', ok && 'playable', dimRest && playable && !ok && 'dim')}
@@ -387,6 +389,8 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
   const pileRef = useRef<HTMLDivElement>(null);
   const deckRef = useRef<HTMLButtonElement>(null);
   const handRef = useRef<HTMLElement>(null);
+  // where each of my cards sat, so a played card flies from its own place
+  const cardRect = useCardRects(handRef);
   const startLevel = useRef<number | null>(null);
   const levelShown = useRef(false);
 
@@ -508,7 +512,11 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
         // face up, like Crazy 7
         const box = from.getBoundingClientRect();
         const to = pileRef.current.getBoundingClientRect();
-        down.forEach((c, i) => fly({ key: `play-${++flightSeq.current}`, count: 1, rangCard: c, size: 'md', from: box, to, delay: playDelay + i * 140 }));
+        // my own cards leave from where they sat in my hand, at their own size
+        down.forEach((c, i) => {
+          const mine = by === view.meId ? cardRect(c.id) : undefined;
+          fly({ key: `play-${++flightSeq.current}`, count: 1, rangCard: c, size: 'md', from: mine ?? box, startWidth: mine?.width, to, delay: playDelay + i * 140, onTable: land });
+        });
       }
       window.setTimeout(() => {
         if (card.value === 'draw2' || card.value === 'wild4') sfx.seven();

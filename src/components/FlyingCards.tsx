@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, type CSSProperties } from 'react';
 import { reducedMotion } from '../lib/motion';
 import type { Card, RangCard as RangCardData } from '../types';
 import { PlayingCard } from './PlayingCard';
@@ -29,6 +29,8 @@ export interface Flight {
   froms?: DOMRect[];
   /** landing on the 3D table: the card lies down at the table's lean as it lands */
   onTable?: boolean;
+  /** the card starts at this width (its size in my hand), from `from` */
+  startWidth?: number;
 }
 
 // how far the table leans (land-world.css --tilt), so a landing card lies flat on it
@@ -43,6 +45,9 @@ export function FlyingCards({ flight, onDone }: { flight: Flight; onDone: () => 
   const y = to.top + to.height / 2;
   const faces = flight.faces ?? null;
   const count = faces ? faces.length : flight.count;
+  /** the size each card starts at when it leaves my hand, else 0 (its own size class) */
+  const cwOf = (i: number) => Math.round(flight.froms?.[i]?.width ?? flight.startWidth ?? 0);
+  const sized = (i: number) => (cwOf(i) ? undefined : (flight.size ?? 'md'));
 
   useLayoutEffect(() => {
     if (reducedMotion()) {
@@ -56,7 +61,7 @@ export function FlyingCards({ flight, onDone }: { flight: Flight; onDone: () => 
       const dx = src.left + src.width / 2 - x;
       const dy = src.top + src.height / 2 - y;
       // the arc's top: above both ends, higher for longer flights
-      const lift = Math.min(140, 40 + Math.hypot(dx, dy) * 0.25);
+      const lift = Math.min(150, 50 + Math.hypot(dx, dy) * 0.28);
       if (flight.vanish) {
         return el.animate(
           [
@@ -64,23 +69,28 @@ export function FlyingCards({ flight, onDone }: { flight: Flight; onDone: () => 
             { transform: `${P} translate(-50%, -50%) translate(${dx * 0.4}px, ${dy * 0.4 - lift * 0.5}px) rotateX(${tilt / 2}deg) scale(0.95) rotate(${i * 7 - 10}deg)`, opacity: 1, offset: 0.5 },
             { transform: `${P} translate(-50%, -50%) scale(0.5)`, opacity: 0 },
           ],
-          { duration: 520, delay: (flight.delay ?? 0) + i * 70, easing: 'cubic-bezier(0.3, 0.7, 0.3, 1)', fill: 'both' },
+          { duration: 560, delay: (flight.delay ?? 0) + i * 70, easing: 'cubic-bezier(0.4, 0, 0.3, 1)', fill: 'both' },
         );
       }
-      // my own cards start face up and turn over in the air (Bluff plays land face down)
+      // a card from my hand starts at its real size and shrinks to the pile's as it lands
+      const startW = src.width > 8 && (flight.froms || flight.startWidth) ? src.width : 0;
+      const endScale = startW ? Math.min(1.1, Math.max(0.45, to.width / startW)) : 0.92;
+      // my own Bluff cards start face up and turn over in the air
       const turn = faces ? 180 : 0;
       const spin = ((i * 23) % 30) - 15;
+      const at = (fx: number, fy: number) => `${P} translate(-50%, -50%) translate(${fx}px, ${fy}px)`;
       return el.animate(
         [
-          { transform: `${P} translate(-50%, -50%) translate(${dx}px, ${dy}px) rotateY(0deg) rotate(${faces ? 0 : i * 9 - 18}deg) scale(${faces ? 1 : 0.8})`, opacity: faces ? 1 : 0.5 },
-          {
-            transform: `${P} translate(-50%, -50%) translate(${dx * 0.45}px, ${dy * 0.45 - lift}px) rotateX(${tilt * 0.3}deg) rotateY(${turn / 2}deg) rotate(${spin / 2}deg) scale(1.12)`,
-            opacity: 1,
-            offset: 0.45,
-          },
-          { transform: `${P} translate(-50%, -50%) rotateX(${tilt}deg) rotateY(${turn}deg) rotate(${spin}deg) scale(0.92)`, opacity: 1 },
+          // still in the hand
+          { transform: `${at(dx, dy)} rotateY(0deg) rotate(${startW ? 0 : i * 9 - 18}deg) scale(${startW ? 1 : 0.8})`, opacity: startW ? 1 : 0.5, easing: 'ease-out' },
+          // lifted out of the hand
+          { transform: `${at(dx, dy - 28)} rotateY(${turn * 0.08}deg) rotate(${spin * 0.2}deg) scale(${startW ? 1.08 : 0.95})`, opacity: 1, offset: 0.18, easing: 'ease-in-out' },
+          // over the top of the arc, turning
+          { transform: `${at(dx * 0.4, dy * 0.4 - lift)} rotateX(${tilt * 0.4}deg) rotateY(${turn * 0.7}deg) rotate(${spin * 0.7}deg) scale(${(1 + endScale) / 2 + 0.06})`, opacity: 1, offset: 0.6, easing: 'ease-out' },
+          // lying on the pile
+          { transform: `${at(0, 0)} rotateX(${tilt}deg) rotateY(${turn}deg) rotate(${spin}deg) scale(${endScale})`, opacity: 1 },
         ],
-        { duration: faces ? 640 : 480, delay: (flight.delay ?? 0) + i * 80, easing: 'cubic-bezier(0.25, 0.75, 0.35, 1)', fill: 'both' },
+        { duration: faces ? 820 : 700, delay: (flight.delay ?? 0) + i * 90, fill: 'both' },
       );
     });
     const last = runs[runs.length - 1];
@@ -98,17 +108,19 @@ export function FlyingCards({ flight, onDone }: { flight: Flight; onDone: () => 
             refs.current[i] = el;
           }}
           className={faces ? 'fly-card fly-turn' : 'fly-card'}
+          // a card leaving my hand keeps its size at the start (its cards inherit --cw)
+          style={cwOf(i) ? ({ ['--cw' as string]: `${cwOf(i)}px` } as CSSProperties) : undefined}
         >
           {faces ? (
             <>
               {/* both sides of the card: the face turns away and the owner's back turns in */}
-              <PlayingCard card={faces[i]} size={flight.size ?? 'md'} className="fly-front" />
-              <PlayingCard faceDown size={flight.size ?? 'md'} back={flight.backs?.[0]} aura={flight.auras?.[0] ?? null} className="fly-back" />
+              <PlayingCard card={faces[i]} size={sized(i)} className="fly-front" />
+              <PlayingCard faceDown size={sized(i)} back={flight.backs?.[0]} aura={flight.auras?.[0] ?? null} className="fly-back" />
             </>
           ) : flight.rangCard ? (
-            <RangCard card={flight.rangCard} size={flight.size ?? 'sm'} />
+            <RangCard card={flight.rangCard} size={cwOf(i) ? undefined : (flight.size ?? 'sm')} />
           ) : flight.card ? (
-            <PlayingCard card={flight.card} size={flight.size ?? 'sm'} />
+            <PlayingCard card={flight.card} size={cwOf(i) ? undefined : (flight.size ?? 'sm')} />
           ) : (
             <PlayingCard
               faceDown

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type ReactNode, useEffect } from 'react';
 import { cx } from '../lib/cards';
 import { compactCoins } from '../lib/coins';
 import { inviteLink, inviteMessage, inviteText } from '../lib/invite';
@@ -43,6 +43,8 @@ interface Props {
   mainButton: ReactNode;
   /** the share buttons, or null when the room is full */
   invite: ReactNode;
+  /** the Friends sheet is open (from Invite): the invite sheet closes so the two never stack */
+  friendsOpen?: boolean;
   onPlayer: (id: string) => void;
   onRemove: (id: string, name: string) => void;
   onJoinFriend: (userId: string, watch: boolean) => Promise<boolean>;
@@ -59,6 +61,9 @@ export function LobbyRoom(props: Props) {
   const { view, actions, auth, isHost, teamGame, ranked, coinsOn, mustLogIn, onPlayer, onRemove } = props;
   const [drawer, setDrawer] = useState(false);
   const [sheet, setSheet] = useState<Sheet | null>(null);
+  useEffect(() => {
+    if (props.friendsOpen) setSheet(null);
+  }, [props.friendsOpen]);
   const close = () => setSheet(null);
   const stake = view.config.stake;
   const slots = view.slots ?? [null, null, null, null];
