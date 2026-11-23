@@ -27,6 +27,17 @@ import './styles/shield.css';
 import './styles/c7power.css';
 import './styles/rang.css';
 import './styles/friends.css';
+// landscape redesign, last so it wins over the portrait styles
+import './styles/landscape.css';
+import './styles/land-home.css';
+import './styles/land-lobby.css';
+import './styles/land-pages.css';
+import './styles/land-pages2.css';
+import './styles/land-overlays.css';
+import './styles/land-table.css';
+import './styles/land-world.css';
+import './styles/land-c7.css';
+import './styles/land-rang.css';
 
 for (const type of ['click', 'touchend'] as const) {
   window.addEventListener(type, unlockSpeech, { once: true, capture: true });

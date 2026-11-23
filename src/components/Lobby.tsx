@@ -84,6 +84,30 @@ import { LiveMark, LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { useOnlineFriends } from '../lib/onlineFriends';
 import { MuteMark } from './MuteButton';
 
+/** the landscape lobby's settings tabs */
+type LobbyTab = 'game' | 'stakes' | 'extras' | 'help';
+
+const LAND_QUERY = '(orientation: landscape)';
+
+/** true while the screen is wider than tall */
+function useLandscape() {
+  const [land, setLand] = useState(() => window.matchMedia?.(LAND_QUERY).matches ?? false);
+  useEffect(() => {
+    const mq = window.matchMedia?.(LAND_QUERY);
+    if (!mq) return;
+    const sync = () => setLand(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+  return land;
+}
+
+/** a layout box in landscape; in portrait its children sit straight in the page, as before */
+function Land({ on, className, children }: { on: boolean; className: string; children: ReactNode }) {
+  return on ? <div className={className}>{children}</div> : <>{children}</>;
+}
+
 /** per-phone voice choice; Girl is the default */
 function VoicePicker({ sample }: { sample: string }) {
   const [gender, setGender] = useState<VoiceGender>(getVoiceGender);
@@ -498,8 +522,71 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
       </button>
     ) : null;
 
+  // landscape: players on the left, settings in tabs on the right, the action bar docked at the bottom
+  const land = useLandscape();
+  const hasStakes = coinsOn || (isBluff && bots.length > 0);
+  const tabs: [LobbyTab, string][] = isHost
+    ? [['game', '🎲 Game'], ...(hasStakes ? [['stakes', coinsOn ? '🪙 Stakes' : '🤖 Bots'] as [LobbyTab, string]] : []), ['extras', '✨ Extras'], ['help', '📘 Help']]
+    : [['game', '🎲 Game'], ['help', '📘 Help']];
+  const [tabPick, setTabPick] = useState<LobbyTab>('game');
+  const tab = tabs.some(([t]) => t === tabPick) ? tabPick : 'game';
+  // portrait shows every section; landscape only the open tab's
+  const show = (t: LobbyTab) => !land || tab === t;
+  // the game's own settings panel has rows on every tab but Help
+  const settingsOpen = !land || tab !== 'help';
+  // 2v2 seats four
+  const seatCap = teamGame ? 4 : 5;
+
+  const modeBanner =
+    rankedKnown && isBluff && (ranked ? <RankedBanner view={view} /> : <p className="mode-banner casual">🎮 Casual game · no rank points</p>);
+
+  const liveVoice = (
+    <>
+      {/* live voice for seated players; a row of its own, since the header is full */}
+      {view.config.voice && view.players.some((p) => p.id === view.meId && p.registered) && (
+        <section className="live-voice-row">
+          <span className="grow">
+            🎧 Live voice
+            <small>{view.players.filter((p) => p.live).length > 0 ? ` · ${view.players.filter((p) => p.live).length} in` : ' · players only'}</small>
+          </span>
+          <LiveVoiceButtons view={view} onToast={actions.toast} wide />
+        </section>
+      )}
+      <LiveVoiceNotice />
+    </>
+  );
+
+  const invite = view.players.length + view.watchers.length < ROOM_LIMIT && (
+    <InvitePanel
+      code={view.code}
+      onToast={actions.toast}
+      onFriends={auth.user ? () => setFriendsOpen(true) : undefined}
+      requests={auth.friendRequests}
+      online={friendsNow ? friendsNow.filter((f) => f.online && f.inRoom !== 'here').length : 0}
+    />
+  );
+
+  const modeRow = (
+    <section className="mode-row">
+      <span className="grow">{meWatching ? "You're watching" : "You're playing"}</span>
+      <div className="mini-seg" role="group" aria-label="Play or watch">
+        <button
+          className={cx(!meWatching && 'on')}
+          aria-pressed={!meWatching}
+          disabled={!!meWatching && seatsFull}
+          onClick={() => meWatching && void actions.setWatching(false)}
+        >
+          🎮 Play
+        </button>
+        <button className={cx(meWatching && 'on')} aria-pressed={!!meWatching} onClick={() => !meWatching && void actions.setWatching(true)}>
+          👀 Watch
+        </button>
+      </div>
+    </section>
+  );
+
   return (
-    <main className="screen lobby">
+    <main className={cx('screen lobby', land && 'lobby-land')}>
       <SuitDrift />
       <header className="lobby-head">
         <div className="grow">
@@ -512,52 +599,19 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             ))}
           </p>
         </div>
+        {land && modeBanner}
         <QuickChat onSend={actions.chat} view={view} />
         <AccountCorner auth={auth} roomCode={view.code} onInvite={actions.invite} onJoin={joinFriend} showOnline={false} />
       </header>
 
       {/* everyone sees at a glance whether this table is ranked or just for fun (older servers: nothing) */}
-      {rankedKnown && isBluff && (ranked ? <RankedBanner view={view} /> : <p className="mode-banner casual">🎮 Casual game · no rank points</p>)}
+      {!land && modeBanner}
+      {!land && liveVoice}
+      {!land && invite}
+      {!land && modeRow}
 
-      {/* live voice for seated players; a row of its own, since the header is full */}
-      {view.config.voice && view.players.some((p) => p.id === view.meId && p.registered) && (
-        <section className="live-voice-row">
-          <span className="grow">
-            🎧 Live voice
-            <small>{view.players.filter((p) => p.live).length > 0 ? ` · ${view.players.filter((p) => p.live).length} in` : ' · players only'}</small>
-          </span>
-          <LiveVoiceButtons view={view} onToast={actions.toast} wide />
-        </section>
-      )}
-      <LiveVoiceNotice />
-
-      {view.players.length + view.watchers.length < ROOM_LIMIT && (
-        <InvitePanel
-          code={view.code}
-          onToast={actions.toast}
-          onFriends={auth.user ? () => setFriendsOpen(true) : undefined}
-          requests={auth.friendRequests}
-          online={friendsNow ? friendsNow.filter((f) => f.online && f.inRoom !== 'here').length : 0}
-        />
-      )}
-
-      <section className="mode-row">
-        <span className="grow">{meWatching ? "You're watching" : "You're playing"}</span>
-        <div className="mini-seg" role="group" aria-label="Play or watch">
-          <button
-            className={cx(!meWatching && 'on')}
-            aria-pressed={!meWatching}
-            disabled={!!meWatching && seatsFull}
-            onClick={() => meWatching && void actions.setWatching(false)}
-          >
-            🎮 Play
-          </button>
-          <button className={cx(meWatching && 'on')} aria-pressed={!!meWatching} onClick={() => !meWatching && void actions.setWatching(true)}>
-            👀 Watch
-          </button>
-        </div>
-      </section>
-
+      <Land on={land} className="lobby-body">
+      <Land on={land} className="lobby-side">
       <section className="panel">
         <h2 className="section-title">
           Players{' '}
@@ -608,6 +662,14 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             </li>
             ),
           )}
+          {/* landscape: the free seats, so the room reads like a table waiting to fill */}
+          {land &&
+            Array.from({ length: Math.max(0, seatCap - view.players.length) }, (_, i) => (
+              <li key={`open-${i}`} className="player-row open-seat" aria-hidden>
+                <span className="open-ring">+</span>
+                <span className="grow">Open seat</span>
+              </li>
+            ))}
         </ul>
         {isHost && !seatsFull && people < ROOM_LIMIT && (
           <>
@@ -656,8 +718,23 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           </ul>
         </section>
       )}
+      {land && invite}
+      {land && liveVoice}
+      </Land>
 
-      {!isHost && (
+      <Land on={land} className="lobby-main">
+      {land && (
+        <nav className="lobby-tabs" role="tablist" aria-label="Lobby sections">
+          {tabs.map(([t, label]) => (
+            <button key={t} type="button" role="tab" className={cx('lobby-tab', t === tab && 'on')} aria-selected={t === tab} onClick={() => setTabPick(t)}>
+              {label}
+            </button>
+          ))}
+        </nav>
+      )}
+      {/* a new tab starts at its top */}
+      <Land key={land ? tab : 'all'} on={land} className="lobby-scroll">
+      {!isHost && show('game') && (
         <section className="panel settings-summary">
           <h2 className="section-title">Game settings</h2>
           <div className="summary-chips">
@@ -712,9 +789,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         </section>
       )}
 
-      {isHost && (
+      {isHost && show('game') && (
         <section className="panel">
-          <h2 className="section-title">Game</h2>
+          {!land && <h2 className="section-title">Game</h2>}
           <div className="seg game-seg">
             <Option
               on={isBluff}
@@ -755,10 +832,12 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         </section>
       )}
 
-      {isHost && crazy7 && (
+      {isHost && crazy7 && settingsOpen && (
         <section className="panel">
-          <h2 className="section-title">Game settings</h2>
-          {coinsOn && <StakePicker stake={stake} players={view.players.length} config={view.config} bots={bots.length > 0} isHost={isHost} onPick={(n) => set({ stake: n })} />}
+          {!land && <h2 className="section-title">Game settings</h2>}
+          {coinsOn && show('stakes') && <StakePicker stake={stake} players={view.players.length} config={view.config} bots={bots.length > 0} isHost={isHost} onPick={(n) => set({ stake: n })} />}
+          {show('game') && (
+          <>
           <SettingRow title="🃏 Cards each" desc="Dealt to every player at the start">
             <Choice<5 | 7> value={view.config.handSize} options={[[5, '5'], [7, '7']]} onPick={(n) => set({ handSize: n })} />
           </SettingRow>
@@ -780,24 +859,35 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               ))}
             </div>
           </div>
+          </>
+          )}
+          {show('extras') && (
+          <>
           <SettingRow title="7️⃣ Stack 7s" desc={view.config.c7Power ? 'Answer a 7 or a 2 with a 7 or a 2: the next player picks the total' : 'Answer a 7 with a 7: the next player picks 4, then 6…'}>
             <Choice value={view.config.stack7} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ stack7: on })} />
           </SettingRow>
           <SettingRow title="⚡ Power cards" desc="J changes the suit · 8 skips the next player · A reverses · 2 makes the next player pick 2">
             <Choice value={view.config.c7Power === true} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ c7Power: on })} />
           </SettingRow>
+          </>
+          )}
+          {show('game') && (
+          <>
           <p className="label">Cards</p>
           <div className="seg">
             <Option on={view.config.decks === 1} disabled={false} title="1 deck" desc="52 cards" onClick={() => set({ decks: 1 })} />
             <Option on={view.config.decks === 2} disabled={false} title="2 decks" desc="104 cards, more 7s" onClick={() => set({ decks: 2 })} />
           </div>
+          </>
+          )}
         </section>
       )}
 
-      {isHost && rang && (
+      {isHost && rang && settingsOpen && (
         <section className="panel">
-          <h2 className="section-title">Game settings</h2>
-          {coinsOn && <StakePicker stake={stake} players={view.players.length} config={view.config} bots={bots.length > 0} isHost={isHost} onPick={(n) => set({ stake: n })} />}
+          {!land && <h2 className="section-title">Game settings</h2>}
+          {coinsOn && show('stakes') && <StakePicker stake={stake} players={view.players.length} config={view.config} bots={bots.length > 0} isHost={isHost} onPick={(n) => set({ stake: n })} />}
+          {show('game') && (
           <div className="setting-row stacked">
             <div className="grow">
               <b>🂠 Picks per turn</b>
@@ -816,6 +906,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               ))}
             </div>
           </div>
+          )}
+          {show('extras') && (
+          <>
           <SettingRow title="➕ Stack +2 and +4" desc="Answer a +2 with a +2 or +4, a +4 with a +4: the next player picks the total">
             <Choice value={view.config.rangStack !== false} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ rangStack: on })} />
           </SettingRow>
@@ -831,12 +924,20 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <SettingRow title="⚡ Force play" desc="A card you pick that fits is played at once">
             <Choice value={view.config.rangForce === true} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ rangForce: on })} />
           </SettingRow>
+          </>
+          )}
+          {show('game') && (
           <SettingRow title="🃏 Cards each" desc="Dealt to every player at the start">
             <Choice<5 | 7 | 10> value={view.config.rangHand ?? 7} options={[[5, '5'], [7, '7'], [10, '10']]} onPick={(n) => set({ rangHand: n })} />
           </SettingRow>
+          )}
+          {show('extras') && (
           <SettingRow title="📢 Forgot last card" desc="Cards picked by a player caught not saying last card">
             <Choice<1 | 2 | 4> value={view.config.rangMissed ?? 2} options={[[1, '1'], [2, '2'], [4, '4']]} onPick={(n) => set({ rangMissed: n })} />
           </SettingRow>
+          )}
+          {show('game') && (
+          <>
           {/* stacked: three wide choices leave the text no room beside them */}
           <div className="setting-row stacked">
             <div className="grow">
@@ -854,14 +955,18 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           <SettingRow title="👥 Teams" desc="2 vs 2: partners sit opposite; when one goes out, both win">
             <Choice value={view.config.teams} options={[[false, 'Off'], [true, '2 vs 2']]} onPick={(on) => set({ teams: on })} />
           </SettingRow>
+          </>
+          )}
         </section>
       )}
 
-      {isHost && isBluff && <section className="panel">
-        <h2 className="section-title">Game settings</h2>
+      {isHost && isBluff && settingsOpen && <section className="panel">
+        {!land && <h2 className="section-title">Game settings</h2>}
         {/* the bots' level comes first: it sets how much can be staked */}
-        {bots.length > 0 && <BotLevelPicker value={view.config.botLevel ?? 'expert'} onPick={(level) => set({ botLevel: level })} />}
-        {coinsOn && <StakePicker stake={stake} players={view.players.length} config={view.config} bots={bots.length > 0} isHost={isHost} onPick={(n) => set({ stake: n })} />}
+        {bots.length > 0 && show('stakes') && <BotLevelPicker value={view.config.botLevel ?? 'expert'} onPick={(level) => set({ botLevel: level })} />}
+        {coinsOn && show('stakes') && <StakePicker stake={stake} players={view.players.length} config={view.config} bots={bots.length > 0} isHost={isHost} onPick={(n) => set({ stake: n })} />}
+        {show('game') && (
+        <>
         <p className="label">Cards</p>
         <div className="seg">
           <Option on={view.config.decks === 1} disabled={!isHost} title="1 deck" desc="52 cards" onClick={() => set({ decks: 1 })} />
@@ -884,7 +989,11 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             onClick={() => set({ bluffRule: 'one' })}
           />
         </div>
-        <p className="label">Extras</p>
+        </>
+        )}
+        {show('extras') && (
+        <>
+        {!land && <p className="label">Extras</p>}
         <SettingRow title="🔍 Peek power" desc="Secretly see one played card before calling">
           <Choice value={view.config.peeks > 0} options={[[false, 'No'], [true, 'Yes']]} onPick={(on) => set({ peeks: on ? 1 : 0 })} />
         </SettingRow>
@@ -935,10 +1044,12 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             </SettingRow>
           </>
         )}
+        </>
+        )}
       </section>}
 
       {/* older servers have no turn timer */}
-      {isHost && view.config.turnTimer !== undefined && (
+      {isHost && view.config.turnTimer !== undefined && show('extras') && (
         <section className="panel">
           <div className="setting-row stacked">
             <div className="grow">
@@ -960,7 +1071,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
       )}
 
       {/* older servers have no voice notes */}
-      {isHost && view.config.voice !== undefined && (
+      {isHost && view.config.voice !== undefined && show('extras') && (
         <section className="panel">
           <SettingRow title="🎧 Live voice" desc="Logged-in players in the game can talk and hear each other. Never recorded">
             <Choice value={view.config.voice} options={[[false, 'Off'], [true, 'On']]} onPick={(on) => set({ voice: on })} />
@@ -968,12 +1079,13 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         </section>
       )}
 
-      {!rang && (
+      {!rang && show('help') && (
         <button className="link-btn tut-link" onClick={() => setLesson(view.config.game)}>
           📘 How to play: 1-minute practice game
         </button>
       )}
-      <details className="panel rules">
+      {show('help') && (
+      <details className="panel rules" open={land || undefined}>
         <summary>How to play {crazy7 ? 'Crazy 7' : rang ? 'Rang' : 'Bluff'}</summary>
         {rang ? (
           <ul>
@@ -1029,10 +1141,16 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
           </ul>
         )}
       </details>
+      )}
 
-      <VoicePicker sample={rang ? `${me?.name ?? 'Ravi'} played a red seven. Priya is skipped` : crazy7 ? `${me?.name ?? 'Ravi'} played seven of spades. Priya picks 2` : `${me?.name ?? 'Ravi'} played four Queens`} />
+      {show('help') && <VoicePicker sample={rang ? `${me?.name ?? 'Ravi'} played a red seven. Priya is skipped` : crazy7 ? `${me?.name ?? 'Ravi'} played seven of spades. Priya picks 2` : `${me?.name ?? 'Ravi'} played four Queens`} />}
+      </Land>
+      </Land>
+      </Land>
 
       <div className="lobby-actions">
+        {/* landscape: Play / Watch rides on the docked bar */}
+        {land && modeRow}
         {isHost ? (
           <>
             {startBlock && <p className="start-block">{startBlock}</p>}

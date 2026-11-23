@@ -26,47 +26,54 @@ const WAYS: [string, string, string][] = [
 export function XpGuide({ level, xp, onClose }: { level: number; xp: number; onClose: () => void }) {
   const next = nextTitle(level);
   return (
-    <Backdrop onClose={onClose}>
+    <Backdrop onClose={onClose} panel="lp-guide-sheet">
       <h3>Levels & XP</h3>
-      <p className="label">How to earn XP</p>
-      <ul className="xp-ways">
-        {WAYS.map(([emoji, text, points]) => (
-          <li key={text}>
-            <span>{emoji}</span>
-            <span className="grow">{text}</span>
-            <b>{points}</b>
-          </li>
-        ))}
-      </ul>
-      <p className="muted small">
-        Every finished game counts, win or lose. Missions and secret cards need games of {MIN_REWARD_GAME_SEC / 60} min or more. Wrong
-        Bluff calls, stopped games and guest games give no XP.
-      </p>
+      {/* sideways: ways to earn beside the titles */}
+      <div className="lp-guide">
+        <div className="lp-guide-col">
+          <p className="label">How to earn XP</p>
+          <ul className="xp-ways">
+            {WAYS.map(([emoji, text, points]) => (
+              <li key={text}>
+                <span>{emoji}</span>
+                <span className="grow">{text}</span>
+                <b>{points}</b>
+              </li>
+            ))}
+          </ul>
+          <p className="muted small">
+            Every finished game counts, win or lose. Missions and secret cards need games of {MIN_REWARD_GAME_SEC / 60} min or more. Wrong
+            Bluff calls, stopped games and guest games give no XP.
+          </p>
+        </div>
 
-      <p className="label">Titles</p>
-      {next && (
-        <p className="xp-next">
-          Next: {next.emoji} <b>{next.title}</b> at level {next.level} · {formatCoins(xpForLevel(next.level) - xp)} XP to go
-        </p>
-      )}
-      <ul className="title-list">
-        {TITLES.map((t) => {
-          const reached = level >= t.level;
-          const current = reached && (nextTitle(t.level)?.level ?? Infinity) > level;
-          return (
-            <li key={t.title} className={cx(reached && 'reached', current && 'current')}>
-              <span className="title-emoji">{t.emoji}</span>
-              <span className="grow">
-                <b>{t.title}</b>
-                {current && <span className="tag">You</span>}
-              </span>
-              <span className="muted small">
-                Lv {t.level} · {formatCoins(xpForLevel(t.level))} XP
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+        <div className="lp-guide-col">
+          <p className="label">Titles</p>
+          {next && (
+            <p className="xp-next">
+              Next: {next.emoji} <b>{next.title}</b> at level {next.level} · {formatCoins(xpForLevel(next.level) - xp)} XP to go
+            </p>
+          )}
+          <ul className="title-list">
+            {TITLES.map((t) => {
+              const reached = level >= t.level;
+              const current = reached && (nextTitle(t.level)?.level ?? Infinity) > level;
+              return (
+                <li key={t.title} className={cx(reached && 'reached', current && 'current')}>
+                  <span className="title-emoji">{t.emoji}</span>
+                  <span className="grow">
+                    <b>{t.title}</b>
+                    {current && <span className="tag">You</span>}
+                  </span>
+                  <span className="muted small">
+                    Lv {t.level} · {formatCoins(xpForLevel(t.level))} XP
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
       <button className="btn ghost block" onClick={onClose}>
         Close
       </button>

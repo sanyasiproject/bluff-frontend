@@ -29,12 +29,23 @@ import { LieRecapBox } from './LieRecap';
 import { SecretsReveal } from './SecretMissions';
 import { RankedLine } from './Ranked';
 
-export function Backdrop({ center, onClose, children }: { center?: boolean; onClose?: () => void; children: ReactNode }) {
+export function Backdrop({
+  center,
+  onClose,
+  children,
+  panel,
+}: {
+  center?: boolean;
+  onClose?: () => void;
+  children: ReactNode;
+  /** extra class on the sheet or modal (the landscape layout of a game sheet) */
+  panel?: string;
+}) {
   // the phone's back button closes it too; screens without onClose (game over) stay put
   useBack(onClose);
   return (
-    <div className={cx('backdrop', center && 'center')} onClick={onClose}>
-      <div className={center ? 'modal' : 'sheet'} role="dialog" aria-modal onClick={(e) => e.stopPropagation()}>
+    <div className={cx('backdrop', center && 'center', panel && `${panel}-bd`)} onClick={onClose}>
+      <div className={cx(center ? 'modal' : 'sheet', panel)} role="dialog" aria-modal onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>
@@ -58,7 +69,7 @@ export function RankSheet({ hand, selected, busy, onPick, onClose, kismat = null
   const honest = ranks.size === 1 ? [...ranks][0] : null;
   const allWild = cards.length > 0 && ranks.size === 0;
   return (
-    <Backdrop onClose={onClose}>
+    <Backdrop onClose={onClose} panel="lo-game">
       <h3>Call a rank for {selected.length} card{selected.length > 1 ? 's' : ''}</h3>
       <p className="muted small">
         {allWild
@@ -67,14 +78,14 @@ export function RankSheet({ hand, selected, busy, onPick, onClose, kismat = null
             ? `Your cards really are ${rankPlural(honest)}${cards.length > 1 && cards.some((c) => c.rank === kismat) ? ' (🍀 wild ones count)' : ''}, or bluff with any other rank.`
             : 'Pick any rank: truth or bluff.'}
       </p>
-      <div className="rank-grid">
+      <div className="rank-grid lo-body">
         {RANKS.map((r) => (
           <button key={r} className={cx('rank-btn', (allWild || r === honest) && 'honest')} disabled={busy} onClick={() => onPick(r)}>
             {r}
           </button>
         ))}
       </div>
-      <button className="btn ghost block" onClick={onClose}>
+      <button className="btn ghost block lo-x" onClick={onClose}>
         Cancel
       </button>
     </Backdrop>
@@ -97,18 +108,27 @@ interface PickSheetProps {
 
 export function PickSheet({ count, back, aura, who, claim, onPick, onClose, kismat = null }: PickSheetProps) {
   return (
-    <Backdrop onClose={onClose}>
+    <Backdrop onClose={onClose} panel="lo-game">
       <h3>Pick one card to turn over</h3>
       <p className="muted small">
         {who} said {claim}. If your card doesn't match, they pick up the pile. If it matches, you do.
         {kismat && ` 🍀 ${rankPlural(kismat)} count as a match.`}
       </p>
-      <div className="pick-row">
+      <div className={cx('pick-row lo-body lo-fan', count > 5 && 'lo-fan-many')} style={{ '--n': count } as CSSProperties}>
         {Array.from({ length: count }, (_, i) => (
-          <PlayingCard key={i} faceDown back={back} aura={aura} size={count > 8 ? 'md' : 'lg'} className="pick-card" onClick={() => onPick(i)} />
+          <PlayingCard
+            key={i}
+            faceDown
+            back={back}
+            aura={aura}
+            size={count > 8 ? 'md' : 'lg'}
+            className="pick-card"
+            style={{ '--i': i } as CSSProperties}
+            onClick={() => onPick(i)}
+          />
         ))}
       </div>
-      <button className="btn ghost block" onClick={onClose}>
+      <button className="btn ghost block lo-x" onClick={onClose}>
         Cancel
       </button>
     </Backdrop>
@@ -136,7 +156,7 @@ export function PeekSheet({ count, back, aura, peeked, left, claim, kismat = nul
   const [busy, setBusy] = useState(false);
   const seen = new Map(peeked.map((p) => [p.index, p.card]));
   return (
-    <Backdrop onClose={onClose}>
+    <Backdrop onClose={onClose} panel="lo-game">
       <h3>🔍 Peek at a card</h3>
       <p className="muted small">
         Tap a card to see it secretly. Others only see that you peeked. {left} peek{left === 1 ? '' : 's'} left this game.
@@ -146,11 +166,18 @@ export function PeekSheet({ count, back, aura, peeked, left, claim, kismat = nul
           🍀 {rankPlural(kismat)} are wild: they count as {rankPlural(claim)}
         </p>
       )}
-      <div className="pick-row">
+      <div className={cx('pick-row lo-body lo-fan', count > 5 && 'lo-fan-many')} style={{ '--n': count } as CSSProperties}>
         {Array.from({ length: count }, (_, i) => {
           const card = seen.get(i);
           return card ? (
-            <PlayingCard key={i} card={card} size={count > 8 ? 'md' : 'lg'} className="flip" wild={kismat !== null && card.rank === kismat} />
+            <PlayingCard
+              key={i}
+              card={card}
+              size={count > 8 ? 'md' : 'lg'}
+              className="flip"
+              style={{ '--i': i } as CSSProperties}
+              wild={kismat !== null && card.rank === kismat}
+            />
           ) : (
             <PlayingCard
               key={i}
@@ -159,6 +186,7 @@ export function PeekSheet({ count, back, aura, peeked, left, claim, kismat = nul
               aura={aura}
               size={count > 8 ? 'md' : 'lg'}
               className={cx('pick-card', (left === 0 || busy) && 'disabled')}
+              style={{ '--i': i } as CSSProperties}
               onClick={
                 left > 0 && !busy
                   ? async () => {
@@ -172,7 +200,7 @@ export function PeekSheet({ count, back, aura, peeked, left, claim, kismat = nul
           );
         })}
       </div>
-      <button className="btn ghost block" onClick={onClose}>
+      <button className="btn ghost block lo-x" onClick={onClose}>
         Done
       </button>
     </Backdrop>
@@ -183,13 +211,13 @@ export function PeekSheet({ count, back, aura, peeked, left, claim, kismat = nul
 export function BetSheet({ limit, value, onPick, onClose }: { limit: number; value: number; onPick: (n: number) => void; onClose: () => void }) {
   const steps = BET_STEPS.filter((n) => n <= limit);
   return (
-    <Backdrop onClose={onClose}>
+    <Backdrop onClose={onClose} panel="lo-game">
       <h3>🎲 Bet on your Bluff call</h3>
       <p className="bet-note">
         Pick your bet <b>first</b>, then tap <b>Bluff!</b> Right call: you win it from them. Wrong call: you pay it. Coins move when the
         game ends.
       </p>
-      <div className="stake-grid">
+      <div className="stake-grid lo-body">
         <button className={cx('stake-chip', value === 0 && 'on')} onClick={() => onPick(0)}>
           No bet
         </button>
@@ -200,7 +228,7 @@ export function BetSheet({ limit, value, onPick, onClose }: { limit: number; val
         ))}
       </div>
       <p className="muted small">You can bet up to {formatCoins(limit)} right now (never more than the stake).</p>
-      <button className="btn ghost block" onClick={onClose}>
+      <button className="btn ghost block lo-x" onClick={onClose}>
         Close
       </button>
     </Backdrop>
@@ -223,7 +251,7 @@ export function RevealOverlay({ reveal, name, back, aura, onClose, kismat = null
   // a Kismat card that isn't the claimed rank still backs the claim: say why
   const wildHelped = kismat !== null && kismat !== reveal.rank && reveal.cards.some((c) => c?.rank === kismat);
   return (
-    <Backdrop center onClose={onClose}>
+    <Backdrop center onClose={onClose} panel="lo-reveal">
       <div className={cx('reveal', reveal.bluff ? 'caught' : 'truth')} onClick={onClose}>
         <p className="muted small">
           {name(reveal.callerId)} called bluff on {name(reveal.playerId) === 'You' ? 'you' : name(reveal.playerId)}
@@ -231,24 +259,43 @@ export function RevealOverlay({ reveal, name, back, aura, onClose, kismat = null
         <h3 className="reveal-title">{reveal.bluff ? 'Caught bluffing!' : 'It was the truth!'}</h3>
         <p className="small">Claimed {claimText(reveal.cards.length, reveal.rank)}</p>
         {wildHelped && <p className="small wild-note">🍀 {rankPlural(kismat)} are wild: they count as {rankPlural(reveal.rank)}</p>}
-        <div className="reveal-cards">
-          {reveal.cards.map((c, i) => (
-            <div
-              key={i}
-              className={cx('reveal-slot', c && (backsClaim(c, reveal.rank, kismat) ? 'match' : 'miss'), reveal.pickedIndex === i && 'picked')}
-            >
-              <PlayingCard
-                card={c}
-                back={back}
-                aura={aura}
-                size={reveal.cards.length > 8 ? 'sm' : 'md'}
-                wild={!!c && c.rank === kismat}
-                className={c ? 'flip' : undefined}
-                style={{ animationDelay: `${120 + Math.min(i, 10) * 110}ms` }}
-              />
-              {c && <span className="mark">{backsClaim(c, reveal.rank, kismat) ? '✓' : '✗'}</span>}
-            </div>
-          ))}
+        {/* landscape: the cards and a big stamp across them (the wrapper is invisible in portrait) */}
+        <div className="lo-stage" style={{ '--n': reveal.cards.length } as CSSProperties}>
+          <div className="reveal-cards">
+            {reveal.cards.map((c, i) => (
+              <div
+                key={i}
+                className={cx('reveal-slot', c && (backsClaim(c, reveal.rank, kismat) ? 'match' : 'miss'), reveal.pickedIndex === i && 'picked')}
+                style={{ '--i': i } as CSSProperties}
+              >
+                {/* landscape only: the player's own back turns away as the face turns in */}
+                {c && (
+                  <span className="lo-flip-back" aria-hidden>
+                    <PlayingCard
+                      faceDown
+                      back={back}
+                      aura={aura}
+                      size={reveal.cards.length > 8 ? 'sm' : 'md'}
+                      style={{ animationDelay: `${120 + Math.min(i, 10) * 110}ms` }}
+                    />
+                  </span>
+                )}
+                <PlayingCard
+                  card={c}
+                  back={back}
+                  aura={aura}
+                  size={reveal.cards.length > 8 ? 'sm' : 'md'}
+                  wild={!!c && c.rank === kismat}
+                  className={c ? 'flip' : undefined}
+                  style={{ animationDelay: `${120 + Math.min(i, 10) * 110}ms` }}
+                />
+                {c && <span className="mark">{backsClaim(c, reveal.rank, kismat) ? '✓' : '✗'}</span>}
+              </div>
+            ))}
+          </div>
+          <span className="lo-stamp" aria-hidden>
+            {reveal.bluff ? 'BLUFF!' : 'TRUTH'}
+          </span>
         </div>
         <p className="reveal-result">
           <b>{name(reveal.loserId)}</b> {name(reveal.loserId) === 'You' ? 'pick' : 'picks'} up {reveal.pileCount} cards
@@ -310,84 +357,107 @@ export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza, onS
         : p.place
           ? `${placeLabel(p.place)}${left(p)}`
           : '';
+  // landscape podium: who won, with their avatar
+  const podium = view.stopped ? [] : view.players.filter((p) => won(p.id));
   const winningTeam = view.teams && view.winnerIds.length > 0 ? (view.teams[0].includes(view.winnerIds[0]) ? '🔵' : '🟠') : null;
   // players who used Leave game are still part of this game's result
   const nameOf = (id: string) =>
     id === view.meId ? 'You' : ([...view.players, ...view.leftPlayers].find((p) => p.id === id)?.name ?? 'Someone');
   return (
-    <Backdrop center>
+    <Backdrop center panel="lo-over">
       <div className="reveal gameover" ref={box}>
-        <h3 className="reveal-title">{view.stopped ? 'Game stopped' : view.endedEarly ? 'Game ended' : view.rang?.timedOut ? "⏱ Time's up" : 'Game over'}</h3>
-        {view.rang?.timedOut && !view.stopped && <p className="muted small">Ranked by points left: fewest first, equal points share the place</p>}
-        {winningTeam && (
-          <p className="team-win">
-            {winningTeam} Team {view.winnerIds.map(nameOf).join(' & ')} {view.winnerIds.includes(view.meId) ? 'win! 🎉' : 'win'}
-          </p>
-        )}
-        {view.endedEarly && (
-          <p className="muted small">
-            The host ended it: {view.teams ? "1st place's team wins, everyone else loses" : '1st place wins, the rest by card value left (A 1 … K 13)'}
-          </p>
-        )}
-        <ol className="results">
-          {ranked.map((p, i) => (
-            <li key={p.id} className={cx(lost(p.id) && 'loser', won(p.id) && 'winner')} style={{ '--i': i } as CSSProperties}>
-              <span className="medal">{medal(p)}</span>
-              <span className="grow">
-                <span data-no-translate>{p.name}</span>
-                {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} /> <SazaTag badge={p.saza} />
-              </span>
-              <span className="muted">{label(p)}</span>
-            </li>
-          ))}
-          {view.leftPlayers.map((p, i) => (
-            <li key={p.id} className="loser" style={{ '--i': ranked.length + i } as CSSProperties}>
-              <span className="medal">🚪</span>
-              <span className="grow">
-                <span data-no-translate>{p.name}</span> <LevelBadge level={p.level} />
-              </span>
-              <span className="muted">Left · Lost</span>
-            </li>
-          ))}
-        </ol>
-        <SazaResult view={view} nameOf={nameOf} onPick={onPickSaza} />
-        <LieRecapBox view={view} nameOf={nameOf} onShowPlays={onShowPlays} />
-        <SecretsReveal view={view} nameOf={nameOf} />
-        {view.awards.length > 0 && (
-          <div className="awards">
-            <p className="label">Awards</p>
-            {view.awards.map((a) => (
-              <div key={a.title} className="award">
-                <span className="award-emoji">{a.emoji}</span>
-                <div className="grow">
-                  <b>{a.title}</b>
-                  <p className="muted small">
-                    {a.playerIds.map(nameOf).join(' & ')} · {a.detail}
-                  </p>
-                </div>
+        {/* landscape: podium and places on the left, rewards on the right, buttons docked; the wrappers vanish in portrait */}
+        <div className="go-main">
+          {podium.length > 0 && (
+            <div className="go-podium" aria-hidden>
+              <span className="go-trophy">🏆</span>
+              <div className="go-champs">
+                {podium.map((p) => (
+                  <span key={p.id} className="go-champ">
+                    <Avatar name={p.name} avatar={p.avatar} bot={p.bot} size="sm" />
+                    <b data-no-translate>{p.id === view.meId ? nameOf(p.id) : p.name}</b>
+                  </span>
+                ))}
               </div>
+              <span className="go-crown-label">{podium.length > 1 ? 'Winners' : 'Winner'}</span>
+            </div>
+          )}
+          <h3 className="reveal-title">{view.stopped ? 'Game stopped' : view.endedEarly ? 'Game ended' : view.rang?.timedOut ? "⏱ Time's up" : 'Game over'}</h3>
+          {view.rang?.timedOut && !view.stopped && <p className="muted small">Ranked by points left: fewest first, equal points share the place</p>}
+          {winningTeam && (
+            <p className="team-win">
+              {winningTeam} Team {view.winnerIds.map(nameOf).join(' & ')} {view.winnerIds.includes(view.meId) ? 'win! 🎉' : 'win'}
+            </p>
+          )}
+          {view.endedEarly && (
+            <p className="muted small">
+              The host ended it: {view.teams ? "1st place's team wins, everyone else loses" : '1st place wins, the rest by card value left (A 1 … K 13)'}
+            </p>
+          )}
+          <ol className="results">
+            {ranked.map((p, i) => (
+              <li key={p.id} className={cx(lost(p.id) && 'loser', won(p.id) && 'winner')} style={{ '--i': i } as CSSProperties}>
+                <span className="medal">{medal(p)}</span>
+                <span className="grow">
+                  <span data-no-translate>{p.name}</span>
+                  {p.id === view.meId && <span className="muted"> (you)</span>} <LevelBadge level={p.level} /> <SazaTag badge={p.saza} />
+                </span>
+                <span className="muted">{label(p)}</span>
+              </li>
             ))}
-          </div>
-        )}
-        <CoinSummary view={view} nameOf={nameOf} startLevel={startLevel ?? null} />
-        {onRematch ? (
-          <button
-            className="btn primary block shine"
-            disabled={busy}
-            onClick={async () => {
-              setBusy(true);
-              await onRematch();
-              setBusy(false);
-            }}
-          >
-            🔁 Play again{view.config.stake > 0 ? ` · 🪙 ${formatCoins(view.config.stake)} each` : ''}
+            {view.leftPlayers.map((p, i) => (
+              <li key={p.id} className="loser" style={{ '--i': ranked.length + i } as CSSProperties}>
+                <span className="medal">🚪</span>
+                <span className="grow">
+                  <span data-no-translate>{p.name}</span> <LevelBadge level={p.level} />
+                </span>
+                <span className="muted">Left · Lost</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <div className="go-side">
+          <SazaResult view={view} nameOf={nameOf} onPick={onPickSaza} />
+          <LieRecapBox view={view} nameOf={nameOf} onShowPlays={onShowPlays} />
+          <SecretsReveal view={view} nameOf={nameOf} />
+          {view.awards.length > 0 && (
+            <div className="awards">
+              <p className="label">Awards</p>
+              {view.awards.map((a) => (
+                <div key={a.title} className="award">
+                  <span className="award-emoji">{a.emoji}</span>
+                  <div className="grow">
+                    <b>{a.title}</b>
+                    <p className="muted small">
+                      {a.playerIds.map(nameOf).join(' & ')} · {a.detail}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <CoinSummary view={view} nameOf={nameOf} startLevel={startLevel ?? null} />
+        </div>
+        <div className="go-actions">
+          {onRematch ? (
+            <button
+              className="btn primary block shine"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                await onRematch();
+                setBusy(false);
+              }}
+            >
+              🔁 Play again{view.config.stake > 0 ? ` · 🪙 ${formatCoins(view.config.stake)} each` : ''}
+            </button>
+          ) : (
+            <p className="muted small">Waiting for the host to play again…</p>
+          )}
+          <button className="btn ghost block" onClick={onLobby}>
+            Back to lobby
           </button>
-        ) : (
-          <p className="muted small">Waiting for the host to play again…</p>
-        )}
-        <button className="btn ghost block" onClick={onLobby}>
-          Back to lobby
-        </button>
+        </div>
       </div>
     </Backdrop>
   );

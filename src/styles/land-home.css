@@ -1,0 +1,625 @@
+/* landscape: land-home (only inside @media (orientation: landscape) unless noted) */
+
+/* noted: the home layout wrappers vanish outside landscape, so portrait stays as before */
+.home-stage,
+.home-main,
+.home-rail {
+  display: contents;
+}
+
+/* noted: the How to play copy under the play panel is for landscape only */
+.home-how-land {
+  display: none;
+}
+
+/* noted: wrapped home sections keep their rise-in from styles.css */
+:is(.home-main, .home-rail) > :is(section, .panel, .guest-hint, .server-status) {
+  animation: rise-soft 0.45s ease-out 0.1s backwards;
+}
+
+.home-rail > :is(section, .panel) {
+  animation-delay: 0.25s;
+}
+
+@keyframes lh-in-left {
+  from {
+    transform: translateX(-28px);
+    opacity: 0;
+  }
+}
+
+@keyframes lh-in-right {
+  from {
+    transform: translateX(28px);
+    opacity: 0;
+  }
+}
+
+@keyframes lh-glow {
+  50% {
+    opacity: 0.6;
+    transform: scale(1.06);
+  }
+}
+
+@media (orientation: landscape) {
+  /* ---------- home: hero | play panel | extras rail ---------- */
+  .screen.home {
+    --lh-main: clamp(240px, min(36vw, calc(var(--u) * 80)), 460px);
+    --lh-rail: clamp(196px, min(28vw, calc(var(--u) * 64)), 360px);
+    --lh-gap: clamp(10px, calc(var(--u) * 3), 28px);
+    --fan: 1;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--lh-main) var(--lh-rail);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      'hero main top'
+      'hero main rail';
+    column-gap: var(--lh-gap);
+    row-gap: calc(var(--u) * 1.5);
+    max-width: 1320px;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    padding: max(calc(var(--u) * 2), env(safe-area-inset-top)) var(--safe-r) var(--safe-b) var(--safe-l);
+    overflow: hidden;
+  }
+
+  /* top right: account corner over the play panel and the rail */
+  .screen.home > .home-top {
+    grid-area: top;
+    z-index: 4;
+    justify-self: end;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    margin: 0;
+  }
+
+  /* ---------- hero: card fan, title, tagline ---------- */
+  .home .hero {
+    grid-area: hero;
+    position: relative;
+    isolation: isolate;
+    justify-content: center;
+    align-self: stretch;
+    gap: calc(var(--u) * 1.2);
+    min-width: 0;
+    /* room on top for the language pill */
+    padding: 44px 0 calc(var(--u) * 2);
+    animation: lh-in-left 0.5s ease-out backwards;
+  }
+
+  /* a soft gold spotlight behind the fan */
+  .home .hero::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: -1;
+    width: min(110%, calc(var(--u) * 90));
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(246, 196, 83, 0.16), rgba(246, 196, 83, 0.05) 55%, transparent 75%);
+    pointer-events: none;
+    animation: lh-glow 6s ease-in-out infinite;
+  }
+
+  /* the fan keeps its own animations; only its size changes */
+  .home .hero-cards {
+    flex: none;
+    margin-block: calc(60px * (var(--fan) - 1));
+    scale: var(--fan);
+  }
+
+  .home .hero h1 {
+    font-size: clamp(42px, calc(var(--u) * 13), 104px);
+    line-height: 1;
+    filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45));
+  }
+
+  .home .hero > .muted {
+    max-width: 30ch;
+    margin: 0;
+    font-size: clamp(13px, calc(var(--u) * 2.2), 19px);
+    line-height: 1.35;
+  }
+
+  /* wider phones get a slightly bigger fan; tall screens a much bigger one */
+  @media (min-width: 800px) {
+    .screen.home {
+      --fan: 1.12;
+    }
+  }
+
+  @media (min-height: 600px) {
+    .screen.home {
+      --fan: 1.45;
+    }
+  }
+
+  @media (min-height: 800px) {
+    .screen.home {
+      --fan: 1.7;
+    }
+  }
+
+  /* language switch: a small pill in the top-left corner */
+  .home .lang-toggle {
+    position: absolute;
+    top: max(calc(var(--u) * 2), env(safe-area-inset-top));
+    left: var(--safe-l);
+    z-index: 3;
+    margin: 0;
+    padding: 0 4px;
+    border: 1px solid var(--land-edge);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.28);
+    opacity: 1;
+  }
+
+  .home .lang-toggle button {
+    min-height: 40px;
+    padding: 4px 8px;
+  }
+}
+
+@media (orientation: landscape) {
+  /* ---------- middle: status lines and the play panel ---------- */
+  .home .home-main {
+    grid-area: main;
+    display: flex;
+    flex-direction: column;
+    /* centred, but a tall panel (locked, invite) starts at the top and scrolls */
+    justify-content: safe center;
+    gap: calc(var(--u) * 1.6);
+    min-height: 0;
+    margin: 0 -4px;
+    padding: 4px 4px calc(var(--u) * 2);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+
+  .home .home-main::-webkit-scrollbar {
+    display: none;
+  }
+
+  .home .home-main > * {
+    flex: none;
+  }
+
+  .home .home-main > .panel {
+    position: relative;
+    padding: clamp(12px, calc(var(--u) * 3), 26px);
+    border-color: var(--land-edge);
+    border-radius: clamp(16px, calc(var(--u) * 3.6), 26px);
+    background: var(--land-panel);
+    box-shadow: var(--land-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  /* a thin gold line along the panel's top edge */
+  .home .home-main > .panel.stack::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 18%;
+    right: 18%;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .home .home-main .stack {
+    gap: clamp(8px, calc(var(--u) * 2), 16px);
+  }
+
+  .home .home-main :is(.btn, .input) {
+    min-height: clamp(44px, calc(var(--u) * 7.4), 60px);
+    font-size: clamp(15px, calc(var(--u) * 2.3), 19px);
+  }
+
+  .home .home-main .btn.primary {
+    font-size: clamp(16px, calc(var(--u) * 2.6), 21px);
+    letter-spacing: 0.01em;
+  }
+
+  .home .home-main .label {
+    margin-bottom: -4px;
+  }
+
+  /* play panel: the name label sits beside its field */
+  .home .home-play {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .home .home-play > * {
+    grid-column: 1 / -1;
+  }
+
+  .home .home-play > .label {
+    grid-column: 1;
+    margin: 0;
+  }
+
+  .home .home-play > .input {
+    grid-column: 2;
+  }
+
+  .home .home-main .input {
+    padding-block: 8px;
+  }
+
+  /* the guest line drops under the panel, so the actions stay on top */
+  .home .home-main > .guest-hint {
+    order: 2;
+  }
+
+  .home .home-main > .home-how-land {
+    order: 3;
+  }
+
+  .home .home-main .join-row {
+    grid-template-columns: minmax(0, 1fr) clamp(80px, calc(var(--u) * 16), 120px);
+  }
+
+  .home .home-main .playing-as {
+    margin: 0;
+    font-size: clamp(15px, calc(var(--u) * 2.4), 20px);
+    text-align: center;
+  }
+
+  .home .home-main .divider {
+    font-size: clamp(12px, calc(var(--u) * 1.9), 15px);
+  }
+
+  .home .home-main :is(.server-status, .guest-hint) {
+    margin: 0;
+    padding: 8px 12px;
+    font-size: clamp(12px, calc(var(--u) * 1.9), 15px);
+    line-height: 1.35;
+  }
+
+  .home .home-main .rejoin {
+    min-height: 44px;
+    padding: 8px 14px;
+    font-size: 15px;
+  }
+
+  .home .home-main .invite-room {
+    font-size: clamp(18px, calc(var(--u) * 3.4), 28px);
+  }
+
+  /* How to play under the panel: quiet, full width */
+  .home .home-how-land {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    min-height: 44px;
+    animation: rise-soft 0.45s ease-out 0.2s backwards;
+  }
+
+  /* the rail copy hides; the button lives under the play panel here */
+  .home .home-rail > .how-to-btn {
+    display: none;
+  }
+}
+
+@media (orientation: landscape) {
+  /* ---------- right: the extras rail, scrolling inside itself ---------- */
+  .home .home-rail {
+    grid-area: rail;
+    display: flex;
+    flex-direction: column;
+    /* centred when it fits, top-aligned and scrolling when it doesn't */
+    justify-content: safe center;
+    gap: calc(var(--u) * 1.4);
+    min-height: 0;
+    margin: 0 -4px;
+    padding: 4px 4px calc(var(--u) * 2);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(246, 196, 83, 0.3) transparent;
+  }
+
+  .home .home-rail > * {
+    flex: none;
+  }
+
+  /* rail cards slide in from the right */
+  .home .home-rail > :is(section, .panel, .home-name-card) {
+    animation: lh-in-right 0.45s ease-out 0.2s backwards;
+  }
+
+  .home .home-rail > .panel {
+    padding: clamp(10px, calc(var(--u) * 2.2), 18px) clamp(10px, calc(var(--u) * 2.4), 18px);
+    border-radius: clamp(14px, calc(var(--u) * 3), 22px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+  }
+
+  /* Spin, Missions, League, Shop: compact menu rows */
+  .home .home-rail > :is(.missions-entry, .league-entry, .shop-entry) {
+    gap: 8px;
+    min-height: clamp(44px, calc(var(--u) * 7.4), 60px);
+    padding-block: 6px;
+    font-size: clamp(14px, calc(var(--u) * 2.2), 18px);
+    transition: transform 0.15s ease-out;
+  }
+
+  .home .home-rail > :is(.missions-entry, .league-entry, .shop-entry):active {
+    transform: scale(0.97);
+  }
+
+  .home .home-rail :is(.missions-entry-emoji, .league-entry-emoji, .shop-entry-emoji) {
+    font-size: clamp(18px, calc(var(--u) * 3), 26px);
+  }
+
+  .home .home-rail :is(.missions-pill, .league-pill) {
+    max-width: 48%;
+    overflow: hidden;
+    padding: 2px 8px;
+    font-size: 12px;
+    text-overflow: ellipsis;
+  }
+
+  /* one line per row: the label shrinks before the pill, chevrons go */
+  .home .home-rail > :is(.missions-entry, .league-entry, .shop-entry) > .grow {
+    min-width: min(5.5em, 50%);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .home .home-rail :is(.missions-chevron, .league-chevron, .shop-entry-chevron) {
+    display: none;
+  }
+
+  /* online friends: a tighter strip */
+  .home .home-rail > .online-friends {
+    gap: 8px;
+    border-color: rgba(60, 207, 145, 0.3);
+  }
+
+  .home .home-rail .online-head {
+    min-height: 32px;
+  }
+
+  .home .home-rail .online-strip {
+    margin: 0 calc(clamp(10px, calc(var(--u) * 2.4), 18px) * -1);
+    padding-inline: clamp(10px, calc(var(--u) * 2.4), 18px);
+  }
+
+  .home .home-rail .online-strip li {
+    width: 68px;
+  }
+
+  /* name, notify and install cards: smaller text */
+  .home .home-rail :is(.notify-card, .install, .home-name-card) {
+    font-size: 14px;
+  }
+
+  .home .home-rail .notify-card-title {
+    font-size: 14px;
+    line-height: 1.3;
+  }
+
+  .home .home-rail .confirm-actions {
+    flex-wrap: wrap;
+  }
+
+  .home .home-rail .confirm-actions .btn {
+    flex: 1 1 auto;
+    min-height: 40px;
+  }
+
+  /* install: icon and words on top, the button full width under them */
+  .home .home-rail .install-row {
+    flex-wrap: wrap;
+    gap: 8px 10px;
+  }
+
+  .home .home-rail .install-row > .btn {
+    flex: 1 0 100%;
+    min-height: 40px;
+  }
+
+  .home .home-rail .install-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .home .home-rail .install-steps {
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .home .home-rail .home-name-card .link-btn {
+    min-height: 40px;
+  }
+
+  /* the name card: field over its Save button in the narrow rail */
+  .home .home-rail .name-card {
+    padding: clamp(10px, calc(var(--u) * 2.2), 18px);
+  }
+
+  .home .home-rail .name-card .section-title {
+    margin-bottom: 6px;
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .home .home-rail .name-card .join-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .home .home-rail .name-card :is(.btn, .input) {
+    min-height: 44px;
+  }
+}
+
+@media (orientation: landscape) {
+  /* ---------- log in / sign up: compact tabs, labels beside fields ---------- */
+  .sheet.lh-account .seg {
+    margin: 0;
+  }
+
+  .sheet.lh-account .option {
+    min-height: 48px;
+    padding: 6px 12px;
+  }
+
+  .sheet.lh-account form.stack {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px 12px;
+  }
+
+  .sheet.lh-account form.stack > :is(.btn, .form-error) {
+    grid-column: 1 / -1;
+  }
+
+  .sheet.lh-account form.stack > .label {
+    margin: 0;
+    max-width: 16ch;
+    line-height: 1.2;
+  }
+
+  .sheet.lh-account .input {
+    min-height: 44px;
+    padding-block: 8px;
+  }
+
+  .sheet.lh-account .btn {
+    min-height: 44px;
+  }
+
+  .sheet.lh-account > .muted.small {
+    margin: 0;
+    font-size: 12px;
+  }
+
+  /* ---------- bonus and invite popups: emoji on the left, words on the right ---------- */
+  .modal.lh-popup {
+    max-width: min(540px, 100%);
+  }
+
+  .lh-popup .reveal.popup {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px clamp(12px, calc(var(--u) * 3), 24px);
+    padding: clamp(14px, calc(var(--u) * 3.4), 26px);
+    text-align: left;
+  }
+
+  .lh-popup .reveal.popup > * {
+    grid-column: 2;
+    margin: 0;
+  }
+
+  .lh-popup .reveal.popup > .popup-emoji {
+    grid-column: 1;
+    grid-row: 1 / span 6;
+    align-self: center;
+    font-size: clamp(54px, calc(var(--u) * 14), 96px);
+  }
+
+  .lh-popup .reveal.popup > .btn {
+    min-height: 44px;
+  }
+
+  /* ---------- intro: logo on the left, words on the right ---------- */
+  .splash {
+    display: grid;
+    grid-template-columns: auto minmax(0, 30rem);
+    grid-template-areas:
+      'logo title'
+      'logo tag'
+      'logo loader'
+      'logo status'
+      'logo retry';
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    column-gap: clamp(20px, calc(var(--u) * 6), 64px);
+    row-gap: 6px;
+    padding: var(--safe-b) var(--safe-r) var(--safe-b) var(--safe-l);
+    text-align: left;
+  }
+
+  .splash-logo {
+    grid-area: logo;
+    width: clamp(96px, calc(var(--u) * 30), 240px);
+    height: clamp(96px, calc(var(--u) * 30), 240px);
+    margin: 0;
+    border-radius: 24%;
+  }
+
+  .splash-title {
+    grid-area: title;
+    font-size: clamp(42px, calc(var(--u) * 12), 96px);
+    line-height: 1;
+  }
+
+  .splash-tag {
+    grid-area: tag;
+    font-size: clamp(14px, calc(var(--u) * 2.4), 20px);
+  }
+
+  .splash-loader {
+    grid-area: loader;
+    margin-top: clamp(8px, calc(var(--u) * 2.4), 20px);
+  }
+
+  .splash-status {
+    grid-area: status;
+    max-width: 30ch;
+    min-height: 2.6em;
+  }
+
+  .splash > .btn {
+    grid-area: retry;
+    justify-self: start;
+    min-height: 40px;
+  }
+
+  /* ---------- toasts and corner cards: clear of the notch, short enough for a phone ---------- */
+  .toasts {
+    top: max(6px, env(safe-area-inset-top));
+    width: min(60vw, 420px);
+  }
+
+  :is(.friend-online, .join-asks) {
+    top: calc(var(--u) * 2 + 52px);
+    right: var(--safe-r);
+    width: min(300px, 44vw);
+    max-height: calc(100dvh - var(--u) * 2 - 60px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  :is(.friend-online, .join-asks) .btn {
+    min-height: 40px;
+  }
+}
+
+@media (orientation: landscape) and (prefers-reduced-motion: reduce) {
+  .home .hero::before,
+  .home .hero,
+  .home .home-rail > *,
+  .home .home-main > * {
+    animation: none;
+  }
+}

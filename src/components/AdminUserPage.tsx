@@ -173,205 +173,212 @@ export function AdminUserPage({ auth, userId, onBack }: { auth: Auth; userId: st
   const u = data.user;
   return (
     <FullPage title={u.displayName} onBack={onBack}>
-      <section className="panel admin-hero">
-        <Avatar name={u.displayName} avatar={u.avatar} size="lg" />
-        <div className="grow">
-          <h3>
-            {u.displayName} <LevelBadge level={levelOf(u.stats)} /> {u.role === 'admin' && <span className="tag">Admin</span>}
-            {u.blocked && <span className="tag danger-tag">Blocked</span>}
-          </h3>
-          <p className="muted small">@{u.username}</p>
-          <div className="chip-row">
-            <span>📅 Joined {dateTime(u.createdAt)}</span>
-            <span>🕒 Last login {u.lastLoginAt ? timeAgo(u.lastLoginAt) : 'never'}</span>
-            <span>📱 {data.activeSessions} device{data.activeSessions === 1 ? '' : 's'} logged in</span>
-            <span>👥 {data.friends} friend{data.friends === 1 ? '' : 's'}</span>
+      {/* landscape: who they are on top, then coins and access beside stats and history */}
+      <div className="lp2-au">
+        <section className="panel admin-hero">
+          <Avatar name={u.displayName} avatar={u.avatar} size="lg" />
+          <div className="grow">
+            <h3>
+              {u.displayName} <LevelBadge level={levelOf(u.stats)} /> {u.role === 'admin' && <span className="tag">Admin</span>}
+              {u.blocked && <span className="tag danger-tag">Blocked</span>}
+            </h3>
+            <p className="muted small">@{u.username}</p>
+            <div className="chip-row">
+              <span>📅 Joined {dateTime(u.createdAt)}</span>
+              <span>🕒 Last login {u.lastLoginAt ? timeAgo(u.lastLoginAt) : 'never'}</span>
+              <span>📱 {data.activeSessions} device{data.activeSessions === 1 ? '' : 's'} logged in</span>
+              <span>👥 {data.friends} friend{data.friends === 1 ? '' : 's'}</span>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {error && <p className="form-error">{error}</p>}
-      {notice && <p className="form-ok">{notice}</p>}
+        {error && <p className="form-error">{error}</p>}
+        {notice && <p className="form-ok">{notice}</p>}
 
-      <section className="wallet-card">
-        <div className="wallet-top">
-          <div>
-            <span className="label">Coins</span>
-            <b className="wallet-amount">🪙 {formatCoins(u.coins)}</b>
-          </div>
-        </div>
-        <div className="quick-amounts">
-          {QUICK_AMOUNTS.map((n) => (
-            <button key={n} className={cx('stake-chip', amount === String(n) && 'on')} onClick={() => setAmount(String(n))}>
-              {compactCoins(n)}
-            </button>
-          ))}
-        </div>
-        <div className="coin-form">
-          <input
-            className="input"
-            inputMode="numeric"
-            aria-label="Number of coins"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value.replace(/\D/g, '').slice(0, 7))}
-          />
-          <input
-            className="input"
-            placeholder="Reason (optional)"
-            maxLength={100}
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-          />
-          <div className="coin-buttons">
-            <button className="btn primary small" disabled={busy} onClick={() => void changeCoins(1)}>
-              + Give {amount ? compactCoins(Number(amount)) : 0}
-            </button>
-            <button className="btn small" disabled={busy} onClick={() => void changeCoins(-1)}>
-              − Take {amount ? compactCoins(Number(amount)) : 0}
-            </button>
-          </div>
-        </div>
-      </section>
+        <div className="lp2-au-a">
+          <section className="wallet-card">
+            <div className="wallet-top">
+              <div>
+                <span className="label">Coins</span>
+                <b className="wallet-amount">🪙 {formatCoins(u.coins)}</b>
+              </div>
+            </div>
+            <div className="quick-amounts">
+              {QUICK_AMOUNTS.map((n) => (
+                <button key={n} className={cx('stake-chip', amount === String(n) && 'on')} onClick={() => setAmount(String(n))}>
+                  {compactCoins(n)}
+                </button>
+              ))}
+            </div>
+            <div className="coin-form">
+              <input
+                className="input"
+                inputMode="numeric"
+                aria-label="Number of coins"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value.replace(/\D/g, '').slice(0, 7))}
+              />
+              <input
+                className="input"
+                placeholder="Reason (optional)"
+                maxLength={100}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+              <div className="coin-buttons">
+                <button className="btn primary small" disabled={busy} onClick={() => void changeCoins(1)}>
+                  + Give {amount ? compactCoins(Number(amount)) : 0}
+                </button>
+                <button className="btn small" disabled={busy} onClick={() => void changeCoins(-1)}>
+                  − Take {amount ? compactCoins(Number(amount)) : 0}
+                </button>
+              </div>
+            </div>
+          </section>
 
-      <section className="panel stack-tight">
-        <h3 className="section-title">Profile</h3>
-        <label className="label" htmlFor="admin-name">
-          Display name
-        </label>
-        <div className="join-row">
-          <input id="admin-name" className="input" maxLength={16} value={name} onChange={(e) => setName(e.target.value)} />
-          <button
-            className="btn"
-            disabled={busy || !name.trim() || name.trim() === u.displayName}
-            onClick={() => void update({ displayName: name.trim() }, 'Name saved')}
-          >
-            Save
-          </button>
-        </div>
-        <label className="label" htmlFor="admin-username">
-          Username
-        </label>
-        <div className="join-row">
-          <input
-            id="admin-username"
-            className="input"
-            maxLength={20}
-            autoCapitalize="none"
-            autoComplete="off"
-            spellCheck={false}
-            value={username}
-            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-          />
-          <button
-            className="btn"
-            disabled={busy || username.length < 3 || username === u.username}
-            onClick={() =>
-              setConfirm({
-                title: `Change @${u.username} to @${username}?`,
-                body: `${u.displayName} will log in with @${username} from now on and friends find them by it. They stay logged in on their devices.`,
-                action: 'Change',
-                danger: false,
-                run: () => void update({ username }, 'Username saved'),
-              })
-            }
-          >
-            Save
-          </button>
-        </div>
-        <p className="muted small">3 to 20 letters, numbers or _</p>
-      </section>
-
-      <section className="panel stack-tight">
-        <h3 className="section-title">Access</h3>
-        <div className="access-row">
-          <span className="grow">Role</span>
-          <div className="mini-seg" role="group" aria-label="Role">
-            {(['user', 'admin'] as const).map((r) => (
+          <section className="panel stack-tight">
+            <h3 className="section-title">Profile</h3>
+            <label className="label" htmlFor="admin-name">
+              Display name
+            </label>
+            <div className="join-row">
+              <input id="admin-name" className="input" maxLength={16} value={name} onChange={(e) => setName(e.target.value)} />
               <button
-                key={r}
-                className={cx(u.role === r && 'on')}
-                aria-pressed={u.role === r}
-                disabled={busy || self}
-                onClick={() => u.role !== r && askRole(r)}
+                className="btn"
+                disabled={busy || !name.trim() || name.trim() === u.displayName}
+                onClick={() => void update({ displayName: name.trim() }, 'Name saved')}
               >
-                {r === 'admin' ? 'Admin' : 'Player'}
+                Save
               </button>
-            ))}
-          </div>
-        </div>
-        <div className="access-row">
-          <span className="grow">{u.blocked ? 'Blocked: cannot log in' : 'Can log in and play'}</span>
-          <button className={cx('btn small', !u.blocked && 'ghost danger-text')} disabled={busy || self} onClick={askBlock}>
-            {u.blocked ? 'Unblock' : 'Block'}
-          </button>
-        </div>
-        {self && <p className="muted small">You can't change your own role or block yourself.</p>}
-        <label className="label" htmlFor="admin-pass">
-          Reset password
-        </label>
-        <div className="join-row">
-          <input
-            id="admin-pass"
-            className="input"
-            type="password"
-            autoComplete="new-password"
-            placeholder="New password"
-            maxLength={128}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button className="btn" disabled={busy || password.length === 0} onClick={() => void resetPassword()}>
-            Set
-          </button>
-        </div>
-      </section>
+            </div>
+            <label className="label" htmlFor="admin-username">
+              Username
+            </label>
+            <div className="join-row">
+              <input
+                id="admin-username"
+                className="input"
+                maxLength={20}
+                autoCapitalize="none"
+                autoComplete="off"
+                spellCheck={false}
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+              />
+              <button
+                className="btn"
+                disabled={busy || username.length < 3 || username === u.username}
+                onClick={() =>
+                  setConfirm({
+                    title: `Change @${u.username} to @${username}?`,
+                    body: `${u.displayName} will log in with @${username} from now on and friends find them by it. They stay logged in on their devices.`,
+                    action: 'Change',
+                    danger: false,
+                    run: () => void update({ username }, 'Username saved'),
+                  })
+                }
+              >
+                Save
+              </button>
+            </div>
+            <p className="muted small">3 to 20 letters, numbers or _</p>
+          </section>
 
-      <section className="panel stack-tight">
-        <h3 className="section-title">Lifetime stats</h3>
-        <StatGrid stats={u.stats} />
-      </section>
+          <section className="panel stack-tight">
+            <h3 className="section-title">Access</h3>
+            <div className="access-row">
+              <span className="grow">Role</span>
+              <div className="mini-seg" role="group" aria-label="Role">
+                {(['user', 'admin'] as const).map((r) => (
+                  <button
+                    key={r}
+                    className={cx(u.role === r && 'on')}
+                    aria-pressed={u.role === r}
+                    disabled={busy || self}
+                    onClick={() => u.role !== r && askRole(r)}
+                  >
+                    {r === 'admin' ? 'Admin' : 'Player'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="access-row">
+              <span className="grow">{u.blocked ? 'Blocked: cannot log in' : 'Can log in and play'}</span>
+              <button className={cx('btn small', !u.blocked && 'ghost danger-text')} disabled={busy || self} onClick={askBlock}>
+                {u.blocked ? 'Unblock' : 'Block'}
+              </button>
+            </div>
+            {self && <p className="muted small">You can't change your own role or block yourself.</p>}
+            <label className="label" htmlFor="admin-pass">
+              Reset password
+            </label>
+            <div className="join-row">
+              <input
+                id="admin-pass"
+                className="input"
+                type="password"
+                autoComplete="new-password"
+                placeholder="New password"
+                maxLength={128}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button className="btn" disabled={busy || password.length === 0} onClick={() => void resetPassword()}>
+                Set
+              </button>
+            </div>
+          </section>
+        </div>
 
-      <section className="panel stack-tight">
-        <h3 className="section-title">
-          Admin history {history.total > 0 && <span className="muted">{history.total}</span>}
-        </h3>
-        {history.total === 0 && <p className="muted small">No admin changes yet.</p>}
-        <ul className="history-list">
-          {history.items.map((h) => {
-            const [icon, text] = historyText(h);
-            return (
-              <li key={h.id}>
-                <span className="history-icon">{icon}</span>
-                <div className="grow">
-                  <b>{text}</b>
-                  <p className="muted small">
-                    {h.by ?? 'Admin key'} · {timeAgo(h.createdAt)}
-                    {h.balanceAfter !== undefined && ` · balance ${formatCoins(h.balanceAfter)}`}
-                  </p>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-        {pages > 1 && (
-          <div className="pager">
-            <button className="btn small" disabled={history.page <= 1} onClick={() => void showHistoryPage(history.page - 1)}>
-              ‹ Newer
-            </button>
-            <span className="muted small">
-              Page {history.page} of {pages}
-            </span>
-            <button className="btn small" disabled={history.page >= pages} onClick={() => void showHistoryPage(history.page + 1)}>
-              Older ›
-            </button>
-          </div>
-        )}
-      </section>
+        <div className="lp2-au-b">
+          <section className="panel stack-tight">
+            <h3 className="section-title">Lifetime stats</h3>
+            <StatGrid stats={u.stats} />
+          </section>
 
-      <section className="stack-tight">
-        <h3 className="section-title">Recent games</h3>
-        <GameList games={data.games} empty="No games yet." />
-      </section>
+          <section className="panel stack-tight">
+            <h3 className="section-title">
+              Admin history {history.total > 0 && <span className="muted">{history.total}</span>}
+            </h3>
+            {history.total === 0 && <p className="muted small">No admin changes yet.</p>}
+            <ul className="history-list">
+              {history.items.map((h) => {
+                const [icon, text] = historyText(h);
+                return (
+                  <li key={h.id}>
+                    <span className="history-icon">{icon}</span>
+                    <div className="grow">
+                      <b>{text}</b>
+                      <p className="muted small">
+                        {h.by ?? 'Admin key'} · {timeAgo(h.createdAt)}
+                        {h.balanceAfter !== undefined && ` · balance ${formatCoins(h.balanceAfter)}`}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            {pages > 1 && (
+              <div className="pager">
+                <button className="btn small" disabled={history.page <= 1} onClick={() => void showHistoryPage(history.page - 1)}>
+                  ‹ Newer
+                </button>
+                <span className="muted small">
+                  Page {history.page} of {pages}
+                </span>
+                <button className="btn small" disabled={history.page >= pages} onClick={() => void showHistoryPage(history.page + 1)}>
+                  Older ›
+                </button>
+              </div>
+            )}
+          </section>
+
+          <section className="stack-tight">
+            <h3 className="section-title">Recent games</h3>
+            <GameList games={data.games} empty="No games yet." />
+          </section>
+        </div>
+      </div>
 
       {confirm && (
         <Backdrop center onClose={() => setConfirm(null)}>

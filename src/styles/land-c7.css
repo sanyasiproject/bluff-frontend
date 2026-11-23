@@ -1,0 +1,325 @@
+/* landscape: land-c7 (only inside @media (orientation: landscape) unless noted) */
+
+@media (orientation: landscape) {
+  /* ---------- deck and pile: real stacks lying on the 3D felt ---------- */
+
+  .c7-deck-spot,
+  .c7-pile-spot,
+  .c7-pile-spot .pile-react {
+    transform-style: preserve-3d;
+  }
+
+  .c7-deck3d,
+  .c7-discard3d {
+    --pcw: calc(var(--pw) * 0.072);
+    position: relative;
+    display: block;
+    width: var(--pcw);
+    height: calc(var(--pcw) * 1.4);
+    padding: 0;
+    border: 0;
+    background: none;
+    transform-style: preserve-3d;
+  }
+
+  .c7-deck3d:disabled {
+    cursor: default;
+    opacity: 1;
+  }
+
+  .c7-deck3d.live {
+    cursor: pointer;
+  }
+
+  .c7-deck3d.live:active {
+    scale: 0.96;
+  }
+
+  /* paper layers: the stack's real height */
+  .c7-3d-layer {
+    position: absolute;
+    inset: 0;
+    border-radius: calc(var(--pcw) * 0.1);
+    background: #f1e9d7;
+    box-shadow: inset 0 0 0 1px #cbbfa4;
+    translate: 0 0 calc(var(--i) * 0.9px + 0.5px);
+  }
+
+  .c7-3d-layer:nth-of-type(even) {
+    background: #ddd2ba;
+  }
+
+  /* the shadow each stack throws on the felt, from its bottom layer */
+  .c7-deck3d > .c7-3d-layer:first-of-type,
+  .c7-discard3d > .c7-3d-layer:first-of-type {
+    box-shadow: 0 1px 0 #efe7d4, 6px 10px 18px 4px rgba(0, 0, 0, 0.55);
+  }
+
+  .card.c7-3d-card {
+    --cw: var(--pcw);
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-shadow: 0 1px 0 #efe7d4, 0 2px 0 #b9ad94, 0 4px 8px rgba(0, 0, 0, 0.35);
+  }
+
+  .card.c7-deck3d-top {
+    translate: 0 0 calc(var(--layers) * 0.9px + 1px);
+  }
+
+  /* the cards played before, peeking out from under the top one */
+  .card.c7-3d-under {
+    filter: brightness(0.82);
+  }
+
+  .card.c7-3d-top {
+    translate: 0 0 calc(var(--layers) * 0.9px + 6px);
+    box-shadow: 0 1px 0 #efe7d4, 0 2px 0 #b9ad94, 0 8px 14px rgba(0, 0, 0, 0.5);
+    animation: c7-3d-drop 0.32s ease-out 0.3s backwards;
+  }
+
+  /* a 7 on top: a red ring round it */
+  .card.c7-3d-top.seven {
+    box-shadow:
+      0 0 0 3px var(--danger),
+      0 0 18px 3px rgba(229, 72, 77, 0.65),
+      0 8px 14px rgba(0, 0, 0, 0.5);
+  }
+
+  .c7-3d-empty {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border: 2px dashed rgba(255, 255, 255, 0.25);
+    border-radius: calc(var(--pcw) * 0.1);
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  /* how many cards: a small tag standing beside each stack */
+  .c7-3d-count {
+    position: absolute;
+    bottom: 0;
+    z-index: 2;
+    min-width: 26px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.82);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+    color: var(--ink);
+    font-size: clamp(12px, calc(var(--pw) * 0.015), 20px);
+    font-weight: 900;
+    text-align: center;
+    transform-origin: 50% 100%;
+    rotate: x calc(var(--tilt) * -1);
+    translate: 0 0 calc(var(--layers) * 0.9px + 12px);
+  }
+
+  .c7-deck3d .c7-3d-count {
+    right: calc(100% + 6px);
+  }
+
+  .c7-discard3d .c7-3d-count {
+    left: calc(100% + 6px);
+    box-shadow: inset 0 0 0 1px rgba(246, 196, 83, 0.5);
+  }
+
+  .c7-discard3d .pile-ripple {
+    translate: 0 0 calc(var(--layers) * 0.9px + 10px);
+  }
+
+  /* may pick: a breathing green ring lying on the felt round the deck */
+  .c7-deck3d-glow {
+    position: absolute;
+    inset: -7px;
+    border-radius: calc(var(--pcw) * 0.18);
+    box-shadow: 0 0 0 3px var(--ok), 0 0 22px 6px rgba(60, 207, 145, 0.7);
+    translate: 0 0 0.3px;
+    pointer-events: none;
+    animation: c7-breathe 1.4s ease-in-out infinite;
+  }
+
+  .c7-deck3d.live .card.c7-deck3d-top {
+    box-shadow: 0 0 0 2px var(--ok), 0 0 14px rgba(60, 207, 145, 0.8), 0 4px 8px rgba(0, 0, 0, 0.35);
+  }
+
+  @keyframes c7-3d-drop {
+    from {
+      opacity: 0;
+      scale: 1.35;
+    }
+  }
+
+  /* ---------- play's direction: a faint arrow lying on the felt ---------- */
+
+  .c7-dir-spot {
+    pointer-events: none;
+  }
+
+  .c7-dir3d {
+    display: block;
+    color: rgba(255, 255, 255, 0.13);
+    font-size: calc(var(--pw) * 0.24);
+    font-weight: 300;
+    line-height: 1;
+    animation: fade-in 0.5s ease-out;
+  }
+
+  .c7-dir3d.back {
+    color: rgba(246, 196, 83, 0.16);
+  }
+
+  /* ---------- the small signs standing by the pile: a 7's pick, a J's wish ---------- */
+
+  .felt-sign.c7-signs {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+  }
+
+  .c7-sign {
+    padding: 4px 10px;
+    border-radius: 9px;
+    background: linear-gradient(180deg, rgba(20, 14, 2, 0.92), rgba(40, 28, 4, 0.92));
+    box-shadow: 0 0 0 1.5px rgba(246, 196, 83, 0.55), 0 6px 12px rgba(0, 0, 0, 0.55);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+    animation: pop-big 0.4s ease-out;
+  }
+
+  .c7-sign.pick {
+    background: rgba(70, 10, 14, 0.92);
+    box-shadow: 0 0 0 1.5px rgba(229, 72, 77, 0.8), 0 6px 12px rgba(0, 0, 0, 0.55);
+    color: #ffb3b6;
+  }
+
+  .c7-sign.pick.mine {
+    background: var(--danger);
+    color: #fff;
+  }
+
+  /* the wished suit on a little white tile, red or black */
+  .c7-sign.wish b {
+    display: inline-grid;
+    place-items: center;
+    min-width: 18px;
+    margin-left: 2px;
+    border-radius: 5px;
+    background: var(--card-face);
+    color: var(--suit-black);
+  }
+
+  .c7-sign.wish.red b {
+    color: var(--suit-red);
+  }
+}
+
+@media (orientation: landscape) {
+  /* ---------- right column: last card above, pick and pass below ---------- */
+
+  .c7-table .side-actions {
+    bottom: calc(var(--safe-b) + 40px);
+  }
+
+  /* my turn: the pick and pass buttons take the bottom */
+  .c7-table.my-turn-table .side-actions {
+    bottom: calc(var(--safe-b) + 118px);
+  }
+
+  .c7-table .side-actions .c7-call {
+    min-height: 52px;
+    padding: 4px 10px;
+    border-radius: 18px;
+    font-size: 15px;
+    line-height: 1.15;
+    white-space: normal;
+  }
+
+  .c7-table .side-actions .c7-call.urgent {
+    min-height: 60px;
+    font-size: 16px;
+  }
+
+  .table.c7-table .action-bar.c7-actions {
+    align-items: stretch;
+  }
+
+  /* Pick N while a 7 waits: red like its sign */
+  .table.c7-table .action-bar .btn.danger {
+    min-height: 56px;
+    font-size: 17px;
+    background: linear-gradient(180deg, #ff5a5f, var(--danger) 55%, #b8232b);
+    box-shadow:
+      0 5px 0 var(--danger-deep),
+      0 10px 20px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+
+  /* ---------- seats at the rail: the hit seat and one-card seats ring red ---------- */
+
+  .seat-stand .seat.c7-hit .avatar,
+  .seat-stand .seat.c7-one .avatar {
+    --seat-ring: var(--danger);
+  }
+
+  .seat-stand .seat.c7-hit .seat-name {
+    background: rgba(110, 20, 26, 0.88);
+  }
+
+  .seat-stand .seat .c7-tags {
+    position: absolute;
+    top: 2px;
+    left: calc(50% + 24px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .seat-stand .seat .c7-tags:empty {
+    display: none;
+  }
+
+  .seat-stand .seat .c7-tag {
+    font-size: 10px;
+  }
+
+  /* one card left: the pulsing gold ring goes round the avatar, not a box round the standing seat */
+  .c7-table .seat-stand .seat.spot::after {
+    inset: auto;
+    top: -6px;
+    left: 50%;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    translate: -50% 0;
+  }
+
+  /* and round my hand: a gold glow rising from the bottom edge instead of a box */
+  .c7-table .hand-area.spot::after {
+    inset: auto 6% 0;
+    height: 55%;
+    border-radius: 50% 50% 0 0;
+    box-shadow: none;
+    background: radial-gradient(60% 90% at 50% 100%, rgba(246, 196, 83, 0.38), transparent 70%);
+  }
+
+  /* ---------- the hand: only my own short tags stay above it ---------- */
+
+  .c7-table .hand-area .hand-head .c7-tag {
+    font-size: 11px;
+  }
+}
+
+@media (orientation: landscape) and (prefers-reduced-motion: reduce) {
+  .card.c7-3d-top,
+  .c7-deck3d-glow,
+  .c7-sign {
+    animation: none;
+  }
+}

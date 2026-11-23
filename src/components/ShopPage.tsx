@@ -293,58 +293,63 @@ export function ShopPage({ auth, onClose, initial = null, onChange }: Props) {
   const askingRunning = asking ? (untilOf(asking.item.id) ?? 0) > now : false;
 
   return (
-    <FullPage title="Coin shop" onBack={onClose}>
-      <section className="shop-hero">
-        <span className="shop-hero-label">Your coins</span>
-        <b className="shop-hero-coins">
-          <span aria-hidden>🪙</span> {formatCoins(shown)}
-        </b>
-        <span className="shop-hero-note">Rent for a day or a week. Nothing is kept for good.</span>
-      </section>
-      {error && <p className="form-error">{error}</p>}
-      {!data && !error && <p className="muted small">Loading…</p>}
-      {error && !data && (
-        <button className="btn ghost block" onClick={load}>
-          Try again
-        </button>
-      )}
-      {data && (
-        <>
-          <RunningStrip data={data} now={now} />
-          {SECTIONS.map((sec) => {
-            const items = SHOP_ITEMS.filter((i) => i.kind === sec.kind);
-            if (items.length === 0) return null;
-            return (
-              <section key={sec.kind} className={cx('shop-section', sec.kind)}>
-                <div className="shop-section-head">
-                  <h3 className="section-title">{sec.title}</h3>
-                  <p className="shop-section-note">{sec.note}</p>
-                </div>
-                <ul className="shop-list">
-                  {items.map((item, i) => (
-                    <ShopCard
-                      key={item.id}
-                      item={item}
-                      index={i}
-                      coins={coins}
-                      until={untilOf(item.id)}
-                      now={now}
-                      worn={isLook(item.kind) && data.wearing[item.kind] === item.id}
-                      busy={busy}
-                      error={cardError?.id === item.id ? cardError.text : null}
-                      onRent={(it, el) => setAsking({ item: it, el })}
-                      onWear={(it, on) => void wear(it, on)}
-                      onPreview={preview}
-                      held={data.shields ?? 0}
-                    />
-                  ))}
-                </ul>
-              </section>
-            );
-          })}
-          <p className="shop-foot muted small">Buying again adds time, up to 28 days ahead. One XP boost and one coin boost at a time.</p>
-        </>
-      )}
+    <FullPage title="Coin shop" onBack={onClose} className="lp-split lp-shop">
+      {/* sideways: coins and what's running on the left, the shelves on the right */}
+      <aside className="lp-rail">
+        <section className="shop-hero">
+          <span className="shop-hero-label">Your coins</span>
+          <b className="shop-hero-coins">
+            <span aria-hidden>🪙</span> {formatCoins(shown)}
+          </b>
+          <span className="shop-hero-note">Rent for a day or a week. Nothing is kept for good.</span>
+        </section>
+        {error && <p className="form-error">{error}</p>}
+        {!data && !error && <p className="muted small">Loading…</p>}
+        {error && !data && (
+          <button className="btn ghost block" onClick={load}>
+            Try again
+          </button>
+        )}
+        {data && <RunningStrip data={data} now={now} />}
+      </aside>
+      <div className="lp-main">
+        {data && (
+          <>
+            {SECTIONS.map((sec) => {
+              const items = SHOP_ITEMS.filter((i) => i.kind === sec.kind);
+              if (items.length === 0) return null;
+              return (
+                <section key={sec.kind} className={cx('shop-section', sec.kind)}>
+                  <div className="shop-section-head">
+                    <h3 className="section-title">{sec.title}</h3>
+                    <p className="shop-section-note">{sec.note}</p>
+                  </div>
+                  <ul className="shop-list">
+                    {items.map((item, i) => (
+                      <ShopCard
+                        key={item.id}
+                        item={item}
+                        index={i}
+                        coins={coins}
+                        until={untilOf(item.id)}
+                        now={now}
+                        worn={isLook(item.kind) && data.wearing[item.kind] === item.id}
+                        busy={busy}
+                        error={cardError?.id === item.id ? cardError.text : null}
+                        onRent={(it, el) => setAsking({ item: it, el })}
+                        onWear={(it, on) => void wear(it, on)}
+                        onPreview={preview}
+                        held={data.shields ?? 0}
+                      />
+                    ))}
+                  </ul>
+                </section>
+              );
+            })}
+            <p className="shop-foot muted small">Buying again adds time, up to 28 days ahead. One XP boost and one coin boost at a time.</p>
+          </>
+        )}
+      </div>
       {toast && (
         <div key={toast.key} className="shop-toast" role="status">
           {toast.text}

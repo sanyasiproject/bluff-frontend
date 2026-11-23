@@ -100,77 +100,81 @@ export function PlayerSheet({ auth, name, username, level, avatar = null, childr
 
   return (
     <Backdrop onClose={onClose}>
-      {/* their shop aura round the header, as everyone sees it */}
-      <div className={cx('player-card', p?.aura && 'aura-live aura-card')} data-aura={p?.aura ?? undefined}>
-        <AuraCanvas aura={p?.aura} pad={16} />
-        <Avatar name={p?.displayName ?? name} avatar={p ? p.avatar : avatar} size="lg">
-          {p && p.online !== null && <i className={cx('presence', p.online && 'on')} />}
-        </Avatar>
-        <h3>
-          {p?.displayName ?? name} <LevelBadge level={shownLevel} />
-        </h3>
-        {p && (
-          <p className="muted small">
-            @{p.username}
-            {p.online !== null && ` · ${presenceText(p.online, p.lastSeen)}`} · joined {monthYear(p.joinedAt)}
-          </p>
-        )}
-        {/* this season's ranked division (everyone starts at Bronze), then earlier seasons */}
-        {p && <RankChip rank={p.rank} />}
-        {p && <PastSeasons seasons={p.seasons} />}
-        {!username && <p className="muted small">Guest player · no account, so no profile</p>}
-        {username && !auth.user && <p className="muted small">Log in to see player profiles</p>}
-      </div>
-
-      {p && (
-        <>
-          <div className="record-numbers player-stats">
-            <div>
-              <b>{p.stats.gamesPlayed}</b>
-              <span>games</span>
-            </div>
-            <div>
-              <b>{p.stats.wins}</b>
-              <span>wins</span>
-            </div>
-            <div>
-              <b>{pct(percent(p.stats.wins, p.stats.gamesPlayed))}</b>
-              <span>win rate</span>
-            </div>
-            <div>
-              <b>{pct(percent(p.stats.goodCalls, p.stats.goodCalls + p.stats.wrongCalls))}</b>
-              <span>right bluff calls</span>
-            </div>
-          </div>
-          {badges.length > 0 && (
-            <p className="player-badges" aria-label="Achievements">
-              {badges.map((b) => (
-                <span key={b.title} title={b.title}>
-                  {b.emoji} {b.title}
-                </span>
-              ))}
+      {/* landscape: the card on the left, numbers and actions on the right */}
+      <div className="lp2-ps">
+        {/* their shop aura round the header, as everyone sees it */}
+        <div className={cx('player-card', p?.aura && 'aura-live aura-card')} data-aura={p?.aura ?? undefined}>
+          <AuraCanvas aura={p?.aura} pad={16} />
+          <Avatar name={p?.displayName ?? name} avatar={p ? p.avatar : avatar} size="lg">
+            {p && p.online !== null && <i className={cx('presence', p.online && 'on')} />}
+          </Avatar>
+          <h3>
+            {p?.displayName ?? name} <LevelBadge level={shownLevel} />
+          </h3>
+          {p && (
+            <p className="muted small">
+              @{p.username}
+              {p.online !== null && ` · ${presenceText(p.online, p.lastSeen)}`} · joined {monthYear(p.joinedAt)}
             </p>
           )}
-          {p.status === 'friend' && <RivalPanel auth={auth} username={p.username} />}
-          {friend}
-        </>
-      )}
-      {onThrow && (
-        <ThrowRow
-          onThrow={(i) => {
-            onThrow(i);
-            // close so the flight is visible
-            onClose();
-          }}
-        />
-      )}
-      {p?.status === 'friend' && (
-        <GiftRow auth={auth} name={p.displayName} target={memberId ? { memberId } : { userId: p.id }} />
-      )}
-      {error && <p className="form-error">{error}</p>}
-      {/* in a room, someone else: mute them just for me */}
-      {memberId && onThrow && <MuteButton player={{ id: memberId, username, name }} />}
-      {children}
+          {/* this season's ranked division (everyone starts at Bronze), then earlier seasons */}
+          {p && <RankChip rank={p.rank} />}
+          {p && <PastSeasons seasons={p.seasons} />}
+          {!username && <p className="muted small">Guest player · no account, so no profile</p>}
+          {username && !auth.user && <p className="muted small">Log in to see player profiles</p>}
+        </div>
+        <div className="lp2-ps-side">
+          {p && (
+            <>
+              <div className="record-numbers player-stats">
+                <div>
+                  <b>{p.stats.gamesPlayed}</b>
+                  <span>games</span>
+                </div>
+                <div>
+                  <b>{p.stats.wins}</b>
+                  <span>wins</span>
+                </div>
+                <div>
+                  <b>{pct(percent(p.stats.wins, p.stats.gamesPlayed))}</b>
+                  <span>win rate</span>
+                </div>
+                <div>
+                  <b>{pct(percent(p.stats.goodCalls, p.stats.goodCalls + p.stats.wrongCalls))}</b>
+                  <span>right bluff calls</span>
+                </div>
+              </div>
+              {badges.length > 0 && (
+                <p className="player-badges" aria-label="Achievements">
+                  {badges.map((b) => (
+                    <span key={b.title} title={b.title}>
+                      {b.emoji} {b.title}
+                    </span>
+                  ))}
+                </p>
+              )}
+              {p.status === 'friend' && <RivalPanel auth={auth} username={p.username} />}
+              {friend}
+            </>
+          )}
+          {onThrow && (
+            <ThrowRow
+              onThrow={(i) => {
+                onThrow(i);
+                // close so the flight is visible
+                onClose();
+              }}
+            />
+          )}
+          {p?.status === 'friend' && (
+            <GiftRow auth={auth} name={p.displayName} target={memberId ? { memberId } : { userId: p.id }} />
+          )}
+          {error && <p className="form-error">{error}</p>}
+          {/* in a room, someone else: mute them just for me */}
+          {memberId && onThrow && <MuteButton player={{ id: memberId, username, name }} />}
+          {children}
+        </div>
+      </div>
       <button className="btn ghost block" onClick={onClose}>
         Close
       </button>

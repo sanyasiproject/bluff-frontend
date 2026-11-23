@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { api, errorText } from '../lib/api';
 import { cx } from '../lib/cards';
-import { refreshUnread } from '../lib/dm';
+import { refreshUnread, useDmUnread } from '../lib/dm';
+import { useOnlineFriends } from '../lib/onlineFriends';
 import { socket } from '../lib/socket';
 import { DM_MAX_LENGTH, type DirectMessage, type DmHistoryResponse, type DmReadEvent } from '../types';
 import type { Auth } from '../useAuth';
+import { Avatar } from './Avatar';
 import { FullPage } from './FullPage';
 
 interface Props {
@@ -23,8 +25,63 @@ const merge = (list: DirectMessage[], more: DirectMessage[]) => {
   return [...byId.values()].sort((a, b) => a.at.localeCompare(b.at));
 };
 
-/** a private 1:1 chat with a friend: bubbles, live updates, load older */
+/** true while the screen is wider than tall */
+function useLandscape(): boolean {
+  const [on, setOn] = useState(() => window.matchMedia?.('(orientation: landscape)').matches ?? false);
+  useEffect(() => {
+    const mq = window.matchMedia?.('(orientation: landscape)');
+    if (!mq) return;
+    const sync = () => setOn(mq.matches);
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+  return on;
+}
+
+/** a private 1:1 chat with a friend; sideways, the other friends sit in a column beside it */
 export function DmPage({ auth, friend, onClose }: Props) {
+  const [active, setActive] = useState(friend);
+  const wide = useLandscape();
+  // the shared friends list, read only while the column is on screen
+  const friends = useOnlineFriends(wide ? auth.token : null);
+  const unread = useDmUnread(auth.token);
+  const list = friends ? [...friends].sort((a, b) => Number(b.online) - Number(a.online)) : [];
+
+  return (
+    <FullPage title={`💬 ${active.displayName}`} onBack={onClose}>
+      <div className="lp2-dm">
+        {wide && list.length > 0 && (
+          <aside className="lp2-dm-friends" aria-label="Friends">
+            <p className="lp2-dm-head">Chats</p>
+            <ul>
+              {list.map((f) => (
+                <li key={f.id}>
+                  <button
+                    type="button"
+                    className={cx('lp2-dm-friend', f.id === active.id && 'on')}
+                    aria-current={f.id === active.id}
+                    onClick={() => setActive(f)}
+                  >
+                    <Avatar name={f.displayName} avatar={f.avatar} size="sm">
+                      <i className={cx('presence', f.online && 'on')} />
+                    </Avatar>
+                    <b data-no-translate>{f.displayName}</b>
+                    {f.id !== active.id && (unread.byFriend[f.id] ?? 0) > 0 && <span className="req-dot">{unread.byFriend[f.id]}</span>}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </aside>
+        )}
+        {/* a new thread for each friend, so nothing carries over */}
+        <DmThread key={active.id} auth={auth} friend={active} />
+      </div>
+    </FullPage>
+  );
+}
+
+/** one thread: bubbles, live updates, load older */
+function DmThread({ auth, friend }: Omit<Props, 'onClose'>) {
   const me = auth.user?.id ?? '';
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [more, setMore] = useState(false);
@@ -128,7 +185,7 @@ export function DmPage({ auth, friend, onClose }: Props) {
   const left = DM_MAX_LENGTH - [...text.trim()].length;
 
   return (
-    <FullPage title={`💬 ${friend.displayName}`} onBack={onClose}>
+    <div className="lp2-dm-main">
       <div className="dm-thread">
         {more && (
           <button className="link-btn dm-older" onClick={() => void loadOlder()}>
@@ -184,6 +241,6 @@ export function DmPage({ auth, friend, onClose }: Props) {
         </div>
         {left < 40 && <p className={cx('muted small dm-left', left < 0 && 'over')}>{left} left</p>}
       </form>
-    </FullPage>
+    </div>
   );
 }

@@ -5,7 +5,7 @@ import { Backdrop } from './Overlays';
 /** 🎁 shown once when the daily login bonus lands */
 export function BonusPopup({ amount, streak, onClose }: { amount: number; streak?: number; onClose: () => void }) {
   return (
-    <Backdrop center onClose={onClose}>
+    <Backdrop center onClose={onClose} panel="lh-popup">
       <div className="reveal popup">
         <span className="popup-emoji">🎁</span>
         <h3 className="reveal-title">+{amount} coins</h3>
@@ -31,7 +31,7 @@ export function BonusPopup({ amount, streak, onClose }: { amount: number; streak
 /** a friend invited you; Join leaves your current lobby and goes to theirs */
 export function InvitePopup({ invite, inGame, onJoin, onIgnore }: { invite: Invite; inGame: boolean; onJoin: () => void; onIgnore: () => void }) {
   return (
-    <Backdrop center onClose={onIgnore}>
+    <Backdrop center onClose={onIgnore} panel="lh-popup">
       <div className="reveal popup">
         <span className="popup-emoji">🃏</span>
         <h3 className="reveal-title">{invite.fromName} invited you</h3>

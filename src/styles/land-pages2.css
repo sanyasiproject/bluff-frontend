@@ -1,0 +1,847 @@
+/* landscape: land-pages2 (only inside @media (orientation: landscape) unless noted) */
+/* friends, player card, messages, room chat, replay, admin, rules, practice */
+
+/* noted: upright screens ignore the landscape wrappers, so the old layout stays exactly as it was */
+@media (orientation: portrait) {
+  .lp2-fr-cols,
+  .lp2-fr-side,
+  .lp2-fr-main,
+  .lp2-ps,
+  .lp2-ps-side,
+  .lp2-dm,
+  .lp2-dm-main,
+  .lp2-replay,
+  .lp2-replay-stage,
+  .lp2-admin,
+  .lp2-admin-side,
+  .lp2-admin-main,
+  .lp2-au,
+  .lp2-au-a,
+  .lp2-au-b,
+  .lp2-rules {
+    display: contents;
+  }
+  .lp2-fr-tip,
+  .lp2-dm-friends {
+    display: none;
+  }
+}
+
+/* ---------- friends sheet: search and requests on the left, friends on the right ---------- */
+@media (orientation: landscape) {
+  /* a container, so the side is only pinned when it really sits beside the list */
+  .lp2-fr-cols {
+    container: lp2fr / inline-size;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: calc(var(--u) * 2.4);
+  }
+
+  .lp2-fr-side,
+  .lp2-fr-main {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--u) * 1.8);
+    min-width: 0;
+  }
+
+  .lp2-fr-side {
+    flex: 1 1 230px;
+    max-width: 100%;
+    padding: calc(var(--u) * 2.2);
+    border: 1px solid var(--land-edge);
+    border-radius: 16px;
+    background: var(--land-panel);
+    box-shadow: var(--land-shadow);
+  }
+
+  .lp2-fr-main {
+    flex: 1.7 1 300px;
+  }
+
+  .lp2-fr-side .label,
+  .lp2-fr-main .label {
+    margin: 0;
+    color: var(--gold);
+  }
+
+  .lp2-fr-side .friend-list {
+    max-height: calc(var(--u) * 46);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .lp2-fr-side .search-empty,
+  .lp2-fr-side .form-note,
+  .lp2-fr-side .form-error {
+    margin: 0;
+  }
+
+  /* an empty side: a small card that says what this side is for */
+  .lp2-fr-tip {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: calc(var(--u) * 2.4) 10px;
+    border: 1px dashed rgba(246, 196, 83, 0.3);
+    border-radius: 14px;
+    text-align: center;
+  }
+
+  .lp2-fr-tip-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    margin-bottom: 2px;
+    border-radius: 50%;
+    background: rgba(246, 196, 83, 0.14);
+    font-size: 20px;
+  }
+
+  .lp2-fr-tip b {
+    font-size: 15px;
+  }
+
+  /* rows: a touch roomier, with a gold edge on hover or focus */
+  .lp2-fr-cols .friend-row {
+    min-height: 56px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.05);
+    transition: border-color 0.15s ease;
+  }
+
+  .lp2-fr-cols .friend-row:hover,
+  .lp2-fr-cols .friend-row:focus-within {
+    border-color: var(--land-edge);
+  }
+
+  .lp2-fr-cols .friend-acts .btn.small,
+  .lp2-fr-cols .row-actions .btn.small {
+    min-height: 40px;
+  }
+
+  .lp2-fr-cols .friend-more {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* side by side: the side stays put while the friends list scrolls */
+  @container lp2fr (min-width: 560px) {
+    .lp2-fr-side {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .lp2-fr-tip {
+      display: flex;
+    }
+  }
+
+  /* a wide sheet lists friends in two columns */
+  @container lp2fr (min-width: 900px) {
+    .lp2-fr-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+  }
+}
+
+/* ---------- player card: who they are on the left, numbers and actions on the right ---------- */
+@media (orientation: landscape) {
+  .lp2-ps {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: calc(var(--u) * 2.4);
+  }
+
+  .lp2-ps > .player-card {
+    flex: 1 1 220px;
+    max-width: 100%;
+    padding: calc(var(--u) * 2.6) 12px;
+    border: 1px solid var(--land-edge);
+    border-radius: 18px;
+    background: var(--land-panel);
+    box-shadow: var(--land-shadow);
+  }
+
+  .lp2-ps-side {
+    display: flex;
+    flex: 1.5 1 280px;
+    flex-direction: column;
+    gap: calc(var(--u) * 1.8);
+    min-width: 0;
+  }
+
+  /* the four numbers on one row */
+  .lp2-ps-side .player-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 0;
+  }
+
+  .lp2-ps-side .btn {
+    min-height: 40px;
+  }
+}
+
+/* ---------- messages: a chats column beside the thread ---------- */
+@media (orientation: landscape) {
+  .lp2-dm {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(var(--u) * 2.4);
+    /* the page head's height, so the chats column pins just under it */
+    --lp2-head: calc(var(--u) * 4 + 30px + env(safe-area-inset-top));
+  }
+
+  .lp2-dm-friends {
+    position: sticky;
+    top: calc(var(--lp2-head) + 4px);
+    flex: 0 0 clamp(170px, 28%, 250px);
+    max-height: calc(100dvh - var(--lp2-head) - 16px);
+    padding: 8px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--land-edge);
+    border-radius: 16px;
+    background: var(--land-panel);
+    box-shadow: var(--land-shadow);
+  }
+
+  .lp2-dm-head {
+    margin: 2px 6px 6px;
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .lp2-dm-friends ul {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .lp2-dm-friend {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 48px;
+    padding: 6px 8px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .lp2-dm-friend .avatar {
+    position: relative;
+    flex: none;
+  }
+
+  .lp2-dm-friend b {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lp2-dm-friend:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .lp2-dm-friend.on {
+    border-color: rgba(246, 196, 83, 0.55);
+    background: rgba(246, 196, 83, 0.14);
+  }
+
+  .lp2-dm-friend .req-dot {
+    position: static;
+    flex: none;
+  }
+
+  .lp2-dm-main {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* the thread fills the height, so the box to type in sits at the bottom */
+  .lp2-dm .dm-thread {
+    min-height: calc(100dvh - var(--lp2-head) - 96px);
+    padding: 0 calc(var(--u) * 1.2);
+  }
+
+  .lp2-dm .dm-bubble {
+    max-width: min(78%, 520px);
+  }
+
+  /* the composer: a floating bar instead of an edge-to-edge strip */
+  .lp2-dm .dm-compose {
+    bottom: var(--safe-b);
+    margin: 8px 0 0;
+    padding: 8px;
+    border: 1px solid var(--land-edge);
+    border-radius: 16px;
+    background: rgba(5, 30, 20, 0.94);
+    box-shadow: var(--land-shadow);
+  }
+
+  .lp2-dm .dm-compose-row {
+    align-items: center;
+  }
+
+  .lp2-dm .dm-input {
+    min-height: 44px;
+    max-height: calc(var(--u) * 24);
+  }
+
+  .lp2-dm .dm-compose .btn {
+    min-height: 44px;
+  }
+}
+
+/* ---------- room chat tray: shorter list, one-line composer ---------- */
+@media (orientation: landscape) {
+  .room-chat-list {
+    min-height: calc(var(--u) * 14);
+    max-height: calc(var(--u) * 42);
+    gap: 4px;
+  }
+
+  .room-chat-line {
+    max-width: min(82%, 420px);
+    padding: 5px 10px;
+  }
+
+  .room-chat-form {
+    position: relative;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .room-chat-form .input,
+  .room-chat-form .btn {
+    min-height: 40px;
+  }
+
+  /* the "N left" note sits above the row instead of pushing it */
+  .room-chat-note {
+    position: absolute;
+    right: 4px;
+    bottom: calc(100% + 2px);
+    width: auto;
+  }
+}
+
+/* ---------- replay: seats left, the table in the middle, step controls docked right ---------- */
+@media (orientation: landscape) {
+  .lp2-replay {
+    display: grid;
+    grid-template-columns: minmax(120px, 0.6fr) minmax(0, 2fr) minmax(190px, 0.85fr);
+    align-items: start;
+    gap: calc(var(--u) * 2.4);
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+    --lp2-head: calc(var(--u) * 4 + 30px + env(safe-area-inset-top));
+  }
+
+  .lp2-replay .replay-seats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .lp2-replay .replay-seat {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-height: 40px;
+    padding: 6px 10px;
+    border-color: rgba(255, 255, 255, 0.06);
+    background: var(--land-panel);
+    transition:
+      border-color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .lp2-replay .replay-seat.turn {
+    border-color: var(--gold);
+    transform: translateX(4px);
+  }
+
+  .lp2-replay .replay-seat.caller {
+    border-color: var(--new-card);
+  }
+
+  .lp2-replay .replay-seat-count {
+    flex: none;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lp2-replay-stage {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--u) * 1.6);
+    min-width: 0;
+  }
+
+  /* the middle reads as a little felt table with a gold rim */
+  .lp2-replay .replay-table {
+    justify-content: center;
+    min-height: calc(var(--u) * 40);
+    padding: calc(var(--u) * 2.4) calc(var(--u) * 5);
+    border: 2px solid rgba(246, 196, 83, 0.28);
+    border-radius: calc(var(--u) * 14);
+    background: radial-gradient(80% 90% at 50% 45%, var(--felt-light) 0%, var(--felt) 55%, var(--felt-deep) 100%);
+    box-shadow:
+      inset 0 0 0 6px rgba(0, 0, 0, 0.18),
+      inset 0 0 40px rgba(0, 0, 0, 0.45),
+      var(--land-shadow);
+  }
+
+  .lp2-replay .replay-lines {
+    min-height: 0;
+    max-height: calc(var(--u) * 22);
+    padding: 8px 12px;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 13px;
+  }
+
+  /* controls: a panel pinned under the page head */
+  .lp2-replay .replay-controls {
+    top: calc(var(--lp2-head) + 4px);
+    bottom: auto;
+    gap: calc(var(--u) * 1.6);
+    padding: calc(var(--u) * 2) 12px;
+    border: 1px solid var(--land-edge);
+    border-radius: 18px;
+    background: var(--land-panel);
+    box-shadow: var(--land-shadow);
+  }
+
+  .lp2-replay .replay-progress {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .lp2-replay .replay-progress input[type='range'] {
+    flex: 1 1 100%;
+  }
+
+  .lp2-replay .replay-count {
+    min-width: 0;
+    text-align: center;
+  }
+
+  .lp2-replay .replay-buttons {
+    gap: 8px;
+  }
+
+  .lp2-replay .replay-buttons .btn.small {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .lp2-replay .replay-play {
+    flex: 1;
+    min-height: 44px;
+    padding-inline: 8px;
+    white-space: nowrap;
+  }
+
+  .lp2-replay .replay-speed {
+    width: 100%;
+  }
+
+  .lp2-replay .replay-speed button {
+    flex: 1;
+    min-height: 40px;
+  }
+}
+
+/* short phones: the table gives up some height so the line log still shows */
+@media (orientation: landscape) and (max-height: 430px) {
+  .lp2-replay .replay-table {
+    min-height: calc(var(--u) * 36);
+    gap: 6px;
+  }
+
+  .lp2-replay .replay-lines {
+    max-height: calc(var(--u) * 18);
+  }
+}
+
+@media (orientation: landscape) and (prefers-reduced-motion: reduce) {
+  .lp2-replay .replay-seat.turn {
+    transform: none;
+  }
+}
+
+/* ---------- admin: app switches left, the user list right ---------- */
+@media (orientation: landscape) {
+  .screen.admin {
+    max-width: 1180px;
+    gap: calc(var(--u) * 2);
+    padding: calc(var(--u) * 2 + env(safe-area-inset-top)) var(--safe-r) calc(var(--u) * 2 + var(--safe-b)) var(--safe-l);
+  }
+
+  .lp2-admin {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.5fr);
+    align-items: start;
+    gap: calc(var(--u) * 2.4);
+  }
+
+  .lp2-admin-side {
+    position: sticky;
+    top: calc(var(--u) * 2);
+    max-height: calc(100dvh - var(--u) * 4);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 18px;
+  }
+
+  .lp2-admin-side .panel {
+    border-color: var(--land-edge);
+    background: var(--land-panel);
+    box-shadow: var(--land-shadow);
+  }
+
+  .lp2-admin-main {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--u) * 1.6);
+    min-width: 0;
+  }
+
+  /* search stays at the top of the list while it scrolls */
+  .lp2-admin-main > .input {
+    position: sticky;
+    top: calc(var(--u) * 1);
+    z-index: 2;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+
+  .lp2-admin .admin-user-row {
+    min-height: 56px;
+    padding: 8px 12px;
+  }
+}
+
+/* big screens: users in two columns */
+@media (orientation: landscape) and (min-width: 1200px) {
+  .lp2-admin .admin-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+}
+
+/* ---------- admin user page: who they are on top, then two columns ---------- */
+@media (orientation: landscape) {
+  .lp2-au {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: calc(var(--u) * 2.4);
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  .lp2-au > :not(.lp2-au-a):not(.lp2-au-b) {
+    grid-column: 1 / -1;
+  }
+
+  .lp2-au > .form-error,
+  .lp2-au > .form-ok {
+    margin: 0;
+  }
+
+  .lp2-au-a,
+  .lp2-au-b {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--u) * 2);
+    min-width: 0;
+  }
+
+  .lp2-au .admin-hero {
+    border-color: var(--land-edge);
+    background: var(--land-panel);
+    box-shadow: var(--land-shadow);
+  }
+
+  .lp2-au .admin-hero .chip-row {
+    flex-wrap: wrap;
+  }
+
+  .lp2-au .btn {
+    min-height: 40px;
+  }
+}
+
+/* ---------- rules: closed sections as tiles, the open one across the page ---------- */
+@media (orientation: landscape) {
+  .lp2-rules {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+    align-items: start;
+    gap: calc(var(--u) * 1.6);
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  .lp2-rules > .rules-section {
+    padding: 0;
+    overflow: hidden;
+    border-color: rgba(255, 255, 255, 0.08);
+    background: var(--land-panel);
+  }
+
+  .lp2-rules > .rules-section[open] {
+    grid-column: 1 / -1;
+    border-color: var(--land-edge);
+    box-shadow: var(--land-shadow);
+  }
+
+  .lp2-rules .rules-section summary {
+    min-height: 48px;
+    padding: 10px 14px;
+    font-size: 15px;
+  }
+
+  .lp2-rules .rules-section summary:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .lp2-rules .rules-section[open] summary {
+    border-bottom: 1px solid rgba(246, 196, 83, 0.16);
+    color: var(--gold);
+  }
+
+  .lp2-rules .rules-body {
+    padding: 4px 14px 14px;
+  }
+
+  /* each rule a small card, read left to right then down, at a comfortable width */
+  .lp2-rules .rules-body > ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
+    gap: 8px;
+    padding-left: 0;
+    list-style: none;
+  }
+
+  .lp2-rules .rules-body > ul > li {
+    max-width: 70ch;
+    padding: 8px 12px;
+    border-left: 3px solid rgba(246, 196, 83, 0.4);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.22);
+  }
+
+  /* lists inside a rule stay plain lists */
+  .lp2-rules .rules-body ul ul {
+    display: block;
+    margin: 4px 0 0;
+    padding-left: 18px;
+    list-style: disc;
+  }
+}
+
+/* ---------- practice: Raju and the coach left, a felt table in the middle, buttons right, hand below the table ---------- */
+@media (orientation: landscape) {
+  .page.tut-page {
+    display: grid;
+    grid-template-columns: minmax(170px, 0.9fr) minmax(0, 2.2fr) minmax(150px, 0.8fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'head head head'
+      'prog prog prog'
+      'seat board acts'
+      'coach board acts'
+      'coach hand hand';
+    column-gap: calc(var(--u) * 2);
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .tut-page > .page-head {
+    grid-area: head;
+  }
+
+  .tut-page > .tut-progress {
+    grid-area: prog;
+    margin: 0 var(--safe-r) 0 var(--safe-l);
+  }
+
+  .tut-page > .tut-seats {
+    grid-area: seat;
+    align-self: end;
+    padding: calc(var(--u) * 1.5) 0 calc(var(--u) * 1) var(--safe-l);
+  }
+
+  .tut-page > .tut-center {
+    position: relative;
+    grid-area: board;
+    align-self: stretch;
+    min-height: 0;
+    margin: calc(var(--u) * 1.5) 0;
+    padding: calc(var(--u) * 1.5) calc(var(--u) * 4);
+    border: 2px solid rgba(246, 196, 83, 0.3);
+    border-radius: 999px;
+    background: radial-gradient(75% 85% at 50% 45%, var(--felt-light) 0%, var(--felt) 55%, var(--felt-deep) 100%);
+    box-shadow:
+      inset 0 0 0 7px rgba(0, 0, 0, 0.2),
+      inset 0 0 44px rgba(0, 0, 0, 0.5),
+      var(--land-shadow);
+  }
+
+  /* the coach bubble sits under Raju; it scrolls if a line runs long */
+  .tut-page > .tut-coach {
+    position: relative;
+    grid-area: coach;
+    align-self: start;
+    max-height: calc(100% - var(--u) * 1.5 - var(--safe-b));
+    margin: 0 0 0 var(--safe-l);
+    padding: calc(var(--u) * 1.4) 12px;
+    overflow-y: auto;
+    font-size: clamp(12.5px, calc(var(--u) * 2.4), 17px);
+    line-height: 1.3;
+    border-left: 4px solid var(--gold);
+    background: rgba(30, 26, 8, 0.82);
+    box-shadow: var(--land-shadow);
+  }
+
+  /* the rank picker lays over the bottom of the table */
+  .tut-page > .tut-ranks {
+    z-index: 3;
+    grid-area: board;
+    align-self: end;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin: 0 0 calc(var(--u) * 1.5);
+    padding: 8px;
+    border: 1px solid var(--land-edge);
+    border-radius: 16px;
+    background: rgba(6, 26, 18, 0.95);
+    box-shadow: var(--land-shadow);
+  }
+
+  .tut-page > .tut-ranks .rank-btn {
+    height: 40px;
+    font-size: 17px;
+  }
+
+  /* the ring is enough here: a finger would cover the rank above */
+  .tut-page > .tut-ranks .tut-target::after {
+    content: none;
+  }
+
+  /* the buttons stack in a column on the right */
+  .tut-page > .tut-actions {
+    grid-area: acts;
+    flex-direction: column;
+    justify-content: center;
+    align-self: stretch;
+    gap: calc(var(--u) * 1.6);
+    min-height: 0;
+    padding: calc(var(--u) * 2) var(--safe-r) calc(var(--u) * 2) 0;
+    background: none;
+  }
+
+  .tut-page > .tut-actions .btn {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .tut-page > .tut-actions .hint {
+    font-size: 13px;
+  }
+
+  .tut-page > .tut-hand {
+    grid-area: hand;
+    max-height: none;
+    padding: 4px var(--safe-r) var(--safe-b) 0;
+  }
+}
+
+/* laptops and tablets: keep the table a sensible size in the middle, with bigger pieces on it */
+@media (orientation: landscape) and (min-height: 600px) {
+  /* spacer columns either side keep the head full width and the rest centred */
+  .page.tut-page {
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 300px) minmax(0, 760px) minmax(180px, 260px) minmax(0, 1fr);
+    grid-template-areas:
+      'head head head head head'
+      'prog prog prog prog prog'
+      '. seat board acts .'
+      '. coach board acts .'
+      '. coach hand hand .';
+  }
+
+  .tut-page > .tut-center {
+    align-self: center;
+    justify-self: center;
+    width: 100%;
+    max-width: calc(var(--u) * 100);
+    height: min(100% - var(--u) * 3, calc(var(--u) * 46));
+  }
+
+  .tut-page > .tut-center > * {
+    scale: 1.3;
+  }
+
+  .tut-page > .tut-coach {
+    font-size: 16px;
+  }
+
+  .tut-page > .tut-ranks {
+    max-width: calc(var(--u) * 90);
+    justify-self: center;
+  }
+
+  .tut-page > .tut-ranks .rank-btn {
+    height: 48px;
+    font-size: 19px;
+  }
+}
+
+/* short phones: tighter table and coach */
+@media (orientation: landscape) and (max-height: 430px) {
+  .tut-page > .tut-center {
+    gap: 4px;
+  }
+
+  .tut-page > .tut-center .card-md {
+    scale: 0.85;
+  }
+
+  .tut-page > .tut-seats .seat {
+    padding-block: 4px;
+  }
+}

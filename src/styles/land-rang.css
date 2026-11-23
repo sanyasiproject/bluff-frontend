@@ -1,0 +1,407 @@
+/* landscape: land-rang (only inside @media (orientation: landscape) unless noted) */
+
+/* the 3D deck, pile and felt marks exist only on the landscape table */
+.rg3-deck,
+.rg3-pile,
+.rg3-ring,
+.rg3-dir {
+  display: none;
+}
+
+@media (orientation: landscape) {
+  /* ---------- top bar: game time as a small glass chip ---------- */
+
+  .table.rg-table .topbar .rg-clock {
+    padding: 5px 11px;
+    background: rgba(0, 0, 0, 0.45);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    font-size: 14px;
+  }
+
+  .table.rg-table .topbar .rg-clock.low {
+    background: rgba(229, 72, 77, 0.55);
+    box-shadow: inset 0 0 0 1px rgba(255, 140, 140, 0.6), 0 0 14px rgba(229, 72, 77, 0.5);
+  }
+
+  /* ---------- the deck and the pile: real stacks lying on the felt ---------- */
+
+  .rg-table .rg3-deck,
+  .rg-table .rg3-pile {
+    --rcw: calc(var(--pw) * 0.074);
+    position: relative;
+    display: block;
+    width: var(--rcw);
+    height: calc(var(--rcw) * 1.4);
+    transform-style: preserve-3d;
+  }
+
+  .rg-table .rg3-deck {
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--rcw) * 0.1);
+    background: none;
+    color: inherit;
+    cursor: default;
+  }
+
+  .rg-table .rg3-deck.live {
+    cursor: pointer;
+  }
+
+  .rg-table .rg3-deck:disabled {
+    opacity: 1;
+  }
+
+  .rg-table .pile-spot .pile-react {
+    transform-style: preserve-3d;
+  }
+
+  /* paper layers: the stack's real height */
+  .rg-table .rg3-layer {
+    position: absolute;
+    inset: 0;
+    border-radius: calc(var(--rcw) * 0.1);
+    background: #f1e9d7;
+    box-shadow: inset 0 0 0 1px #cbbfa4;
+    translate: 0 0 calc(var(--i) * 0.9px + 0.5px);
+  }
+
+  .rg-table .rg3-layer:nth-of-type(even) {
+    background: #ddd2ba;
+  }
+
+  /* the shadow each stack throws on the felt, from its bottom piece */
+  .rg-table .rg3-layer:first-of-type,
+  .rg-table .rg3-deck > .card:first-of-type,
+  .rg-table .rg3-pile > .card:first-of-type {
+    box-shadow: 0 1px 0 #efe7d4, 6px 10px 18px 4px rgba(0, 0, 0, 0.55);
+  }
+
+  .rg-table .card.rg3-card {
+    --cw: var(--rcw);
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-shadow: 0 1px 0 #efe7d4, 0 2px 0 #b9ad94, 0 4px 8px rgba(0, 0, 0, 0.35);
+  }
+
+  .rg-table .card.rg3-under {
+    filter: brightness(0.82);
+  }
+
+  /* the top card drops in and stands a hair proud of the rest */
+  .rg-table .rg3-top {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    animation: rg3-drop 0.32s ease-out 0.3s backwards;
+  }
+
+  .rg-table .rg3-top .card.rg3-card {
+    position: absolute;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 0 #b9ad94, 0 8px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  .rg-table .rg3-top.hit .card.rg3-card {
+    box-shadow: 0 0 0 2px rgba(255, 120, 120, 0.9), 0 0 18px rgba(229, 72, 77, 0.8), 0 8px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  .rg-table .rg3-empty {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border: 2px dashed rgba(255, 255, 255, 0.25);
+    border-radius: calc(var(--rcw) * 0.1);
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  /* may pick: a breathing green ring on the felt round the deck */
+  .rg-table .rg3-glow {
+    position: absolute;
+    inset: -9px;
+    border-radius: 14px;
+    box-shadow: 0 0 0 3px var(--ok), 0 0 22px 4px rgba(60, 207, 145, 0.75), inset 0 0 14px rgba(60, 207, 145, 0.5);
+    translate: 0 0 0.3px;
+    animation: pulse-soft 1.4s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* the counts and the Pick tag stand up to face you */
+  .rg-table .rg3-count,
+  .rg-table .rg3-tip {
+    position: absolute;
+    z-index: 2;
+    rotate: x calc(var(--tilt) * -1);
+    scale: calc(var(--seat-k) / 1.55);
+    transform-origin: 50% 100%;
+    pointer-events: none;
+  }
+
+  .rg-table .rg3-count {
+    right: -32px;
+    bottom: 0;
+    min-width: 24px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.82);
+    box-shadow: inset 0 0 0 1px rgba(246, 196, 83, 0.5);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 900;
+    text-align: center;
+    translate: 0 0 calc(var(--layers) * 0.9px + 12px);
+  }
+
+  .rg-table .rg3-deck .rg3-count {
+    right: auto;
+    left: -32px;
+  }
+
+  .rg-table .rg3-tip {
+    left: 50%;
+    bottom: -4px;
+    padding: 2px 11px;
+    border-radius: 999px;
+    background: var(--ok);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+    color: #04150d;
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+    translate: -50% 0 calc(var(--layers) * 0.9px + 14px);
+  }
+
+  .rg-table .rg3-deck.live:active .rg3-back:last-of-type {
+    scale: 0.96;
+  }
+
+  .rg-table .rg3-pile .pile-ripple {
+    translate: 0 0 calc(var(--layers) * 0.9px + 10px);
+  }
+
+  @keyframes rg3-drop {
+    from {
+      opacity: 0;
+      scale: 1.35;
+    }
+  }
+}
+
+@media (orientation: landscape) {
+  /* ---------- felt marks: the colour in play and the way play goes, lying flat ---------- */
+
+  .rg-table .on-table.rg3-ring-spot,
+  .rg-table .on-table.rg3-dir-spot {
+    pointer-events: none;
+  }
+
+  /* the colour to match: a glowing ring on the felt round the pile */
+  .rg-table .rg3-ring {
+    display: block;
+    width: calc(var(--pw) * 0.16);
+    height: calc(var(--pw) * 0.16);
+    border: 4px solid var(--rg-now);
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--rg-now) 40%, transparent), color-mix(in srgb, var(--rg-now) 10%, transparent) 75%, transparent);
+    box-shadow: 0 0 20px 2px var(--rg-now), inset 0 0 16px var(--rg-now);
+    opacity: 0.9;
+    animation: rg3-ring-in 0.6s ease-out 0.35s backwards;
+  }
+
+  /* the way play goes: two faint curved arrows round the deck and the pile */
+  .rg-table .rg3-dir {
+    display: block;
+    width: calc(var(--pw) * 0.42);
+    height: calc(var(--pw) * 0.26);
+    animation: rg3-fade-in 0.6s ease-out backwards;
+  }
+
+  .rg-table .rg3-dir.ccw {
+    scale: -1 1;
+  }
+
+  .rg-table .rg3-dir svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.4);
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* +2 / +4 waiting: a small red sign standing on the felt by the deck */
+  .rg-table .rg3-penalty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #ff5a5f, var(--danger) 60%, #b8232b);
+    box-shadow: 0 3px 0 var(--danger-deep), 0 8px 14px rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.15;
+    white-space: nowrap;
+    animation: pop-big 0.4s ease-out;
+  }
+
+  .rg-table .rg3-penalty.mine {
+    animation: pop-big 0.4s ease-out, c7-throb 0.9s ease-in-out 0.4s infinite;
+  }
+
+  .rg-table .rg3-penalty small {
+    font-size: 9px;
+    font-weight: 800;
+    opacity: 0.9;
+  }
+
+  @keyframes rg3-ring-in {
+    from {
+      opacity: 0;
+      scale: 1.3;
+    }
+  }
+
+  @keyframes rg3-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+
+@media (orientation: landscape) {
+  /* ---------- my hand and the right column ---------- */
+
+  .table.rg-table .hand-area .hand-head {
+    flex-wrap: nowrap;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .table.rg-table .hand-area .turn-hint {
+    overflow: hidden;
+    min-width: 0;
+    text-overflow: ellipsis;
+  }
+
+  /* a 0 could pass every hand on: a small note above the hand, on the right */
+  .table.rg-table .hand-area .rg-zero-hint {
+    position: absolute;
+    right: 6px;
+    bottom: calc(100% + 2px);
+    z-index: 3;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--ink);
+    font-size: 11.5px;
+  }
+
+  .table.rg-table .rg-fan-hand.read-only .fan-card {
+    cursor: default;
+  }
+
+  /* the right column, bottom up: Pick, Pass, Challenge, Last card */
+  .table.rg-table .action-bar .rg-pick {
+    order: 1;
+  }
+
+  .table.rg-table .action-bar .rg-pass {
+    order: 2;
+  }
+
+  .table.rg-table .action-bar .rg-challenge {
+    order: 3;
+  }
+
+  .table.rg-table .action-bar .c7-call {
+    order: 4;
+  }
+
+  .table.rg-table .action-bar .hint {
+    order: 5;
+    margin: 0;
+    text-align: center;
+  }
+
+  /* keep each button's own colour over the frame's dark glass */
+  .table.rg-table .action-bar .btn.c7-call:not(.primary) {
+    min-height: 54px;
+    background: linear-gradient(180deg, #ffe08a, var(--gold));
+    color: var(--gold-ink);
+    box-shadow: 0 4px 0 var(--gold-deep), 0 0 18px rgba(246, 196, 83, 0.5);
+  }
+
+  .table.rg-table .action-bar .btn.c7-call.urgent:not(.primary) {
+    background: var(--danger);
+    color: #fff;
+    box-shadow: 0 4px 0 var(--danger-deep), 0 0 22px rgba(229, 72, 77, 0.7);
+  }
+
+  .table.rg-table .action-bar .btn.rg-challenge:not(.primary) {
+    background: linear-gradient(180deg, #b9a4ff, #7c5cf0);
+    color: #fff;
+    box-shadow: 0 4px 0 #4e35b0, 0 8px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  .table.rg-table .action-bar .btn.danger:not(.primary) {
+    min-height: 56px;
+    font-size: 16px;
+    background: linear-gradient(180deg, #ff5a5f, var(--danger) 55%, #b8232b);
+    color: #fff;
+    box-shadow: 0 5px 0 var(--danger-deep), 0 10px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+}
+
+
+/* still motion: no ring, arrow, glow or sign movement */
+@media (orientation: landscape) and (prefers-reduced-motion: reduce) {
+  .rg-table .rg3-ring,
+  .rg-table .rg3-dir,
+  .rg-table .rg3-glow,
+  .rg-table .rg3-top,
+  .rg-table .rg3-penalty {
+    animation: none;
+  }
+}
+
+@media (orientation: landscape) {
+  /* ---------- seats at the rail: avatar, name, then one row of small tags so the seat doesn't grow up into the top bar ---------- */
+
+  .rg-table .seat-stand .seat {
+    display: grid;
+    grid-template-columns: repeat(6, auto);
+    justify-content: center;
+    justify-items: center;
+    align-items: center;
+    row-gap: 2px;
+    column-gap: 0;
+  }
+
+  .rg-table .seat-stand .seat > * {
+    grid-row: 3;
+    margin: 0 1.5px;
+  }
+
+  .rg-table .seat-stand .seat > .avatar {
+    grid-row: 1;
+    grid-column: 1 / -1;
+  }
+
+  .rg-table .seat-stand .seat > .seat-name {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+
+  .rg-table .seat-stand .seat .rg-chip {
+    font-size: 10px;
+  }
+}

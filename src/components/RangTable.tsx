@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import { cx } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
@@ -11,7 +11,7 @@ import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
 import { RANG_COLORS, RANG_HAND_SIZE, RANG_MISSED_PENALTY, rangHandPoints, type Card, type RangCard as RangCardData, type RangColor, type RangMove, type RangView, type RoomView } from '../types';
 import type { Auth } from '../useAuth';
-import type { Actions, ChatBubble } from '../useBluff';
+import type { Actions, ChatBubble, Note } from '../useBluff';
 import { FlyingCards, type Flight } from './FlyingCards';
 import { LevelUp } from './LevelUp';
 import { PileReact } from './PileReact';
@@ -23,6 +23,13 @@ import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
 import { StreakMark, TurnCountdown, useTurnEndsAt } from './TurnTimer';
 import { Avatar } from './Avatar';
 import { SecretChip } from './SecretMissions';
+import { useBox, fanLayout } from './FanHand';
+import { OnTable, seatSpots, TableScene } from './TableScene';
+import { OppCards } from './Table3D';
+import { TableInfo } from './TableInfo';
+import { RangArrows, RangDeck3D, RangPile3D, RangRing } from './RangTable3D';
+import { FullscreenButton } from './RotateGate';
+import { useLandscape } from '../lib/useLandscape';
 import { isRangWild, RangSwapContext, RANG_COLOR_NAME, RANG_HEX, RangCard, RangCardBack, rangCardName, RangChip, rangSymbol } from './RangCard';
 
 const BUBBLE_MS = 4000;
@@ -103,7 +110,10 @@ function Pile({ rg, boxRef }: { rg: RangView; boxRef: RefObject<HTMLDivElement> 
       })}
       {rg.top && (
         // re-keyed when a new card lands or the colour changes, so it drops in and the ring pulses
-        <div key={`${rg.top.id}-${rg.pileCount}-${rg.color}`} className={cx('rg-top', rg.color && 'ringed', (rg.top.value === 'draw2' || rg.top.value === 'wild4') && 'hit')}>
+        <div
+          key={`${rg.top.id}-${rg.pileCount}-${rg.color}`}
+          className={cx('rg-top', rg.color && 'ringed', (rg.top.value === 'draw2' || rg.top.value === 'wild4') && 'hit')}
+        >
           <RangCard card={rg.top} size="lg" chosen={isRangWild(rg.top) ? rg.color : null} />
         </div>
       )}
@@ -147,6 +157,31 @@ function seatTag(rg: RangView, id: string, cards: number) {
   if (rg.called.includes(id) && cards === 1) return <span className="c7-tag call">📢 Last card</span>;
   if (cards === 1) return <span className={cx('c7-tag one', rg.atRisk === id && 'risk')}>1 card!</span>;
   return null;
+}
+
+/** landscape: my Rang cards fanned like a held hand (FanHand's layout with Rang cards) */
+function RangFanHand({ cards, onTap, deal, fresh = [], playable, dimRest }: { cards: RangCardData[]; onTap?: (id: string) => void; deal?: boolean; fresh?: string[]; playable?: string[]; dimRest?: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const box = useBox(ref);
+  const layout = useMemo(() => fanLayout(cards, box), [cards, box]);
+  return (
+    <div className={cx('fan-hand rg-fan-hand', !onTap && 'read-only')} ref={ref}>
+      {cards.length === 0 && <p className="hand-empty">No cards left</p>}
+      {layout.spots.map(({ card, style }, i) => {
+        const ok = !!playable?.includes(card.id);
+        return (
+          <RangCard
+            key={card.id}
+            card={card}
+            onClick={onTap ? () => onTap(card.id) : undefined}
+            note={ok ? ', playable' : undefined}
+            className={cx('fan-card', deal && 'deal', fresh.includes(card.id) && 'fresh', ok && 'playable', dimRest && playable && !ok && 'dim')}
+            style={{ ...style, ['--cw' as string]: `${layout.cw}px`, animationDelay: deal ? `${i * 26}ms` : undefined }}
+          />
+        );
+      })}
+    </div>
+  );
 }
 
 /** overlapping rows of Rang cards that fit the screen width (Hand's layout, for Rang cards) */
@@ -306,7 +341,7 @@ function GameClock({ msLeft }: { msLeft: number }) {
   );
 }
 
-type TableProps = { view: RoomView; actions: Actions; bubbles: ChatBubble[]; auth: Auth };
+type TableProps = { view: RoomView; actions: Actions; bubbles: ChatBubble[]; auth: Auth; notes?: Note[] };
 
 /** the Rang table; with 7-0 swap on, every 0 and 7 on it shows its swap badge */
 export function RangTable(props: TableProps) {
@@ -317,9 +352,10 @@ export function RangTable(props: TableProps) {
   );
 }
 
-function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
+function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps) {
   const rg = view.rang;
   const [busy, setBusy] = useState(false);
+  const land = useLandscape();
   const [sound, setSound] = useState(isSoundOn);
   const [panel, setPanel] = useState<'menu' | 'people' | 'requests' | null>(null);
   // there's no page behind a game: back opens the menu (Stop, Leave…) instead of leaving the app
@@ -688,20 +724,135 @@ function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
     );
   }
 
+  // one opponent's seat (portrait: in the row on top; landscape: standing at the far rail)
+  const seatOf = (p: (typeof view.players)[number]) => {
+    const a = acts[p.id];
+    return (
+      <Seat
+        key={p.id}
+        player={p}
+        turn={p.id === view.turnId}
+        passed={false}
+        viewing={watching && p.id === followId}
+        team={teamOf(p.id)}
+        partner={p.id === partnerId}
+        action={a?.text ?? null}
+        bubble={bubbleOf(p.id)}
+        onClick={watching ? () => setPinned(pinnedId === p.id ? null : p.id) : () => setTarget(p.id)}
+        label={watching ? `See ${p.name}'s cards` : `Throw an emoji at ${p.name}`}
+        tag={
+          <>
+            {a?.card && <RangChip card={a.card} color={a.color} />}
+            {seatTag(rg, p.id, p.cardCount)}
+            {playing && p.id === nextId && <span className="c7-tag next">next</span>}
+          </>
+        }
+        extra={cx(playing && p.cardCount === 1 && 'c7-one spot', playing && rg.penalty > 0 && p.id === view.turnId && 'c7-hit')}
+        turnEndsAt={p.id === view.turnId ? turnEndsAt : null}
+        turnSec={view.config.turnSec}
+        seatRef={(el) => {
+          if (el) seatEls.current.set(p.id, el);
+          else seatEls.current.delete(p.id);
+        }}
+      />
+    );
+  };
+  // landscape: where everyone sits round the 3D table
+  const spots = seatSpots(opponents.length);
+  // the table's extra switches that the shared rules list doesn't name
+  const extraRules = [
+    view.teams && '2 vs 2',
+    doublesOn && 'Doubles',
+    forceOn && 'Force play',
+    handSize !== RANG_HAND_SIZE && `${handSize} cards each`,
+    missedPenalty !== RANG_MISSED_PENALTY && `Last card penalty ${missedPenalty}`,
+  ].filter(Boolean) as string[];
+  // what only I need now and then, kept in the table info panel instead of on the table
+  const infoMine = (
+    <p className="tinfo-counts">
+      {partnerId && <span>{`${teamOf(view.meId) === 'a' ? '🔵' : '🟠'} Team · with ${name(partnerId)}`}</span>}
+      {!partnerId && watching && view.teams && <span>🔵 vs 🟠</span>}
+      {me && <span>{`🃏 Cards in your hand · ${hand.length}`}</span>}
+      {me && hand.length > 0 && <span>{`🔢 Points in your hand · ${rangHandPoints(hand)}`}</span>}
+      {rg.msLeft !== null && <span>⏱ When game time runs out, the fewest points win</span>}
+      {extraRules.length > 0 && <span>{`➕ ${extraRules.join(' · ')}`}</span>}
+      {view.config.stake > 0 && <span>{`🪙 Pot ${compactCoins(pot)}`}</span>}
+    </p>
+  );
+  const infoTips = [
+    'Tap a glowing card to play it',
+    'Tap the deck when it glows to pick a card',
+    'The ring round the pile is the colour to match; the arrows show which way play goes',
+    'Down to two cards? Say 📢 Last card, then play',
+    view.config.rangChallenge && 'Challenge a +4: if they had the colour, they take it back and pick 4; if not, you pick 6',
+    swapOn && 'A 7 swaps hands with anyone; a 0 passes every hand on',
+    'Hold the pile to react to the last play',
+  ].filter(Boolean) as string[];
+
   return (
-    <main className="table c7-table rg-table">
-      <header className="topbar">
-        <span className="code-chip">{view.code}</span>
-        <span className="c7-chip rg-game-chip">
-          🌈<span> Rang</span>
-        </span>
-        {partnerId && (
-          <span className={cx('team-chip rg-team-chip', `team-${teamOf(view.meId)}`)} aria-label={`Your team: ${teamOf(view.meId) === 'a' ? 'blue' : 'orange'}, with ${name(partnerId)}`}>
-            {`${teamOf(view.meId) === 'a' ? '🔵' : '🟠'} Team · with ${name(partnerId)}`}
-          </span>
+    <main className={cx('table c7-table rg-table', myTurn && 'rg-my-turn')}>
+      <TableScene ranked={view.config.ranked}>
+        {land && (
+          <>
+            {opponents.map((p, i) => (
+              <Fragment key={p.id}>
+                <OnTable x={spots[i].cards.x} y={spots[i].cards.y}>
+                  <OppCards count={p.cardCount} back={p.back} aura={p.shop?.aura ?? null} turn={spots[i].cards.turn} />
+                </OnTable>
+                {p.id === view.turnId && (
+                  <OnTable x={spots[i].cards.x} y={spots[i].cards.y} className="turn-spot">
+                    <i />
+                  </OnTable>
+                )}
+                <OnTable x={spots[i].seat.x} y={spots[i].seat.y} stand className="seat-stand">
+                  {seatOf(p)}
+                </OnTable>
+              </Fragment>
+            ))}
+            {/* the way play goes, round the deck and the pile */}
+            <OnTable x={50} y={47} className="rg3-dir-spot">
+              <RangArrows dir={rg.dir} />
+            </OnTable>
+            <OnTable x={58} y={47} className="rg3-ring-spot">
+              <RangRing rg={rg} />
+            </OnTable>
+            <OnTable x={41} y={47} z={3} className="rg3-deck-spot">
+              <RangDeck3D count={rg.deckCount} live={myTurn && rg.canPick && !busy} penalty={rg.penalty} boxRef={deckRef} onPick={pick} />
+            </OnTable>
+            <OnTable x={58} y={47} z={3} className="pile-spot rg3-pile-spot">
+              <PileReact onReact={(i) => void actions.reactOnPile(i)}>
+                <RangPile3D rg={rg} boxRef={pileRef} />
+              </PileReact>
+            </OnTable>
+            {/* +2 / +4 waiting: a small sign standing by the deck */}
+            {playing && rg.penalty > 0 && (
+              <OnTable x={24} y={51} stand className="felt-sign rg3-sign">
+                <div key={`${rg.penalty}-${view.turnId}`} className={cx('rg3-penalty', myTurn && 'mine')} role="status">
+                  {`Pick ${rg.penalty}!`}
+                  {(rg.chain?.length ?? 0) > 1 && <small>{rg.chain.map((n) => `+${n}`).join(' ')}</small>}
+                </div>
+              </OnTable>
+            )}
+          </>
         )}
-        {!partnerId && watching && view.teams && <span className="team-chip rg-team-chip">🔵 vs 🟠</span>}
-        {view.config.stake > 0 && <span className="pot-chip">🪙 Pot {compactCoins(pot)}</span>}
+      </TableScene>
+      <header className="topbar">
+        {land && <TableInfo view={view} notes={notes} mine={infoMine} tips={infoTips} />}
+        {!land && (
+          <>
+            <span className="code-chip">{view.code}</span>
+            <span className="c7-chip rg-game-chip">
+              🌈<span> Rang</span>
+            </span>
+            {partnerId && (
+              <span className={cx('team-chip rg-team-chip', `team-${teamOf(view.meId)}`)} aria-label={`Your team: ${teamOf(view.meId) === 'a' ? 'blue' : 'orange'}, with ${name(partnerId)}`}>
+                {`${teamOf(view.meId) === 'a' ? '🔵' : '🟠'} Team · with ${name(partnerId)}`}
+              </span>
+            )}
+            {!partnerId && watching && view.teams && <span className="team-chip rg-team-chip">🔵 vs 🟠</span>}
+            {view.config.stake > 0 && <span className="pot-chip">🪙 Pot {compactCoins(pot)}</span>}
+          </>
+        )}
         {/* game time: when it runs out, the fewest points win */}
         {rg && rg.msLeft !== null && view.phase === 'playing' && <GameClock msLeft={rg.msLeft} />}
         <span className="grow" />
@@ -714,6 +865,7 @@ function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
           )}
           <LiveVoiceButtons view={view} onToast={actions.toast} />
           <QuickChat onSend={actions.chat} view={view} />
+          <FullscreenButton />
           <button className="icon-btn" aria-label="Game menu" onClick={() => setPanel('menu')}>
             ⋯
           </button>
@@ -721,41 +873,13 @@ function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
       </header>
       <LiveVoiceNotice />
 
-      <section className="seats">
-        {opponents.map((p) => {
-          const a = acts[p.id];
-          return (
-            <Seat
-              key={p.id}
-              player={p}
-              turn={p.id === view.turnId}
-              passed={false}
-              viewing={watching && p.id === followId}
-              team={teamOf(p.id)}
-              partner={p.id === partnerId}
-              action={a?.text ?? null}
-              bubble={bubbleOf(p.id)}
-              onClick={watching ? () => setPinned(pinnedId === p.id ? null : p.id) : () => setTarget(p.id)}
-              label={watching ? `See ${p.name}'s cards` : `Throw an emoji at ${p.name}`}
-              tag={
-                <>
-                  {a?.card && <RangChip card={a.card} color={a.color} />}
-                  {seatTag(rg, p.id, p.cardCount)}
-                  {playing && p.id === nextId && <span className="c7-tag next">next</span>}
-                </>
-              }
-              extra={cx(playing && p.cardCount === 1 && 'c7-one spot', playing && rg.penalty > 0 && p.id === view.turnId && 'c7-hit')}
-              turnEndsAt={p.id === view.turnId ? turnEndsAt : null}
-              turnSec={view.config.turnSec}
-              seatRef={(el) => {
-                if (el) seatEls.current.set(p.id, el);
-                else seatEls.current.delete(p.id);
-              }}
-            />
-          );
-        })}
-      </section>
+      {!land && (
+        <section className="seats" data-n={opponents.length}>
+          {opponents.map(seatOf)}
+        </section>
+      )}
 
+      {!land && (
       <section className="center c7-center rg-center">
         {playing && rg.penalty > 0 ? (
           <div key={`${rg.penalty}-${view.turnId}`} className={cx('c7-banner', myTurn && 'mine')} role="status">
@@ -784,7 +908,7 @@ function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
           </div>
         )}
         {myTurn && rg.canChallenge && <p className="rg-challenge-hint">Challenge the +4: if they had the colour, they take it back and pick 4; if not, you pick 6</p>}
-        <div className="c7-board">
+        <div className="c7-board" style={{ ['--rg-now' as string]: rg.color ? RANG_HEX[rg.color] : 'transparent' }}>
           <Deck count={rg.deckCount} live={myTurn && rg.canPick && !busy} penalty={rg.penalty} boxRef={deckRef} onPick={pick} />
           <PileReact onReact={(i) => void actions.reactOnPile(i)}>
             <Pile rg={rg} boxRef={pileRef} />
@@ -801,6 +925,7 @@ function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
         {playing && <MatchHint rg={rg} stack={stackOn} />}
         {!myTurn && status && <p className="turn-status">{status}</p>}
       </section>
+      )}
 
       {watching && (
         <section className="hand-area watch-hand">
@@ -814,7 +939,7 @@ function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
               <span>Tap a player to pin</span>
             )}
           </div>
-          {followId && <RangHand cards={rg.watch?.[followId] ?? NO_CARDS} />}
+          {followId && (land ? <RangFanHand cards={rg.watch?.[followId] ?? NO_CARDS} /> : <RangHand cards={rg.watch?.[followId] ?? NO_CARDS} />)}
         </section>
       )}
 
@@ -823,35 +948,43 @@ function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
         className={cx('hand-area', watching && 'hidden', myTurn && 'my-turn', oneCard.includes(view.meId) && 'spot')}
         data-member={watching ? undefined : view.meId}
       >
-        <div className="hand-tags">
-          <SecretChip view={view} />
-        </div>
+        {!land && (
+          <div className="hand-tags">
+            <SecretChip view={view} />
+          </div>
+        )}
         <div className="hand-head">
           {myTurn ? (
             <span className="your-turn">
               YOUR TURN {turnEndsAt && <TurnCountdown endsAt={turnEndsAt} away={me?.away} sec={view.config.turnSec} />}
             </span>
           ) : (
-            <span>
-              {`Your cards · ${hand.length}`} <StreakMark player={me} />
-            </span>
+            !land && (
+              <span>
+                {`Your cards · ${hand.length}`} <StreakMark player={me} />
+              </span>
+            )
           )}
-          {myTurn && <span className="turn-hint">{status}</span>}
-          {newIds.length > 0 && <span className="new-chip">+{newIds.length} new</span>}
-          {hand.length > 0 && <span className="rg-points">{`${rangHandPoints(hand)} pts`}</span>}
+          {myTurn && !land && <span className="turn-hint">{status}</span>}
+          {newIds.length > 0 && !land && <span className="new-chip">+{newIds.length} new</span>}
+          {hand.length > 0 && !land && <span className="rg-points">{`${rangHandPoints(hand)} pts`}</span>}
           {!myTurn && rg.called.includes(view.meId) && hand.length === 1 && <span className="c7-tag call">📢 Said it</span>}
           {rg.missed.includes(view.meId) && <span className="c7-tag miss">{`🙊 Missed · you pick ${missedPenalty}`}</span>}
         </div>
-        {zeroHint && <p className="rg-zero-hint">{`A 0 passes every hand on ${rg.dir === 1 ? '↻' : '↺'}`}</p>}
-        <RangHand
-          cards={hand}
-          playable={myTurn ? rg.playable : undefined}
-          dimRest={myTurn && !dealing}
-          // always tappable so cards don't remount each turn; taps count only on my turn
-          onTap={watching ? undefined : tapCard}
-          deal={dealing}
-          fresh={newIds}
-        />
+        {zeroHint && !land && <p className="rg-zero-hint">{`A 0 passes every hand on ${rg.dir === 1 ? '↻' : '↺'}`}</p>}
+        {land ? (
+          <RangFanHand cards={hand} playable={myTurn ? rg.playable : undefined} dimRest={myTurn && !dealing} onTap={watching ? undefined : tapCard} deal={dealing} fresh={newIds} />
+        ) : (
+          <RangHand
+            cards={hand}
+            playable={myTurn ? rg.playable : undefined}
+            dimRest={myTurn && !dealing}
+            // always tappable so cards don't remount each turn; taps count only on my turn
+            onTap={watching ? undefined : tapCard}
+            deal={dealing}
+            fresh={newIds}
+          />
+        )}
       </section>
 
       <footer className="action-bar c7-actions rg-actions">
@@ -866,22 +999,22 @@ function RangTableInner({ view, actions, bubbles, auth }: TableProps) {
           </button>
         )}
         {myTurn && rg.penalty > 0 && (
-          <button className="btn danger grow" disabled={busy || !rg.canPick} onClick={pick}>
+          <button className="btn danger grow rg-pick" disabled={busy || !rg.canPick} onClick={pick}>
             {`Pick ${rg.penalty}`}
           </button>
         )}
         {myTurn && rg.penalty === 0 && rg.canPick && (
-          <button className={cx('btn grow', rg.playable.length === 0 && 'primary')} disabled={busy} onClick={pick}>
+          <button className={cx('btn grow rg-pick', rg.playable.length === 0 && 'primary')} disabled={busy} onClick={pick}>
             {`Pick a card · ${picksLeft} left`}
           </button>
         )}
         {myTurn && rg.canPass && (
-          <button className={cx('btn', !rg.canPick && rg.playable.length === 0 && 'primary grow')} disabled={busy} onClick={pass}>
+          <button className={cx('btn rg-pass', !rg.canPick && rg.playable.length === 0 && 'primary grow')} disabled={busy} onClick={pass}>
             Pass
           </button>
         )}
-        {myTurn && rg.penalty === 0 && !rg.canPick && !rg.canPass && !rg.canCall && <p className="hint">Tap a glowing card to play it</p>}
-        {!myTurn && !rg.canCall && (
+        {myTurn && !land && rg.penalty === 0 && !rg.canPick && !rg.canPass && !rg.canCall && <p className="hint">Tap a glowing card to play it</p>}
+        {!myTurn && !rg.canCall && (!land || watching) && (
           <p className="hint">
             {watching
               ? view.watchers.find((w) => w.id === view.meId)?.byChoice

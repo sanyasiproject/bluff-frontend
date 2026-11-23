@@ -9,6 +9,7 @@ import { Lobby } from './components/Lobby';
 import { BonusPopup, InvitePopup } from './components/Popups';
 import { Reactions } from './components/Reactions';
 import { ShopFx } from './components/ShopFx';
+import { RotateGate } from './components/RotateGate';
 import { LiveVoiceSync } from './components/LiveVoice';
 import { JoinAsks } from './components/JoinAsks';
 import { Splash } from './components/Splash';
@@ -20,10 +21,15 @@ import { autoPush } from './lib/push';
 import { loadName } from './lib/storage';
 import { useAuth } from './useAuth';
 import { useBluff } from './useBluff';
+import { useLandscape } from './lib/useLandscape';
+
+/** moves the table already shows; in a landscape game they go to the info panel's log, not a pop-up */
+const QUIET_IN_GAME = ['play', 'pass', 'round', 'room', 'chat', 'bluff'];
 
 export default function App() {
   const { status, connectionId, view, notes, reactions, bubbles, flyers, invites, replaced, pendingWatch, actions } = useBluff();
   const auth = useAuth();
+  const land = useLandscape();
   // the table theme and card back this player picked
   useLook(auth);
   const [adminOpen, setAdminOpen] = useState(false);
@@ -88,11 +94,11 @@ export default function App() {
   } else if (view.phase === 'lobby') {
     screen = <Lobby view={view} actions={actions} auth={auth} />;
   } else if (view.config.game === 'rang') {
-    screen = <RangTable view={view} actions={actions} bubbles={bubbles} auth={auth} />;
+    screen = <RangTable view={view} actions={actions} bubbles={bubbles} auth={auth} notes={notes} />;
   } else if (view.config.game === 'crazy7') {
-    screen = <Crazy7Table view={view} actions={actions} bubbles={bubbles} auth={auth} />;
+    screen = <Crazy7Table view={view} actions={actions} bubbles={bubbles} auth={auth} notes={notes} />;
   } else {
-    screen = <Table view={view} actions={actions} bubbles={bubbles} auth={auth} />;
+    screen = <Table view={view} actions={actions} bubbles={bubbles} auth={auth} notes={notes} />;
   }
 
   const invite = invites[invites.length - 1];
@@ -104,7 +110,8 @@ export default function App() {
       {/* shop win bursts and entry flashes, for both games and the lobby */}
       <ShopFx view={replaced ? null : view} />
       {view && !replaced && status !== 'online' && <div className="conn-pill">Reconnecting…</div>}
-      <Toasts notes={notes} />
+      {/* sideways at a table: only errors and big moments pop up; every move is in the table info panel */}
+      <Toasts notes={land && view?.phase === 'playing' ? notes.filter((n) => QUIET_IN_GAME.indexOf(n.kind) === -1) : notes} />
       <Reactions items={reactions} />
       <LiveVoiceSync view={replaced ? null : view} />
       {/* people asking me to let them in, top right on any screen */}
@@ -120,6 +127,8 @@ export default function App() {
         />
       )}
       {auth.bonus > 0 && !invite && <BonusPopup amount={auth.bonus} streak={auth.user?.loginStreak} onClose={auth.clearBonus} />}
+      {/* phones held upright: turn sideways (shown by CSS only in portrait on touch screens) */}
+      <RotateGate />
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { Fragment, useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import { cx, isRed, SUIT_NAME, SUIT_SYMBOL } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { useBack } from '../lib/back';
@@ -11,9 +11,16 @@ import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
 import { SUITS, type Card, type Crazy7View, type RoomView, type Suit } from '../types';
 import type { Auth } from '../useAuth';
-import type { Actions, ChatBubble } from '../useBluff';
+import type { Actions, ChatBubble, Note } from '../useBluff';
 import { FlyingCards, type Flight } from './FlyingCards';
 import { Hand } from './Hand';
+import { FanHand } from './FanHand';
+import { OnTable, seatSpots, TableScene } from './TableScene';
+import { OppCards } from './Table3D';
+import { TableInfo } from './TableInfo';
+import { Deck3D, Discard3D } from './C7Table3D';
+import { FullscreenButton } from './RotateGate';
+import { useLandscape } from '../lib/useLandscape';
 import { LevelUp } from './LevelUp';
 import { PileReact } from './PileReact';
 import { LevelBadge } from './LevelBadge';
@@ -46,6 +53,8 @@ function Deck({ count, live, penalty, boxRef, onPick }: { count: number; live: b
       onClick={onPick}
     >
       {count === 0 && <span className="c7-empty">Empty</span>}
+      {/* landscape: the deck's thickness, more as it grows */}
+      {count > 0 && <span className="c7-deck-depth" style={{ ['--depth' as string]: Math.min(count, 60) } as CSSProperties} aria-hidden />}
       {Array.from({ length: layers }, (_, i) => (
         <PlayingCard key={i} faceDown size="md" className="c7-deck-card" style={{ translate: `${i * -2}px ${i * -3}px` } as CSSProperties} />
       ))}
@@ -76,7 +85,11 @@ function Pile({ c7, boxRef }: { c7: Crazy7View; boxRef: RefObject<HTMLDivElement
       })}
       {c7.top && (
         // re-keyed when a new card lands, so it drops in
-        <div key={`${c7.top.id}-${c7.pileCount}`} className={cx('c7-top', c7.top.rank === '7' && 'seven')}>
+        <div
+          key={`${c7.top.id}-${c7.pileCount}`}
+          className={cx('c7-top', c7.top.rank === '7' && 'seven')}
+          style={{ ['--tilt' as string]: `${((c7.pileCount * 37) % 15) - 7}deg` } as CSSProperties}
+        >
           <PlayingCard card={c7.top} size="lg" />
         </div>
       )}
@@ -116,9 +129,10 @@ function seatTag(c7: Crazy7View, id: string, cards: number) {
   return null;
 }
 
-export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; actions: Actions; bubbles: ChatBubble[]; auth: Auth }) {
+export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view: RoomView; actions: Actions; bubbles: ChatBubble[]; auth: Auth; notes?: Note[] }) {
   const c7 = view.crazy7;
   const [busy, setBusy] = useState(false);
+  const land = useLandscape();
   const [sound, setSound] = useState(isSoundOn);
   const [panel, setPanel] = useState<'menu' | 'people' | 'requests' | null>(null);
   // there's no page behind a game: back opens the menu (Stop, Leave…) instead of leaving the app
@@ -411,14 +425,184 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
     );
   }
 
+  // table pieces, laid out differently in portrait and landscape
+  const banner =
+    playing && c7.penalty > 0 ? (
+      <div key={`${c7.penalty}-${view.turnId}`} className={cx('c7-banner', myTurn && 'mine')} role="status">
+        {myTurn
+          ? view.config.stack7 && c7.playable.length > 0
+            ? `Pick ${c7.penalty} or play a ${power ? '7 or 2' : '7'}!`
+            : `Pick ${c7.penalty}!`
+          : `${name(view.turnId)} must pick ${c7.penalty}${view.config.stack7 ? ` or play a ${power ? '7 or 2' : '7'}` : ''}`}
+      </div>
+    ) : null;
+  const rulesChip = (
+    <div className="round-chip set c7-rules-chip">
+      Up to <b>{view.config.maxPicks}</b> pick{view.config.maxPicks > 1 ? 's' : ''} a turn{view.config.stack7 ? ' · 7s stack' : ''}
+      {power && ' · ⚡ power cards'}
+    </div>
+  );
+  const deck = <Deck count={c7.deckCount} live={myTurn && c7.canPick && !busy} penalty={c7.penalty} boxRef={deckRef} onPick={pick} />;
+  const pile = (
+    <PileReact onReact={(i) => void actions.reactOnPile(i)}>
+      <Pile c7={c7} boxRef={pileRef} />
+    </PileReact>
+  );
+  const dirChip =
+    power && playing ? (
+      <span key={c7.dir} className={cx('c7p-dir', c7.dir === -1 && 'back')} role="img" aria-label={c7.dir === 1 ? 'Play goes round in seat order' : 'Play goes the other way round'}>
+        {c7.dir === 1 ? '↻' : '↺'}
+      </span>
+    ) : null;
+  const wishChip =
+    power && playing && c7.wish ? (
+      <span key={c7.wish} className={cx('c7p-wish', isRed(c7.wish) && 'red')} role="status">
+        J → <b>{SUIT_SYMBOL[c7.wish]}</b> <span className="c7p-wish-name">{SUIT_NAME[c7.wish]}</span>
+      </span>
+    ) : null;
+  const played =
+    c7.top && c7.topBy ? (
+      <p className="c7-played">
+        <b>{name(c7.topBy)}</b> played <b className={cx(isRed(c7.top.suit) && 'red')}>{short(c7.top)}</b>
+      </p>
+    ) : null;
+  const callBtn = c7.canCall && (
+    <button className={cx('btn c7-call', urgent && 'urgent', !myTurn && 'grow')} disabled={calling} onClick={() => void call()}>
+      📢 {land ? (urgent ? 'LAST CARD!' : 'Last card') : urgent ? 'Say LAST CARD now!' : view.hand.length === 2 ? 'Last card (say it, then play)' : 'Last card!'}
+    </button>
+  );
+
+  // one opponent's seat (portrait: in the row on top; landscape: standing at the far rail)
+  const seatOf = (p: (typeof opponents)[number]) => (
+    <Seat
+      key={p.id}
+      player={p}
+      turn={p.id === view.turnId}
+      passed={false}
+      viewing={watching && p.id === followId}
+      action={acts[p.id] ?? null}
+      bubble={bubbleOf(p.id)}
+      onClick={watching ? () => setPinned(pinnedId === p.id ? null : p.id) : () => setTarget(p.id)}
+      label={watching ? `See ${p.name}'s cards` : `Throw an emoji at ${p.name}`}
+      tag={
+        land ? (
+          // landscape: the tags sit beside the avatar so the standing seat stays short
+          <span className="c7-tags">
+            {seatTag(c7, p.id, p.cardCount)}
+            {playing && p.id === nextId && opponents.length > 1 && <span className="c7-tag next">next</span>}
+          </span>
+        ) : (
+          <>
+            {seatTag(c7, p.id, p.cardCount)}
+            {playing && p.id === nextId && <span className="c7-tag next">next</span>}
+          </>
+        )
+      }
+      extra={cx(playing && p.cardCount === 1 && 'c7-one spot', playing && c7.penalty > 0 && p.id === view.turnId && 'c7-hit')}
+      turnEndsAt={p.id === view.turnId ? turnEndsAt : null}
+      turnSec={view.config.turnSec}
+      seatRef={(el) => {
+        if (el) seatEls.current.set(p.id, el);
+        else seatEls.current.delete(p.id);
+      }}
+    />
+  );
+  // landscape: where everyone sits round the 3D table
+  const spots = seatSpots(opponents.length);
+  const matchText = !c7.top
+    ? null
+    : c7.penalty > 0
+      ? power
+        ? 'Only a 7 or a 2 can pass the pick on'
+        : 'Only a 7 can pass the pick on'
+      : power && c7.wish
+        ? `Play this suit or a J · ${SUIT_SYMBOL[c7.wish]}`
+        : `Match the suit or the number · ${short(c7.top)}`;
+  // what only I need now and then, kept in the table info panel instead of on the table
+  const infoMine =
+    playing && me ? (
+      <p className="tinfo-counts">
+        <span>{`🃏 Cards in your hand · ${view.hand.length}`}</span>
+        {myTurn && c7.penalty === 0 && <span>{`➕ Picks left this turn · ${picksLeft}`}</span>}
+        {status && <span>{`⏳ ${status}`}</span>}
+        {matchText && <span>{`🎯 ${matchText}`}</span>}
+        <span>{`🎴 Cards in the deck · ${c7.deckCount}`}</span>
+        <span>{`🗂 Cards in the pile · ${c7.pileCount}`}</span>
+        {c7.called.includes(view.meId) && view.hand.length === 1 && <span>📢 You said last card</span>}
+        {c7.missed.includes(view.meId) && <span>🙊 Missed · you pick 1 and skip your next turn</span>}
+      </p>
+    ) : null;
+  const infoTips = [
+    'Tap a glowing card to play it',
+    'No card fits? Tap the deck or Pick',
+    'Two cards left? Tap 📢 Last card before you play',
+    view.config.stack7 ? 'A 7 makes the next player pick, unless they put a 7 on it' : 'A 7 makes the next player pick',
+    ...(power ? ['J names a suit · 8 skips · A turns play round · 2 makes the next pick two'] : []),
+    'Hold the pile to react to the last play',
+  ];
+
   return (
-    <main className="table c7-table">
+    <main className={cx('table c7-table', myTurn && 'my-turn-table', view.config.ranked && 'ranked-table')}>
+      <TableScene ranked={view.config.ranked}>
+        {land && (
+          <>
+            {opponents.map((p, i) => (
+              <Fragment key={p.id}>
+                <OnTable x={spots[i].cards.x} y={spots[i].cards.y}>
+                  <OppCards count={p.cardCount} back={p.back} aura={p.shop?.aura ?? null} turn={spots[i].cards.turn} />
+                </OnTable>
+                {playing && p.id === view.turnId && (
+                  <OnTable x={spots[i].cards.x} y={spots[i].cards.y} className="turn-spot">
+                    <i />
+                  </OnTable>
+                )}
+                <OnTable x={spots[i].seat.x} y={spots[i].seat.y} stand className="seat-stand">
+                  {seatOf(p)}
+                </OnTable>
+              </Fragment>
+            ))}
+            {/* play's direction: a faint arrow lying on the felt round the deck and pile */}
+            {power && playing && (
+              <OnTable x={50} y={48} className="c7-dir-spot">
+                <span key={c7.dir} className={cx('c7-dir3d', c7.dir === -1 && 'back')} role="img" aria-label={c7.dir === 1 ? 'Play goes round in seat order' : 'Play goes the other way round'}>
+                  {c7.dir === 1 ? '↻' : '↺'}
+                </span>
+              </OnTable>
+            )}
+            <OnTable x={42} y={48} z={3} className="c7-deck-spot">
+              <Deck3D count={c7.deckCount} live={myTurn && c7.canPick && !busy} penalty={c7.penalty} boxRef={deckRef} onPick={pick} />
+            </OnTable>
+            <OnTable x={58} y={48} z={3} className="c7-pile-spot">
+              <PileReact onReact={(i) => void actions.reactOnPile(i)}>
+                <Discard3D c7={c7} boxRef={pileRef} />
+              </PileReact>
+            </OnTable>
+            {playing && (c7.penalty > 0 || (power && c7.wish)) && (
+              <OnTable x={71} y={52} stand className="felt-sign c7-signs">
+                {c7.penalty > 0 && (
+                  <span key={`${c7.penalty}-${view.turnId}`} className={cx('c7-sign pick', myTurn && 'mine')} role="status">
+                    {`Pick ${c7.penalty}!`}
+                  </span>
+                )}
+                {power && c7.wish && (
+                  <span key={c7.wish} className={cx('c7-sign wish', isRed(c7.wish) && 'red')} role="status" aria-label={`J wished ${SUIT_NAME[c7.wish]}`}>
+                    J → <b>{SUIT_SYMBOL[c7.wish]}</b>
+                  </span>
+                )}
+              </OnTable>
+            )}
+          </>
+        )}
+      </TableScene>
       <header className="topbar">
-        <span className="code-chip">{view.code}</span>
-        <span className="c7-chip">
-          7️⃣<span> Crazy 7</span>
-        </span>
-        {view.config.stake > 0 && <span className="pot-chip">🪙 Pot {compactCoins(pot)}</span>}
+        {land && <TableInfo view={view} notes={notes} mine={infoMine} tips={infoTips} />}
+        {!land && <span className="code-chip">{view.code}</span>}
+        {!land && (
+          <span className="c7-chip">
+            7️⃣<span> Crazy 7</span>
+          </span>
+        )}
+        {!land && view.config.stake > 0 && <span className="pot-chip">🪙 Pot {compactCoins(pot)}</span>}
         <span className="grow" />
         <div className="topbar-actions">
           {/* host only: people waiting to watch; it pulses and knocks, but never pops up over the game */}
@@ -430,6 +614,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
           )}
           <LiveVoiceButtons view={view} onToast={actions.toast} />
           <QuickChat onSend={actions.chat} view={view} />
+          <FullscreenButton />
           <button className="icon-btn" aria-label="Game menu" onClick={() => setPanel('menu')}>
             ⋯
           </button>
@@ -437,76 +622,32 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
       </header>
       <LiveVoiceNotice />
 
-      <section className="seats">
-        {opponents.map((p) => (
-          <Seat
-            key={p.id}
-            player={p}
-            turn={p.id === view.turnId}
-            passed={false}
-            viewing={watching && p.id === followId}
-            action={acts[p.id] ?? null}
-            bubble={bubbleOf(p.id)}
-            onClick={watching ? () => setPinned(pinnedId === p.id ? null : p.id) : () => setTarget(p.id)}
-            label={watching ? `See ${p.name}'s cards` : `Throw an emoji at ${p.name}`}
-            tag={
-              <>
-                {seatTag(c7, p.id, p.cardCount)}
-                {playing && p.id === nextId && <span className="c7-tag next">next</span>}
-              </>
-            }
-            extra={cx(playing && p.cardCount === 1 && 'c7-one spot', playing && c7.penalty > 0 && p.id === view.turnId && 'c7-hit')}
-            turnEndsAt={p.id === view.turnId ? turnEndsAt : null}
-            turnSec={view.config.turnSec}
-            seatRef={(el) => {
-              if (el) seatEls.current.set(p.id, el);
-              else seatEls.current.delete(p.id);
-            }}
-          />
-        ))}
-      </section>
+      {!land && (
+        <section className="seats" data-n={opponents.length}>
+          {opponents.map(seatOf)}
+        </section>
+      )}
 
-      <section className="center c7-center">
-        {playing && c7.penalty > 0 ? (
-          <div key={`${c7.penalty}-${view.turnId}`} className={cx('c7-banner', myTurn && 'mine')} role="status">
-            {myTurn
-              ? view.config.stack7 && c7.playable.length > 0
-                ? `Pick ${c7.penalty} or play a ${power ? '7 or 2' : '7'}!`
-                : `Pick ${c7.penalty}!`
-              : `${name(view.turnId)} must pick ${c7.penalty}${view.config.stack7 ? ` or play a ${power ? '7 or 2' : '7'}` : ''}`}
+      {!land && (
+        <section className="center c7-center">
+          {banner ?? rulesChip}
+          <div className="c7-board">
+            {deck}
+            {pile}
           </div>
-        ) : (
-          <div className="round-chip set c7-rules-chip">
-            Up to <b>{view.config.maxPicks}</b> pick{view.config.maxPicks > 1 ? 's' : ''} a turn{view.config.stack7 ? ' · 7s stack' : ''}
-            {power && ' · ⚡ power cards'}
-          </div>
-        )}
-        <div className="c7-board">
-          <Deck count={c7.deckCount} live={myTurn && c7.canPick && !busy} penalty={c7.penalty} boxRef={deckRef} onPick={pick} />
-          <PileReact onReact={(i) => void actions.reactOnPile(i)}>
-            <Pile c7={c7} boxRef={pileRef} />
-          </PileReact>
-        </div>
-        {power && playing && (
-          <div className="c7p-row">
-            <span key={c7.dir} className={cx('c7p-dir', c7.dir === -1 && 'back')} role="img" aria-label={c7.dir === 1 ? 'Play goes round in seat order' : 'Play goes the other way round'}>
-              {c7.dir === 1 ? '↻' : '↺'}
-            </span>
-            {c7.wish && (
-              <span key={c7.wish} className={cx('c7p-wish', isRed(c7.wish) && 'red')} role="status">
-                J → <b>{SUIT_SYMBOL[c7.wish]}</b> {SUIT_NAME[c7.wish]}
-              </span>
-            )}
-          </div>
-        )}
-        {c7.top && c7.topBy && (
-          <p className="c7-played">
-            <b>{name(c7.topBy)}</b> played <b className={cx(isRed(c7.top.suit) && 'red')}>{short(c7.top)}</b>
-          </p>
-        )}
-        {playing && <MatchHint c7={c7} power={power} />}
-        {!myTurn && status && <p className="turn-status">{status}</p>}
-      </section>
+          {power && playing && (
+            <div className="c7p-row">
+              {dirChip}
+              {wishChip}
+            </div>
+          )}
+          {played}
+          {playing && <MatchHint c7={c7} power={power} />}
+          {!myTurn && status && <p className="turn-status">{status}</p>}
+        </section>
+      )}
+
+      {land && <section className="side-actions">{callBtn}</section>}
 
       {watching && (
         <section className="hand-area watch-hand">
@@ -520,7 +661,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
               <span>Tap a player to pin</span>
             )}
           </div>
-          {followId && <Hand cards={view.watch?.hands[followId] ?? []} />}
+          {followId && (land ? <FanHand cards={view.watch?.hands[followId] ?? []} /> : <Hand cards={view.watch?.hands[followId] ?? []} />)}
         </section>
       )}
 
@@ -529,41 +670,48 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
         className={cx('hand-area', watching && 'hidden', myTurn && 'my-turn', oneCard.includes(view.meId) && 'spot')}
         data-member={watching ? undefined : view.meId}
       >
-        <div className="hand-tags">
-          <SecretChip view={view} />
-        </div>
+        <div className="hand-tags">{!land && <SecretChip view={view} />}</div>
         <div className="hand-head">
           {myTurn ? (
             <span className="your-turn">
               YOUR TURN {turnEndsAt && <TurnCountdown endsAt={turnEndsAt} away={me?.away} sec={view.config.turnSec} />}
             </span>
           ) : (
-            <span>
-              Your cards · {view.hand.length} <StreakMark player={me} />
-            </span>
+            !land && (
+              <span>
+                Your cards · {view.hand.length} <StreakMark player={me} />
+              </span>
+            )
           )}
-          {myTurn && <span className="turn-hint">{status}</span>}
-          {newIds.length > 0 && <span className="new-chip">+{newIds.length} new</span>}
+          {myTurn && !land && <span className="turn-hint">{status}</span>}
+          {newIds.length > 0 && !land && <span className="new-chip">+{newIds.length} new</span>}
           {!myTurn && c7.called.includes(view.meId) && view.hand.length === 1 && <span className="c7-tag call">📢 Said it</span>}
-          {c7.missed.includes(view.meId) && <span className="c7-tag miss">🙊 Missed · you pick 1 and skip your next turn</span>}
+          {c7.missed.includes(view.meId) && <span className="c7-tag miss">{land ? '🙊 Missed' : '🙊 Missed · you pick 1 and skip your next turn'}</span>}
         </div>
-        <Hand
-          cards={view.hand}
-          playable={myTurn ? c7.playable : undefined}
-          dimRest={myTurn && !dealing}
-          // always tappable so cards don't remount each turn; taps count only on my turn
-          onToggle={watching ? undefined : tapCard}
-          deal={dealing}
-          fresh={newIds}
-        />
+        {land ? (
+          <FanHand
+            cards={view.hand}
+            playable={myTurn ? c7.playable : undefined}
+            dimRest={myTurn && !dealing}
+            onToggle={watching ? undefined : tapCard}
+            deal={dealing}
+            fresh={newIds}
+          />
+        ) : (
+          <Hand
+            cards={view.hand}
+            playable={myTurn ? c7.playable : undefined}
+            dimRest={myTurn && !dealing}
+            // always tappable so cards don't remount each turn; taps count only on my turn
+            onToggle={watching ? undefined : tapCard}
+            deal={dealing}
+            fresh={newIds}
+          />
+        )}
       </section>
 
       <footer className="action-bar c7-actions">
-        {c7.canCall && (
-          <button className={cx('btn c7-call', urgent && 'urgent', !myTurn && 'grow')} disabled={calling} onClick={() => void call()}>
-            📢 {urgent ? 'Say LAST CARD now!' : view.hand.length === 2 ? 'Last card (say it, then play)' : 'Last card!'}
-          </button>
-        )}
+        {!land && callBtn}
         {myTurn && c7.penalty > 0 && (
           <button className="btn danger grow" disabled={busy || !c7.canPick} onClick={pick}>
             Pick {c7.penalty}
@@ -571,7 +719,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
         )}
         {myTurn && c7.penalty === 0 && c7.canPick && (
           <button className={cx('btn grow', c7.playable.length === 0 && 'primary')} disabled={busy} onClick={pick}>
-            Pick a card · {picksLeft} left
+            {land ? 'Pick' : `Pick a card · ${picksLeft} left`}
           </button>
         )}
         {myTurn && c7.canPass && (
@@ -579,7 +727,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
             Pass
           </button>
         )}
-        {myTurn && c7.penalty === 0 && !c7.canPick && !c7.canPass && !c7.canCall && (
+        {myTurn && !land && c7.penalty === 0 && !c7.canPick && !c7.canPass && !c7.canCall && (
           <p className="hint">Tap a glowing card to play it</p>
         )}
         {!myTurn && !c7.canCall && (
@@ -588,7 +736,7 @@ export function Crazy7Table({ view, actions, bubbles, auth }: { view: RoomView; 
               ? view.watchers.find((w) => w.id === view.meId)?.byChoice
                 ? '👀 Watching · switch to Playing in the lobby'
                 : "👀 Watching · you'll play next game"
-              : playing
+              : playing && !land
                 ? 'Wait for your turn'
                 : ''}
           </p>

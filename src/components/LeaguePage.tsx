@@ -200,7 +200,7 @@ export function LeaguePage({ auth, onClose, initial = null, onChange }: Props) {
   const minutes = MIN_REWARD_GAME_SEC / 60;
 
   return (
-    <FullPage title="Friends league" onBack={onClose}>
+    <FullPage title="Friends league" onBack={onClose} className="lp-league">
       <section className="panel league-head">
         <span className="league-head-emoji" aria-hidden>
           🏆
@@ -231,7 +231,7 @@ export function LeaguePage({ auth, onClose, initial = null, onChange }: Props) {
       )}
       {data && board && (
         <>
-          <section className="panel stack-tight">
+          <section className="panel stack-tight lp-crowns">
             <h3 className="section-title">This week's crowns</h3>
             <CrownList board={board} over={false} />
           </section>
@@ -256,7 +256,7 @@ export function LeaguePage({ auth, onClose, initial = null, onChange }: Props) {
           </section>
 
           {last && (
-            <section className="panel stack-tight">
+            <section className="panel stack-tight lp-crowns">
               <h3 className="section-title">Last week's winners</h3>
               <CrownList board={last} over />
               {lastMe && (
@@ -267,7 +267,7 @@ export function LeaguePage({ auth, onClose, initial = null, onChange }: Props) {
             </section>
           )}
 
-          <section className="panel notify-row">
+          <section className="panel notify-row lp-side">
             <div className="setting-row">
               <div className="grow">
                 <b>🙈 Hide me from my friends' boards</b>
@@ -286,7 +286,7 @@ export function LeaguePage({ auth, onClose, initial = null, onChange }: Props) {
         </>
       )}
 
-      <section className="panel stack-tight">
+      <section className="panel stack-tight lp-side">
         <h3 className="section-title">How points work</h3>
         <ul className="league-how">
           <li>

@@ -249,38 +249,44 @@ export function AdminPanel({ auth, onBack }: { auth: Auth; onBack: () => void })
         <span className="muted small">{total} users</span>
       </header>
 
-      <AppSwitches auth={auth} />
+      {/* landscape: app switches on the left, the user list on the right */}
+      <div className="lp2-admin">
+        <div className="lp2-admin-side">
+          <AppSwitches auth={auth} />
+        </div>
+        <div className="lp2-admin-main">
+          <input
+            className="input"
+            placeholder="Search name or username"
+            value={search}
+            autoCapitalize="none"
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {error && <p className="form-error">{error}</p>}
 
-      <input
-        className="input"
-        placeholder="Search name or username"
-        value={search}
-        autoCapitalize="none"
-        onChange={(e) => setSearch(e.target.value)}
-      />
-      {error && <p className="form-error">{error}</p>}
-
-      <ul className="admin-list">
-        {users.map((u) => (
-          <li key={u.id}>
-            <button className="panel admin-user-row" onClick={() => setOpenId(u.id)}>
-              <Avatar name={u.displayName} avatar={u.avatar} size="sm" />
-              <span className="grow">
-                <b>{u.displayName}</b> <LevelBadge level={levelOf(u.stats)} /> {u.role === 'admin' && <span className="tag">Admin</span>}
-                {u.blocked && <span className="tag danger-tag">Blocked</span>}
-                <span className="muted small admin-user-sub">
-                  @{u.username} · {u.stats.gamesPlayed} games · {u.lastLoginAt ? `last login ${timeAgo(u.lastLoginAt)}` : 'never logged in'}
-                </span>
-              </span>
-              <span className="coin-chip">🪙 {compactCoins(u.coins)}</span>
-              <span className="chevron" aria-hidden>
-                ›
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-      {users.length === 0 && !error && <p className="muted center-text">No users found</p>}
+          <ul className="admin-list">
+            {users.map((u) => (
+              <li key={u.id}>
+                <button className="panel admin-user-row" onClick={() => setOpenId(u.id)}>
+                  <Avatar name={u.displayName} avatar={u.avatar} size="sm" />
+                  <span className="grow">
+                    <b>{u.displayName}</b> <LevelBadge level={levelOf(u.stats)} /> {u.role === 'admin' && <span className="tag">Admin</span>}
+                    {u.blocked && <span className="tag danger-tag">Blocked</span>}
+                    <span className="muted small admin-user-sub">
+                      @{u.username} · {u.stats.gamesPlayed} games · {u.lastLoginAt ? `last login ${timeAgo(u.lastLoginAt)}` : 'never logged in'}
+                    </span>
+                  </span>
+                  <span className="coin-chip">🪙 {compactCoins(u.coins)}</span>
+                  <span className="chevron" aria-hidden>
+                    ›
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {users.length === 0 && !error && <p className="muted center-text">No users found</p>}
+        </div>
+      </div>
 
       {openId && (
         <AdminUserPage

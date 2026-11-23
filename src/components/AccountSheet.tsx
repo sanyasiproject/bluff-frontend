@@ -34,7 +34,7 @@ export function AccountSheet({ initial, auth, onClose }: { initial: AccountMode;
   };
 
   return (
-    <Backdrop onClose={onClose}>
+    <Backdrop onClose={onClose} panel="lh-account">
       <div className="seg">
         {(['login', 'register'] as const).map((m) => (
           <button key={m} type="button" className={cx('option', mode === m && 'on')} onClick={() => setMode(m)}>

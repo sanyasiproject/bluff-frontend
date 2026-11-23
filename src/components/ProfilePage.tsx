@@ -82,251 +82,264 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
   const division = RANK_DIVISIONS.find((d) => d.id === user.rank?.division) ?? divisionOf(user.rank?.points ?? 0);
 
   return (
-    <FullPage title="Profile" onBack={onClose}>
-      <section className="profile-hero">
-        <div className="level-ring" style={{ '--p': lvl.progress } as CSSProperties}>
-          <button type="button" className="avatar-edit" aria-label="Change your avatar" onClick={() => setAvatarOpen(true)}>
-            <Avatar name={user.displayName} avatar={user.avatar} size="xl">
-              <span className="avatar-pen" aria-hidden>
-                ✏️
-              </span>
-            </Avatar>
-          </button>
-          <span className="level-badge">Lv {lvl.level}</span>
-        </div>
-        <h2 className="profile-name" data-no-translate>{user.displayName}</h2>
-        <p className="muted">
-          @{user.username} · Joined {monthYear(user.createdAt)}
-          {user.role === 'admin' && <span className="tag">Admin</span>}
-        </p>
-        {/* admins: the way in, on every tab; the admin page opens from Home only, not while in a room */}
-        {user.role === 'admin' &&
-          (onOpenAdmin ? (
-            <button
-              className="btn small admin-entry"
-              onClick={() => {
-                onClose();
-                onOpenAdmin();
-              }}
-            >
-              🛠 Admin panel
-            </button>
-          ) : (
-            <p className="muted small">🛠 Admin panel: leave this room, then open your profile from Home</p>
-          ))}
-        {/* this season's ranked division, not the level title */}
-        <p className="level-title">
-          {division.emoji} {rankName(user.rank?.points ?? 0, division.id)}
-        </p>
-        <div className="xp-bar" aria-label={`${lvl.toNext} XP to level ${lvl.level + 1}`}>
-          <i style={{ width: `${Math.round(lvl.progress * 100)}%` }} />
-        </div>
-        <p className="muted small">
-          {formatCoins(lvl.xp)} XP · {formatCoins(lvl.toNext)} to level {lvl.level + 1}
-        </p>
-        <button className="link-btn" onClick={() => setGuideOpen(true)}>
-          How to earn XP ›
-        </button>
-      </section>
-
-      <ProfileTabs tab={tab} onPick={setTab} requests={auth.friendRequests} />
-
-      {tab === 'stats' && (
-        <div className="profile-pane" role="tabpanel">
-          {/* older servers send no rank */}
-          {user.rank !== undefined && <RankCard rank={user.rank} />}
-          <section className="wallet-card">
-            <div className="wallet-top">
-              <div>
-                <span className="label">Coins</span>
-                <b className="wallet-amount">
-                  🪙 <Rolling value={user.coins} format={formatCoins} />
-                </b>
-              </div>
-              {overview && (
-                <span className="rank-chip">
-                  #{overview.coinRank}
-                  <small>of {overview.players}</small>
+    <FullPage title="Profile" onBack={onClose} className="lp-split lp-profile">
+      {/* sideways: hero and tabs in a left rail, the tab in a scrolling panel */}
+      <aside className="lp-rail">
+        <section className="profile-hero">
+          <div className="level-ring" style={{ '--p': lvl.progress } as CSSProperties}>
+            <button type="button" className="avatar-edit" aria-label="Change your avatar" onClick={() => setAvatarOpen(true)}>
+              <Avatar name={user.displayName} avatar={user.avatar} size="xl">
+                <span className="avatar-pen" aria-hidden>
+                  ✏️
                 </span>
-              )}
-            </div>
-            <span className={cx('reward', overview?.loginBonusToday && 'done')}>
-              🎁 Daily login +{LOGIN_BONUS}
-              <small>{overview?.loginBonusToday ? '✓ received today' : 'open the app every day'}</small>
-            </span>
-            {overview && <DailyLadder gamesToday={overview.gamesToday} />}
-            {games && games.length > 0 && (
-              <p className="muted small">
-                Last {games.length} games: <b className={net >= 0 ? 'up' : 'down'}>{signedCoins(net)} coins</b>
-              </p>
-            )}
-          </section>
-          <LoginStreakCard auth={auth} />
-          <MissionsButton auth={auth} />
-          <SeasonPassButton auth={auth} />
-          <section className="panel stack-tight">
-            <h3 className="section-title">Record</h3>
-            <div className="record-row">
-              <div className="win-ring" style={{ '--p': (winRate ?? 0) / 100 } as CSSProperties}>
-                <b>{winRate === null ? '–' : `${winRate}%`}</b>
-                <span>win rate</span>
-              </div>
-              <div className="record-numbers">
-                <div>
-                  <b>{s.gamesPlayed}</b>
-                  <span>games</span>
-                </div>
-                <div>
-                  <b>{s.wins}</b>
-                  <span>wins</span>
-                </div>
-                <div>
-                  <b>{s.losses}</b>
-                  <span>losses</span>
-                </div>
-                <div>
-                  <b>{games ? winStreak(games) : '–'}</b>
-                  <span>win streak</span>
-                </div>
-              </div>
-            </div>
-            {games && games.length > 0 && (
-              <>
-                <p className="label">Recent form</p>
-                <FormStrip games={games} />
-              </>
-            )}
-          </section>
-          <section className="panel stack-tight">
-            <h3 className="section-title">Play style</h3>
-            <Meter
-              emoji="🤥"
-              label="Bluffs that got away"
-              value={percent(s.bluffs - s.bluffsCaught, s.bluffs)}
-              detail={`${plural(s.bluffs, 'bluff')} · caught ${plural(s.bluffsCaught, 'time')}`}
-            />
-            <Meter
-              emoji="🕵️"
-              label="Right bluff calls"
-              value={percent(s.goodCalls, s.goodCalls + s.wrongCalls)}
-              detail={`${s.goodCalls} right · ${s.wrongCalls} wrong`}
-            />
-            <p className="muted small">
-              🧲 {plural(s.cardsPickedUp, 'card')} picked up
-              {s.gamesPlayed > 0 && ` · ${Math.round(s.cardsPickedUp / s.gamesPlayed)} per game`}
-            </p>
-          </section>
-          <section className="panel stack-tight">
-            <button type="button" className="fold-head" aria-expanded={badgesOpen} onClick={() => setBadgesOpen((open) => !open)}>
-              <h3 className="section-title">
-                🏅 Achievements{' '}
-                <span className="muted">
-                  {unlocked}/{badges.length}
-                </span>
-              </h3>
-              <span className={cx('fold-btn', badgesOpen && 'open')}>
-                {badgesOpen ? 'Hide' : 'Show'} <i aria-hidden>▾</i>
-              </span>
+              </Avatar>
             </button>
-            {/* folded: just the badges earned so far */}
-            {!badgesOpen && unlocked > 0 && (
-              <p className="badge-strip" aria-label="Achievements earned">
-                {badges
-                  .filter((b) => b.value >= b.goal)
-                  .map((b) => (
-                    <span key={b.title} title={b.title}>
-                      {b.emoji}
-                    </span>
-                  ))}
-              </p>
-            )}
-            {badgesOpen && (
-            <div className="badge-grid">
-              {badges.map((b, i) => {
-                const done = b.value >= b.goal;
-                return (
-                  <div key={b.title} className={cx('badge-tile', done && 'done')} style={{ '--i': i } as CSSProperties}>
-                    <span className="badge-emoji">{b.emoji}</span>
-                    <b>{b.title}</b>
-                    <span className="badge-desc">{b.desc}</span>
-                    {!done && (
-                      <div className="badge-progress" aria-label={`${b.value} of ${b.goal}`}>
-                        <i style={{ width: `${Math.min(100, (b.value / b.goal) * 100)}%` }} />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            )}
-          </section>
-
-          <section className="stack-tight">
-            <h3 className="section-title">Recent games</h3>
-            <GameList games={games} empty="No games yet. Finish a game while logged in." onReplay={setReplayOf} />
-          </section>
-        </div>
-      )}
-
-      {tab === 'social' && (
-        <div className="profile-pane" role="tabpanel">
-          {onJoin && <OnlineFriends auth={auth} onJoin={onJoin} />}
-          <div className="quick-actions">
-            <button className="btn" onClick={() => setFriendsOpen(true)}>
-              👥 Friends{overview ? ` · ${overview.friends}` : ''}
-              {auth.friendRequests > 0 && <span className="req-pill">{auth.friendRequests} new</span>}
-            </button>
+            <span className="level-badge">Lv {lvl.level}</span>
           </div>
-          <RivalsList auth={auth} />
-          <LeagueButton auth={auth} />
-        </div>
-      )}
-
-      {tab === 'looks' && (
-        <div className="profile-pane" role="tabpanel">
-          <button className="btn block" onClick={() => setAvatarOpen(true)}>
-            🙂 Change avatar
-          </button>
-          <LookPicker auth={auth} />
-          <ShopButton auth={auth} />
-        </div>
-      )}
-
-      {tab === 'settings' && (
-        <div className="profile-pane" role="tabpanel">
-          <NameCard auth={auth} />
-          <NotifyRow auth={auth} />
-          <FriendAlertsRow auth={auth} />
-          <LangRow />
-          {user.role === 'admin' && onOpenAdmin && (
-            <div className="quick-actions">
+          <h2 className="profile-name" data-no-translate>{user.displayName}</h2>
+          <p className="muted">
+            @{user.username} · Joined {monthYear(user.createdAt)}
+            {user.role === 'admin' && <span className="tag">Admin</span>}
+          </p>
+          {/* admins: the way in, on every tab; the admin page opens from Home only, not while in a room */}
+          {user.role === 'admin' &&
+            (onOpenAdmin ? (
               <button
-                className="btn"
+                className="btn small admin-entry"
                 onClick={() => {
                   onClose();
                   onOpenAdmin();
                 }}
               >
-                🛠 Admin
+                🛠 Admin panel
               </button>
-            </div>
-          )}
-          {user.role === 'admin' && (
-            <button className="btn block rules-btn" onClick={() => setRulesOpen(true)}>
-              📖 Rules & features <span className="tag">Admin</span>
-            </button>
-          )}
-          <button
-            className="btn ghost block"
-            onClick={() => {
-              onClose();
-              void auth.logout();
-            }}
-          >
-            Log out
+            ) : (
+              <p className="muted small">🛠 Admin panel: leave this room, then open your profile from Home</p>
+            ))}
+          {/* this season's ranked division, not the level title */}
+          <p className="level-title">
+            {division.emoji} {rankName(user.rank?.points ?? 0, division.id)}
+          </p>
+          <div className="xp-bar" aria-label={`${lvl.toNext} XP to level ${lvl.level + 1}`}>
+            <i style={{ width: `${Math.round(lvl.progress * 100)}%` }} />
+          </div>
+          <p className="muted small">
+            {formatCoins(lvl.xp)} XP · {formatCoins(lvl.toNext)} to level {lvl.level + 1}
+          </p>
+          <button className="link-btn" onClick={() => setGuideOpen(true)}>
+            How to earn XP ›
           </button>
-        </div>
-      )}
+        </section>
+
+        <ProfileTabs tab={tab} onPick={setTab} requests={auth.friendRequests} />
+      </aside>
+
+      <div className="lp-main">
+        {tab === 'stats' && (
+          <div className="profile-pane lp-stats" role="tabpanel">
+            <div className="lp-col">
+              {/* older servers send no rank */}
+              {user.rank !== undefined && <RankCard rank={user.rank} />}
+              <section className="wallet-card">
+                <div className="wallet-top">
+                  <div>
+                    <span className="label">Coins</span>
+                    <b className="wallet-amount">
+                      🪙 <Rolling value={user.coins} format={formatCoins} />
+                    </b>
+                  </div>
+                  {overview && (
+                    <span className="rank-chip">
+                      #{overview.coinRank}
+                      <small>of {overview.players}</small>
+                    </span>
+                  )}
+                </div>
+                <span className={cx('reward', overview?.loginBonusToday && 'done')}>
+                  🎁 Daily login +{LOGIN_BONUS}
+                  <small>{overview?.loginBonusToday ? '✓ received today' : 'open the app every day'}</small>
+                </span>
+                {overview && <DailyLadder gamesToday={overview.gamesToday} />}
+                {games && games.length > 0 && (
+                  <p className="muted small">
+                    Last {games.length} games: <b className={net >= 0 ? 'up' : 'down'}>{signedCoins(net)} coins</b>
+                  </p>
+                )}
+              </section>
+              <LoginStreakCard auth={auth} />
+              <MissionsButton auth={auth} />
+              <SeasonPassButton auth={auth} />
+            </div>
+            <div className="lp-col">
+              <section className="panel stack-tight">
+                <h3 className="section-title">Record</h3>
+                <div className="record-row">
+                  <div className="win-ring" style={{ '--p': (winRate ?? 0) / 100 } as CSSProperties}>
+                    <b>{winRate === null ? '–' : `${winRate}%`}</b>
+                    <span>win rate</span>
+                  </div>
+                  <div className="record-numbers">
+                    <div>
+                      <b>{s.gamesPlayed}</b>
+                      <span>games</span>
+                    </div>
+                    <div>
+                      <b>{s.wins}</b>
+                      <span>wins</span>
+                    </div>
+                    <div>
+                      <b>{s.losses}</b>
+                      <span>losses</span>
+                    </div>
+                    <div>
+                      <b>{games ? winStreak(games) : '–'}</b>
+                      <span>win streak</span>
+                    </div>
+                  </div>
+                </div>
+                {games && games.length > 0 && (
+                  <>
+                    <p className="label">Recent form</p>
+                    <FormStrip games={games} />
+                  </>
+                )}
+              </section>
+              <section className="panel stack-tight">
+                <h3 className="section-title">Play style</h3>
+                <Meter
+                  emoji="🤥"
+                  label="Bluffs that got away"
+                  value={percent(s.bluffs - s.bluffsCaught, s.bluffs)}
+                  detail={`${plural(s.bluffs, 'bluff')} · caught ${plural(s.bluffsCaught, 'time')}`}
+                />
+                <Meter
+                  emoji="🕵️"
+                  label="Right bluff calls"
+                  value={percent(s.goodCalls, s.goodCalls + s.wrongCalls)}
+                  detail={`${s.goodCalls} right · ${s.wrongCalls} wrong`}
+                />
+                <p className="muted small">
+                  🧲 {plural(s.cardsPickedUp, 'card')} picked up
+                  {s.gamesPlayed > 0 && ` · ${Math.round(s.cardsPickedUp / s.gamesPlayed)} per game`}
+                </p>
+              </section>
+              <section className="panel stack-tight">
+                <button type="button" className="fold-head" aria-expanded={badgesOpen} onClick={() => setBadgesOpen((open) => !open)}>
+                  <h3 className="section-title">
+                    🏅 Achievements{' '}
+                    <span className="muted">
+                      {unlocked}/{badges.length}
+                    </span>
+                  </h3>
+                  <span className={cx('fold-btn', badgesOpen && 'open')}>
+                    {badgesOpen ? 'Hide' : 'Show'} <i aria-hidden>▾</i>
+                  </span>
+                </button>
+                {/* folded: just the badges earned so far */}
+                {!badgesOpen && unlocked > 0 && (
+                  <p className="badge-strip" aria-label="Achievements earned">
+                    {badges
+                      .filter((b) => b.value >= b.goal)
+                      .map((b) => (
+                        <span key={b.title} title={b.title}>
+                          {b.emoji}
+                        </span>
+                      ))}
+                  </p>
+                )}
+                {badgesOpen && (
+                <div className="badge-grid">
+                  {badges.map((b, i) => {
+                    const done = b.value >= b.goal;
+                    return (
+                      <div key={b.title} className={cx('badge-tile', done && 'done')} style={{ '--i': i } as CSSProperties}>
+                        <span className="badge-emoji">{b.emoji}</span>
+                        <b>{b.title}</b>
+                        <span className="badge-desc">{b.desc}</span>
+                        {!done && (
+                          <div className="badge-progress" aria-label={`${b.value} of ${b.goal}`}>
+                            <i style={{ width: `${Math.min(100, (b.value / b.goal) * 100)}%` }} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                )}
+              </section>
+
+              <section className="stack-tight">
+                <h3 className="section-title">Recent games</h3>
+                <GameList games={games} empty="No games yet. Finish a game while logged in." onReplay={setReplayOf} />
+              </section>
+            </div>
+          </div>
+        )}
+
+        {tab === 'social' && (
+          <div className="profile-pane lp-social" role="tabpanel">
+            <div className="lp-col">
+              {onJoin && <OnlineFriends auth={auth} onJoin={onJoin} />}
+              <div className="quick-actions">
+                <button className="btn" onClick={() => setFriendsOpen(true)}>
+                  👥 Friends{overview ? ` · ${overview.friends}` : ''}
+                  {auth.friendRequests > 0 && <span className="req-pill">{auth.friendRequests} new</span>}
+                </button>
+              </div>
+            </div>
+            <div className="lp-col">
+              <RivalsList auth={auth} />
+              <LeagueButton auth={auth} />
+            </div>
+          </div>
+        )}
+
+        {tab === 'looks' && (
+          <div className="profile-pane lp-looks" role="tabpanel">
+            <button className="btn block lp-avatar-btn" onClick={() => setAvatarOpen(true)}>
+              🙂 Change avatar
+            </button>
+            <LookPicker auth={auth} />
+            <ShopButton auth={auth} />
+          </div>
+        )}
+
+        {tab === 'settings' && (
+          <div className="profile-pane lp-settings" role="tabpanel">
+            <NameCard auth={auth} />
+            <NotifyRow auth={auth} />
+            <FriendAlertsRow auth={auth} />
+            <LangRow />
+            {user.role === 'admin' && onOpenAdmin && (
+              <div className="quick-actions">
+                <button
+                  className="btn"
+                  onClick={() => {
+                    onClose();
+                    onOpenAdmin();
+                  }}
+                >
+                  🛠 Admin
+                </button>
+              </div>
+            )}
+            {user.role === 'admin' && (
+              <button className="btn block rules-btn" onClick={() => setRulesOpen(true)}>
+                📖 Rules & features <span className="tag">Admin</span>
+              </button>
+            )}
+            <button
+              className="btn ghost block"
+              onClick={() => {
+                onClose();
+                void auth.logout();
+              }}
+            >
+              Log out
+            </button>
+          </div>
+        )}
+      </div>
 
       {guideOpen && <XpGuide level={lvl.level} xp={lvl.xp} onClose={() => setGuideOpen(false)} />}
       {rulesOpen && <RulesPage onClose={() => setRulesOpen(false)} />}

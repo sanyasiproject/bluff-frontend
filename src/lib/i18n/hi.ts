@@ -16,10 +16,19 @@ import * as shop from './hi.shop';
 import * as social from './hi.social';
 import * as table from './hi.table';
 import * as titles from './hi.titles';
+import * as land from './hi.land';
+import * as landHome from './hi.landHome';
+import * as landLobby from './hi.landLobby';
+import * as landPages from './hi.landPages';
+import * as landPages2 from './hi.landPages2';
+import * as landOverlays from './hi.landOverlays';
+import * as landTable from './hi.landTable';
+import * as landC7 from './hi.landC7';
+import * as landRang from './hi.landRang';
 import type { Dict, Pattern } from './types';
 
 // later files win on the same exact line
-const dicts: Dict[] = [common.D, cards.D, titles.D, home.D, lobby1.D, lobby2.D, table.D, over.D, crazy7.D, rang.D, profile.D, social.D, missions.D, shop.D, league.D, extra.D, errors.D];
+const dicts: Dict[] = [common.D, cards.D, titles.D, home.D, lobby1.D, lobby2.D, table.D, over.D, crazy7.D, rang.D, profile.D, social.D, missions.D, shop.D, league.D, extra.D, land.D, landHome.D, landLobby.D, landPages.D, landPages2.D, landOverlays.D, landTable.D, landC7.D, landRang.D, errors.D];
 
 export const HI_DICT = new Map<string, string>(dicts.flatMap((d) => Object.entries(d)));
 

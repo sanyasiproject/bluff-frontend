@@ -142,7 +142,7 @@ export function SeasonPassPage({ auth, onClose, initial = null, onChange }: Prop
     if (!data || scrolled.current) return;
     scrolled.current = true;
     const firstReady = data.tiers.find((t) => t.reached && !t.claimed)?.tier ?? currentTier;
-    listRef.current?.querySelector(`[data-tier="${firstReady}"]`)?.scrollIntoView({ block: 'center' });
+    listRef.current?.querySelector(`[data-tier="${firstReady}"]`)?.scrollIntoView({ block: 'center', inline: 'center' });
   }, [data]);
 
   const claim = async (n: number, el: HTMLElement) => {
@@ -172,7 +172,7 @@ export function SeasonPassPage({ auth, onClose, initial = null, onChange }: Prop
   const total = (data?.xp ?? 0) / (last * PASS_TIER_XP);
 
   return (
-    <FullPage title="Season pass" onBack={onClose}>
+    <FullPage title="Season pass" onBack={onClose} className="lp-split lp-pass">
       {!data && !error && <p className="muted small">Loading…</p>}
       {error && <p className="form-error">{error}</p>}
       {!data && error && (

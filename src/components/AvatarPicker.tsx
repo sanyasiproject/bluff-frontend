@@ -59,90 +59,95 @@ export function AvatarPicker({ auth, onClose }: { auth: Auth; onClose: () => voi
   };
 
   return (
-    <Backdrop onClose={onClose}>
+    <Backdrop onClose={onClose} panel="lp-av-sheet">
       <div className="avatar-picker">
-        <h3>Your avatar</h3>
-        <div className="avatar-preview">
-          {/* re-keyed so it pops on every change */}
-          <Avatar key={value} name={user.displayName} avatar={value} size="xl" />
-          <p className="muted small">Everyone at your table and in your friends list sees it</p>
+        {/* sideways: the preview on the left, the choices on the right */}
+        <div className="lp-av-side">
+          <h3>Your avatar</h3>
+          <div className="avatar-preview">
+            {/* re-keyed so it pops on every change */}
+            <Avatar key={value} name={user.displayName} avatar={value} size="xl" />
+            <p className="muted small">Everyone at your table and in your friends list sees it</p>
+          </div>
         </div>
 
-        <div className="av-tabs" role="tablist" aria-label="Kind of avatar">
-          {TABS.map((t) => (
-            <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={cx('av-tab', tab === t.id && 'on')} onClick={() => setTab(t.id)}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        {tab === 'emoji' ? (
-          <div className="face-grid" role="radiogroup" aria-label="Face">
-            {FACES.map((f) => {
-              const open = faceUnlocked(f, level);
-              return (
-                <button
-                  key={f.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={face === f.id}
-                  aria-label={open ? f.id : `${f.id}, unlocks at level ${f.level}`}
-                  className={cx('face-btn', face === f.id && 'on', !open && 'locked')}
-                  onClick={() => pick(f.id, f.level, f.emoji)}
-                >
-                  <span className="face-emoji">{f.emoji}</span>
-                  {!open && <span className="face-lock">🔒 {f.level}</span>}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="char-grid" role="radiogroup" aria-label={tab === 'girl' ? 'Girls' : 'Boys'}>
-            {CHARACTERS.filter((c) => c.kind === tab).map((c) => {
-              const open = faceUnlocked(c, level);
-              const name = characterName(c.id);
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={face === c.id}
-                  aria-label={open ? name : `${name}, unlocks at level ${c.level}`}
-                  className={cx('char-btn', face === c.id && 'on', !open && 'locked')}
-                  onClick={() => pick(c.id, c.level, name)}
-                >
-                  {/* shown on the background you picked */}
-                  <span className="char-pic" style={{ background: backgroundCss(bg) }}>
-                    <CharacterPic id={c.id} />
-                  </span>
-                  <span className="char-name">{open ? name : `🔒 Lv ${c.level}`}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        <p className="label">Background</p>
-        <div className="bg-row" role="radiogroup" aria-label="Background">
-          {BACKGROUNDS.map((b) => {
-            const open = bgUnlocked(b, level);
-            return (
-              <button
-                key={b.id}
-                type="button"
-                role="radio"
-                aria-checked={bg === b.id}
-                aria-label={open ? BACKGROUND_NAMES[b.id] : `${BACKGROUND_NAMES[b.id]}, unlocks at level ${b.level}`}
-                className={cx('bg-swatch', bg === b.id && 'on', !open && 'locked')}
-                onClick={() => (open ? (setBg(b.id), setHint('')) : setHint(`Reach Lv ${b.level} to unlock ${BACKGROUND_NAMES[b.id]}`))}
-              >
-                <span className="bg-dot" style={{ background: backgroundCss(b.id) }}>
-                  {!open && '🔒'}
-                </span>
-                <span className="bg-name">{open ? BACKGROUND_NAMES[b.id] : `Lv ${b.level}`}</span>
+        <div className="lp-av-main">
+          <div className="av-tabs" role="tablist" aria-label="Kind of avatar">
+            {TABS.map((t) => (
+              <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={cx('av-tab', tab === t.id && 'on')} onClick={() => setTab(t.id)}>
+                {t.label}
               </button>
-            );
-          })}
+            ))}
+          </div>
+
+          {tab === 'emoji' ? (
+            <div className="face-grid" role="radiogroup" aria-label="Face">
+              {FACES.map((f) => {
+                const open = faceUnlocked(f, level);
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={face === f.id}
+                    aria-label={open ? f.id : `${f.id}, unlocks at level ${f.level}`}
+                    className={cx('face-btn', face === f.id && 'on', !open && 'locked')}
+                    onClick={() => pick(f.id, f.level, f.emoji)}
+                  >
+                    <span className="face-emoji">{f.emoji}</span>
+                    {!open && <span className="face-lock">🔒 {f.level}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="char-grid" role="radiogroup" aria-label={tab === 'girl' ? 'Girls' : 'Boys'}>
+              {CHARACTERS.filter((c) => c.kind === tab).map((c) => {
+                const open = faceUnlocked(c, level);
+                const name = characterName(c.id);
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={face === c.id}
+                    aria-label={open ? name : `${name}, unlocks at level ${c.level}`}
+                    className={cx('char-btn', face === c.id && 'on', !open && 'locked')}
+                    onClick={() => pick(c.id, c.level, name)}
+                  >
+                    {/* shown on the background you picked */}
+                    <span className="char-pic" style={{ background: backgroundCss(bg) }}>
+                      <CharacterPic id={c.id} />
+                    </span>
+                    <span className="char-name">{open ? name : `🔒 Lv ${c.level}`}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <p className="label">Background</p>
+          <div className="bg-row" role="radiogroup" aria-label="Background">
+            {BACKGROUNDS.map((b) => {
+              const open = bgUnlocked(b, level);
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={bg === b.id}
+                  aria-label={open ? BACKGROUND_NAMES[b.id] : `${BACKGROUND_NAMES[b.id]}, unlocks at level ${b.level}`}
+                  className={cx('bg-swatch', bg === b.id && 'on', !open && 'locked')}
+                  onClick={() => (open ? (setBg(b.id), setHint('')) : setHint(`Reach Lv ${b.level} to unlock ${BACKGROUND_NAMES[b.id]}`))}
+                >
+                  <span className="bg-dot" style={{ background: backgroundCss(b.id) }}>
+                    {!open && '🔒'}
+                  </span>
+                  <span className="bg-name">{open ? BACKGROUND_NAMES[b.id] : `Lv ${b.level}`}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {hint && <p className="avatar-hint">{hint}</p>}

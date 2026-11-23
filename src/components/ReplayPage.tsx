@@ -71,21 +71,26 @@ export function ReplayPage({ game, load, onClose }: { game: GameSummary; load: (
         {replay.status === 'ended_early' ? ' · stopped early' : ''}
         {replay.truncated ? ' · long game, some moves skipped' : ''}
       </p>
-      <ReplaySeats replay={replay} step={step} />
-      <ReplayTable replay={replay} step={step} />
-      <ReplayLines step={step} at={at} />
-      <ReplayControls
-        at={at}
-        last={last}
-        playing={playing}
-        speed={speed}
-        onToggle={toggle}
-        onGo={(i) => {
-          setPlaying(false);
-          go(i);
-        }}
-        onSpeed={setSpeed}
-      />
+      {/* landscape: seats on the left, the table in the middle, the step controls docked on the right */}
+      <div className="lp2-replay">
+        <ReplaySeats replay={replay} step={step} />
+        <div className="lp2-replay-stage">
+          <ReplayTable replay={replay} step={step} />
+          <ReplayLines step={step} at={at} />
+        </div>
+        <ReplayControls
+          at={at}
+          last={last}
+          playing={playing}
+          speed={speed}
+          onToggle={toggle}
+          onGo={(i) => {
+            setPlaying(false);
+            go(i);
+          }}
+          onSpeed={setSpeed}
+        />
+      </div>
     </FullPage>
   );
 }

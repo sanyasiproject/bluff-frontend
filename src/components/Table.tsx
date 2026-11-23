@@ -1,5 +1,5 @@
 import { AuraCanvas } from './AuraCanvas';
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { api } from '../lib/api';
 import { claimText, cx, placeLabel, rankPlural, SUIT_SYMBOL } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
@@ -13,10 +13,16 @@ import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
 import { backsClaim, claimsAllowed, DEFAULT_CARD_BACK, SHIELD_MAX_CARDS, type Card, type FriendsResponse, type PublicPlayer, type Rank, type RoomView } from '../types';
 import type { Auth } from '../useAuth';
-import type { Actions, ChatBubble } from '../useBluff';
+import type { Actions, ChatBubble, Note } from '../useBluff';
 import { ConfirmBox } from './ConfirmBox';
 import { FlyingCards, type Flight } from './FlyingCards';
 import { Hand } from './Hand';
+import { FanHand } from './FanHand';
+import { OnTable, seatSpots, TableScene } from './TableScene';
+import { OppCards, Pile3D } from './Table3D';
+import { TableInfo } from './TableInfo';
+import { FullscreenButton } from './RotateGate';
+import { useLandscape } from '../lib/useLandscape';
 import { LevelBadge } from './LevelBadge';
 import { LevelUp } from './LevelUp';
 import { PileReact } from './PileReact';
@@ -199,6 +205,8 @@ function Pile({
   return (
     <div className="pile" ref={boxRef} aria-label={`${count} cards in the pile`}>
       {count === 0 && <div className="pile-empty">Pile</div>}
+      {/* landscape: the pile's thickness grows with its cards */}
+      {count > 1 && <span className="pile-depth" style={{ ['--depth' as string]: Math.min(count, 60) }} aria-hidden />}
       {Array.from({ length: shown }, (_, i) => {
         // keys shift as the pile grows so newly played cards animate in
         const n = count - shown + i;
@@ -307,8 +315,10 @@ const SEEDHI_STEPS = ['down', 'same', 'up'];
 const shortPlural = (r: Rank) => (r === 'A' ? 'Aces' : `${r}s`);
 const DOUBLE_TAP_MS = 350;
 
-export function Table({ view, actions, bubbles, auth }: { view: RoomView; actions: Actions; bubbles: ChatBubble[]; auth: Auth }) {
+export function Table({ view, actions, bubbles, auth, notes = [] }: { view: RoomView; actions: Actions; bubbles: ChatBubble[]; auth: Auth; notes?: Note[] }) {
   const [selected, setSelected] = useState<string[]>([]);
+  // sideways screens get the 3D table: fanned hand, actions down the right side
+  const land = useLandscape();
   const [sheet, setSheet] = useState<'rank' | 'pick' | 'peek' | 'bet' | 'partner' | null>(null);
   /** coins to bet on my next bluff call (0 = none) */
   const [bet, setBet] = useState(0);
@@ -637,20 +647,171 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
   else if (myTurn) status = view.roundRank ? `Put down ${rankPlural(view.roundRank)} or pass` : 'New round · call any rank';
   else if (playing) status = `${name(view.turnId)}'s turn`;
 
+  // one opponent's seat (portrait: in the row on top; landscape: standing at the far rail)
+  const seatOf = (p: PublicPlayer) => (
+      <Seat
+        key={p.id}
+        player={p}
+        turn={p.id === view.turnId}
+        passed={view.passedIds.includes(p.id)}
+        viewing={watching && p.id === followId}
+        action={lp?.playerId === p.id ? `${lp.count} × ${lp.rank}${lp.shielded ? ' 🔒' : ''}` : null}
+        bubble={bubbleOf(p.id)}
+        onClick={watching ? () => setPinned(pinnedId === p.id ? null : p.id) : () => setTarget(p.id)}
+        label={watching ? `See ${p.name}'s cards` : `Throw an emoji at ${p.name}`}
+        team={teamOf(p.id)}
+        partner={p.id === partnerId}
+        extra={cx(oneCard.includes(p.id) && 'spot')}
+        ranked={view.config.ranked}
+        turnEndsAt={p.id === view.turnId ? turnEndsAt : null}
+        turnSec={view.config.turnSec}
+        seatRef={(el) => {
+          if (el) seatEls.current.set(p.id, el);
+          else seatEls.current.delete(p.id);
+        }}
+      />
+  );
+  const roundRow = (
+    kismat ? (
+            <div className="round-row">
+              {roundChip}
+              <button
+                type="button"
+                className="kismat-chip"
+                title={`${rankPlural(kismat)} are wild this game`}
+                aria-label={`Kismat card: ${rankPlural(kismat)} are wild this game`}
+                onClick={() => actions.toast(`🍀 Kismat card: ${rankPlural(kismat)} are wild this game. They back up any claim`)}
+              >
+                🍀 Kismat <b>{kismat}</b>
+              </button>
+            </div>
+          ) : (
+            roundChip
+          )
+  );
+  // landscape: where everyone sits round the 3D table
+  const spots = seatSpots(opponents.length);
+  // what only I need now and then, kept in the table info panel instead of on the table
+  const infoMine = (
+    <>
+      {view.partnerHand && partnerId && (
+        <button className={cx('btn block partner-btn', `team-${teamOf(view.meId)}`)} onClick={() => setSheet('partner')}>
+          🤝 {name(partnerId)}'s cards · {view.partnerHand.length}
+        </button>
+      )}
+      {playing && me && (
+        <p className="tinfo-counts">
+          {view.config.peeks > 0 && <span>🔍 {view.peeksLeft} peek{view.peeksLeft === 1 ? '' : 's'} left</span>}
+          {view.config.shields > 0 && <span>🔒 {view.shieldsLeft} shield{view.shieldsLeft === 1 ? '' : 's'} left</span>}
+          {view.bluffCallsLeft !== null && view.bluffCallsLeft !== undefined && <span>🤥 {view.bluffCallsLeft} call{view.bluffCallsLeft === 1 ? '' : 's'} left in a row</span>}
+          <span>🃏 {view.hand.length} cards in your hand</span>
+          {me.saza && <span>🤡 Saza: {me.saza}</span>}
+        </p>
+      )}
+    </>
+  );
+  const infoTips = ['Tap cards to pick them; they go down in the order you tap', 'Double-tap a card to pick every card of that rank', 'Hold the pile to react to the last play', 'Big hand? ▦ Stacks groups your cards by rank'];
+
+  // calling a bluff, peek, bet and End game: under the pile in portrait, down the right side in landscape
+  const callControls = (
+    <>
+      {canBluff && lp && (
+        <button
+          className={cx('btn danger bluff-btn', bluffLocked && 'locked')}
+          disabled={bluffLocked || busy}
+          onClick={callBluff}
+        >
+          {bluffLocked ? 'Bluff locked' : 'Bluff!'}
+          {bluffLocked ? (
+            <small>Play or pass first</small>
+          ) : (
+            (betNow > 0 || view.bluffCallsLeft === 1) && (
+              <small>
+                {[betNow > 0 && `🪙 ${compactCoins(betNow)} bet`, view.bluffCallsLeft === 1 && '1 call left'].filter(Boolean).join(' · ')}
+              </small>
+            )
+          )}
+        </button>
+      )}
+      {canBluff && lp && !bluffLocked && (view.peeksLeft > 0 || view.betLimit >= 50) && (
+        <div className="bluff-tools">
+          {view.peeksLeft > 0 && (
+            <button className="btn small" onClick={() => setSheet('peek')}>
+              🔍 Peek · {view.peeksLeft}
+            </button>
+          )}
+          {view.betLimit >= 50 && (
+            <button className={cx('btn small', betNow > 0 && 'primary')} onClick={() => setSheet('bet')}>
+              🪙 {betNow > 0 ? `Bet ${compactCoins(betNow)}` : 'Bet'}
+            </button>
+          )}
+        </div>
+      )}
+      {canBluff && peekedNow.length > 0 && (
+        <p className="peeked-line">
+          {peekedNow.map((p) => (
+            <span key={p.index}>
+              🔍 Card {p.index + 1}: <b>{p.card.rank}</b>
+              {SUIT_SYMBOL[p.card.suit]}
+              {view.kismat !== null && p.card.rank === view.kismat && ' 🍀 wild'}
+            </span>
+          ))}
+        </p>
+      )}
+      {canEnd && (
+        <button className="btn small ghost end-btn" onClick={() => setConfirmEnd(true)}>
+          🏁 End game · {view.teams ? `${winner!.name}'s team` : winner!.name} wins
+        </button>
+      )}
+    </>
+  );
+
   return (
-    <main className={cx('table', crowded && 'crowded', view.config.ranked && 'ranked-table')}>
+    <main className={cx('table bluff-table', crowded && 'crowded', view.config.ranked && 'ranked-table', myTurn && 'my-turn-table')}>
+      <TableScene ranked={view.config.ranked}>
+        {land && (
+          <>
+            {opponents.map((p, i) => (
+              <Fragment key={p.id}>
+                <OnTable x={spots[i].cards.x} y={spots[i].cards.y}>
+                  <OppCards count={p.cardCount} back={p.back} aura={aura(p.id)} turn={spots[i].cards.turn} />
+                </OnTable>
+                {p.id === view.turnId && (
+                  <OnTable x={spots[i].cards.x} y={spots[i].cards.y} className="turn-spot">
+                    <i />
+                  </OnTable>
+                )}
+                <OnTable x={spots[i].seat.x} y={spots[i].seat.y} stand className="seat-stand">
+                  {seatOf(p)}
+                </OnTable>
+              </Fragment>
+            ))}
+            <OnTable x={50} y={50} className="pile-spot">
+              <PileReact onReact={(i) => void actions.reactOnPile(i)}>
+                <Pile3D count={view.pileCount} boxRef={pileRef} playKey={lp?.id ?? null} backs={pileBacks} auras={pileAuras} />
+              </PileReact>
+            </OnTable>
+            <OnTable x={30} y={52} stand className="felt-sign">
+              {roundRow}
+            </OnTable>
+          </>
+        )}
+      </TableScene>
       <header className="topbar">
+        {land && <TableInfo view={view} notes={notes} mine={infoMine} tips={infoTips} />}
         {/* a ranked table says so for the whole game: the room code turns gold (no extra width on a full top bar) */}
+        {!land && (
         <span className={cx('code-chip', view.config.ranked && 'ranked-code')} aria-label={view.config.ranked ? `Ranked game, room ${view.code}` : undefined}>
           {view.config.ranked && '🏅 '}
           {view.code}
         </span>
-        {partnerId && (
+        )}
+        {!land && partnerId && (
           <span className={cx('team-chip', `team-${teamOf(view.meId)}`)}>
             {teamOf(view.meId) === 'a' ? '🔵' : '🟠'} with {name(partnerId)}
           </span>
         )}
-        {view.config.stake > 0 && <span className="pot-chip">🪙 Pot {compactCoins(pot)}</span>}
+        {!land && view.config.stake > 0 && <span className="pot-chip">🪙 Pot {compactCoins(pot)}</span>}
         <span className="grow" />
         <div className="topbar-actions">
           {/* host only: people waiting to watch; it pulses and knocks, but never pops up over the game */}
@@ -663,6 +824,7 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
           )}
           <LiveVoiceButtons view={view} onToast={actions.toast} />
           <QuickChat onSend={actions.chat} view={view} />
+          <FullscreenButton />
           <button className="icon-btn" aria-label="Game menu" onClick={() => setPanel('menu')}>
             ⋯
           </button>
@@ -670,49 +832,21 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
       </header>
       <LiveVoiceNotice />
 
-      <section className="seats">
-        {opponents.map((p) => (
-          <Seat
-            key={p.id}
-            player={p}
-            turn={p.id === view.turnId}
-            passed={view.passedIds.includes(p.id)}
-            viewing={watching && p.id === followId}
-            action={lp?.playerId === p.id ? `${lp.count} × ${lp.rank}${lp.shielded ? ' 🔒' : ''}` : null}
-            bubble={bubbleOf(p.id)}
-            onClick={watching ? () => setPinned(pinnedId === p.id ? null : p.id) : () => setTarget(p.id)}
-            label={watching ? `See ${p.name}'s cards` : `Throw an emoji at ${p.name}`}
-            team={teamOf(p.id)}
-            partner={p.id === partnerId}
-            extra={cx(oneCard.includes(p.id) && 'spot')}
-            ranked={view.config.ranked}
-            turnEndsAt={p.id === view.turnId ? turnEndsAt : null}
-            turnSec={view.config.turnSec}
-            seatRef={(el) => {
-              if (el) seatEls.current.set(p.id, el);
-              else seatEls.current.delete(p.id);
-            }}
-          />
-        ))}
+      {!land && (
+      <section className="seats" data-n={opponents.length}>
+        {opponents.map(seatOf)}
       </section>
+      )}
 
+      {land ? (
+        // landscape: the round, the pile and the seats are on the 3D table; only rare notes float here
+        <section className="center center-notes">
+          {shieldedNow && <p className="shield-note">🔒 Card Shield: nobody can call or peek at this play</p>}
+          {watching && lp && view.watch?.lastPlayCards && <TruthRow cards={view.watch.lastPlayCards} claim={lp.rank} kismat={kismat} />}
+        </section>
+      ) : (
       <section className="center">
-        {kismat ? (
-          <div className="round-row">
-            {roundChip}
-            <button
-              type="button"
-              className="kismat-chip"
-              title={`${rankPlural(kismat)} are wild this game`}
-              aria-label={`Kismat card: ${rankPlural(kismat)} are wild this game`}
-              onClick={() => actions.toast(`🍀 Kismat card: ${rankPlural(kismat)} are wild this game. They back up any claim`)}
-            >
-              🍀 Kismat <b>{kismat}</b>
-            </button>
-          </div>
-        ) : (
-          roundChip
-        )}
+        {roundRow}
         <PileReact onReact={(i) => void actions.reactOnPile(i)}>
           <Pile count={view.pileCount} boxRef={pileRef} playKey={lp?.id ?? null} backs={pileBacks} auras={pileAuras} />
         </PileReact>
@@ -725,55 +859,11 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
         {shieldedNow && <p className="shield-note">🔒 Card Shield: nobody can call or peek at this play</p>}
         {watching && lp && view.watch?.lastPlayCards && <TruthRow cards={view.watch.lastPlayCards} claim={lp.rank} kismat={kismat} />}
         {!myTurn && status && <p className="turn-status">{status}</p>}
-        {canBluff && lp && (
-          <button
-            className={cx('btn danger bluff-btn', bluffLocked && 'locked')}
-            disabled={bluffLocked || busy}
-            onClick={callBluff}
-          >
-            {bluffLocked ? 'Bluff locked' : 'Bluff!'}
-            {bluffLocked ? (
-              <small>Play or pass first</small>
-            ) : (
-              (betNow > 0 || view.bluffCallsLeft === 1) && (
-                <small>
-                  {[betNow > 0 && `🪙 ${compactCoins(betNow)} bet`, view.bluffCallsLeft === 1 && '1 call left'].filter(Boolean).join(' · ')}
-                </small>
-              )
-            )}
-          </button>
-        )}
-        {canBluff && lp && !bluffLocked && (view.peeksLeft > 0 || view.betLimit >= 50) && (
-          <div className="bluff-tools">
-            {view.peeksLeft > 0 && (
-              <button className="btn small" onClick={() => setSheet('peek')}>
-                🔍 Peek · {view.peeksLeft}
-              </button>
-            )}
-            {view.betLimit >= 50 && (
-              <button className={cx('btn small', betNow > 0 && 'primary')} onClick={() => setSheet('bet')}>
-                🪙 {betNow > 0 ? `Bet ${compactCoins(betNow)}` : 'Bet'}
-              </button>
-            )}
-          </div>
-        )}
-        {canBluff && peekedNow.length > 0 && (
-          <p className="peeked-line">
-            {peekedNow.map((p) => (
-              <span key={p.index}>
-                🔍 Card {p.index + 1}: <b>{p.card.rank}</b>
-                {SUIT_SYMBOL[p.card.suit]}
-                {view.kismat !== null && p.card.rank === view.kismat && ' 🍀 wild'}
-              </span>
-            ))}
-          </p>
-        )}
-        {canEnd && (
-          <button className="btn small ghost end-btn" onClick={() => setConfirmEnd(true)}>
-            🏁 End game · {view.teams ? `${winner!.name}'s team` : winner!.name} wins
-          </button>
-        )}
+        {callControls}
       </section>
+      )}
+
+      {land && <section className="side-actions">{callControls}</section>}
 
       {watching && (
         <section className="hand-area watch-hand">
@@ -787,7 +877,8 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
               <span>Tap a player to pin</span>
             )}
           </div>
-          {followId && <Hand cards={view.watch?.hands[followId] ?? []} kismat={kismat} />}
+          {followId &&
+            (land ? <FanHand cards={view.watch?.hands[followId] ?? []} kismat={kismat} stackable /> : <Hand cards={view.watch?.hands[followId] ?? []} kismat={kismat} />)}
         </section>
       )}
 
@@ -797,12 +888,12 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
         data-member={watching ? undefined : view.meId}
       >
         <div className="hand-tags">
-          {view.partnerHand && partnerId && (
+          {!land && view.partnerHand && partnerId && (
             <button className={cx('partner-btn', `team-${teamOf(view.meId)}`)} onClick={() => setSheet('partner')}>
               🤝 {name(partnerId)}'s cards · {view.partnerHand.length}
             </button>
           )}
-          <SecretChip view={view} />
+          {!land && <SecretChip view={view} />}
           {shieldReady && (
             <button className={cx('shield-chip', shieldOn && 'on', shieldBlocked && 'blocked')} aria-pressed={shieldOn} onClick={() => setShieldOn(!shieldOn)}>
               {shieldOn ? `🔒 Shield on${shieldWhy ? ` · ${shieldWhy}` : ''}` : `🔒 Card Shield · ${view.shieldsLeft}`}
@@ -815,21 +906,27 @@ export function Table({ view, actions, bubbles, auth }: { view: RoomView; action
               YOUR TURN {turnEndsAt && <TurnCountdown endsAt={turnEndsAt} away={me?.away} sec={view.config.turnSec} />}
             </span>
           ) : (
+            !land && (
             <span>
               Your cards · {view.hand.length} <SazaTag badge={me?.saza} /> <StreakMark player={me} />
             </span>
+            )
           )}
-          {myTurn && <span className="turn-hint">{status}</span>}
-          {newIds.length > 0 && <span className="new-chip">+{newIds.length} new</span>}
+          {myTurn && !land && <span className="turn-hint">{status}</span>}
+          {newIds.length > 0 && !land && <span className="new-chip">+{newIds.length} new</span>}
           {selected.length > 0 ? (
             <button className="link-btn" onClick={() => setSelected([])}>
               Clear {selected.length}
             </button>
           ) : (
-            !myTurn && view.hand.length > 1 && <span className="tap-tip">Double-tap = all of a rank</span>
+            !myTurn && !land && view.hand.length > 1 && <span className="tap-tip">Double-tap = all of a rank</span>
           )}
         </div>
-        <Hand cards={view.hand} selected={selected} onToggle={tapCard} deal={dealing} fresh={newIds} kismat={kismat} />
+        {land ? (
+          <FanHand cards={view.hand} selected={selected} onToggle={tapCard} onSet={setSelected} stackable deal={dealing} fresh={newIds} kismat={kismat} />
+        ) : (
+          <Hand cards={view.hand} selected={selected} onToggle={tapCard} deal={dealing} fresh={newIds} kismat={kismat} />
+        )}
       </section>
 
       <footer className="action-bar">

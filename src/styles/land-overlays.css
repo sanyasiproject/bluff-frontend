@@ -1,0 +1,914 @@
+/* landscape: land-overlays (only inside @media (orientation: landscape) unless noted) */
+
+/* not in a media query: the landscape-only wrappers vanish in portrait, so its layout is unchanged */
+.lo-stage,
+.go-main,
+.go-side,
+.go-actions {
+  display: contents;
+}
+
+.lo-stamp,
+.lo-flip-back,
+.go-podium {
+  display: none;
+}
+
+/* ---------- sheets and modals: glass panels with a gold edge ---------- */
+
+@media (orientation: landscape) {
+  :root {
+    /* shared look for every overlay panel */
+    --lo-glass: linear-gradient(160deg, rgba(20, 62, 45, 0.95) 0%, rgba(8, 32, 23, 0.97) 55%, rgba(4, 20, 14, 0.98) 100%);
+    --lo-gold: rgba(246, 196, 83, 0.42);
+    --lo-shine: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 0 1px rgba(246, 196, 83, 0.1);
+    --lo-pad: clamp(10px, calc(var(--u) * 3.2), 22px);
+  }
+
+  .backdrop {
+    background: radial-gradient(120% 90% at 50% 50%, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.66));
+  }
+
+  /* a plain sheet floats in from the right as a drawer, so the table stays in view */
+  .backdrop:not(.center) {
+    align-items: center;
+    justify-content: flex-end;
+    padding: 8px var(--safe-r) 8px max(8px, var(--safe-l));
+  }
+
+  .sheet {
+    position: relative;
+    gap: clamp(8px, calc(var(--u) * 2.4), 14px);
+    width: min(460px, 58vw);
+    max-width: none;
+    max-height: calc(100dvh - 16px);
+    padding: var(--lo-pad) var(--lo-pad) calc(var(--lo-pad) + 2px);
+    border: 1px solid var(--lo-gold);
+    border-radius: 20px;
+    background: var(--lo-glass);
+    box-shadow: var(--land-shadow), var(--lo-shine), 0 0 0 4px rgba(0, 0, 0, 0.18);
+    /* no backdrop-filter: it would trap full pages opened from a sheet (messages, player card) inside it */
+    overscroll-behavior: contain;
+    animation: lo-drawer-in 0.42s var(--spring) backwards;
+  }
+
+  /* Friends gets a wide sheet for its two columns */
+  .sheet:has(.lp2-fr-cols) {
+    width: min(980px, 92vw);
+  }
+
+  /* a thin gold line along the top edge, like a dialog frame */
+  .sheet::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 12%;
+    right: 12%;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, rgba(246, 196, 83, 0.85), transparent);
+    pointer-events: none;
+  }
+
+  .sheet h3 {
+    font-size: clamp(17px, calc(var(--u) * 4.6), 24px);
+    line-height: 1.2;
+  }
+
+  .sheet .btn {
+    min-height: 44px;
+  }
+
+  /* centred modals stay centred, sized for a short screen; the doubled class beats the table's own .center (its pile area) */
+  .backdrop.backdrop.center {
+    position: fixed;
+    inset: 0;
+    left: 0;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    padding: 8px var(--safe-r) 8px var(--safe-l);
+    translate: none;
+    zoom: 1;
+    pointer-events: auto;
+  }
+
+  .modal {
+    max-width: min(460px, 92vw);
+    max-height: calc(100dvh - 16px);
+    overscroll-behavior: contain;
+    animation: lo-modal-in 0.46s var(--spring) backwards;
+  }
+
+  .modal > .reveal,
+  .modal > .confirm-box {
+    border-color: var(--lo-gold);
+    background: var(--lo-glass);
+    box-shadow: var(--land-shadow), var(--lo-shine);
+  }
+
+  .confirm-box {
+    gap: 8px;
+    padding: var(--lo-pad);
+  }
+
+  .confirm-actions .btn {
+    min-height: 44px;
+  }
+
+  @keyframes lo-drawer-in {
+    from {
+      transform: translateX(48px) scale(0.98);
+      opacity: 0;
+    }
+  }
+
+  @keyframes lo-modal-in {
+    from {
+      transform: translateY(14px) scale(0.86);
+      opacity: 0;
+    }
+  }
+}
+
+/* ---------- game sheets: rank call, pick, peek, bet: a wide panel docked low, the table still visible ---------- */
+
+@media (orientation: landscape) {
+  .backdrop.lo-game-bd {
+    align-items: flex-end;
+    justify-content: center;
+    padding: 8px var(--safe-r) var(--safe-b) var(--safe-l);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.55) 70%);
+  }
+
+  /* title and a small close button on one line, the rest below */
+  .sheet.lo-game {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: clamp(6px, calc(var(--u) * 1.8), 12px) 14px;
+    width: min(820px, 100%);
+    max-height: calc(100dvh - 12px);
+    padding-top: calc(var(--lo-pad) - 2px);
+    border-radius: 22px;
+    animation-name: lo-rise-in;
+  }
+
+  .sheet.lo-game > * {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  .sheet.lo-game > h3 {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .sheet.lo-game > .lo-x {
+    grid-row: 1;
+    grid-column: 2;
+    width: auto;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    font-size: 14px;
+  }
+
+  .sheet.lo-game > p {
+    font-size: clamp(12px, calc(var(--u) * 3.3), 15px);
+    line-height: 1.35;
+  }
+
+  /* rank call: all 13 ranks on one row (two on a narrow window) */
+  .rank-grid.lo-body {
+    grid-template-columns: repeat(13, minmax(0, 1fr));
+    gap: clamp(4px, calc(var(--u) * 1.5), 10px);
+    padding: 2px 0 4px;
+  }
+
+  .rank-grid.lo-body .rank-btn {
+    position: relative;
+    height: clamp(46px, calc(var(--u) * 14), 72px);
+    min-width: 0;
+    padding: 0;
+    border: 1px solid rgba(246, 196, 83, 0.3);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    color: var(--gold);
+    font-size: clamp(17px, calc(var(--u) * 5.4), 28px);
+    transition: transform 0.18s var(--spring);
+    animation: lo-pop-in 0.38s var(--spring) backwards;
+  }
+
+  .rank-grid.lo-body .rank-btn:nth-child(n + 4) {
+    animation-delay: 60ms;
+  }
+
+  .rank-grid.lo-body .rank-btn:nth-child(n + 8) {
+    animation-delay: 120ms;
+  }
+
+  .rank-grid.lo-body .rank-btn.honest {
+    border-color: var(--ok);
+    background: linear-gradient(180deg, rgba(60, 207, 145, 0.32), rgba(60, 207, 145, 0.1));
+    box-shadow: 0 4px 0 rgba(10, 80, 50, 0.6), 0 0 14px rgba(60, 207, 145, 0.35);
+    color: #eafff5;
+  }
+
+  @media (hover: hover) {
+    .rank-grid.lo-body .rank-btn:hover:not(:disabled) {
+      transform: translateY(-3px);
+    }
+  }
+
+  .rank-grid.lo-body .rank-btn:active:not(:disabled) {
+    transform: translateY(2px) scale(0.96);
+  }
+
+  /* pick and peek: the face-down cards fanned on an arc, tilted back like a table */
+  .pick-row.lo-fan {
+    --step: min(11deg, calc(52deg / var(--n, 3)));
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    gap: clamp(2px, calc(var(--u) * 1), 8px);
+    padding: calc(var(--u) * 3) 0 calc(var(--u) * 3.5);
+    perspective: 900px;
+    overflow: visible;
+  }
+
+  .pick-row.lo-fan > .card {
+    --cw: clamp(56px, calc(var(--u) * 19), 112px);
+    rotate: calc((var(--i, 0) - (var(--n, 1) - 1) / 2) * var(--step));
+    margin-inline: calc(var(--cw) * -0.07);
+    transform-origin: 50% 220%;
+    transition: translate 0.22s var(--spring), scale 0.22s var(--spring);
+  }
+
+  .pick-row.lo-fan > .pick-card {
+    transform: rotateX(12deg);
+    animation: lo-deal 0.5s var(--spring) calc(var(--i, 0) * 70ms) backwards;
+  }
+
+  /* a big play: cards overlap a little so they stay on one row */
+  .pick-row.lo-fan.lo-fan-many {
+    gap: 0;
+  }
+
+  .pick-row.lo-fan.lo-fan-many > .card {
+    --cw: clamp(44px, min(calc(var(--u) * 14), calc(150vw / var(--n, 6))), 88px);
+    margin-inline: calc(var(--cw) * -0.14);
+  }
+
+  @media (hover: hover) {
+    .pick-row.lo-fan > .pick-card:not(.disabled):hover {
+      translate: 0 -14px;
+      scale: 1.06;
+      z-index: 2;
+    }
+  }
+
+  .pick-row.lo-fan > .pick-card:not(.disabled):active {
+    translate: 0 -10px;
+    scale: 1.03;
+  }
+
+  /* bet: every chip on one row */
+  .stake-grid.lo-body {
+    grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+    margin: 0;
+  }
+
+  .stake-grid.lo-body .stake-chip {
+    min-height: 44px;
+  }
+
+  .sheet.lo-game .bet-note {
+    font-size: clamp(12px, calc(var(--u) * 3.3), 15px);
+  }
+
+  @keyframes lo-rise-in {
+    from {
+      transform: translateY(40px) scale(0.97);
+      opacity: 0;
+    }
+  }
+
+  @keyframes lo-pop-in {
+    from {
+      transform: translateY(10px) scale(0.7);
+      opacity: 0;
+    }
+  }
+
+  @keyframes lo-deal {
+    from {
+      transform: rotateX(12deg) translateY(60px) scale(0.6);
+      opacity: 0;
+    }
+  }
+}
+
+/* a narrow landscape window: the ranks split in two rows */
+@media (orientation: landscape) and (max-width: 600px) {
+  .rank-grid.lo-body {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+
+/* ---------- bluff reveal: the cards flip over in 3D, then the verdict is stamped across them ---------- */
+
+@media (orientation: landscape) {
+  .modal.lo-reveal {
+    max-width: min(640px, 74vw);
+  }
+
+  .lo-reveal .reveal {
+    gap: clamp(2px, calc(var(--u) * 1.2), 10px);
+    padding: clamp(10px, calc(var(--u) * 3), 24px) clamp(14px, calc(var(--u) * 4), 32px);
+    border-width: 2px;
+    cursor: pointer;
+  }
+
+  .lo-reveal .reveal.caught {
+    border-color: rgba(229, 72, 77, 0.8);
+    background:
+      radial-gradient(80% 70% at 50% 55%, rgba(229, 72, 77, 0.16), transparent 70%),
+      var(--lo-glass);
+  }
+
+  .lo-reveal .reveal.truth {
+    border-color: rgba(60, 207, 145, 0.75);
+    background:
+      radial-gradient(80% 70% at 50% 55%, rgba(60, 207, 145, 0.14), transparent 70%),
+      var(--lo-glass);
+  }
+
+  .lo-reveal .reveal-title {
+    font-size: clamp(22px, calc(var(--u) * 7), 40px);
+    line-height: 1.1;
+  }
+
+  .lo-reveal .reveal p {
+    margin: 0;
+  }
+
+  .lo-reveal .reveal-result {
+    font-size: clamp(14px, calc(var(--u) * 4.2), 20px);
+  }
+
+  /* the stage holds the cards and the stamp over them */
+  .lo-stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    padding: calc(var(--u) * 1.5) 0;
+  }
+
+  .lo-stage .reveal-cards {
+    gap: clamp(6px, calc(var(--u) * 2), 14px);
+    padding: 4px 0;
+    perspective: 1000px;
+  }
+
+  .lo-stage .reveal-slot {
+    --cw: clamp(40px, min(calc(var(--u) * 17), calc(60vw / var(--n, 4) - 12px)), 96px);
+    transform-style: preserve-3d;
+  }
+
+  .lo-stage .reveal-slot .card {
+    --cw: inherit;
+  }
+
+  /* the face turns in after the back has turned away */
+  .lo-stage .card.flip {
+    backface-visibility: hidden;
+    animation: lo-flip-in 0.6s cubic-bezier(0.3, 1.3, 0.5, 1) both;
+  }
+
+  .lo-stage .lo-flip-back {
+    position: absolute;
+    inset: 0;
+    display: block;
+    pointer-events: none;
+  }
+
+  .lo-stage .lo-flip-back .card {
+    backface-visibility: hidden;
+    animation: lo-flip-out 0.6s ease-in both;
+  }
+
+  /* ✓ and ✗ pop on once each card is face-up */
+  .lo-stage .reveal-slot .mark {
+    z-index: 2;
+    width: clamp(20px, calc(var(--u) * 6), 30px);
+    height: clamp(20px, calc(var(--u) * 6), 30px);
+    font-size: clamp(12px, calc(var(--u) * 3.6), 17px);
+    animation: lo-pop-in 0.35s var(--spring) calc(0.5s + min(var(--i, 0), 10) * 110ms) backwards;
+  }
+
+  .lo-stage .reveal-slot.picked {
+    border-radius: calc(var(--cw) * 0.12);
+    box-shadow: 0 0 0 3px var(--gold), 0 0 18px rgba(246, 196, 83, 0.55);
+    translate: 0 -6px;
+  }
+
+  /* BLUFF! or TRUTH, slammed down like a rubber stamp once the cards are over */
+  .lo-stamp {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 3;
+    display: block;
+    padding: 0.08em 0.4em 0.02em;
+    border: 0.09em solid currentColor;
+    border-radius: 0.18em;
+    font-size: clamp(30px, calc(var(--u) * 12), 84px);
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    white-space: nowrap;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.28);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 0 0 2px rgba(255, 255, 255, 0.08);
+    opacity: 0.94;
+    pointer-events: none;
+    transform: translate(-50%, -50%) rotate(-11deg);
+    animation: lo-stamp 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) calc(0.5s + min(var(--n, 1), 10) * 100ms) backwards;
+  }
+
+  .reveal.caught .lo-stamp {
+    color: #ff5a5f;
+  }
+
+  .reveal.truth .lo-stamp {
+    color: #4be3a2;
+  }
+
+  @keyframes lo-flip-in {
+    0%,
+    45% {
+      transform: rotateY(-90deg) scale(1.08);
+    }
+    100% {
+      transform: rotateY(0deg) scale(1);
+    }
+  }
+
+  @keyframes lo-flip-out {
+    0% {
+      transform: rotateY(0deg);
+      opacity: 1;
+    }
+    45% {
+      transform: rotateY(90deg) scale(1.08);
+      opacity: 1;
+    }
+    46%,
+    100% {
+      transform: rotateY(90deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes lo-stamp {
+    0% {
+      transform: translate(-50%, -50%) rotate(-11deg) scale(2.6);
+      opacity: 0;
+    }
+    60% {
+      transform: translate(-50%, -50%) rotate(-11deg) scale(0.92);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(-11deg) scale(1);
+      opacity: 0.94;
+    }
+  }
+}
+
+/* ---------- game over: podium left, rewards right, buttons docked at the bottom ---------- */
+
+@media (orientation: landscape) {
+  .backdrop.lo-over-bd {
+    padding: 8px var(--safe-r) 8px var(--safe-l);
+  }
+
+  .modal.lo-over {
+    width: 100%;
+    max-width: 1040px;
+    overflow: hidden;
+  }
+
+  .lo-over .reveal.gameover {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: clamp(8px, calc(var(--u) * 2), 14px) clamp(10px, calc(var(--u) * 3), 22px);
+    height: min(calc(100dvh - 16px), 680px);
+    padding: clamp(10px, calc(var(--u) * 2.6), 20px);
+    text-align: left;
+  }
+
+  /* left: the verdict, the trophy and every place */
+  .lo-over .go-main {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: clamp(4px, calc(var(--u) * 1.4), 10px);
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    text-align: center;
+  }
+
+  .lo-over .go-main > .reveal-title {
+    order: -1;
+    font-size: clamp(20px, calc(var(--u) * 6.4), 36px);
+    line-height: 1.1;
+  }
+
+  .lo-over .go-main > p {
+    margin: 0;
+  }
+
+  .lo-over .results {
+    gap: clamp(4px, calc(var(--u) * 1.2), 8px);
+    margin: 0;
+  }
+
+  .lo-over .results li {
+    gap: 10px;
+    min-height: 40px;
+    padding: clamp(5px, calc(var(--u) * 1.6), 10px) 10px;
+    font-size: clamp(13px, calc(var(--u) * 3.6), 16px);
+  }
+
+  /* the champion: a big glowing trophy over the winner's avatar and name */
+  .lo-over .go-podium {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    flex: none;
+    padding: calc(var(--u) * 1.5) 8px calc(var(--u) * 2);
+    border-radius: 16px;
+    background:
+      radial-gradient(70% 90% at 50% 20%, rgba(246, 196, 83, 0.3), transparent 70%),
+      linear-gradient(180deg, rgba(246, 196, 83, 0.1), rgba(246, 196, 83, 0.02));
+    box-shadow: inset 0 0 0 1px rgba(246, 196, 83, 0.35);
+    animation: lo-pop-in 0.5s var(--spring) 0.15s backwards;
+  }
+
+  .go-trophy {
+    font-size: clamp(34px, calc(var(--u) * 13), 80px);
+    line-height: 1;
+    filter: drop-shadow(0 0 14px rgba(246, 196, 83, 0.7));
+    animation: lo-trophy 0.8s var(--spring) 0.3s backwards, lo-bob 3s ease-in-out 1.2s infinite;
+  }
+
+  .go-champs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 14px;
+  }
+
+  .go-champ {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: clamp(15px, calc(var(--u) * 4.4), 22px);
+  }
+
+  .go-champ b {
+    color: var(--gold);
+  }
+
+  .go-crown-label {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  /* right: missions, coins, awards, lie recap and secret cards scroll on their own */
+  .lo-over .go-side {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(8px, calc(var(--u) * 2), 14px);
+    min-height: 0;
+    padding: 2px 4px 6px 2px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(246, 196, 83, 0.35) transparent;
+  }
+
+  .lo-over .go-side > * {
+    flex: none;
+    width: 100%;
+    margin: 0;
+    animation: lo-side-in 0.45s var(--spring) 0.35s backwards;
+  }
+
+  .lo-over .go-side > :nth-child(2) {
+    animation-delay: 0.45s;
+  }
+
+  .lo-over .go-side > :nth-child(n + 3) {
+    animation-delay: 0.55s;
+  }
+
+  /* each block on the right is a small card */
+  .lo-over .go-side > .coin-results,
+  .lo-over .go-side > .awards,
+  .lo-over .go-side > .lie-recap,
+  .lo-over .go-side > .secrets-reveal,
+  .lo-over .go-side > .saza-box {
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
+
+  .lo-over .go-side > .coin-results {
+    order: -1;
+    box-shadow: inset 0 0 0 1px rgba(246, 196, 83, 0.3);
+  }
+
+  /* Play again and Back to lobby stay on screen */
+  .lo-over .go-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: clamp(6px, calc(var(--u) * 1.6), 12px);
+    border-top: 1px solid rgba(246, 196, 83, 0.2);
+  }
+
+  .lo-over .go-actions .btn {
+    flex: 1 1 0;
+    width: auto;
+    min-height: clamp(42px, calc(var(--u) * 12), 54px);
+  }
+
+  .lo-over .go-actions .btn.primary {
+    flex-grow: 1.6;
+  }
+
+  .lo-over .go-actions > p {
+    flex: 1.6 1 0;
+    margin: 0;
+    text-align: center;
+  }
+
+  /* nothing for the right side (a guest game): podium left, places right */
+  .lo-over .gameover:has(> .go-side:empty) .go-side {
+    display: none;
+  }
+
+  .lo-over .gameover:has(> .go-side:empty) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    width: min(760px, 100%);
+    height: auto;
+    max-height: calc(100dvh - 16px);
+    margin-inline: auto;
+  }
+
+  .lo-over:has(.go-side:empty) {
+    max-width: 760px;
+  }
+
+  .lo-over .gameover:has(> .go-side:empty) .go-main:has(> .go-podium) {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
+    align-content: start;
+    column-gap: 18px;
+  }
+
+  .lo-over .gameover:has(> .go-side:empty) .go-main > * {
+    grid-column: 2;
+  }
+
+  .lo-over .gameover:has(> .go-side:empty) .go-main > .go-podium {
+    grid-column: 1;
+    grid-row: 1 / span 6;
+    align-self: stretch;
+    justify-content: center;
+  }
+
+  @keyframes lo-trophy {
+    from {
+      transform: translateY(-30px) scale(0.3) rotate(-20deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes lo-bob {
+    50% {
+      transform: translateY(-4px) rotate(3deg);
+    }
+  }
+
+  @keyframes lo-side-in {
+    from {
+      transform: translateX(24px);
+      opacity: 0;
+    }
+  }
+}
+
+/* ---------- level up, chat tray, pile tray, floating reactions, throw and gift rows ---------- */
+
+@media (orientation: landscape) {
+  /* the reveal box is a flex column with centred items: in a grid that would squash the scrolling columns */
+  .lo-over .reveal.gameover {
+    align-items: stretch;
+  }
+
+  /* level up: ring on the left, the words on the right */
+  .levelup {
+    padding: 12px var(--safe-r) 12px var(--safe-l);
+  }
+
+  .levelup-box {
+    display: grid;
+    grid-template-columns: auto minmax(0, 380px);
+    align-items: center;
+    justify-items: start;
+    gap: 4px clamp(18px, calc(var(--u) * 6), 48px);
+    text-align: left;
+  }
+
+  .levelup-box > * {
+    grid-column: 2;
+    margin: 0;
+  }
+
+  .levelup-box > .levelup-ring {
+    grid-column: 1;
+    grid-row: 1 / span 8;
+    width: clamp(110px, calc(var(--u) * 36), 220px);
+    height: clamp(110px, calc(var(--u) * 36), 220px);
+  }
+
+  .levelup-emoji {
+    font-size: clamp(48px, calc(var(--u) * 15), 92px);
+  }
+
+  .levelup-level {
+    font-size: clamp(34px, calc(var(--u) * 11), 60px);
+  }
+
+  .levelup-unlock {
+    max-width: 380px;
+  }
+
+  /* 💬 tray: a drawer at the bottom right instead of a full-width bottom sheet */
+  .tray-backdrop {
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 8px var(--safe-r) var(--safe-b) 8px;
+  }
+
+  .chat-tray,
+  .chat-tray.with-list {
+    width: min(420px, 52vw);
+    max-height: calc(100dvh - 16px);
+    padding: 8px 12px 12px;
+    border: 1px solid var(--lo-gold);
+    border-radius: 18px;
+    background: var(--lo-glass);
+    box-shadow: var(--land-shadow), var(--lo-shine);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: lo-drawer-in 0.36s var(--spring) backwards;
+  }
+
+  .chat-tray .room-chat-list {
+    min-height: 60px;
+    max-height: 32dvh;
+  }
+
+  .chat-tray .reaction-btn {
+    min-height: 40px;
+    aspect-ratio: auto;
+    font-size: 22px;
+  }
+
+  .chat-tray .message-pills {
+    max-height: 30dvh;
+  }
+
+  .chat-tray .message-pill {
+    min-height: 40px;
+  }
+
+  /* hold-the-pile tray: a gold-edged glass pill */
+  .pile-tray {
+    gap: 2px;
+    padding: 4px;
+    border: 1px solid var(--lo-gold);
+    background: var(--lo-glass);
+    box-shadow: var(--land-shadow), var(--lo-shine);
+  }
+
+  .pile-tray button {
+    width: clamp(40px, calc(var(--u) * 11), 52px);
+    height: clamp(40px, calc(var(--u) * 11), 52px);
+    font-size: clamp(22px, calc(var(--u) * 6.6), 30px);
+    transition: transform 0.15s var(--spring);
+  }
+
+  /* emoji float up a short screen: a little smaller */
+  .reaction {
+    bottom: 34%;
+  }
+
+  .reaction span {
+    font-size: clamp(32px, calc(var(--u) * 11), 60px);
+  }
+
+  .reaction small {
+    font-size: 11px;
+  }
+
+  /* throw and gift rows in the player sheet: one row each */
+  .throw-box,
+  .gift-box {
+    gap: 6px;
+    padding: 10px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
+
+  .throw-row {
+    grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+    gap: 6px;
+  }
+
+  .throw-btn {
+    height: clamp(42px, calc(var(--u) * 11), 52px);
+    font-size: clamp(22px, calc(var(--u) * 6.6), 30px);
+  }
+
+  .gift-row .btn {
+    min-height: 40px;
+  }
+
+  /* secret card chip by the hand: a touch more glass, same purple */
+  .secret-chip {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+
+  /* game-over blocks: tighter for a short screen */
+  .go-side .lie-row {
+    padding: 6px 8px 8px;
+  }
+
+  .go-side .saza-picks {
+    gap: 4px;
+  }
+
+  .go-side .saza-pick {
+    min-height: 44px;
+  }
+
+  .go-side .lie-player,
+  .go-side .secret-row {
+    min-height: 40px;
+  }
+}
+
+/* reduced motion: no springs, flips or stamps; everything shows at once */
+@media (orientation: landscape) and (prefers-reduced-motion: reduce) {
+  .sheet,
+  .modal,
+  .chat-tray,
+  .rank-grid.lo-body .rank-btn,
+  .pick-row.lo-fan > .card,
+  .lo-stage .card.flip,
+  .lo-stage .reveal-slot .mark,
+  .lo-stamp,
+  .go-podium,
+  .go-trophy,
+  .go-side > * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .lo-stage .lo-flip-back {
+    display: none;
+  }
+}

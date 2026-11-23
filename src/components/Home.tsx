@@ -112,143 +112,155 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
       <header className="home-top">
         <AccountCorner auth={auth} onOpenAdmin={onOpenAdmin} onJoin={(userId, watch) => actions.joinFriend(userId, watch, auth.user?.displayName ?? name)} />
       </header>
-      <div className="hero">
-        <HeroFan />
-        <ShineTitle text="Bluff" />
-        <p className="muted">Lie with a straight face. Catch your friends.</p>
+      {/* landscape: hero on the left, play panel in the middle (both are plain children in portrait) */}
+      <div className="home-stage">
+        <div className="hero">
+          <HeroFan />
+          <ShineTitle text="Bluff" />
+          <p className="muted">Lie with a straight face. Catch your friends.</p>
+        </div>
+
+        <div className="home-main">
+          {!online && (
+            <p className="server-status">
+              <span className="dot" />
+              {slow ? 'Waking up the server… this can take up to a minute after a break.' : 'Connecting…'}
+            </p>
+          )}
+
+          {guestHint}
+
+          {pendingWatch ? (
+            <section className="panel stack invite-card">
+              <p className="label">{pendingWatch.askedOf ? 'Asked to join' : 'Game in progress'}</p>
+              <p className="invite-room">
+                Room <b>{pendingWatch.code}</b>
+              </p>
+              <p className="waiting-host">
+                <span className="dot" />
+                {pendingWatch.askedOf ? `Waiting for ${pendingWatch.askedOf} to let you in…` : 'Waiting for the host to let you watch…'}
+              </p>
+              <p className="muted small">You'll go straight in when they say yes.</p>
+              <button className="btn ghost block" onClick={actions.cancelWatch}>
+                Cancel
+              </button>
+            </section>
+          ) : locked ? (
+            <>
+              {saved && (
+                <button className="panel rejoin" disabled={!online || busy} onClick={() => go(actions.rejoinSaved)}>
+                  <span>
+                    Rejoin room <b>{saved.code}</b> as {saved.name}
+                  </span>
+                  <span aria-hidden>→</span>
+                </button>
+              )}
+              <section className="panel stack guest-locked">
+                <p className="lock-title">🔒 Log in to play</p>
+                <p className="muted small">
+                  Guest play is off right now. Log in or make a free account to {invite ? `join room ${invite}` : 'create or join a room'}.
+                </p>
+                <button className="btn primary block shine" onClick={() => setAccountSheet('login')}>
+                  Log in
+                </button>
+                <button className="btn ghost block" onClick={() => setAccountSheet('register')}>
+                  Sign up
+                </button>
+              </section>
+            </>
+          ) : invite ? (
+            <section className="panel stack invite-card">
+              <p className="label">You're invited</p>
+              <p className="invite-room">
+                Room <b>{invite}</b>
+              </p>
+              {nameField}
+              <button
+                className="btn primary block shine"
+                disabled={!playName || !online || busy}
+                onClick={() => go(() => actions.join(invite, playName))}
+              >
+                {busy ? `Joining room ${invite}…` : `Join room ${invite}`}
+              </button>
+              <button
+                className="link-btn"
+                onClick={() => {
+                  clearInvite();
+                  setInvite(null);
+                }}
+              >
+                Create my own room instead
+              </button>
+            </section>
+          ) : (
+            <>
+              {saved && (
+                <button className="panel rejoin" disabled={!online || busy} onClick={() => go(actions.rejoinSaved)}>
+                  <span>
+                    Rejoin room <b>{saved.code}</b> as {saved.name}
+                  </span>
+                  <span aria-hidden>→</span>
+                </button>
+              )}
+
+              <section className="panel stack home-play">
+                {nameField}
+                <button
+                  className="btn primary block shine"
+                  disabled={!playName || !online || busy}
+                  onClick={() => go(() => actions.create(playName))}
+                >
+                  Create a room
+                </button>
+
+                <div className="divider">
+                  <span>or join friends</span>
+                </div>
+
+                <div className="join-row">
+                  <input
+                    className="input code-input"
+                    value={code}
+                    placeholder="CODE"
+                    aria-label="Room code"
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                    spellCheck={false}
+                    onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4))}
+                  />
+                  <button
+                    className="btn"
+                    disabled={!playName || code.length !== 4 || !online || busy}
+                    onClick={() => go(() => actions.join(code, playName))}
+                  >
+                    Join
+                  </button>
+                </div>
+              </section>
+            </>
+          )}
+          {/* landscape only: How to play sits under the play panel */}
+          <button className="btn ghost block how-to-btn home-how-land" onClick={() => setChooser(true)}>
+            📘 How to play
+          </button>
+        </div>
       </div>
 
-      {!online && (
-        <p className="server-status">
-          <span className="dot" />
-          {slow ? 'Waking up the server… this can take up to a minute after a break.' : 'Connecting…'}
-        </p>
-      )}
-
-      {guestHint}
-
-      {pendingWatch ? (
-        <section className="panel stack invite-card">
-          <p className="label">{pendingWatch.askedOf ? 'Asked to join' : 'Game in progress'}</p>
-          <p className="invite-room">
-            Room <b>{pendingWatch.code}</b>
-          </p>
-          <p className="waiting-host">
-            <span className="dot" />
-            {pendingWatch.askedOf ? `Waiting for ${pendingWatch.askedOf} to let you in…` : 'Waiting for the host to let you watch…'}
-          </p>
-          <p className="muted small">You'll go straight in when they say yes.</p>
-          <button className="btn ghost block" onClick={actions.cancelWatch}>
-            Cancel
-          </button>
-        </section>
-      ) : locked ? (
-        <>
-          {saved && (
-            <button className="panel rejoin" disabled={!online || busy} onClick={() => go(actions.rejoinSaved)}>
-              <span>
-                Rejoin room <b>{saved.code}</b> as {saved.name}
-              </span>
-              <span aria-hidden>→</span>
-            </button>
-          )}
-          <section className="panel stack guest-locked">
-            <p className="lock-title">🔒 Log in to play</p>
-            <p className="muted small">
-              Guest play is off right now. Log in or make a free account to {invite ? `join room ${invite}` : 'create or join a room'}.
-            </p>
-            <button className="btn primary block shine" onClick={() => setAccountSheet('login')}>
-              Log in
-            </button>
-            <button className="btn ghost block" onClick={() => setAccountSheet('register')}>
-              Sign up
-            </button>
-          </section>
-        </>
-      ) : invite ? (
-        <section className="panel stack invite-card">
-          <p className="label">You're invited</p>
-          <p className="invite-room">
-            Room <b>{invite}</b>
-          </p>
-          {nameField}
-          <button
-            className="btn primary block shine"
-            disabled={!playName || !online || busy}
-            onClick={() => go(() => actions.join(invite, playName))}
-          >
-            {busy ? `Joining room ${invite}…` : `Join room ${invite}`}
-          </button>
-          <button
-            className="link-btn"
-            onClick={() => {
-              clearInvite();
-              setInvite(null);
-            }}
-          >
-            Create my own room instead
-          </button>
-        </section>
-      ) : (
-        <>
-          {saved && (
-            <button className="panel rejoin" disabled={!online || busy} onClick={() => go(actions.rejoinSaved)}>
-              <span>
-                Rejoin room <b>{saved.code}</b> as {saved.name}
-              </span>
-              <span aria-hidden>→</span>
-            </button>
-          )}
-
-          <section className="panel stack">
-            {nameField}
-            <button
-              className="btn primary block shine"
-              disabled={!playName || !online || busy}
-              onClick={() => go(() => actions.create(playName))}
-            >
-              Create a room
-            </button>
-
-            <div className="divider">
-              <span>or join friends</span>
-            </div>
-
-            <div className="join-row">
-              <input
-                className="input code-input"
-                value={code}
-                placeholder="CODE"
-                aria-label="Room code"
-                autoCapitalize="characters"
-                autoComplete="off"
-                spellCheck={false}
-                onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4))}
-              />
-              <button
-                className="btn"
-                disabled={!playName || code.length !== 4 || !online || busy}
-                onClick={() => go(() => actions.join(code, playName))}
-              >
-                Join
-              </button>
-            </div>
-          </section>
-        </>
-      )}
-
-      <OnlineFriends auth={auth} onJoin={(userId, watch) => actions.joinFriend(userId, watch, auth.user?.displayName ?? name)} />
-      <SpinButton auth={auth} />
-      <MissionsButton auth={auth} online={online} />
-      <LeagueButton auth={auth} online={online} />
-      <ShopButton auth={auth} online={online} />
-      <button className="btn ghost block how-to-btn" onClick={() => setChooser(true)}>
-        📘 How to play
-      </button>
-      <LangToggle />
-      <HomeNameCard auth={auth} />
-      <NotifyCard auth={auth} />
-      <InstallCard />
+      {/* landscape: extras in a scrolling side rail */}
+      <div className="home-rail">
+        <OnlineFriends auth={auth} onJoin={(userId, watch) => actions.joinFriend(userId, watch, auth.user?.displayName ?? name)} />
+        <SpinButton auth={auth} />
+        <MissionsButton auth={auth} online={online} />
+        <LeagueButton auth={auth} online={online} />
+        <ShopButton auth={auth} online={online} />
+        <button className="btn ghost block how-to-btn" onClick={() => setChooser(true)}>
+          📘 How to play
+        </button>
+        <LangToggle />
+        <HomeNameCard auth={auth} />
+        <NotifyCard auth={auth} />
+        <InstallCard />
+      </div>
       {accountSheet && <AccountSheet initial={accountSheet} auth={auth} onClose={() => setAccountSheet(null)} />}
       {chooser && (
         <LessonChooser

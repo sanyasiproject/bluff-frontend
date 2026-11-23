@@ -1,6 +1,6 @@
 # bluff-frontend — guide for Claude
 
-Phone-first React app for **Bluff**, a free real-time card game for a group of friends.
+Landscape-first React app (phones play sideways, like Uno) for **Bluff**, a free real-time card game for a group of friends.
 Deployed on Vercel (https://bluff-frontend.vercel.app, auto-deploys `main`). The server is the sibling repo
 `bluff-backend` (Render). If both repos sit side by side, the parent folder's `CLAUDE.md` has the whole-project
 guide, the feature list and the owner's working preferences. Read it first.
@@ -25,6 +25,11 @@ React 18 + Vite 8 + TypeScript, socket.io-client, no UI library. All styles are 
 | `components/FriendOnline.tsx`, `FriendAlertsRow.tsx`, `lib/friendAlerts.ts` | "👋 came online" card (top right, every screen, mounted in `App`; groups arrivals; Invite in a lobby; chime) and its per-phone Profile switch |
 | `components/Table.tsx` | The Bluff game: seats, pile, Bluff / Peek / Bet, partner cards, hand, menus, end game. Exports `Seat`, `SeatSheet`, `GameMenu`, `useOnChange` for Crazy 7 |
 | `components/Crazy7Table.tsx` | The Crazy 7 game (`App` picks it when `view.config.game === 'crazy7'`): deck, pile, 7 penalty banner, playable cards glow (`Hand` `playable`/`dimRest`), Pick / Pass / 📢 Last card, move animations from view diffs |
+| `components/RotateGate.tsx`, `lib/orientation.ts`, `lib/useLandscape.ts`, `styles/landscape.css` | Landscape: the "Turn your phone" card for touch screens held upright, ⛶ full screen, `useLandscape()`, shared tokens (`--u`, `--safe-*`) |
+| `components/TableScene.tsx`, `Table3D.tsx`, `styles/land-world.css` | The 3D table world every game shares: one tilted plane (rim, felt, lamp); `OnTable` puts things on it (lying, or `stand` facing you), `seatSpots` seats opponents at the far rail, `OppCards` / `Pile3D` are cards on the felt. Keep felt items 2px+ above the felt |
+| `components/TableInfo.tsx` | The one place for what isn't needed every second: ☰ room button (secret-mission badge) and its panel (secret mission, my counts, `tableRules`, tips, last moves) |
+| `components/FanHand.tsx`, `styles/land-table.css` | The fanned hand (`fanLayout`, Bluff's rank stacks for big hands), top bar, the right-hand action column (`.side-actions`, `.action-bar`) |
+| `components/RangTable.tsx`, `RangCard.tsx` | The Rang game (third game): colour cards, deck and pile, penalties, colour and swap pickers |
 | `components/Overlays.tsx` | `Backdrop` (every sheet/modal), rank/pick/peek/bet sheets, reveal, game over, people list |
 | `components/ProfilePage.tsx`, `ProfileParts.tsx`, `ProfileTabs.tsx`, `XpGuide.tsx` | Your profile: header, then Stats · Social · Looks · Settings tabs (last tab remembered per phone); levels, achievements, games |
 | `components/MissionsPage.tsx`, `SecretMissions.tsx` | 🎯 Missions page and its Home/Profile button (daily and weekly sets, the daily swap, the games ladder); 🤫 secret mission card pill by the hand and its game-over reveal |
@@ -44,7 +49,7 @@ React 18 + Vite 8 + TypeScript, socket.io-client, no UI library. All styles are 
 
 - Sheets and popups: `Backdrop` (bottom sheet, or `center` for a modal). Full-screen pages: `FullPage`. Both handle the phone back button.
 - Risky actions get an in-app confirm popup (see `confirm-box` in Table / AdminUserPage), not `window.confirm`.
-- Keep screens simple: few words, one button that opens a sheet rather than many inline controls, mobile width first (375px).
+- Keep screens simple: few words, one button that opens a sheet rather than many inline controls. Design for a phone held sideways first (844x390, 667x375), then check a laptop (1440x900). New landscape styles go in the screen's own `styles/land-*.css` inside `@media (orientation: landscape)`; portrait styles stay for narrow desktop windows.
 - `vercel.json` sets security headers. Its CSP `connect-src` lists the Render backend (https + wss): update it if the backend URL changes. No inline scripts (CSP `script-src 'self'`).
 - Motion: animate only `transform` / `opacity` (the "motion pass" section at the end of `styles.css`). Containers that may hold fixed sheets use `backwards` fill so no transform is left behind. Everything stops under the phone's reduced-motion setting; JS motion checks `reducedMotion()`.
 - `cx(...)` joins class names; coins are shown with `formatCoins` / `compactCoins` (Indian grouping).

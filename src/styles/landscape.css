@@ -1,0 +1,112 @@
+/* ---------- landscape: shared tokens, the turn-your-phone screen, full screen button ---------- */
+
+/* sizes for the sideways screens: --u is 1% of the screen height, kept sane on tiny phones and big laptops */
+@media (orientation: landscape) {
+  :root {
+    --u: clamp(3.4px, 1dvh, 8.6px);
+    /* the notch sits on the left or right edge when the phone is sideways */
+    --safe-l: max(10px, env(safe-area-inset-left));
+    --safe-r: max(10px, env(safe-area-inset-right));
+    --safe-b: max(6px, env(safe-area-inset-bottom));
+    /* a short phone screen (about 360-430 tall) */
+    --land-h: 100dvh;
+    /* page panels: glassy dark green */
+    --land-panel: linear-gradient(180deg, rgba(10, 40, 29, 0.86), rgba(4, 22, 15, 0.9));
+    --land-edge: rgba(246, 196, 83, 0.18);
+    --land-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* phones and tablets held upright: cover everything with the turn-your-phone card */
+.rotate-gate {
+  display: none;
+}
+
+@media (orientation: portrait) and (pointer: coarse) and (max-width: 1100px) {
+  .rotate-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px;
+    text-align: center;
+    color: var(--ink);
+    background:
+      radial-gradient(90% 60% at 50% 40%, var(--felt-light) 0%, var(--felt) 50%, var(--felt-deep) 100%);
+  }
+  .rotate-gate h2 {
+    font-size: 26px;
+    letter-spacing: 0.3px;
+  }
+  .rotate-gate p {
+    color: var(--muted);
+    max-width: 280px;
+  }
+  .rotate-gate .rotate-tip {
+    font-size: 13px;
+    opacity: 0.8;
+  }
+  /* nothing behind the card scrolls or takes taps */
+  body:has(.rotate-gate) {
+    overflow: hidden;
+  }
+}
+
+.rotate-phone {
+  width: 78px;
+  height: 132px;
+  margin-bottom: 18px;
+  border-radius: 16px;
+  border: 4px solid var(--ink);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  display: grid;
+  place-items: center;
+  animation: rotate-hint 2.6s ease-in-out infinite;
+}
+
+.rotate-screen {
+  display: flex;
+  gap: 3px;
+}
+
+/* three little cards on the phone's screen */
+.rotate-screen i {
+  width: 16px;
+  height: 23px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, var(--back-1), var(--back-2));
+  border: 1.5px solid #fff;
+}
+
+.rotate-screen i:nth-child(2) {
+  background: var(--card-face);
+}
+
+@keyframes rotate-hint {
+  0%,
+  20% {
+    rotate: 0deg;
+  }
+  50%,
+  80% {
+    rotate: -90deg;
+  }
+  100% {
+    rotate: 0deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rotate-phone {
+    animation: none;
+    rotate: -90deg;
+  }
+}
+
+.fs-btn {
+  font-size: 17px;
+}

@@ -229,7 +229,7 @@ export function MissionsPage({ auth, onClose, initial = null, onChange }: Props)
   const anyOpen = [...daily, ...weekly].some((k) => !k.view.done);
 
   return (
-    <FullPage title="Missions" onBack={onClose}>
+    <FullPage title="Missions" onBack={onClose} className="lp-missions">
       <p className="muted small mission-intro">
         Finish games of {MIN_REWARD_GAME_SEC / 60} min or more to fill these up. Coins and XP are added as soon as a mission is done.
       </p>

@@ -279,100 +279,115 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
   return (
     <Backdrop onClose={onClose}>
       <h3>Friends</h3>
-      <input
-        className="input"
-        type="search"
-        placeholder="🔍 Search by username or name"
-        aria-label="Search players"
-        autoCapitalize="none"
-        autoComplete="off"
-        spellCheck={false}
-        maxLength={20}
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
-      {query.trim().length === 1 && <p className="muted small">Type at least 2 letters</p>}
-      {query.trim().length >= 2 && found === null && searching && <p className="muted small">Searching…</p>}
-      {query.trim().length >= 2 && found?.length === 0 && (
-        <p className="search-empty">No player found for “{query.trim()}”. Check the username and try again.</p>
-      )}
-      {found && found.length > 0 && (
-        <ul className="friend-list search-results">{found.map((p) => person(p, foundAction(p)))}</ul>
-      )}
-      {note && <p className="form-note">{note}</p>}
-      {error && <p className="form-error">{error}</p>}
-
-      {data && data.incoming.length > 0 && (
-        <>
-          <p className="label">
-            Friend requests <span className="req-pill">{data.incoming.length}</span>
-          </p>
-          <ul className="friend-list">
-            {data.incoming.map((f) =>
-              person(
-                f,
-                <div className="row-actions">
-                  <button className="btn small primary" disabled={busy} onClick={() => accept(f)}>
-                    Accept
-                  </button>
-                  <button className="btn small ghost" disabled={busy} onClick={() => void act(() => api(`/friends/${f.id}/remove`, { method: 'POST', token: auth.token }))}>
-                    Decline
-                  </button>
-                </div>,
-                false,
-              ),
-            )}
-          </ul>
-        </>
-      )}
-
-      <p className="label">
-        Your friends {data ? `(${data.friends.length})` : ''}
-        {onlineCount > 0 && <span className="online-note"> · 🟢 {onlineCount} online</span>}
-      </p>
-      {roomCode && (
-        <p className="muted small">
-          Friends who aren't in a room get a popup to join room {roomCode}
-          {auth.pushInvites ? ', or a phone notification if they are offline and turned them on.' : '.'}
-        </p>
-      )}
-      {data === null && <p className="muted small">Loading…</p>}
-      {data?.friends.length === 0 && <p className="muted small">No friends yet. Search for someone above and tap + Add.</p>}
-      {data && data.friends.length > 0 && (
-        <ul className="friend-list">
-          {friendsOnlineFirst.map((f) =>
-            person(
-              f,
-              // one line: 💬, the one main action, and ⋯ for the rest
-              <div className="row-actions friend-acts">
-                <button className="btn small dm-btn" aria-label={`Message ${f.displayName}`} onClick={() => setChatWith(f)}>
-                  💬
-                  {(unread.byFriend[f.id] ?? 0) > 0 && <span className="req-dot">{unread.byFriend[f.id]}</span>}
-                </button>
-                {mainAction(f)}
-                {moreMenu(f)}
-              </div>,
-            ),
+      {/* landscape: search and requests on the left, your friends on the right */}
+      <div className="lp2-fr-cols">
+        <div className="lp2-fr-side">
+          <input
+            className="input"
+            type="search"
+            placeholder="🔍 Search by username or name"
+            aria-label="Search players"
+            autoCapitalize="none"
+            autoComplete="off"
+            spellCheck={false}
+            maxLength={20}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          {query.trim().length === 1 && <p className="muted small">Type at least 2 letters</p>}
+          {query.trim().length >= 2 && found === null && searching && <p className="muted small">Searching…</p>}
+          {query.trim().length >= 2 && found?.length === 0 && (
+            <p className="search-empty">No player found for “{query.trim()}”. Check the username and try again.</p>
           )}
-        </ul>
-      )}
+          {found && found.length > 0 && (
+            <ul className="friend-list search-results">{found.map((p) => person(p, foundAction(p)))}</ul>
+          )}
+          {/* landscape only: fills the empty side while there's nothing to search or accept */}
+          {query.trim().length < 2 && data?.incoming.length === 0 && (
+            <div className="lp2-fr-tip" aria-hidden>
+              <span className="lp2-fr-tip-icon">🔍</span>
+              <b>Find your friends</b>
+              <span className="muted small">Search their username, then tap + Add. Requests show up here.</span>
+            </div>
+          )}
+          {note && <p className="form-note">{note}</p>}
+          {error && <p className="form-error">{error}</p>}
 
-      {data && data.outgoing.length > 0 && (
-        <>
-          <p className="label">Requests you sent</p>
-          <ul className="friend-list">
-            {data.outgoing.map((f) =>
-              person(
-                f,
-                <button className="link-btn" disabled={busy} onClick={() => void act(() => api(`/friends/${f.id}/remove`, { method: 'POST', token: auth.token }))}>
-                  Cancel
-                </button>,
-                false,
-              ),
-            )}
-          </ul>
-        </>
-      )}
+          {data && data.incoming.length > 0 && (
+            <>
+              <p className="label">
+                Friend requests <span className="req-pill">{data.incoming.length}</span>
+              </p>
+              <ul className="friend-list">
+                {data.incoming.map((f) =>
+                  person(
+                    f,
+                    <div className="row-actions">
+                      <button className="btn small primary" disabled={busy} onClick={() => accept(f)}>
+                        Accept
+                      </button>
+                      <button className="btn small ghost" disabled={busy} onClick={() => void act(() => api(`/friends/${f.id}/remove`, { method: 'POST', token: auth.token }))}>
+                        Decline
+                      </button>
+                    </div>,
+                    false,
+                  ),
+                )}
+              </ul>
+            </>
+          )}
+        </div>
+
+        <div className="lp2-fr-main">
+          <p className="label">
+            Your friends {data ? `(${data.friends.length})` : ''}
+            {onlineCount > 0 && <span className="online-note"> · 🟢 {onlineCount} online</span>}
+          </p>
+          {roomCode && (
+            <p className="muted small">
+              Friends who aren't in a room get a popup to join room {roomCode}
+              {auth.pushInvites ? ', or a phone notification if they are offline and turned them on.' : '.'}
+            </p>
+          )}
+          {data === null && <p className="muted small">Loading…</p>}
+          {data?.friends.length === 0 && <p className="muted small">No friends yet. Search for someone above and tap + Add.</p>}
+          {data && data.friends.length > 0 && (
+            <ul className="friend-list lp2-fr-list">
+              {friendsOnlineFirst.map((f) =>
+                person(
+                  f,
+                  // one line: 💬, the one main action, and ⋯ for the rest
+                  <div className="row-actions friend-acts">
+                    <button className="btn small dm-btn" aria-label={`Message ${f.displayName}`} onClick={() => setChatWith(f)}>
+                      💬
+                      {(unread.byFriend[f.id] ?? 0) > 0 && <span className="req-dot">{unread.byFriend[f.id]}</span>}
+                    </button>
+                    {mainAction(f)}
+                    {moreMenu(f)}
+                  </div>,
+                ),
+              )}
+            </ul>
+          )}
+
+          {data && data.outgoing.length > 0 && (
+            <>
+              <p className="label">Requests you sent</p>
+              <ul className="friend-list">
+                {data.outgoing.map((f) =>
+                  person(
+                    f,
+                    <button className="link-btn" disabled={busy} onClick={() => void act(() => api(`/friends/${f.id}/remove`, { method: 'POST', token: auth.token }))}>
+                      Cancel
+                    </button>,
+                    false,
+                  ),
+                )}
+              </ul>
+            </>
+          )}
+        </div>
+      </div>
 
       <button className="btn ghost block" onClick={onClose}>
         Close

@@ -1,0 +1,802 @@
+/* landscape: land-pages (only inside @media (orientation: landscape) unless noted) */
+
+/* not in a media query: the landscape-only wrappers add no box upright, so portrait pages stay as they were */
+.lp-rail,
+.lp-main,
+.lp-col,
+.lp-guide,
+.lp-guide-col,
+.lp-av-side,
+.lp-av-main {
+  display: contents;
+}
+
+/* ---------- page chrome: a slim gold-edged bar and a centred body (every FullPage) ---------- */
+
+@media (orientation: landscape) {
+  .page {
+    --lp-gap: clamp(8px, calc(var(--u) * 2.6), 16px);
+    --lp-rail-w: clamp(196px, 25vw, 290px);
+    --lp-radius: clamp(14px, calc(var(--u) * 3.6), 22px);
+    background:
+      radial-gradient(70% 90% at 50% 0%, rgba(246, 196, 83, 0.06), rgba(246, 196, 83, 0) 60%),
+      radial-gradient(120% 90% at 50% 10%, var(--felt) 0%, var(--felt-deep) 72%) fixed,
+      var(--felt-deep);
+  }
+
+  .page-head {
+    min-height: clamp(44px, calc(var(--u) * 5.6), 54px);
+    gap: 10px;
+    padding: 2px var(--safe-r) 2px var(--safe-l);
+    background: linear-gradient(180deg, rgba(6, 44, 30, 0.95), rgba(4, 30, 20, 0.9));
+    box-shadow:
+      inset 0 -1px 0 var(--land-edge),
+      0 6px 18px rgba(0, 0, 0, 0.28);
+  }
+
+  /* a thin gold line under the bar, brightest in the middle */
+  .page-head::after {
+    content: '';
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    bottom: -1px;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(246, 196, 83, 0), rgba(246, 196, 83, 0.55), rgba(246, 196, 83, 0));
+    pointer-events: none;
+  }
+
+  .page-head .icon-btn {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--land-edge);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .page-head h2 {
+    font-size: clamp(16px, calc(var(--u) * 2.4), 20px);
+    letter-spacing: 0.02em;
+  }
+
+  .page-body {
+    gap: var(--lp-gap);
+    max-width: min(780px, 100%);
+    padding: var(--lp-gap) var(--safe-r) calc(14px + var(--safe-b)) var(--safe-l);
+  }
+
+  /* ---------- split pages: the page holds still, its panels scroll ---------- */
+
+  .page.lp-split {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .page.lp-split > .page-head {
+    flex: none;
+  }
+
+  .page.lp-split > .page-body {
+    flex: 1;
+    min-height: 0;
+    max-width: min(1240px, 100%);
+    padding-bottom: 0;
+  }
+
+  .lp-split .lp-rail,
+  .lp-split .lp-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lp-gap);
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .lp-split .lp-rail::-webkit-scrollbar,
+  .lp-split .lp-main::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* room under the last card so its shadow and the bottom inset are not cut */
+  .lp-split .lp-main {
+    padding: 2px 2px calc(12px + var(--safe-b));
+  }
+
+  /* the glassy panel the rails sit in, running off the bottom edge like a game menu */
+  .lp-profile .lp-rail,
+  .lp-shop .lp-rail {
+    padding: 10px 10px calc(10px + var(--safe-b));
+    border: 1px solid var(--land-edge);
+    border-bottom: 0;
+    border-radius: var(--lp-radius) var(--lp-radius) 0 0;
+    background: var(--land-panel);
+    box-shadow: var(--land-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .lp-profile > .page-body,
+  .lp-shop > .page-body {
+    display: grid;
+    grid-template-columns: var(--lp-rail-w) minmax(0, 1fr);
+    gap: var(--lp-gap);
+  }
+}
+
+/* ---------- profile: hero and tabs in the left rail, the open tab as cards on the right ---------- */
+
+@media (orientation: landscape) {
+  /* hero: ring on the left, name and rank beside it, XP across */
+  .lp-profile .profile-hero {
+    --lp-ring: clamp(62px, calc(var(--u) * 11), 92px);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-auto-flow: row dense;
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 2px;
+    padding: 2px 2px 0;
+    text-align: left;
+  }
+
+  .lp-profile .profile-hero > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .lp-profile .profile-hero > .level-ring {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    width: var(--lp-ring);
+    height: var(--lp-ring);
+    margin: 0 0 6px;
+  }
+
+  .lp-profile .level-ring .avatar.xl {
+    width: calc(var(--lp-ring) - 12px);
+    height: calc(var(--lp-ring) - 12px);
+    font-size: clamp(24px, calc(var(--u) * 4.6), 36px);
+  }
+
+  .lp-profile .level-ring .level-badge {
+    bottom: -7px;
+    padding: 1px 8px;
+    font-size: 11px;
+  }
+
+  .lp-profile .profile-hero > .profile-name,
+  .lp-profile .profile-hero > p.muted:not(.small),
+  .lp-profile .profile-hero > .level-title {
+    grid-column: 2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lp-profile .profile-name {
+    font-size: clamp(18px, calc(var(--u) * 3.2), 26px);
+    line-height: 1.15;
+  }
+
+  .lp-profile .profile-hero > p.muted:not(.small) {
+    font-size: 12px;
+  }
+
+  .lp-profile .profile-hero .level-title {
+    margin-top: 0;
+    font-size: 12px;
+  }
+
+  .lp-profile .profile-hero .xp-bar {
+    margin-top: 4px;
+  }
+
+  .lp-profile .profile-hero > p.small {
+    font-size: 11.5px;
+  }
+
+  .lp-profile .profile-hero .link-btn {
+    justify-self: start;
+    min-height: 32px;
+    padding: 0;
+  }
+
+  .lp-profile .profile-hero .admin-entry {
+    justify-self: stretch;
+  }
+
+  /* tabs: a vertical menu under the hero */
+  .lp-profile .profile-tabs {
+    position: static;
+    flex: none;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.22);
+    box-shadow: inset 0 0 0 1px var(--faint);
+  }
+
+  .lp-profile .profile-tabs button {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 10px;
+    min-height: clamp(40px, calc(var(--u) * 6.6), 52px);
+    padding: 0 12px;
+    font-size: clamp(13px, calc(var(--u) * 2.1), 16px);
+    transition: transform 0.15s ease-out;
+  }
+
+  .lp-profile .profile-tabs button span {
+    font-size: 18px;
+  }
+
+  .lp-profile .profile-tabs button.on {
+    box-shadow: 0 4px 14px rgba(246, 196, 83, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+
+  .lp-profile .profile-tabs .req-dot {
+    top: 50%;
+    right: 10px;
+    margin-top: -9px;
+  }
+
+  @media (hover: hover) {
+    .lp-profile .profile-tabs button:not(.on):hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--ink);
+    }
+  }
+
+  .lp-profile .profile-tabs button:active {
+    transform: scale(0.97);
+  }
+
+  /* the open tab: two columns of cards */
+  .lp-profile .profile-pane {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--lp-gap);
+  }
+
+  .lp-profile .lp-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lp-gap);
+    min-width: 0;
+  }
+
+  /* looks: avatar and shop buttons side by side, the pickers under them */
+  .lp-profile .lp-looks > * {
+    grid-column: 1 / -1;
+  }
+
+  .lp-profile .lp-looks > .lp-avatar-btn {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: stretch;
+  }
+
+  .lp-profile .lp-looks > .shop-entry {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: stretch;
+  }
+
+  .lp-profile .lp-looks > .look-picker {
+    grid-row: 2;
+  }
+
+  /* settings: cards flow in two columns */
+  .lp-profile .lp-settings > * {
+    min-width: 0;
+  }
+
+  /* a small phone: one column of cards beside the rail */
+  @media (max-width: 799px) {
+    .lp-profile .profile-pane {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .lp-profile .lp-looks > .lp-avatar-btn,
+    .lp-profile .lp-looks > .shop-entry,
+    .lp-profile .lp-looks > .look-picker {
+      grid-column: 1;
+      grid-row: auto;
+    }
+  }
+
+  /* a short phone under a browser bar: tabs in a 2 x 2 block so the rail fits */
+  @media (max-height: 360px) {
+    .lp-profile .profile-tabs {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .lp-profile .profile-tabs button {
+      gap: 6px;
+      padding: 0 8px;
+      font-size: 12.5px;
+    }
+
+    .lp-profile .profile-tabs button span {
+      font-size: 15px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lp-profile .profile-tabs button {
+      transition: none;
+    }
+  }
+}
+
+/* ---------- coin shop: coins and what's running in the rail, each section a sideways shelf ---------- */
+
+@media (orientation: landscape) {
+  .lp-shop .shop-hero {
+    flex: none;
+    gap: 2px;
+    padding: clamp(10px, calc(var(--u) * 3), 20px) 10px;
+  }
+
+  .lp-shop .shop-hero-coins {
+    font-size: clamp(24px, calc(var(--u) * 6.4), 40px);
+  }
+
+  .lp-shop .shop-hero-note {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  /* running now: a short list down the rail instead of a strip */
+  .lp-shop .shop-running-title {
+    margin: 2px 2px 6px;
+  }
+
+  .lp-shop .shop-running-list {
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .lp-shop .shop-chip {
+    padding: 6px 10px 6px 8px;
+  }
+
+  .lp-shop .shop-running-empty {
+    padding: 0 6px;
+  }
+
+  .lp-shop .lp-main {
+    gap: clamp(10px, calc(var(--u) * 3.2), 20px);
+  }
+
+  .lp-shop .shop-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .lp-shop .shop-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 10px;
+    padding: 0 2px;
+  }
+
+  .lp-shop .shop-section-head .section-title {
+    margin: 0;
+  }
+
+  .lp-shop .shop-section-note {
+    margin: 0;
+    font-size: 12px;
+  }
+
+  /* the shelf: cards side by side, swiped sideways, the next card peeking in */
+  .lp-shop .shop-list {
+    --lp-card-w: clamp(176px, calc(var(--u) * 27), 230px);
+    flex-direction: row;
+    gap: 10px;
+    padding: 4px 2px 8px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+  }
+
+  .lp-shop .shop-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* a card: the item tile on top, its name and price under it, the button at the foot */
+  .lp-shop .shop-card {
+    flex: 0 0 var(--lp-card-w);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px;
+    scroll-snap-align: start;
+    border-radius: 18px;
+    background:
+      radial-gradient(90% 50% at 50% 0%, rgba(246, 196, 83, 0.12), rgba(246, 196, 83, 0) 70%),
+      linear-gradient(180deg, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.34));
+  }
+
+  .lp-shop .shop-card > .shop-tile {
+    align-self: center;
+    width: clamp(52px, calc(var(--u) * 12), 76px);
+    height: clamp(52px, calc(var(--u) * 12), 76px);
+  }
+
+  .lp-shop .shop-card-main {
+    gap: 3px;
+  }
+
+  .lp-shop .shop-card-top {
+    flex-direction: column;
+    gap: 3px;
+    text-align: center;
+  }
+
+  .lp-shop .shop-card-name {
+    max-width: 100%;
+    font-size: 15px;
+  }
+
+  .lp-shop .shop-card-desc {
+    font-size: 12px;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  .lp-shop .shop-card-state {
+    justify-content: center;
+    font-size: 12px;
+  }
+
+  .lp-shop .shop-need {
+    text-align: center;
+  }
+
+  /* buttons sit on the card's floor, whatever the text above */
+  .lp-shop .shop-card-actions {
+    margin-top: auto;
+    padding-top: 4px;
+  }
+
+  .lp-shop .shop-card-actions .btn {
+    font-size: 13px;
+  }
+
+  .lp-shop .shop-foot {
+    padding-bottom: 4px;
+  }
+
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .lp-shop .shop-card {
+      transition: transform 0.18s ease-out;
+    }
+
+    .lp-shop .shop-card:hover {
+      transform: translateY(-3px);
+    }
+  }
+}
+
+/* ---------- missions: today and this week side by side ---------- */
+
+@media (orientation: landscape) {
+  .lp-missions > .page-body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    max-width: min(1120px, 100%);
+  }
+
+  .lp-missions > .page-body > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  /* the two sets, then the ladder beside the secret-missions note */
+  .lp-missions > .page-body > .mission-set,
+  .lp-missions > .page-body > .ladder,
+  .lp-missions > .page-body > .mission-note.secret {
+    grid-column: auto;
+  }
+
+  .lp-missions .mission-set {
+    align-self: stretch;
+    border: 1px solid var(--land-edge);
+    box-shadow: var(--land-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .lp-missions .mission-intro {
+    text-align: center;
+  }
+
+  .lp-missions .mission-note.secret {
+    align-self: start;
+    margin: 0;
+  }
+}
+
+/* ---------- season pass: the status bar on top, the tiers as a sideways track ---------- */
+
+@media (orientation: landscape) {
+  .lp-pass > .page-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .lp-pass .pass-head {
+    flex: none;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 4px 18px;
+    padding: 10px 14px;
+    border: 1px solid var(--land-edge);
+  }
+
+  .lp-pass .pass-head > * {
+    grid-column: 2;
+    margin: 0;
+  }
+
+  .lp-pass .pass-head > .pass-head-top {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .lp-pass .pass-head-tier {
+    font-size: clamp(22px, calc(var(--u) * 4.6), 32px);
+  }
+
+  .lp-pass .pass-how {
+    font-size: 11.5px;
+    line-height: 1.3;
+  }
+
+  .lp-pass .pass-note {
+    flex: none;
+    margin: 0;
+  }
+
+  /* the track: tier cards in a row, centred in the space left */
+  .lp-pass .pass-track {
+    --lp-tier-w: clamp(112px, calc(var(--u) * 24), 204px);
+    flex: 1;
+    min-height: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    margin: 0 calc(-1 * var(--safe-r)) 0 calc(-1 * var(--safe-l));
+    padding: 6px var(--safe-r) calc(10px + var(--safe-b)) var(--safe-l);
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--safe-l) var(--safe-r);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    /* the track fades out at the right edge, so more tiers read as "keep swiping" */
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
+  }
+
+  .lp-pass .pass-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .lp-pass .pass-tier {
+    flex: 0 0 var(--lp-tier-w);
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    height: min(100%, clamp(150px, calc(var(--u) * 40), 320px));
+    min-height: 0;
+    padding: 10px 8px;
+    border-radius: 16px;
+    text-align: center;
+    scroll-snap-align: center;
+  }
+
+  /* the joins run sideways, number to number */
+  .lp-pass .pass-tier:not(:last-child)::after {
+    left: auto;
+    right: -13px;
+    top: 27px;
+    bottom: auto;
+    width: 14px;
+    height: 2px;
+  }
+
+  .lp-pass .pass-tier-main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .lp-pass .pass-tier-reward {
+    font-size: clamp(13px, calc(var(--u) * 2.6), 20px);
+    line-height: 1.25;
+  }
+
+  .lp-pass .pass-tier.big .pass-tier-reward {
+    font-size: clamp(14px, calc(var(--u) * 2.9), 23px);
+  }
+
+  .lp-pass .pass-tier-note {
+    font-size: 11px;
+  }
+
+  .lp-pass .btn.small.pass-claim {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+  }
+
+  .lp-pass .pass-tier-state {
+    min-height: 24px;
+  }
+}
+
+/* ---------- friends league: the board in a panel on the left, crowns and the rest beside it ---------- */
+
+@media (orientation: landscape) {
+  .lp-league > .page-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    grid-auto-flow: row dense;
+    align-items: start;
+    max-width: min(1120px, 100%);
+  }
+
+  .lp-league > .page-body > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .lp-league > .page-body > .lp-crowns,
+  .lp-league > .page-body > .lp-side {
+    grid-column: 2;
+  }
+
+  /* before the board loads, the points guide takes the full width */
+  .lp-league > .page-body:not(:has(> .league-board)) > .lp-side {
+    grid-column: 1 / -1;
+  }
+
+  /* the board stays in view while the side column scrolls, and scrolls inside when long */
+  .lp-league > .page-body > .league-board {
+    position: sticky;
+    top: var(--lp-gap);
+    grid-column: 1;
+    grid-row: span 4;
+    max-height: calc(100dvh - clamp(44px, calc(var(--u) * 5.6), 54px) - 2 * var(--lp-gap));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--land-edge);
+    box-shadow: var(--land-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    scrollbar-width: none;
+  }
+
+  .lp-league .league-board::-webkit-scrollbar {
+    display: none;
+  }
+
+  .lp-league .league-head {
+    padding-block: 8px;
+  }
+}
+
+/* ---------- XP and rank guides, avatar picker: a wide centred panel in two columns ---------- */
+
+@media (orientation: landscape) {
+  .backdrop.lp-guide-sheet-bd,
+  .backdrop.lp-av-sheet-bd {
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sheet.lp-guide-sheet,
+  .sheet.lp-av-sheet {
+    width: min(860px, 100%);
+  }
+
+  .lp-guide-sheet .lp-guide {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    align-items: start;
+    gap: 6px 18px;
+  }
+
+  .lp-guide-sheet .lp-guide-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .lp-guide-sheet .lp-guide-col .label {
+    margin: 0;
+  }
+
+  /* avatar: the big preview and save on the left, faces and backgrounds on the right */
+  .lp-av-sheet .avatar-picker {
+    display: grid;
+    grid-template-columns: clamp(150px, 26%, 220px) minmax(0, 1fr);
+    grid-auto-flow: row dense;
+    align-items: start;
+    gap: 8px 18px;
+  }
+
+  .lp-av-sheet .avatar-picker > * {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .lp-av-sheet .lp-av-side {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .lp-av-sheet .lp-av-main {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    grid-column: 2;
+    grid-row: 1 / span 6;
+  }
+
+  .lp-av-sheet .lp-av-main .label {
+    margin: 0;
+  }
+
+  .lp-av-sheet .avatar-picker > .link-btn {
+    justify-self: center;
+    min-height: 36px;
+  }
+}
+
+/* ---------- laptops and tablets: the rails become floating cards sized to what they hold ---------- */
+
+@media (orientation: landscape) and (min-height: 600px) {
+  .lp-profile .lp-rail,
+  .lp-shop .lp-rail {
+    align-self: start;
+    max-height: calc(100% - var(--lp-gap));
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--land-edge);
+    border-radius: var(--lp-radius);
+  }
+
+  .lp-shop .shop-card-name {
+    font-size: 16px;
+  }
+
+  .lp-shop .shop-card-desc,
+  .lp-pass .pass-how {
+    font-size: 13px;
+  }
+}
