@@ -1,3 +1,4 @@
+import { reducedMotion } from '../lib/motion';
 import { paperSteps } from './Table3D';
 import type { CSSProperties, RefObject } from 'react';
 import { cx } from '../lib/cards';
@@ -102,14 +103,29 @@ export function RangRing({ rg }: { rg: RangView }) {
 }
 
 /** the way play goes: two faint curved arrows on the felt round the deck and pile; they flip when it reverses */
+/** the oval track round the deck and pile, clockwise from the left */
+const TRACK = 'M8 50 A92 42 0 1 1 192 50 A92 42 0 1 1 8 50';
+
+/**
+ * play's direction lying on the felt: two arrowheads glide round an oval track, chasing each other the way play goes,
+ * with dashes flowing along it (mirrored when play goes the other way). Used by Rang and Crazy 7
+ */
 export function RangArrows({ dir }: { dir: 1 | -1 }) {
+  const still = reducedMotion();
   return (
-    <span key={dir} className={cx('rg3-dir', dir === -1 && 'ccw')} role="img" aria-label={dir === 1 ? 'Play goes clockwise' : 'Play goes anticlockwise'}>
+    <span key={dir} className={cx('rg3-dir', dir === -1 && 'ccw', !still && 'moving')} role="img" aria-label={dir === 1 ? 'Play goes clockwise' : 'Play goes anticlockwise'}>
       <svg viewBox="0 0 200 100" preserveAspectRatio="none" aria-hidden>
-        <path d="M20 30 Q100 -12 180 30" />
-        <path d="M180 30 l-7 -14 M180 30 l-16 2" />
-        <path d="M180 70 Q100 112 20 70" />
-        <path d="M20 70 l7 14 M20 70 l16 -2" />
+        <path className="rg3-track" d={TRACK} />
+        {[0, 1].map((i) => (
+          <g key={i} className="rg3-head">
+            <path d="M-9 -8 L5 0 L-9 8" />
+            {still ? (
+              <animateMotion dur="1s" path={TRACK} rotate="auto" keyPoints={i ? '0.75' : '0.25'} keyTimes="0" fill="freeze" calcMode="discrete" />
+            ) : (
+              <animateMotion dur="9s" begin={`${-i * 4.5}s`} repeatCount="indefinite" path={TRACK} rotate="auto" />
+            )}
+          </g>
+        ))}
       </svg>
     </span>
   );

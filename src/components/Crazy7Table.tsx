@@ -28,6 +28,7 @@ import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
 import { LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { useTableFx } from './TableFx';
+import { RangArrows } from './RangTable3D';
 import { useCardRects } from '../lib/cardRects';
 import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
 import { StreakMark, TurnCountdown, useTurnEndsAt } from './TurnTimer';
@@ -625,9 +626,8 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
             {/* play's direction: a faint arrow lying on the felt round the deck and pile */}
             {power && playing && (
               <OnTable x={50} y={48} className="c7-dir-spot">
-                <span key={c7.dir} className={cx('c7-dir3d', c7.dir === -1 && 'back')} role="img" aria-label={c7.dir === 1 ? 'Play goes round in seat order' : 'Play goes the other way round'}>
-                  {c7.dir === 1 ? '↻' : '↺'}
-                </span>
+                {/* the same moving arrows as Rang, going the way play goes */}
+                <RangArrows dir={c7.dir} />
               </OnTable>
             )}
             <OnTable x={42} y={48} z={3} className="c7-deck-spot">
