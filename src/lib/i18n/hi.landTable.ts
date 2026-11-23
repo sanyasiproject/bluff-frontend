@@ -2,6 +2,14 @@ import type { Dict } from './types';
 
 // new lines from the landscape redesign
 export const D: Dict = {
+  'SKIP!': 'स्किप!',
+  'REVERSE': 'उल्टा!',
+  'LAST CARD!': 'आख़िरी पत्ता!',
+  'CAUGHT!': 'पकड़े गए!',
+  'RED!': 'लाल!',
+  'BLUE!': 'नीला!',
+  'GREEN!': 'हरा!',
+  'YELLOW!': 'पीला!',
   'Pick cards': 'पत्ते चुनें',
   'call a rank': 'रैंक बोलें',
   'None': 'कोई नहीं',

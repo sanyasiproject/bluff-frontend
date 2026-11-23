@@ -27,6 +27,7 @@ import { Backdrop, GameOver, PlayersSheet } from './Overlays';
 import { PlayingCard } from './PlayingCard';
 import { QuickChat } from './QuickChat';
 import { LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
+import { useTableFx } from './TableFx';
 import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
 import { StreakMark, TurnCountdown, useTurnEndsAt } from './TurnTimer';
 import { Avatar } from './Avatar';
@@ -237,6 +238,8 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
 
   // what changed on the table: a card played flies face up to the pile, picked cards fly from the deck
   const flightSeq = useRef(0);
+  // Uno-style moments for the power cards and the 7: skip, reverse, +2, a J's suit, last card, caught
+  const { fx, layer: fxLayer } = useTableFx();
   useEffect(() => {
     if (!c7) return;
     const counts = new Map(view.players.map((p) => [p.id, p.cardCount]));
@@ -261,6 +264,22 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
       if (top.rank === '7') sfx.seven();
       else sfx.play(1);
       if (by) next[by] = `played ${short(top)}`;
+      // the card's big moment, once it has landed
+      const card = top;
+      window.setTimeout(() => {
+        const pile = pileRef.current;
+        if (card.rank === '7' || (power && card.rank === '2')) fx('draw', pile, { text: `+${c7.penalty > 0 ? c7.penalty : 2}` });
+        else if (power && card.rank === '8') {
+          sfx.skip();
+          fx('skip', pile);
+        } else if (power && card.rank === 'A') {
+          sfx.reverse();
+          fx('reverse', pile);
+        } else if (power && card.rank === 'J' && c7.wish) {
+          sfx.wild();
+          fx('wild', pile, { text: `${SUIT_SYMBOL[c7.wish]} ${SUIT_NAME[c7.wish].toUpperCase()}!`, color: isRed(c7.wish) ? '#e2342f' : '#f2f7f4' });
+        }
+      }, 420);
       delay = 280;
     }
     let picked = false;
@@ -283,6 +302,8 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
         });
       }
       next[p.id] = `+${gained}`;
+      // a 7's (or 2's) penalty lands on its player
+      if (gained > 1 && to) window.setTimeout(() => fx('draw', to, { text: `+${gained}` }), delay + 300);
     }
     if (picked) window.setTimeout(() => sfx.draw(), delay);
     const last = c7.last;
@@ -311,8 +332,13 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
     const before = prevMarks.current;
     prevMarks.current = { called: c7.called, missed: c7.missed, deck: c7.deckCount };
     if (!before) return;
-    if (c7.missed.some((id) => !before.missed.includes(id))) sfx.caught();
-    else if (c7.called.some((id) => !before.called.includes(id))) sfx.lastCard();
+    const caught = c7.missed.filter((id) => !before.missed.includes(id));
+    const said = c7.called.filter((id) => !before.called.includes(id));
+    if (caught.length) sfx.caught();
+    else if (said.length) sfx.lastCard();
+    // the shout bursts from whoever said it; a stamp on whoever forgot
+    said.forEach((id) => fx('call', spotOf(id)));
+    caught.forEach((id) => fx('missed', spotOf(id)));
     if (c7.deckCount > before.deck) sfx.shuffle();
   }, [view]);
 
@@ -765,6 +791,7 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
       {targetPlayer && (
         <SeatSheet player={targetPlayer} auth={auth} onThrow={(i) => void actions.throwAt(targetPlayer.id, i)} onClose={() => setTarget(null)} />
       )}
+      {fxLayer}
       {flights.map((f) => (
         <FlyingCards key={f.key} flight={f} onDone={() => setFlights((all) => all.filter((x) => x.key !== f.key))} />
       ))}

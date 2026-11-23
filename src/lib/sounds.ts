@@ -71,6 +71,24 @@ export const sfx = {
     const c = audio();
     if (c) notes(c, [784, 1047], 0.12, 0.28, { gain: 0.07 });
   },
+  /** a skip: a short falling zap */
+  skip() {
+    const c = audio();
+    if (c) tone(c, 900, 0, 0.22, { type: 'square', gain: 0.06, to: 240 });
+  },
+  /** a reverse: a whoop up, then down */
+  reverse() {
+    const c = audio();
+    if (c) {
+      tone(c, 300, 0, 0.16, { type: 'triangle', gain: 0.1, to: 900 });
+      tone(c, 900, 0.17, 0.18, { type: 'triangle', gain: 0.1, to: 300 });
+    }
+  },
+  /** a wild's colour: a bright four-note sparkle */
+  wild() {
+    const c = audio();
+    if (c) notes(c, [784, 988, 1175, 1568], 0.07, 0.22, { type: 'triangle', gain: 0.1 });
+  },
   /** cards put down; one slap per card, up to four */
   play(count: number) {
     const c = audio();

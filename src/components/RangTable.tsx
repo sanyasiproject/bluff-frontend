@@ -20,6 +20,7 @@ import { Backdrop, GameOver, PlayersSheet } from './Overlays';
 import { QuickChat } from './QuickChat';
 import { LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
+import { useTableFx } from './TableFx';
 import { StreakMark, TurnCountdown, useTurnEndsAt } from './TurnTimer';
 import { Avatar } from './Avatar';
 import { SecretChip } from './SecretMissions';
@@ -465,6 +466,8 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
 
   // each new move: a seat label, a sound, and cards flying to the pile or from the deck
   const flightSeq = useRef(0);
+  // Uno-style moments: skip, reverse, +2/+4, a wild's colour, last card, caught
+  const { fx, layer: fxLayer } = useTableFx();
   /** the move before the one being shown, so a Force play's pick isn't flown twice */
   const prevMove = useRef<Move | null>(null);
   /** face-down cards flying from the deck to whoever picked */
@@ -511,6 +514,28 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
         if (card.value === 'draw2' || card.value === 'wild4') sfx.seven();
         else sfx.play(down.length);
       }, playDelay);
+      // the card's big moment, once it has landed on the pile
+      const landed = playDelay + 420;
+      const pileBox = () => pileRef.current;
+      window.setTimeout(() => {
+        if (card.value === 'skip') {
+          sfx.skip();
+          fx('skip', last.targetId ? spotOf(last.targetId) : pileBox());
+        } else if (card.value === 'reverse') {
+          sfx.reverse();
+          fx('reverse', pileBox());
+        } else if (card.value === 'draw2' || card.value === 'wild4') {
+          // the running total when +2s and +4s stack
+          const total = rg.penalty > 0 ? rg.penalty : card.value === 'wild4' ? 4 : 2;
+          fx('draw', pileBox(), { text: `+${total}`, shake: card.value === 'wild4' });
+        }
+        if (isRangWild(card) && last.color) {
+          window.setTimeout(() => {
+            sfx.wild();
+            fx('wild', pileBox(), { text: `${RANG_COLOR_NAME[last.color!].toUpperCase()}!`, color: RANG_HEX[last.color!] });
+          }, card.value === 'wild4' ? 650 : 0);
+        }
+      }, landed);
       const chip = { card, color: last.color ?? null };
       // "picked & played" for a Force play, "2× 7" for doubles
       const how = [move.forced && 'picked & played', down.length > 1 && `${down.length}× ${card.value}`].filter(Boolean).join(' ');
@@ -533,6 +558,8 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
       const missed = last.kind === 'missed' || (last.kind === 'penalty' && !!by && !!prevMarks.current?.missed.includes(by));
       if (missed) sfx.caught();
       else window.setTimeout(() => sfx.draw(), 120);
+      // a +2/+4 penalty lands on its player
+      if (last.kind === 'penalty' && !missed && last.count > 1) fx('draw', by ? spotOf(by) : null, { text: `+${last.count}` });
       say(by, { text: missed ? `missed · +${last.count}` : `+${last.count}` });
     } else if (last.kind === 'pass') {
       sfx.pass();
@@ -577,8 +604,13 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
     const before = prevMarks.current;
     prevMarks.current = { called: rg.called, missed: rg.missed, deck: rg.deckCount };
     if (!before) return;
-    if (rg.missed.some((id) => !before.missed.includes(id))) sfx.caught();
-    else if (rg.called.some((id) => !before.called.includes(id))) sfx.lastCard();
+    const caught = rg.missed.filter((id) => !before.missed.includes(id));
+    const said = rg.called.filter((id) => !before.called.includes(id));
+    if (caught.length) sfx.caught();
+    else if (said.length) sfx.lastCard();
+    // the shout bursts from whoever said it; a stamp on whoever forgot
+    said.forEach((id) => fx('call', spotOf(id)));
+    caught.forEach((id) => fx('missed', spotOf(id)));
     if (rg.deckCount > before.deck) sfx.shuffle();
   }, [view]);
 
@@ -1080,6 +1112,7 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
       {targetPlayer && (
         <SeatSheet player={targetPlayer} auth={auth} onThrow={(i) => void actions.throwAt(targetPlayer.id, i)} onClose={() => setTarget(null)} />
       )}
+      {fxLayer}
       {flights.map((f) => (
         <FlyingCards key={f.key} flight={f} onDone={() => setFlights((all) => all.filter((x) => x.key !== f.key))} />
       ))}

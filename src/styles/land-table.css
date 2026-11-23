@@ -985,3 +985,22 @@
     text-align: center;
   }
 }
+
+/* bigger screens: the turn corner grows too, and its offsets are divided back so it stays in the corner */
+@media (orientation: landscape) and (min-height: 560px) {
+  .table .hand-area .hand-head {
+    zoom: 1.25;
+    left: calc(-1 * (var(--side-w) + 6px) / 1.25);
+    width: calc(var(--side-w) / 1.25);
+    bottom: calc((var(--safe-b) + 72px) / 1.25);
+  }
+}
+
+@media (orientation: landscape) and (min-height: 760px) {
+  .table .hand-area .hand-head {
+    zoom: 1.5;
+    left: calc(-1 * (var(--side-w) + 6px) / 1.5);
+    width: calc(var(--side-w) / 1.5);
+    bottom: calc((var(--safe-b) + 80px) / 1.5);
+  }
+}

@@ -35,6 +35,8 @@ import './styles/land-table.css';
 import './styles/land-world.css';
 import './styles/land-c7.css';
 import './styles/land-rang.css';
+// skip, reverse, +2/+4, wild and last-card effects (components/TableFx.tsx)
+import './styles/table-fx.css';
 
 // service worker only in production builds so it never caches the dev server
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
