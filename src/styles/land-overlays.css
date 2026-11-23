@@ -912,3 +912,91 @@
     display: none;
   }
 }
+
+/* ---------- game over: every name and coin amount shows in full, never cut with "…" ---------- */
+@media (orientation: landscape) {
+  .lo-over .results li .grow,
+  .lo-over .coin-row .grow,
+  .lo-over .lie-player .grow,
+  .lo-over .secret-who,
+  .lo-over .secret-what,
+  .lo-over .go-champ b {
+    min-width: 0;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .lo-over .results li > .muted {
+    flex: 0 1 auto;
+    text-align: right;
+  }
+
+  /* coins: the amounts drop under the name when the row runs out of room */
+  .lo-over .coin-row {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .lo-over .coin-row .grow {
+    flex: 1 1 8em;
+  }
+
+  .lo-over .coin-row > :not(.grow) {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  /* a narrow card: the name on its own line, the amounts in a row under it */
+  .lo-over .coin-results {
+    container: locoins / inline-size;
+  }
+
+  @container locoins (max-width: 420px) {
+    .lo-over .coin-row .grow {
+      flex-basis: 100%;
+    }
+  }
+
+  /* lie recap: the counts drop under the name the same way */
+  .lo-over .lie-player {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .lo-over .lie-player .grow {
+    flex: 1 1 10em;
+  }
+
+  .lo-over .lie-player .lie-chev {
+    margin-left: auto;
+  }
+
+  /* a narrow card: the name gets its own line, both counts stay together under it */
+  .lo-over .lie-recap {
+    container: lorecap / inline-size;
+  }
+
+  @container lorecap (max-width: 420px) {
+    .lo-over .lie-player .grow {
+      flex-basis: 100%;
+    }
+  }
+
+  /* secret cards: the name on its own line, the card's title under it with the arrow */
+  .lo-over .secret-row {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .lo-over .secret-who {
+    flex: 1 1 calc(100% - 32px);
+    max-width: none;
+  }
+
+  .lo-over .secret-what {
+    flex: 1 1 0;
+    margin-left: 28px;
+  }
+}

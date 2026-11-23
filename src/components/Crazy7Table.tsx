@@ -19,7 +19,6 @@ import { OnTable, seatSpots, TableScene } from './TableScene';
 import { OppCards } from './Table3D';
 import { TableInfo } from './TableInfo';
 import { Deck3D, Discard3D } from './C7Table3D';
-import { FullscreenButton } from './RotateGate';
 import { useLandscape } from '../lib/useLandscape';
 import { LevelUp } from './LevelUp';
 import { PileReact } from './PileReact';
@@ -614,7 +613,6 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
           )}
           <LiveVoiceButtons view={view} onToast={actions.toast} />
           <QuickChat onSend={actions.chat} view={view} />
-          <FullscreenButton />
           <button className="icon-btn" aria-label="Game menu" onClick={() => setPanel('menu')}>
             ⋯
           </button>

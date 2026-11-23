@@ -6,15 +6,13 @@ import type { Actions, ConnStatus, PendingWatch } from '../useBluff';
 import { AccountCorner } from './AccountCorner';
 import { AccountSheet } from './AccountSheet';
 import { HeroFan, ShineTitle, SuitDrift } from './Ambient';
-import { InstallCard } from './InstallCard';
-import { LeagueButton } from './LeaguePage';
-import { MissionsButton } from './MissionsPage';
-import { ShopButton } from './ShopPage';
-import { NotifyCard } from './NotifyCard';
-import { HomeNameCard } from './NameCard';
-import { OnlineFriends } from './OnlineFriends';
+import { FriendsSheet } from './FriendsSheet';
+import { HomeDock } from './HomeDock';
+import { HomeNotice } from './HomeNotice';
+import { OnlineAvatars } from './OnlineFriends';
 import { LangToggle } from './LangToggle';
-import { SpinButton } from './DailyCard';
+import { Backdrop } from './Overlays';
+import { PlayPanel } from './PlayPanel';
 import { LessonChooser } from './tutorial/LessonOffer';
 import { TutorialPage } from './tutorial/TutorialPage';
 import { markTutorialSeen } from '../lib/tutorial';
@@ -32,10 +30,12 @@ interface HomeProps {
 
 export function Home({ status, connectionId, actions, auth, onOpenAdmin, pendingWatch }: HomeProps) {
   const [name, setName] = useState(loadName);
-  const [code, setCode] = useState('');
   const [invite, setInvite] = useState(inviteCode);
   const [busy, setBusy] = useState(false);
   const [slow, setSlow] = useState(false);
+  /** the Play panel; an invite link opens it straight away */
+  const [play, setPlay] = useState(() => inviteCode() !== null);
+  const [friends, setFriends] = useState(false);
   const [accountSheet, setAccountSheet] = useState<'login' | 'register' | null>(null);
   /** How to play: choosing a lesson, then the lesson itself */
   const [chooser, setChooser] = useState(false);
@@ -45,6 +45,9 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
   const online = status === 'online';
   // logged-in players always play under their account name
   const playName = auth.user?.displayName ?? name.trim();
+  // an admin turned guest play off: guests must log in before they can create or join a room
+  const locked = !auth.user && auth.accountsOn === true && !auth.guestsAllowed && !auth.checking;
+  const joinFriend = (userId: string, watch: boolean) => actions.joinFriend(userId, watch, auth.user?.displayName ?? name);
 
   // a sleeping free server needs up to a minute to wake up
   useEffect(() => {
@@ -52,6 +55,11 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
     const t = setTimeout(() => setSlow(true), 3000);
     return () => clearTimeout(t);
   }, [online]);
+
+  // waiting to watch: show the waiting card without a tap
+  useEffect(() => {
+    if (pendingWatch) setPlay(true);
+  }, [pendingWatch !== null]);
 
   const go = async (fn: () => Promise<unknown>) => {
     setBusy(true);
@@ -74,193 +82,83 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
     });
   }, [invite, online, connectionId, auth.checking]);
 
-  const nameField = auth.user ? (
-    <p className="playing-as">
-      Playing as <b data-no-translate>{auth.user.displayName}</b>
+  const serverStatus = online ? null : (
+    <p className="server-status">
+      <span className="dot" />
+      {slow ? 'Waking up the server… this can take up to a minute after a break.' : 'Connecting…'}
     </p>
-  ) : (
-    <>
-      <label className="label" htmlFor="name">
-        Your name
-      </label>
-      <input
-        id="name"
-        className="input"
-        maxLength={16}
-        value={name}
-        placeholder="e.g. Ravi"
-        autoComplete="nickname"
-        enterKeyHint="done"
-        onChange={(e) => setName(e.target.value)}
-      />
-    </>
   );
-
-  // an admin turned guest play off: guests must log in before they can create or join a room
-  const locked = !auth.user && auth.accountsOn === true && !auth.guestsAllowed && !auth.checking;
-
-  const guestHint =
-    !auth.user && auth.accountsOn && !auth.checking && !locked ? (
-      <p className="guest-hint">
-        Playing as a <b>guest</b> · log in to earn coins and save wins
-      </p>
-    ) : null;
 
   return (
     <main className="screen home">
       <SuitDrift />
       <header className="home-top">
-        <AccountCorner auth={auth} onOpenAdmin={onOpenAdmin} onJoin={(userId, watch) => actions.joinFriend(userId, watch, auth.user?.displayName ?? name)} />
+        <LangToggle />
+        <HomeNotice auth={auth} />
+        <div className="home-corner">
+          <AccountCorner auth={auth} onOpenAdmin={onOpenAdmin} onJoin={joinFriend} showOnline={false} />
+        </div>
       </header>
-      {/* landscape: hero on the left, play panel in the middle (both are plain children in portrait) */}
+
+      {/* centre stage: logo, title and one big Play */}
       <div className="home-stage">
         <div className="hero">
           <HeroFan />
           <ShineTitle text="Bluff" />
-          <p className="muted">Lie with a straight face. Catch your friends.</p>
+          <p className="muted hero-tag">Lie with a straight face. Catch your friends.</p>
         </div>
-
-        <div className="home-main">
-          {!online && (
-            <p className="server-status">
-              <span className="dot" />
-              {slow ? 'Waking up the server… this can take up to a minute after a break.' : 'Connecting…'}
-            </p>
-          )}
-
-          {guestHint}
-
-          {pendingWatch ? (
-            <section className="panel stack invite-card">
-              <p className="label">{pendingWatch.askedOf ? 'Asked to join' : 'Game in progress'}</p>
-              <p className="invite-room">
-                Room <b>{pendingWatch.code}</b>
-              </p>
-              <p className="waiting-host">
-                <span className="dot" />
-                {pendingWatch.askedOf ? `Waiting for ${pendingWatch.askedOf} to let you in…` : 'Waiting for the host to let you watch…'}
-              </p>
-              <p className="muted small">You'll go straight in when they say yes.</p>
-              <button className="btn ghost block" onClick={actions.cancelWatch}>
-                Cancel
-              </button>
-            </section>
-          ) : locked ? (
-            <>
-              {saved && (
-                <button className="panel rejoin" disabled={!online || busy} onClick={() => go(actions.rejoinSaved)}>
-                  <span>
-                    Rejoin room <b>{saved.code}</b> as {saved.name}
-                  </span>
-                  <span aria-hidden>→</span>
-                </button>
-              )}
-              <section className="panel stack guest-locked">
-                <p className="lock-title">🔒 Log in to play</p>
-                <p className="muted small">
-                  Guest play is off right now. Log in or make a free account to {invite ? `join room ${invite}` : 'create or join a room'}.
-                </p>
-                <button className="btn primary block shine" onClick={() => setAccountSheet('login')}>
-                  Log in
-                </button>
-                <button className="btn ghost block" onClick={() => setAccountSheet('register')}>
-                  Sign up
-                </button>
-              </section>
-            </>
-          ) : invite ? (
-            <section className="panel stack invite-card">
-              <p className="label">You're invited</p>
-              <p className="invite-room">
-                Room <b>{invite}</b>
-              </p>
-              {nameField}
-              <button
-                className="btn primary block shine"
-                disabled={!playName || !online || busy}
-                onClick={() => go(() => actions.join(invite, playName))}
-              >
-                {busy ? `Joining room ${invite}…` : `Join room ${invite}`}
-              </button>
-              <button
-                className="link-btn"
-                onClick={() => {
-                  clearInvite();
-                  setInvite(null);
-                }}
-              >
-                Create my own room instead
-              </button>
-            </section>
-          ) : (
-            <>
-              {saved && (
-                <button className="panel rejoin" disabled={!online || busy} onClick={() => go(actions.rejoinSaved)}>
-                  <span>
-                    Rejoin room <b>{saved.code}</b> as {saved.name}
-                  </span>
-                  <span aria-hidden>→</span>
-                </button>
-              )}
-
-              <section className="panel stack home-play">
-                {nameField}
-                <button
-                  className="btn primary block shine"
-                  disabled={!playName || !online || busy}
-                  onClick={() => go(() => actions.create(playName))}
-                >
-                  Create a room
-                </button>
-
-                <div className="divider">
-                  <span>or join friends</span>
-                </div>
-
-                <div className="join-row">
-                  <input
-                    className="input code-input"
-                    value={code}
-                    placeholder="CODE"
-                    aria-label="Room code"
-                    autoCapitalize="characters"
-                    autoComplete="off"
-                    spellCheck={false}
-                    onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4))}
-                  />
-                  <button
-                    className="btn"
-                    disabled={!playName || code.length !== 4 || !online || busy}
-                    onClick={() => go(() => actions.join(code, playName))}
-                  >
-                    Join
-                  </button>
-                </div>
-              </section>
-            </>
-          )}
-          {/* landscape only: How to play sits under the play panel */}
-          <button className="btn ghost block how-to-btn home-how-land" onClick={() => setChooser(true)}>
-            📘 How to play
-          </button>
-        </div>
-      </div>
-
-      {/* landscape: extras in a scrolling side rail */}
-      <div className="home-rail">
-        <OnlineFriends auth={auth} onJoin={(userId, watch) => actions.joinFriend(userId, watch, auth.user?.displayName ?? name)} />
-        <SpinButton auth={auth} />
-        <MissionsButton auth={auth} online={online} />
-        <LeagueButton auth={auth} online={online} />
-        <ShopButton auth={auth} online={online} />
-        <button className="btn ghost block how-to-btn" onClick={() => setChooser(true)}>
-          📘 How to play
+        <button className="btn primary shine home-play-btn" onClick={() => setPlay(true)}>
+          <span aria-hidden>▶</span> Play
         </button>
-        <LangToggle />
-        <HomeNameCard auth={auth} />
-        <NotifyCard auth={auth} />
-        <InstallCard />
+        {pendingWatch ? (
+          <button className="home-sub home-chip" onClick={() => setPlay(true)}>
+            <span className="dot" /> Room <b>{pendingWatch.code}</b>
+          </button>
+        ) : (
+          // offline, the server line takes this place (the rejoin would be disabled anyway)
+          saved &&
+          !invite &&
+          online && (
+            <button className="home-sub home-chip" disabled={!online || busy} onClick={() => go(actions.rejoinSaved)}>
+              ↩ Rejoin room <b>{saved.code}</b>
+            </button>
+          )
+        )}
+        {serverStatus && <div className="home-sub">{serverStatus}</div>}
       </div>
+
+      {/* everything else: one row of round buttons */}
+      <div className="home-bottom">
+        <OnlineAvatars auth={auth} onOpen={() => setFriends(true)} />
+        <HomeDock auth={auth} online={online} onHowTo={() => setChooser(true)} onFriends={() => setFriends(true)} onLogin={() => setAccountSheet('login')} />
+      </div>
+
+      {play && (
+        <Backdrop center onClose={() => setPlay(false)} panel="hp">
+          <PlayPanel
+            auth={auth}
+            actions={actions}
+            online={online}
+            busy={busy}
+            go={go}
+            name={name}
+            setName={setName}
+            playName={playName}
+            locked={locked}
+            invite={invite}
+            onDropInvite={() => {
+              clearInvite();
+              setInvite(null);
+            }}
+            pendingWatch={pendingWatch}
+            serverStatus={serverStatus}
+            onAccount={setAccountSheet}
+            onHowTo={() => setChooser(true)}
+            onClose={() => setPlay(false)}
+          />
+        </Backdrop>
+      )}
+      {friends && auth.user && <FriendsSheet auth={auth} onJoin={joinFriend} onClose={() => setFriends(false)} />}
       {accountSheet && <AccountSheet initial={accountSheet} auth={auth} onClose={() => setAccountSheet(null)} />}
       {chooser && (
         <LessonChooser
@@ -285,7 +183,6 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
           }}
         />
       )}
-
     </main>
   );
 }

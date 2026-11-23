@@ -7,8 +7,16 @@ import type { Auth } from '../useAuth';
 /** shown once per player on this phone */
 const seenPref = (userId: string) => `pushCard.${userId}`;
 
-/** Home: a one-time card for logged-in players whose phone hasn't been asked yet */
-export function NotifyCard({ auth }: { auth: Auth }) {
+export interface NotifyOffer {
+  busy: boolean;
+  error: string;
+  turnOn: () => Promise<void>;
+  /** Not now: never asked again on this phone */
+  close: () => void;
+}
+
+/** Home: the one-time "get invites when closed" offer, or null when it shouldn't show */
+export function useNotifyOffer(auth: Auth): NotifyOffer | null {
   const userId = auth.user?.id ?? null;
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -48,16 +56,23 @@ export function NotifyCard({ auth }: { auth: Auth }) {
     }
   };
 
+  return { busy, error, turnOn, close };
+}
+
+/** a one-time card for logged-in players whose phone hasn't been asked yet */
+export function NotifyCard({ auth }: { auth: Auth }) {
+  const offer = useNotifyOffer(auth);
+  if (!offer) return null;
   return (
     <section className="panel notify-card">
       <p className="notify-card-title">🔔 Get friend invites even when Bluff is closed</p>
       <p className="muted small">A friend taps Invite, your phone shows it, one tap and you're in their room.</p>
-      {error && <p className="form-error">{error}</p>}
+      {offer.error && <p className="form-error">{offer.error}</p>}
       <div className="confirm-actions">
-        <button className="btn ghost" disabled={busy} onClick={close}>
+        <button className="btn ghost" disabled={offer.busy} onClick={offer.close}>
           Not now
         </button>
-        <button className="btn primary" disabled={busy} onClick={() => void turnOn()}>
+        <button className="btn primary" disabled={offer.busy} onClick={() => void offer.turnOn()}>
           Turn on
         </button>
       </div>

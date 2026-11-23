@@ -28,7 +28,6 @@ import { OnTable, seatSpots, TableScene } from './TableScene';
 import { OppCards } from './Table3D';
 import { TableInfo } from './TableInfo';
 import { RangArrows, RangDeck3D, RangPile3D, RangRing } from './RangTable3D';
-import { FullscreenButton } from './RotateGate';
 import { useLandscape } from '../lib/useLandscape';
 import { isRangWild, RangSwapContext, RANG_COLOR_NAME, RANG_HEX, RangCard, RangCardBack, rangCardName, RangChip, rangSymbol } from './RangCard';
 
@@ -865,7 +864,6 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
           )}
           <LiveVoiceButtons view={view} onToast={actions.toast} />
           <QuickChat onSend={actions.chat} view={view} />
-          <FullscreenButton />
           <button className="icon-btn" aria-label="Game menu" onClick={() => setPanel('menu')}>
             ⋯
           </button>

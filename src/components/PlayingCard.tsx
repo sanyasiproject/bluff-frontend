@@ -21,6 +21,8 @@ interface Props {
   wild?: boolean;
   /** a face-down card's owner's shop aura (styles/shop-fx.css) */
   aura?: string | null;
+  /** the card's id on the element, so a flight can start from where it sits */
+  dataId?: string;
 }
 
 /** suit shapes drawn in the card's colour, so they look the same on every phone */
@@ -72,7 +74,7 @@ function CourtArt({ rank }: { rank: Rank }) {
   );
 }
 
-export function PlayingCard({ card, faceDown, size, selected, order, onClick, className, style, note = '', back, wild, aura }: Props) {
+export function PlayingCard({ card, faceDown, size, selected, order, onClick, className, style, note = '', back, wild, aura, dataId }: Props) {
   const shown = faceDown ? null : (card ?? null);
   const court = !!shown && ['J', 'Q', 'K'].includes(shown.rank);
   const classes = cx(
@@ -122,11 +124,11 @@ export function PlayingCard({ card, faceDown, size, selected, order, onClick, cl
   const backId = shown ? undefined : back;
   const auraId = shown ? undefined : (aura ?? undefined);
   return onClick ? (
-    <button type="button" className={classes} style={style} onClick={onClick} aria-label={label} aria-pressed={selected} data-back={backId} data-aura={auraId}>
+    <button type="button" className={classes} style={style} onClick={onClick} aria-label={label} aria-pressed={selected} data-back={backId} data-aura={auraId} data-card={dataId}>
       {body}
     </button>
   ) : (
-    <div className={classes} style={style} role="img" aria-label={label} data-back={backId} data-aura={auraId}>
+    <div className={classes} style={style} role="img" aria-label={label} data-back={backId} data-aura={auraId} data-card={dataId}>
       {body}
     </div>
   );

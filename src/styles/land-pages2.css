@@ -47,7 +47,7 @@
   }
 
   .lp2-fr-side {
-    flex: 1 1 230px;
+    flex: 1 1 260px;
     max-width: 100%;
     padding: calc(var(--u) * 2.2);
     border: 1px solid var(--land-edge);
@@ -57,7 +57,14 @@
   }
 
   .lp2-fr-main {
-    flex: 1.7 1 300px;
+    container: lp2frmain / inline-size;
+    flex: 1.4 1 280px;
+  }
+
+  /* the search box: its whole hint fits on a phone */
+  .lp2-fr-side .input {
+    padding: 0 10px;
+    font-size: clamp(14px, calc(var(--u) * 2.4), 18px);
   }
 
   .lp2-fr-side .label,
@@ -126,6 +133,70 @@
   .lp2-fr-cols .friend-more {
     width: 40px;
     height: 40px;
+  }
+
+  /* names and status lines wrap in full instead of ending in "…"; buttons keep one line */
+  .lp2-fr-cols .friend-row .friend-name {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .lp2-fr-cols .friend-row .friend-name b,
+  .lp2-fr-cols .friend-row .row-open .muted.small,
+  .lp2-fr-cols .friend-row .friend-seen {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* a row never squeezes shorter than its text inside a scrolling list */
+  .lp2-fr-cols .friend-row {
+    flex-shrink: 0;
+  }
+
+  .lp2-fr-cols .friend-row > .btn {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  /* search results and requests: a compact button leaves the name more room */
+  .lp2-fr-side .friend-row {
+    gap: 8px;
+    padding-inline: 8px;
+  }
+
+  .lp2-fr-side .friend-row > .btn.small,
+  .lp2-fr-side .row-actions .btn.small {
+    padding-inline: 10px;
+  }
+
+  /* a narrow list: the buttons drop under the name, so the name and status get the full row */
+  @container lp2frmain (max-width: 440px) {
+    .lp2-fr-main .friend-row {
+      flex-wrap: wrap;
+      row-gap: 6px;
+    }
+    .lp2-fr-main .friend-row > .row-open {
+      flex: 1 1 100%;
+    }
+    .lp2-fr-main .friend-row > :not(.row-open) {
+      margin-left: auto;
+    }
+  }
+
+  /* requests on the side: Accept and Decline sit under the name the same way */
+  .lp2-fr-side .friend-row:has(> .row-actions) {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .lp2-fr-side .friend-row:has(> .row-actions) > .row-open {
+    flex: 1 1 100%;
+  }
+
+  .lp2-fr-side .friend-row > .row-actions {
+    margin-left: auto;
   }
 
   /* side by side: the side stays put while the friends list scrolls */
@@ -252,13 +323,13 @@
     flex: none;
   }
 
+  /* a long name wraps in full instead of ending in "…" */
   .lp2-dm-friend b {
     flex: 1;
     min-width: 0;
-    overflow: hidden;
     font-size: 14px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
   }
 
   .lp2-dm-friend:hover {
@@ -843,5 +914,16 @@
 
   .tut-page > .tut-seats .seat {
     padding-block: 4px;
+  }
+}
+
+/* ---------- replay: a seat's full name wraps instead of ending in "…" ---------- */
+@media (orientation: landscape) {
+  .lp2-replay .replay-seat-name {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
   }
 }

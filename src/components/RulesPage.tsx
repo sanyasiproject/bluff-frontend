@@ -123,11 +123,12 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         <Section icon="📱" title="Landscape and the 3D table">
           <ul>
             <li>Bluff plays sideways, like Uno. It always opens in landscape: with the phone upright (rotation lock on), the game is already turned, so just hold the phone sideways. On Android it follows which way you hold it.</li>
-            <li>Laptops and tablets show the same sideways layout, bigger. ⛶ in the game's top bar goes full screen (not on iPhone).</li>
+            <li>Laptops and tablets show the same sideways layout, bigger.</li>
             <li>The table is 3D: opponents round the far edge, the pile lying on the felt, your cards fanned at the bottom, Bluff / Play / Pass on the right.</li>
             <li>The table only shows the players, the cards and your buttons. Tap ☰ (top left, with the room code) for your secret mission, this table's rules, your counts and the last moves.</li>
             <li>Tap a card to lift it out of the fan; the number on it is the order it goes down in.</li>
-            <li>Bluff with a big hand (2 decks): the cards fold into one stack per rank. Tap a stack to take one more of that rank, tap a full stack to put them back. ▦ Stacks / 🂠 Fan switches.</li>
+            <li>Bluff with a big hand (2 decks): the cards fold into one stack per rank. Tap a stack and choose how many of that rank to put down (1, 2 … All, or None). ▦ Stacks / 🂠 Fan switches.</li>
+            <li>On Android the status bar hides after your first tap, like other games; swipe down from the top to see it for a moment.</li>
           </ul>
         </Section>
         <Section icon="🌈" title="Rang (third game)">

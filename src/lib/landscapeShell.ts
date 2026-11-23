@@ -6,6 +6,8 @@ const SHORT_SIDE_MAX = 1100;
 /** messages between the game (inside) and the shell */
 export const SHELL_FULLSCREEN = 'bluff:fullscreen';
 export const SHELL_FS_STATE = 'bluff:fs';
+/** the game asks the shell to hide the phone's bars (full screen on), never off */
+export const SHELL_FS_ON = 'bluff:fs-on';
 
 /** this page is the game inside the shell's frame */
 export function insideShell() {
@@ -73,10 +75,11 @@ export function startShell() {
 
   // full screen is asked for by the game's ⛶ button; the shell does it so the turned frame stays inside it
   window.addEventListener('message', (e) => {
-    if (e.origin !== location.origin || e.data !== SHELL_FULLSCREEN) return;
+    if (e.origin !== location.origin || (e.data !== SHELL_FULLSCREEN && e.data !== SHELL_FS_ON)) return;
     const done = () => frame.contentWindow?.postMessage({ type: SHELL_FS_STATE, on: !!document.fullscreenElement }, location.origin);
-    if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
-    else
+    if (document.fullscreenElement) {
+      if (e.data === SHELL_FULLSCREEN) void document.exitFullscreen().catch(() => {});
+    } else
       void document.documentElement
         .requestFullscreen({ navigationUI: 'hide' })
         .then(() => (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> })?.lock?.('landscape').catch(() => {}))

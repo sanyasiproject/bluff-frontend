@@ -97,8 +97,12 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
             <span className="level-badge">Lv {lvl.level}</span>
           </div>
           <h2 className="profile-name" data-no-translate>{user.displayName}</h2>
-          <p className="muted">
-            @{user.username} · Joined {monthYear(user.createdAt)}
+          {/* spans so sideways can stack the handle and the joined date */}
+          <p className="muted profile-meta">
+            <span className="profile-handle">@{user.username}</span>
+            <span className="profile-joined">
+              <span className="profile-sep"> · </span>Joined {monthYear(user.createdAt)}
+            </span>
             {user.role === 'admin' && <span className="tag">Admin</span>}
           </p>
           {/* admins: the way in, on every tab; the admin page opens from Home only, not while in a room */}

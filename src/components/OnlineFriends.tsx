@@ -73,3 +73,40 @@ export function OnlineFriends({ auth, onJoin }: Props) {
     </section>
   );
 }
+
+/** Home dock: 👥 Friends with the online count; opens the Friends sheet */
+export function FriendsDockButton({ auth, onOpen }: { auth: Auth; onOpen: () => void }) {
+  const all = useOnlineFriends(auth.user ? auth.token : null);
+  const count = all ? all.filter((f) => f.online).length : 0;
+  return (
+    <button type="button" className="dock-item" aria-label={count > 0 ? `Friends, ${count} online` : 'Friends'} onClick={onOpen}>
+      <span className="dock-icon" aria-hidden>
+        👥
+      </span>
+      <span className="dock-label">Friends</span>
+      {count > 0 && <b className="dock-badge online">{count}</b>}
+    </button>
+  );
+}
+
+/** Home, beside the dock: up to 3 online friends' faces; one tap opens Friends */
+export function OnlineAvatars({ auth, onOpen }: { auth: Auth; onOpen: () => void }) {
+  const all = useOnlineFriends(auth.user ? auth.token : null);
+  if (!auth.user || !all) return null;
+  const online = onlineFirst(all);
+  if (online.length === 0) return null;
+  return (
+    <button type="button" className="home-online" aria-label={`${online.length} friends online`} onClick={onOpen}>
+      <span className="home-online-faces">
+        {online.slice(0, 3).map((f) => (
+          <Avatar key={f.id} name={f.displayName} avatar={f.avatar} size="sm">
+            <i className="presence on" />
+          </Avatar>
+        ))}
+      </span>
+      <span className="home-online-text">
+        <i className="live-dot on" aria-hidden /> {online.length} online
+      </span>
+    </button>
+  );
+}

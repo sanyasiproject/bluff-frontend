@@ -61,9 +61,21 @@
     white-space: nowrap;
   }
 
+  /* never cut with "…": the pill wraps instead */
   .lobby-land .lobby-head .mode-banner > * {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* ranked: title over the player's rank, a two-line pill */
+  .lobby-land .lobby-head .mode-banner.ranked {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    padding: 4px 14px;
+    border-radius: 16px;
+    line-height: 1.25;
   }
 
   .lobby-land .lobby-head .mode-banner.ranked b {
@@ -392,12 +404,13 @@
     font-size: 12.5px;
     line-height: 1.3;
     text-align: center;
-    /* two lines at most: the clamp alone lets a third peek into the padding */
-    max-height: calc(2.6em + 10px);
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    overflow-wrap: anywhere;
+  }
+
+  /* a locked Start shrinks to its label so the reason gets the room to show in full */
+  .lobby-land .lobby-actions .btn.grow.blocked {
+    flex: none;
+    min-width: 0;
   }
 
   /* Start / I'm ready on the right, wide enough to hit */
@@ -462,10 +475,10 @@
   }
 }
 
-/* narrow phones: the ranked pill keeps only its title */
+/* narrow phones: smaller mode-row buttons */
 @media (orientation: landscape) and (max-width: 760px) {
   .lobby-land .lobby-head .mode-banner.ranked span {
-    display: none;
+    font-size: 11.5px;
   }
 
   .lobby-land .lobby-actions .mode-row .mini-seg button {

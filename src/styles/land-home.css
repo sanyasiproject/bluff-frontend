@@ -1,113 +1,626 @@
-/* landscape: land-home (only inside @media (orientation: landscape) unless noted) */
+/* home: a game main menu. Top bar (language | one-time notice | account), centre stage (logo, title, Play), dock of round buttons.
+   Base rules serve both orientations (portrait = narrow desktop window); landscape sizing is inside @media (orientation: landscape) */
 
-/* noted: the home layout wrappers vanish outside landscape, so portrait stays as before */
-.home-stage,
-.home-main,
-.home-rail {
-  display: contents;
+@keyframes hm-rise {
+  from {
+    transform: translateY(14px);
+    opacity: 0;
+  }
 }
 
-/* noted: the How to play copy under the play panel is for landscape only */
-.home-how-land {
+@keyframes hm-drop {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+}
+
+@keyframes hm-glow {
+  50% {
+    opacity: 0.55;
+    transform: scale(1.08);
+  }
+}
+
+/* ---------- top bar ---------- */
+.screen.home > .home-top {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'lang notice corner';
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin: 0;
+}
+
+.home .home-top > .lang-toggle {
+  grid-area: lang;
+  justify-self: start;
+  margin: 0;
+  padding: 0 6px;
+  border: 1px solid rgba(246, 196, 83, 0.22);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 1;
+}
+
+.home .home-top > .lang-toggle button {
+  min-height: 44px;
+  padding: 4px 8px;
+}
+
+.home-corner {
+  grid-area: corner;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.home-corner > .online-pill {
+  margin: 0;
+}
+
+/* one small one-time notice in the middle of the top bar */
+.home-notice {
+  grid-area: notice;
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 560px;
+  padding: 3px 4px 3px 12px;
+  border: 1px solid rgba(246, 196, 83, 0.38);
+  border-radius: 16px;
+  background: rgba(5, 22, 15, 0.82);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  animation: hm-drop 0.45s ease-out 0.9s backwards;
+}
+
+.home-notice-icon {
+  flex: none;
+  font-size: 18px;
+}
+
+.home-notice-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.home-notice-text .form-error {
+  display: block;
+  font-size: 12px;
+}
+
+.home-notice > .btn {
+  flex: none;
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.home-notice > .btn.primary {
+  box-shadow: 0 3px 0 var(--gold-deep);
+}
+
+.home-notice-x {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  background: none;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* ---------- centre stage ---------- */
+.home-stage {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  gap: 12px;
+  min-height: 0;
+  text-align: center;
+}
+
+/* a soft gold spotlight behind the logo */
+.home-stage::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: -1;
+  width: min(92vw, 640px);
+  aspect-ratio: 1.6;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(246, 196, 83, 0.17), rgba(246, 196, 83, 0.05) 55%, transparent 78%);
+  pointer-events: none;
+  animation: hm-glow 7s ease-in-out infinite;
+}
+
+.home .home-stage > .hero {
+  gap: 4px;
+  padding: 0;
+}
+
+.home .hero h1 {
+  line-height: 1;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45));
+}
+
+.home .hero-tag {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* the one big button */
+.home-play-btn.btn {
+  min-width: 230px;
+  min-height: 60px;
+  padding: 0 44px;
+  border-radius: 999px;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  box-shadow: 0 5px 0 var(--gold-deep), 0 12px 30px rgba(246, 196, 83, 0.25);
+  animation: hm-rise 0.5s var(--spring) 0.35s backwards;
+}
+
+.home-play-btn > span {
+  font-size: 0.8em;
+}
+
+/* rejoin / waiting chip and the server line under Play */
+.home-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgba(246, 196, 83, 0.45);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.32);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.home-chip:disabled {
+  opacity: 0.5;
+}
+
+.home-chip b {
+  color: var(--gold);
+  letter-spacing: 0.08em;
+}
+
+.home-sub .server-status {
+  max-width: 48ch;
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 13px;
+  text-align: left;
+}
+
+/* ---------- bottom: online faces on the left, the dock in the middle ---------- */
+.home-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.home-bottom > .home-dock {
+  grid-column: 2;
+}
+
+.home-bottom > .home-online {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+}
+
+/* no transform, filter or z-index on the dock itself: the pages its buttons open are fixed children */
+.home-dock {
+  --ic: 48px;
+  --dock-w: 70px;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px 6px;
+  border-radius: 26px;
+}
+
+/* the glass lives on a pseudo-element so it can blur without trapping those pages */
+.home-dock::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(246, 196, 83, 0.2);
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.3));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+/* every item: my own .dock-item and the shared Missions / League / Shop / Spin buttons */
+.home-dock > :is(.dock-item, .missions-entry, .league-entry, .shop-entry) {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  width: var(--dock-w);
+  min-height: 44px;
+  margin: 0;
+  padding: 0 0 2px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  box-shadow: none;
+  color: var(--ink);
+  text-align: center;
+  transition: transform 0.12s ease;
+  animation: hm-rise 0.4s ease-out 0.45s backwards;
+}
+
+.home-dock > :is(.dock-item, .missions-entry, .league-entry, .shop-entry):active {
+  transform: translateY(1px) scale(0.95);
+}
+
+.home-dock :is(.dock-icon, .missions-entry-emoji, .league-entry-emoji, .shop-entry-emoji) {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--ic);
+  height: var(--ic);
+  margin: 0;
+  border: 1.5px solid rgba(246, 196, 83, 0.55);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.24), transparent 52%),
+    radial-gradient(circle at 50% 62%, var(--felt-light), var(--felt-deep));
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 -3px 6px rgba(0, 0, 0, 0.35);
+  font-size: calc(var(--ic) * 0.46);
+  line-height: 1;
+}
+
+.home-dock > .dock-item.guest .dock-icon {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.home-dock :is(.dock-label, .missions-entry > .grow, .league-entry > .grow, .shop-entry > .grow) {
+  flex: none;
+  max-width: 100%;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.home-dock :is(.missions-chevron, .league-chevron, .shop-entry-chevron, .league-pill-more) {
   display: none;
 }
 
-/* noted: wrapped home sections keep their rise-in from styles.css */
-:is(.home-main, .home-rail) > :is(section, .panel, .guest-hint, .server-status) {
-  animation: rise-soft 0.45s ease-out 0.1s backwards;
+/* badges on the icon's top-right */
+.home-dock :is(.dock-badge, .missions-pill, .league-pill, .shop-entry-pill) {
+  position: absolute;
+  top: -3px;
+  left: calc(50% + var(--ic) / 2 - 15px);
+  min-width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0 5px;
+  border: 2px solid var(--felt-deep);
+  border-radius: 10px;
+  background: var(--gold);
+  color: var(--gold-ink);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 16px;
+  text-align: center;
+  white-space: nowrap;
 }
 
-.home-rail > :is(section, .panel) {
-  animation-delay: 0.25s;
+.home-dock .dock-badge.online {
+  background: var(--ok);
+  color: #04140d;
 }
 
-@keyframes lh-in-left {
-  from {
-    transform: translateX(-28px);
-    opacity: 0;
+.home-dock .dock-badge.lock {
+  padding: 0 2px;
+  background: rgba(0, 0, 0, 0.7);
+  font-size: 9px;
+}
+
+/* missions left today, a free spin, shop boosts running: a red dot (the words stay for screen readers) */
+.home-dock :is(.missions-pill:not(.done), .shop-entry-pill.on) {
+  top: -1px;
+  left: calc(50% + var(--ic) / 2 - 13px);
+  width: 14px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0;
+  overflow: hidden;
+  background: var(--danger);
+  font-size: 0;
+}
+
+.home-dock :is(.missions-pill.done, .shop-entry-pill:not(.on)) {
+  display: none;
+}
+
+/* ---------- online friends' faces beside the dock ---------- */
+.home-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px 14px 4px 6px;
+  border: 1px solid rgba(60, 207, 145, 0.35);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 700;
+  animation: hm-rise 0.4s ease-out 0.55s backwards;
+}
+
+.home-online-faces {
+  display: flex;
+}
+
+.home-online-faces > .avatar {
+  box-shadow: 0 0 0 2px var(--felt-deep);
+}
+
+.home-online-faces > .avatar + .avatar {
+  margin-left: -10px;
+}
+
+.home-online-faces .presence {
+  border-color: var(--felt-deep);
+}
+
+.home-online-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* ---------- the Play panel (a centred modal) ---------- */
+.modal.hp {
+  width: 100%;
+  max-width: min(440px, calc(100vw - 24px));
+  border: 1px solid rgba(246, 196, 83, 0.42);
+  border-radius: 22px;
+  background: linear-gradient(160deg, rgba(20, 62, 45, 0.96) 0%, rgba(8, 32, 23, 0.97) 55%, rgba(4, 20, 14, 0.98) 100%);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.hp-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 18px 10px;
+}
+
+/* a thin gold line along the top edge */
+.hp-panel::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 14%;
+  right: 14%;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  pointer-events: none;
+}
+
+.hp-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.hp-title {
+  margin: 0;
+  color: var(--gold);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.hp-close.icon-btn {
+  position: absolute;
+  top: 0;
+  right: -8px;
+  width: 44px;
+  height: 44px;
+  background: none;
+  color: var(--muted);
+}
+
+.hp-panel > :is(.server-status, .guest-hint) {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.hp-panel .server-status {
+  justify-content: center;
+}
+
+.hp-card.stack {
+  gap: 12px;
+}
+
+.hp-card :is(.btn, .input) {
+  min-height: 48px;
+}
+
+/* inputs are a fixed 52px elsewhere: match the buttons beside them */
+.hp-card .input {
+  height: 48px;
+}
+
+.hp-card .label {
+  margin: 0;
+}
+
+.hp-card .link-btn {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+.hp-card .playing-as {
+  margin: 0;
+  text-align: center;
+}
+
+.hp-name {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.hp-ways {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hp-way {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.hp-way-title {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hp-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.hp-panel > .hp-how {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+/* the Get app steps */
+.install-pop {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgba(246, 196, 83, 0.42);
+  border-radius: 20px;
+  background: linear-gradient(160deg, rgba(20, 62, 45, 0.96), rgba(4, 20, 14, 0.98));
+}
+
+.install-pop .install-steps {
+  margin: 0;
+}
+
+.modal.hp-name > .name-card {
+  border-color: rgba(246, 196, 83, 0.42);
+  background: linear-gradient(160deg, rgba(20, 62, 45, 0.96), rgba(4, 20, 14, 0.98));
+}
+
+/* ---------- portrait (narrow desktop window): stacked, the notice on its own row ---------- */
+@media (orientation: portrait) {
+  .screen.home > .home-top {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'lang corner'
+      'notice notice';
   }
-}
 
-@keyframes lh-in-right {
-  from {
-    transform: translateX(28px);
-    opacity: 0;
+  .home .hero h1 {
+    font-size: 52px;
   }
-}
 
-@keyframes lh-glow {
-  50% {
-    opacity: 0.6;
-    transform: scale(1.06);
+  .home-bottom {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+
+  .home-bottom > :is(.home-dock, .home-online) {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: center;
+  }
+
+  .home-bottom > .home-online {
+    order: -1;
   }
 }
 
 @media (orientation: landscape) {
-  /* ---------- home: hero | play panel | extras rail ---------- */
+  /* ---------- landscape: three rows on one centred column, no page scroll ---------- */
   .screen.home {
-    --lh-main: clamp(240px, min(36vw, calc(var(--u) * 80)), 460px);
-    --lh-rail: clamp(196px, min(28vw, calc(var(--u) * 64)), 360px);
-    --lh-gap: clamp(10px, calc(var(--u) * 3), 28px);
-    --fan: 1;
+    --fan: 0.66;
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) var(--lh-main) var(--lh-rail);
-    grid-template-rows: auto minmax(0, 1fr);
-    grid-template-areas:
-      'hero main top'
-      'hero main rail';
-    column-gap: var(--lh-gap);
-    row-gap: calc(var(--u) * 1.5);
-    max-width: 1320px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: calc(var(--u) * 1);
+    width: 100%;
+    max-width: none;
     height: 100vh;
     height: 100dvh;
     min-height: 0;
-    padding: max(calc(var(--u) * 2), env(safe-area-inset-top)) var(--safe-r) var(--safe-b) var(--safe-l);
+    padding: max(calc(var(--u) * 1.6), env(safe-area-inset-top)) var(--safe-r) var(--safe-b) var(--safe-l);
     overflow: hidden;
   }
 
-  /* top right: account corner over the play panel and the rail */
-  .screen.home > .home-top {
-    grid-area: top;
-    z-index: 4;
-    justify-self: end;
-    align-items: center;
-    gap: 8px;
-    min-height: 44px;
-    margin: 0;
+  .home-stage {
+    gap: clamp(8px, calc(var(--u) * 2.2), 24px);
   }
 
-  /* ---------- hero: card fan, title, tagline ---------- */
-  .home .hero {
-    grid-area: hero;
-    position: relative;
-    isolation: isolate;
-    justify-content: center;
-    align-self: stretch;
-    gap: calc(var(--u) * 1.2);
-    min-width: 0;
-    /* room on top for the language pill */
-    padding: 44px 0 calc(var(--u) * 2);
-    animation: lh-in-left 0.5s ease-out backwards;
+  .home-stage::before {
+    width: min(80vw, calc(var(--u) * 150));
   }
 
-  /* a soft gold spotlight behind the fan */
-  .home .hero::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    z-index: -1;
-    width: min(110%, calc(var(--u) * 90));
-    aspect-ratio: 1;
-    translate: -50% -50%;
-    border-radius: 50%;
-    background: radial-gradient(closest-side, rgba(246, 196, 83, 0.16), rgba(246, 196, 83, 0.05) 55%, transparent 75%);
-    pointer-events: none;
-    animation: lh-glow 6s ease-in-out infinite;
-  }
-
-  /* the fan keeps its own animations; only its size changes */
+  /* the fan keeps its own animations; only its size changes (margins give back the space it doesn't use) */
   .home .hero-cards {
     flex: none;
     margin-block: calc(60px * (var(--fan) - 1));
@@ -115,359 +628,147 @@
   }
 
   .home .hero h1 {
-    font-size: clamp(42px, calc(var(--u) * 13), 104px);
-    line-height: 1;
-    filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45));
+    font-size: clamp(40px, calc(var(--u) * 12), 108px);
   }
 
-  .home .hero > .muted {
-    max-width: 30ch;
-    margin: 0;
-    font-size: clamp(13px, calc(var(--u) * 2.2), 19px);
-    line-height: 1.35;
+  .home .hero-tag {
+    font-size: clamp(12.5px, calc(var(--u) * 2.2), 19px);
   }
 
-  /* wider phones get a slightly bigger fan; tall screens a much bigger one */
-  @media (min-width: 800px) {
+  .home-play-btn.btn {
+    min-width: clamp(220px, calc(var(--u) * 42), 360px);
+    min-height: clamp(52px, calc(var(--u) * 8.4), 76px);
+    font-size: clamp(20px, calc(var(--u) * 3.6), 30px);
+  }
+
+  .home-chip {
+    font-size: clamp(13px, calc(var(--u) * 1.9), 16px);
+  }
+
+  /* the top bar grows a little on big screens */
+  .home .home-top > .lang-toggle,
+  .home-notice-text {
+    font-size: clamp(13px, calc(var(--u) * 1.8), 16px);
+  }
+
+  .home-notice > .btn {
+    font-size: clamp(13px, calc(var(--u) * 1.7), 15px);
+  }
+
+  .home-corner .coin-mini {
+    font-size: clamp(14px, calc(var(--u) * 1.9), 17px);
+  }
+
+  .home-dock {
+    --ic: clamp(44px, calc(var(--u) * 7), 62px);
+    --dock-w: clamp(66px, max(9.6vw, calc(var(--u) * 12)), 110px);
+    padding: clamp(6px, calc(var(--u) * 1.2), 12px) clamp(8px, calc(var(--u) * 1.6), 16px) clamp(4px, calc(var(--u) * 0.9), 10px);
+  }
+
+  .home-dock :is(.dock-label, .missions-entry > .grow, .league-entry > .grow, .shop-entry > .grow) {
+    font-size: clamp(11px, calc(var(--u) * 1.75), 14px);
+  }
+
+  .home-online-faces > .avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+  }
+
+  .home-online-faces > .avatar + .avatar {
+    margin-left: -9px;
+  }
+
+  /* the Play panel: create and join side by side */
+  .modal.hp {
+    max-width: min(440px, calc(100vw - 24px));
+  }
+
+  .modal.hp:has(.hp-ways) {
+    max-width: min(660px, calc(100vw - 24px));
+  }
+
+  .hp-panel {
+    gap: clamp(8px, calc(var(--u) * 2), 16px);
+    padding: clamp(8px, calc(var(--u) * 1.6), 16px) clamp(14px, calc(var(--u) * 3.4), 28px) clamp(6px, calc(var(--u) * 1.2), 12px);
+  }
+
+  .hp-title {
+    font-size: clamp(20px, calc(var(--u) * 4.2), 30px);
+  }
+
+  .hp-card.stack {
+    gap: clamp(8px, calc(var(--u) * 2), 14px);
+  }
+
+  .hp-card :is(.btn, .input) {
+    min-height: clamp(44px, calc(var(--u) * 7), 58px);
+  }
+
+  .hp-card .input {
+    height: clamp(44px, calc(var(--u) * 7), 58px);
+  }
+
+  .hp-ways {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: end;
+    gap: 16px;
+  }
+
+  .hp-ways > .hp-or {
+    flex-direction: column;
+    align-self: stretch;
+    gap: 6px;
+  }
+
+  .hp-ways > .hp-or::before,
+  .hp-ways > .hp-or::after {
+    width: 1px;
+    height: auto;
+  }
+
+  /* bigger screens: a bigger fan */
+  @media (min-height: 500px) {
     .screen.home {
-      --fan: 1.12;
+      --fan: 0.95;
     }
   }
 
-  @media (min-height: 600px) {
+  @media (min-height: 640px) {
     .screen.home {
-      --fan: 1.45;
+      --fan: 1.2;
     }
   }
 
   @media (min-height: 800px) {
     .screen.home {
-      --fan: 1.7;
+      --fan: 1.45;
     }
   }
 
-  /* language switch: a small pill in the top-left corner */
-  .home .lang-toggle {
-    position: absolute;
-    top: max(calc(var(--u) * 2), env(safe-area-inset-top));
-    left: var(--safe-l);
-    z-index: 3;
-    margin: 0;
-    padding: 0 4px;
-    border: 1px solid var(--land-edge);
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.28);
-    opacity: 1;
+  /* short phones: the tagline steps aside while a rejoin or server line sits under Play */
+  @media (max-height: 430px) {
+    .home-stage:has(> .home-sub) .hero-tag {
+      display: none;
+    }
+
+    .screen.home:has(.home-stage > .home-sub) {
+      --fan: 0.46;
+    }
+
+    .home-stage:has(> .home-sub) {
+      gap: 8px;
+    }
   }
 
-  .home .lang-toggle button {
-    min-height: 40px;
-    padding: 4px 8px;
-  }
-}
-
-@media (orientation: landscape) {
-  /* ---------- middle: status lines and the play panel ---------- */
-  .home .home-main {
-    grid-area: main;
-    display: flex;
-    flex-direction: column;
-    /* centred, but a tall panel (locked, invite) starts at the top and scrolls */
-    justify-content: safe center;
-    gap: calc(var(--u) * 1.6);
-    min-height: 0;
-    margin: 0 -4px;
-    padding: 4px 4px calc(var(--u) * 2);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: none;
-  }
-
-  .home .home-main::-webkit-scrollbar {
-    display: none;
-  }
-
-  .home .home-main > * {
-    flex: none;
-  }
-
-  .home .home-main > .panel {
-    position: relative;
-    padding: clamp(12px, calc(var(--u) * 3), 26px);
-    border-color: var(--land-edge);
-    border-radius: clamp(16px, calc(var(--u) * 3.6), 26px);
-    background: var(--land-panel);
-    box-shadow: var(--land-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  }
-
-  /* a thin gold line along the panel's top edge */
-  .home .home-main > .panel.stack::before {
-    content: '';
-    position: absolute;
-    top: -1px;
-    left: 18%;
-    right: 18%;
-    height: 2px;
-    border-radius: 2px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    opacity: 0.7;
-    pointer-events: none;
-  }
-
-  .home .home-main .stack {
-    gap: clamp(8px, calc(var(--u) * 2), 16px);
-  }
-
-  .home .home-main :is(.btn, .input) {
-    min-height: clamp(44px, calc(var(--u) * 7.4), 60px);
-    font-size: clamp(15px, calc(var(--u) * 2.3), 19px);
-  }
-
-  .home .home-main .btn.primary {
-    font-size: clamp(16px, calc(var(--u) * 2.6), 21px);
-    letter-spacing: 0.01em;
-  }
-
-  .home .home-main .label {
-    margin-bottom: -4px;
-  }
-
-  /* play panel: the name label sits beside its field */
-  .home .home-play {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    column-gap: 12px;
-  }
-
-  .home .home-play > * {
-    grid-column: 1 / -1;
-  }
-
-  .home .home-play > .label {
-    grid-column: 1;
-    margin: 0;
-  }
-
-  .home .home-play > .input {
-    grid-column: 2;
-  }
-
-  .home .home-main .input {
-    padding-block: 8px;
-  }
-
-  /* the guest line drops under the panel, so the actions stay on top */
-  .home .home-main > .guest-hint {
-    order: 2;
-  }
-
-  .home .home-main > .home-how-land {
-    order: 3;
-  }
-
-  .home .home-main .join-row {
-    grid-template-columns: minmax(0, 1fr) clamp(80px, calc(var(--u) * 16), 120px);
-  }
-
-  .home .home-main .playing-as {
-    margin: 0;
-    font-size: clamp(15px, calc(var(--u) * 2.4), 20px);
-    text-align: center;
-  }
-
-  .home .home-main .divider {
-    font-size: clamp(12px, calc(var(--u) * 1.9), 15px);
-  }
-
-  .home .home-main :is(.server-status, .guest-hint) {
-    margin: 0;
-    padding: 8px 12px;
-    font-size: clamp(12px, calc(var(--u) * 1.9), 15px);
-    line-height: 1.35;
-  }
-
-  .home .home-main .rejoin {
-    min-height: 44px;
-    padding: 8px 14px;
-    font-size: 15px;
-  }
-
-  .home .home-main .invite-room {
-    font-size: clamp(18px, calc(var(--u) * 3.4), 28px);
-  }
-
-  /* How to play under the panel: quiet, full width */
-  .home .home-how-land {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4em;
-    min-height: 44px;
-    animation: rise-soft 0.45s ease-out 0.2s backwards;
-  }
-
-  /* the rail copy hides; the button lives under the play panel here */
-  .home .home-rail > .how-to-btn {
-    display: none;
+  /* narrow phones: the dock's Friends count is enough */
+  @media (max-width: 799px) {
+    .home-bottom > .home-online {
+      display: none;
+    }
   }
 }
-
-@media (orientation: landscape) {
-  /* ---------- right: the extras rail, scrolling inside itself ---------- */
-  .home .home-rail {
-    grid-area: rail;
-    display: flex;
-    flex-direction: column;
-    /* centred when it fits, top-aligned and scrolling when it doesn't */
-    justify-content: safe center;
-    gap: calc(var(--u) * 1.4);
-    min-height: 0;
-    margin: 0 -4px;
-    padding: 4px 4px calc(var(--u) * 2);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(246, 196, 83, 0.3) transparent;
-  }
-
-  .home .home-rail > * {
-    flex: none;
-  }
-
-  /* rail cards slide in from the right */
-  .home .home-rail > :is(section, .panel, .home-name-card) {
-    animation: lh-in-right 0.45s ease-out 0.2s backwards;
-  }
-
-  .home .home-rail > .panel {
-    padding: clamp(10px, calc(var(--u) * 2.2), 18px) clamp(10px, calc(var(--u) * 2.4), 18px);
-    border-radius: clamp(14px, calc(var(--u) * 3), 22px);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
-  }
-
-  /* Spin, Missions, League, Shop: compact menu rows */
-  .home .home-rail > :is(.missions-entry, .league-entry, .shop-entry) {
-    gap: 8px;
-    min-height: clamp(44px, calc(var(--u) * 7.4), 60px);
-    padding-block: 6px;
-    font-size: clamp(14px, calc(var(--u) * 2.2), 18px);
-    transition: transform 0.15s ease-out;
-  }
-
-  .home .home-rail > :is(.missions-entry, .league-entry, .shop-entry):active {
-    transform: scale(0.97);
-  }
-
-  .home .home-rail :is(.missions-entry-emoji, .league-entry-emoji, .shop-entry-emoji) {
-    font-size: clamp(18px, calc(var(--u) * 3), 26px);
-  }
-
-  .home .home-rail :is(.missions-pill, .league-pill) {
-    max-width: 48%;
-    overflow: hidden;
-    padding: 2px 8px;
-    font-size: 12px;
-    text-overflow: ellipsis;
-  }
-
-  /* one line per row: the label shrinks before the pill, chevrons go */
-  .home .home-rail > :is(.missions-entry, .league-entry, .shop-entry) > .grow {
-    min-width: min(5.5em, 50%);
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .home .home-rail :is(.missions-chevron, .league-chevron, .shop-entry-chevron) {
-    display: none;
-  }
-
-  /* online friends: a tighter strip */
-  .home .home-rail > .online-friends {
-    gap: 8px;
-    border-color: rgba(60, 207, 145, 0.3);
-  }
-
-  .home .home-rail .online-head {
-    min-height: 32px;
-  }
-
-  .home .home-rail .online-strip {
-    margin: 0 calc(clamp(10px, calc(var(--u) * 2.4), 18px) * -1);
-    padding-inline: clamp(10px, calc(var(--u) * 2.4), 18px);
-  }
-
-  .home .home-rail .online-strip li {
-    width: 68px;
-  }
-
-  /* name, notify and install cards: smaller text */
-  .home .home-rail :is(.notify-card, .install, .home-name-card) {
-    font-size: 14px;
-  }
-
-  .home .home-rail .notify-card-title {
-    font-size: 14px;
-    line-height: 1.3;
-  }
-
-  .home .home-rail .confirm-actions {
-    flex-wrap: wrap;
-  }
-
-  .home .home-rail .confirm-actions .btn {
-    flex: 1 1 auto;
-    min-height: 40px;
-  }
-
-  /* install: icon and words on top, the button full width under them */
-  .home .home-rail .install-row {
-    flex-wrap: wrap;
-    gap: 8px 10px;
-  }
-
-  .home .home-rail .install-row > .btn {
-    flex: 1 0 100%;
-    min-height: 40px;
-  }
-
-  .home .home-rail .install-icon {
-    width: 36px;
-    height: 36px;
-  }
-
-  .home .home-rail .install-steps {
-    margin-top: 8px;
-    font-size: 13px;
-    line-height: 1.5;
-  }
-
-  .home .home-rail .home-name-card .link-btn {
-    min-height: 40px;
-  }
-
-  /* the name card: field over its Save button in the narrow rail */
-  .home .home-rail .name-card {
-    padding: clamp(10px, calc(var(--u) * 2.2), 18px);
-  }
-
-  .home .home-rail .name-card .section-title {
-    margin-bottom: 6px;
-    font-size: 15px;
-    line-height: 1.3;
-  }
-
-  .home .home-rail .name-card .join-row {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
-  }
-
-  .home .home-rail .name-card :is(.btn, .input) {
-    min-height: 44px;
-  }
-}
-
 @media (orientation: landscape) {
   /* ---------- log in / sign up: compact tabs, labels beside fields ---------- */
   .sheet.lh-account .seg {
@@ -615,11 +916,12 @@
   }
 }
 
-@media (orientation: landscape) and (prefers-reduced-motion: reduce) {
-  .home .hero::before,
-  .home .hero,
-  .home .home-rail > *,
-  .home .home-main > * {
+@media (prefers-reduced-motion: reduce) {
+  .home-stage::before,
+  .home-notice,
+  .home-play-btn.btn,
+  .home-online,
+  .home-dock > * {
     animation: none;
   }
 }

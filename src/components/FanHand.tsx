@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { Fragment, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import { cx } from '../lib/cards';
 import { loadPref, savePref } from '../lib/storage';
 import type { Card, Rank } from '../types';
@@ -129,6 +129,7 @@ export function FanHand({ cards, selected = [], onToggle, onSet, stackable, deal
             <PlayingCard
               key={card.id}
               card={card}
+              dataId={card.id}
               selected={pick !== -1}
               order={pick !== -1 ? pick + 1 : undefined}
               onClick={onToggle ? () => onToggle(card.id) : undefined}
@@ -183,11 +184,22 @@ function Stacks({
   const x0 = (box.w - (step * (g - 1) + cw)) / 2;
   const top = box.h - cw * 1.4 * 0.96;
 
-  const tap = (group: Card[]) => {
+  /** the rank whose "how many?" chooser is open */
+  const [open, setOpen] = useState<Rank | null>(null);
+  // take exactly n of a rank: keep what's already picked of it first, in tap order, then add more
+  const take = (group: Card[], n: number) => {
     if (!onSet) return;
     const ids = group.map((c) => c.id);
-    const next = ids.find((id) => !selected.includes(id));
-    onSet(next ? [...selected, next] : selected.filter((id) => !ids.includes(id)));
+    const kept = selected.filter((id) => ids.includes(id)).slice(0, n);
+    const more = ids.filter((id) => !kept.includes(id)).slice(0, n - kept.length);
+    onSet([...selected.filter((id) => !ids.includes(id) || kept.includes(id)), ...more]);
+    setOpen(null);
+  };
+  // a single card toggles at once; a stack asks how many
+  const tap = (group: Card[]) => {
+    if (!onSet) return;
+    if (group.length === 1) take(group, selected.includes(group[0].id) ? 0 : 1);
+    else setOpen((o) => (o === group[0].rank ? null : group[0].rank));
   };
 
   return (
@@ -197,10 +209,10 @@ function Stacks({
         const orders = picked.map((c) => selected.indexOf(c.id) + 1);
         const shown = group.slice(0, Math.min(group.length, 4));
         const isNew = group.some((c) => fresh.includes(c.id));
-        const label = `${group.length} × ${group[0].rank}${picked.length ? `, ${picked.length} selected` : ''}${group.length > picked.length ? '. Tap to add one' : '. Tap to put them back'}`;
+        const label = `${group.length} × ${group[0].rank}${picked.length ? `, ${picked.length} selected` : ''}. Tap to choose how many`;
         return (
+          <Fragment key={group[0].rank}>
           <button
-            key={group[0].rank}
             type="button"
             className={cx('rank-stack', picked.length > 0 && 'has-pick', picked.length === group.length && 'all', isNew && 'fresh', deal && 'deal')}
             style={{ left: x0 + i * step, top, ['--cw' as string]: `${cw}px`, zIndex: i + 1, animationDelay: deal ? `${i * 40}ms` : undefined }}
@@ -213,6 +225,7 @@ function Stacks({
                 <PlayingCard
                   key={c.id}
                   card={c}
+                  dataId={c.id}
                   wild={kismat === c.rank}
                   className="stack-card"
                   style={{ translate: `${k * 2.5}px ${-k * 3}px`, zIndex: 10 - k }}
@@ -227,6 +240,21 @@ function Stacks({
               </span>
             )}
           </button>
+          {open === group[0].rank && (
+            <div className="stack-picker" role="group" aria-label={`How many ${group[0].rank}s`} style={{ left: x0 + i * step + cw / 2, top }}>
+              {Array.from({ length: group.length }, (_, k) => k + 1).map((n) => (
+                <button key={n} type="button" className={cx(n === picked.length && 'on')} onClick={() => take(group, n)}>
+                  {n === group.length && n > 1 ? `All ${n}` : n}
+                </button>
+              ))}
+              {picked.length > 0 && (
+                <button type="button" className="none" onClick={() => take(group, 0)}>
+                  None
+                </button>
+              )}
+            </div>
+          )}
+          </Fragment>
         );
       })}
     </>

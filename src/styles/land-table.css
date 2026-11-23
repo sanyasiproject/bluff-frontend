@@ -753,3 +753,148 @@
     line-height: 1.2;
   }
 }
+
+/* ---------- my hand in the middle: equal room both sides, buttons in the corners ---------- */
+@media (orientation: landscape) {
+  .table {
+    --side-w: clamp(112px, 15vw, 210px);
+  }
+
+  .table .hand-area {
+    left: calc(var(--safe-l) + var(--side-w) + 6px);
+    right: calc(var(--safe-r) + var(--side-w) + 6px);
+  }
+
+  /* Bluff: Pass in the bottom left corner, Play in the bottom right, Bluff above Play */
+  .bluff-table .action-bar {
+    display: contents;
+  }
+
+  .bluff-table .action-bar > * {
+    position: absolute;
+    bottom: var(--safe-b);
+    z-index: 7;
+    width: var(--side-w);
+  }
+
+  .bluff-table .action-bar > .btn:not(.primary),
+  .bluff-table .action-bar > .hint {
+    left: var(--safe-l);
+  }
+
+  .bluff-table .action-bar > .btn.primary,
+  .bluff-table .action-bar > .claim-pick {
+    right: var(--safe-r);
+  }
+
+  .bluff-table .action-bar > .btn.primary {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .bluff-table .action-bar > .btn.primary small {
+    font-size: 11px;
+    font-weight: 700;
+    opacity: 0.75;
+  }
+
+  .bluff-table.my-turn-table .side-actions {
+    bottom: calc(var(--safe-b) + 66px);
+  }
+
+  .bluff-table .side-actions {
+    bottom: var(--safe-b);
+  }
+
+  @media (min-height: 560px) {
+    /* the bar itself must not grow too, or its buttons grow twice */
+    .bluff-table .action-bar {
+      zoom: 1;
+    }
+
+    .bluff-table .action-bar > * {
+      zoom: 1.25;
+      width: calc(var(--side-w) / 1.25);
+    }
+  }
+
+  @media (min-height: 760px) {
+    /* the bar itself must not grow too, or its buttons grow twice */
+    .bluff-table .action-bar {
+      zoom: 1;
+    }
+
+    .bluff-table .action-bar > * {
+      zoom: 1.5;
+      width: calc(var(--side-w) / 1.5);
+    }
+  }
+
+  /* ---------- picking a card: it comes up out of the fan, towards you ---------- */
+
+  .fan-hand {
+    perspective: 1000px;
+    perspective-origin: 50% 130%;
+  }
+
+  .card.fan-card {
+    transition: transform 0.3s var(--spring), box-shadow 0.2s ease, filter 0.15s ease;
+  }
+
+  .card.fan-card.selected {
+    transform: translateY(calc(var(--cw) * -0.42)) translateZ(46px) rotateX(-10deg) scale(1.06);
+    box-shadow:
+      0 0 0 3px var(--gold),
+      0 0 22px rgba(246, 196, 83, 0.6),
+      0 22px 30px rgba(0, 0, 0, 0.55);
+  }
+
+  .card.fan-card.tappable:active:not(.selected) {
+    transform: translateY(calc(var(--cw) * -0.06)) scale(0.97);
+  }
+
+  /* ---------- a rank stack's "how many?" chooser ---------- */
+
+  .stack-picker {
+    position: absolute;
+    z-index: 1000;
+    display: flex;
+    gap: 4px;
+    padding: 5px;
+    border-radius: 14px;
+    translate: -50% calc(-100% - 12px);
+    background: rgba(8, 22, 15, 0.96);
+    box-shadow: 0 0 0 1px rgba(246, 196, 83, 0.5), 0 12px 26px rgba(0, 0, 0, 0.6);
+    animation: picker-in 0.22s var(--spring) backwards;
+  }
+
+  .stack-picker button {
+    min-width: 42px;
+    height: 42px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .stack-picker button.on {
+    background: var(--gold);
+    color: var(--gold-ink);
+  }
+
+  .stack-picker button.none {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  @keyframes picker-in {
+    from {
+      opacity: 0;
+      scale: 0.85;
+    }
+  }
+}

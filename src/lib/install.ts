@@ -23,6 +23,8 @@ window.addEventListener('appinstalled', () => {
 /** true when opened from the home-screen icon */
 export const isInstalled = () =>
   window.matchMedia('(display-mode: standalone)').matches ||
+  // the installed app now opens full screen (manifest display)
+  window.matchMedia('(display-mode: fullscreen)').matches ||
   (navigator as Navigator & { standalone?: boolean }).standalone === true;
 
 // iPads report a Mac platform, so a touch-screen "Mac" counts as iOS unless the browser says Android

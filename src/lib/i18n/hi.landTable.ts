@@ -2,6 +2,9 @@ import type { Dict } from './types';
 
 // new lines from the landscape redesign
 export const D: Dict = {
+  'Pick cards': 'पत्ते चुनें',
+  'call a rank': 'रैंक बोलें',
+  'None': 'कोई नहीं',
   'Table info, secret mission and rules': 'मेज़ की जानकारी, गुप्त मिशन और नियम',
   '🤫 Your secret mission · only you see it': '🤫 आपका गुप्त मिशन · सिर्फ़ आप देखते हैं',
   'This table': 'यह मेज़',

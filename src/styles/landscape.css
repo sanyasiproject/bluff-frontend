@@ -110,3 +110,21 @@
 .fs-btn {
   font-size: 17px;
 }
+
+/* a card turning over in flight (FlyingCards faces): its face and its back, back to back */
+.fly-card.fly-turn {
+  transform-style: preserve-3d;
+}
+
+.fly-turn .fly-front,
+.fly-turn .fly-back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
+}
+
+.fly-turn .fly-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+}

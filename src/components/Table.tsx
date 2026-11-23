@@ -21,7 +21,6 @@ import { FanHand } from './FanHand';
 import { OnTable, seatSpots, TableScene } from './TableScene';
 import { OppCards, Pile3D } from './Table3D';
 import { TableInfo } from './TableInfo';
-import { FullscreenButton } from './RotateGate';
 import { useLandscape } from '../lib/useLandscape';
 import { LevelBadge } from './LevelBadge';
 import { LevelUp } from './LevelUp';
@@ -540,8 +539,13 @@ export function Table({ view, actions, bubbles, auth, notes = [] }: { view: Room
     sfx.play(lp.count);
     const from = lp.playerId === view.meId ? handRef.current : seatEls.current.get(lp.playerId);
     const to = pileRef.current;
-    if (from && to) {
-      fly({ key: id, count: Math.min(lp.count, 6), from: from.getBoundingClientRect(), to: to.getBoundingClientRect(), backs: [back(lp.playerId)], auras: [aura(lp.playerId)] });
+    const mine = lp.playerId === view.meId ? myPlay.current : null;
+    myPlay.current = null;
+    if (from && to && mine && mine.faces.length === lp.count) {
+      // my own cards leave from their places in my hand, face up, and turn face down on the way to the pile
+      fly({ key: id, count: lp.count, from: from.getBoundingClientRect(), to: to.getBoundingClientRect(), faces: mine.faces.slice(0, 8), froms: mine.froms.slice(0, 8), backs: [back(lp.playerId)], auras: [aura(lp.playerId)], onTable: land });
+    } else if (from && to) {
+      fly({ key: id, count: Math.min(lp.count, 6), from: from.getBoundingClientRect(), to: to.getBoundingClientRect(), backs: [back(lp.playerId)], auras: [aura(lp.playerId)], onTable: land });
     }
   });
   useOnChange(view.passedIds.length, (n) => n > 0 && sfx.pass());
@@ -580,9 +584,15 @@ export function Table({ view, actions, bubbles, auth, notes = [] }: { view: Room
     if (!myTurn) setShieldOn(false);
   }, [myTurn]);
 
+  /** my play on its way: the cards and where each sat in my hand, for the flight to the pile */
+  const myPlay = useRef<{ faces: Card[]; froms: DOMRect[] } | null>(null);
   const play = async (rank?: Rank) => {
     setBusy(true);
+    const faces = selected.map((id) => view.hand.find((c) => c.id === id)).filter((c): c is Card => !!c);
+    const froms = selected.map((id) => (handRef.current?.querySelector(`[data-card="${id}"]`) ?? handRef.current)?.getBoundingClientRect() ?? new DOMRect());
+    myPlay.current = { faces, froms };
     const ok = await actions.play(selected, rank, shieldNow);
+    if (!ok) myPlay.current = null;
     setBusy(false);
     if (ok) {
       setSelected([]);
@@ -824,7 +834,6 @@ export function Table({ view, actions, bubbles, auth, notes = [] }: { view: Room
           )}
           <LiveVoiceButtons view={view} onToast={actions.toast} />
           <QuickChat onSend={actions.chat} view={view} />
-          <FullscreenButton />
           <button className="icon-btn" aria-label="Game menu" onClick={() => setPanel('menu')}>
             ⋯
           </button>
@@ -936,7 +945,7 @@ export function Table({ view, actions, bubbles, auth, notes = [] }: { view: Room
               Pass
             </button>
             <button className="btn primary grow" disabled={busy || selected.length === 0 || shieldBlocked} onClick={() => play()}>
-              {selected.length ? `Play ${claimText(selected.length, view.roundRank)}${lock}` : 'Tap cards to select'}
+              {selected.length ? `Play ${claimText(selected.length, view.roundRank)}${lock}` : land ? 'Pick cards' : 'Tap cards to select'}
             </button>
           </>
         )}
@@ -969,7 +978,21 @@ export function Table({ view, actions, bubbles, auth, notes = [] }: { view: Room
         )}
         {myTurn && !view.roundRank && (
           <button className="btn primary grow" disabled={busy || selected.length === 0 || shieldBlocked} onClick={() => setSheet('rank')}>
-            {selected.length ? `Put down ${selected.length} · call a rank${lock}` : 'Tap cards to select'}
+            {selected.length ? (
+              land ? (
+                <>
+                  Put down {selected.length}
+                  {lock}
+                  <small>call a rank</small>
+                </>
+              ) : (
+                `Put down ${selected.length} · call a rank${lock}`
+              )
+            ) : land ? (
+              'Pick cards'
+            ) : (
+              'Tap cards to select'
+            )}
           </button>
         )}
         {!myTurn && (
