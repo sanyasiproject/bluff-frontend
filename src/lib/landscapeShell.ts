@@ -39,14 +39,14 @@ export function startShell() {
   Object.assign(document.documentElement.style, { height: '100%', background: '#020604' });
   Object.assign(document.body.style, { margin: '0', height: '100%', overflow: 'hidden', background: '#020604' });
 
-  // the notch and home bar stay outside the game
+  // the notch and home bar stay outside the game; the game may hang over the box's edges while the phone's bars peek in
   const box = document.createElement('div');
   box.style.cssText =
-    'position:fixed;z-index:10;top:env(safe-area-inset-top);bottom:env(safe-area-inset-bottom);left:env(safe-area-inset-left);right:env(safe-area-inset-right);overflow:hidden;opacity:0;transition:opacity .25s ease';
+    'position:fixed;z-index:10;top:env(safe-area-inset-top);bottom:env(safe-area-inset-bottom);left:env(safe-area-inset-left);right:env(safe-area-inset-right);overflow:visible;opacity:0;transition:opacity .25s ease';
   const frame = document.createElement('iframe');
   frame.title = 'Bluff';
   frame.allow = 'fullscreen; microphone; autoplay; clipboard-write; web-share';
-  frame.style.cssText = 'position:absolute;left:50%;top:50%;border:0;transform-origin:50% 50%;background:#020604';
+  frame.style.cssText = 'position:absolute;left:0;top:0;border:0;transform-origin:50% 50%;background:#020604';
 
   // the game gets the invite link (?room=) and keeps it; the shell's own address drops it so a reload doesn't join again
   const url = new URL(location.href);
@@ -65,6 +65,23 @@ export function startShell() {
 
   // which way the phone is held: 90 = left side down (the usual), -90 = right side down
   let side = 90;
+  /**
+   * the size the game is laid out at. When the phone's bars peek in (pulling down the time and notifications,
+   * the back-gesture bar) the space shrinks for a moment: the game keeps its size and the bars just lie over it,
+   * like a native game. Only a smaller space that is still there a few seconds later (full screen really ended) counts.
+   */
+  let held = { w: 0, h: 0, upright: false };
+  let shrinkTimer: number | null = null;
+  const SHRINK_WAIT = 2600;
+  const place = () => {
+    const { w, h, upright } = held;
+    const fw = upright ? h : w;
+    const fh = upright ? w : h;
+    frame.style.width = `${fw}px`;
+    frame.style.height = `${fh}px`;
+    // centred on the held space, from the box's top left, so a shrinking box doesn't move or resize the game
+    frame.style.transform = `translate(${w / 2 - fw / 2}px, ${h / 2 - fh / 2}px) rotate(${upright ? side : 0}deg)`;
+  };
   const fit = () => {
     const r = box.getBoundingClientRect();
     // a box with no size yet (mid-rotation on some tablets): try again next frame
@@ -73,9 +90,26 @@ export function startShell() {
       return;
     }
     const upright = r.height > r.width;
-    frame.style.width = `${upright ? r.height : r.width}px`;
-    frame.style.height = `${upright ? r.width : r.height}px`;
-    frame.style.transform = `translate(-50%, -50%) rotate(${upright ? side : 0}deg)`;
+    const grew = r.width >= held.w - 0.5 && r.height >= held.h - 0.5;
+    if (upright !== held.upright || held.w === 0 || grew) {
+      // turned, first fit, or more room (full screen came on): take it at once
+      if (shrinkTimer !== null) {
+        clearTimeout(shrinkTimer);
+        shrinkTimer = null;
+      }
+      held = { w: r.width, h: r.height, upright };
+      place();
+      return;
+    }
+    // less room: wait and see whether the bars go away again
+    if (shrinkTimer === null) {
+      shrinkTimer = window.setTimeout(() => {
+        shrinkTimer = null;
+        const now = box.getBoundingClientRect();
+        held = { w: now.width, h: now.height, upright: now.height > now.width };
+        place();
+      }, SHRINK_WAIT);
+    }
   };
   // tablets report the new size at different moments while turning, so watch the box itself and check again for a while
   const settle = () => {
@@ -117,7 +151,7 @@ export function startShell() {
     }
     if (want !== side && now - since > 700) {
       side = want;
-      fit();
+      place();
     }
   });
 

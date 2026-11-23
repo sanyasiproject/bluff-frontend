@@ -33,6 +33,8 @@ import './styles/land-pages2.css';
 import './styles/land-overlays.css';
 import './styles/land-table.css';
 import './styles/land-world.css';
+// each table theme's own art on the 3D felt
+import './styles/land-felt-art.css';
 import './styles/land-c7.css';
 import './styles/land-rang.css';
 // skip, reverse, +2/+4, wild and last-card effects (components/TableFx.tsx)

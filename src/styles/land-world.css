@@ -705,3 +705,147 @@ body:has(main.lobby-room)::after {
     animation: nudge 2.4s ease-in-out infinite;
   }
 }
+
+/* ---------- light 3D for big high-res screens (tablets at 2944x1840 ran out of graphics memory: halves blinking) ----------
+   The rim's thickness is a shadow under the rail, the floor shadow lies flat outside the 3D plane, and the felt's
+   grain is a cheap pattern, so the tilted plane is one layer instead of six */
+@media (orientation: landscape) {
+  .rim-edge {
+    display: none;
+  }
+
+  .rail {
+    box-shadow:
+      /* the rim's edge seen on the near side */
+      0 10px 0 #24120a,
+      0 16px 0 #120803,
+      inset 0 0 0 2px rgba(255, 220, 170, 0.12),
+      inset 0 3px 2px rgba(255, 230, 190, 0.25),
+      inset 0 -4px 10px rgba(0, 0, 0, 0.6);
+  }
+
+  .rail.ranked {
+    box-shadow:
+      0 10px 0 #7a520e,
+      0 16px 0 #3d2802,
+      inset 0 0 0 2px rgba(255, 245, 200, 0.4),
+      inset 0 -4px 10px rgba(0, 0, 0, 0.45);
+  }
+
+  /* the floor shadow: flat, under the table's lower half */
+  .scene > .plane-shadow {
+    position: absolute;
+    inset: auto;
+    z-index: 0;
+    left: 50%;
+    bottom: -12dvh;
+    width: calc(var(--pw) * 1.02);
+    height: 62dvh;
+    translate: -50% 0;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4) 70%, transparent);
+  }
+
+  /* cloth grain without the noise image (the image had to be drawn at full table size on every redraw) */
+  .felt {
+    background:
+      repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.022) 0 2px, transparent 2px 5px),
+      repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.035) 0 2px, transparent 2px 6px),
+      radial-gradient(60% 55% at 50% 42%, var(--felt-light) 0%, var(--felt) 55%, var(--felt-deep) 100%);
+  }
+
+  /* the bars over the table get their own small layer, so redrawing the table never flickers them */
+  .room-dock,
+  .table .topbar,
+  .table .action-bar > *,
+  .side-actions {
+    transform: translateZ(0);
+  }
+}
+
+/* my turn: the gold glow round the rim, keeping the rim's edge */
+@media (orientation: landscape) {
+  :is(.my-turn-table, .rg-my-turn) .rail {
+    box-shadow:
+      0 10px 0 #24120a,
+      0 16px 0 #120803,
+      inset 0 0 0 2px rgba(255, 220, 170, 0.12),
+      inset 0 3px 2px rgba(255, 230, 190, 0.25),
+      0 0 0 3px rgba(246, 196, 83, 0.75),
+      0 0 36px 8px rgba(246, 196, 83, 0.45);
+  }
+}
+
+/* ---------- each player's own table colour on their seat ---------- */
+@media (orientation: landscape) {
+  /* the seat is a small card in that player's table look (looks.css sets --seat-bg from data-table) */
+  .seat-stand .seat {
+    padding: 6px 8px 6px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    background: var(--seat-bg, rgba(6, 22, 15, 0.9));
+    box-shadow:
+      0 8px 14px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  }
+
+  .seat-stand .seat.turn {
+    border-color: var(--gold);
+    box-shadow:
+      0 0 0 2px rgba(246, 196, 83, 0.4),
+      0 0 22px rgba(246, 196, 83, 0.45),
+      0 8px 14px rgba(0, 0, 0, 0.55);
+  }
+
+  /* the bottom bar of the room follows my table's colours too */
+  .room-dock {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--felt-deep) 85%, transparent), color-mix(in srgb, var(--felt-deep) 70%, #000));
+  }
+}
+
+/* ---------- panels over the table: solid, darker behind, bigger on big screens ---------- */
+@media (orientation: landscape) {
+  /* over the room and the game the table behind is busy: a solid panel and a darker screen behind it */
+  :is(main.lobby-room, main.table) .backdrop {
+    background: rgba(0, 0, 0, 0.62);
+  }
+
+  :is(main.lobby-room, main.table) .backdrop :is(.sheet, .modal) {
+    background: linear-gradient(160deg, color-mix(in srgb, var(--felt) 45%, #0b2219), #04150e 70%);
+    border-color: rgba(246, 196, 83, 0.55);
+  }
+
+  /* the room's seat panel: clear, solid buttons */
+  .room-sheet .btn:not(.primary) {
+    min-height: 48px;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    font-weight: 800;
+  }
+
+  /* big screens (tablets, laptops): panels grow with the screen instead of staying phone-sized */
+  @media (min-height: 700px) {
+    .backdrop :is(.sheet, .modal):not(.lo-over):not(.lo-reveal) {
+      --pz: 1.3;
+      zoom: var(--pz);
+      max-height: calc((100dvh - 16px) / var(--pz));
+    }
+
+    .sheet:has(.lp2-fr-cols) {
+      width: calc(min(980px, 92vw) / var(--pz, 1));
+    }
+  }
+
+  @media (min-height: 880px) {
+    .backdrop :is(.sheet, .modal):not(.lo-over):not(.lo-reveal) {
+      --pz: 1.45;
+    }
+  }
+}
+
+/* a panel opened from inside another (a friend's card from Friends) already sits in the bigger size: don't grow it twice */
+@media (orientation: landscape) and (min-height: 700px) {
+  .backdrop .backdrop :is(.sheet, .modal):not(.lo-over):not(.lo-reveal) {
+    zoom: 1;
+  }
+}

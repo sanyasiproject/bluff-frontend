@@ -1,10 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { cx } from '../lib/cards';
 
-/** layers under the rail that give the table edge its thickness */
-// three layers, spaced wider, give the same edge as six for half the phone's work
-const RIM_LAYERS = [1, 2, 3];
-
 /**
  * the 3D card table behind a landscape game: one tilted plane holding the felt, the rail and whatever lies on the table
  * (seats stand up at the far rail, cards lie on the felt); shown by CSS only in landscape
@@ -13,12 +9,10 @@ export function TableScene({ ranked, children }: { ranked?: boolean; children?: 
   return (
     <div className="scene">
       <div className="scene-room" aria-hidden />
+      {/* the table's shadow on the floor: flat, outside the 3D space, so it costs no extra 3D layer */}
+      <div className="plane-shadow" aria-hidden />
       <div className="world">
         <div className="plane">
-          <div className="plane-shadow" aria-hidden />
-          {RIM_LAYERS.map((i) => (
-            <div key={i} className={cx('rim-edge', ranked && 'ranked')} style={{ ['--z' as string]: i } as CSSProperties} aria-hidden />
-          ))}
           <div className={cx('rail', ranked && 'ranked')} aria-hidden>
             <div className="felt">
               <div className="felt-line" />
