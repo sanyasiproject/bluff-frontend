@@ -1,9 +1,5 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App';
-import { unlockAudio } from './lib/sounds';
-import { unlockSpeech } from './lib/speech';
-import { startI18n } from './lib/i18n/dom';
+import { insideShell, startShell, wantsShell } from './lib/landscapeShell';
+// styles load with the page so the intro screen is styled from the first paint
 import './styles.css';
 // table themes and card backs, after the base styles so they win
 import './styles/looks.css';
@@ -39,12 +35,6 @@ import './styles/land-world.css';
 import './styles/land-c7.css';
 import './styles/land-rang.css';
 
-for (const type of ['click', 'touchend'] as const) {
-  window.addEventListener(type, unlockSpeech, { once: true, capture: true });
-}
-// kept on: phones can suspend audio in the background, and the next tap resumes it
-window.addEventListener('pointerdown', unlockAudio, { capture: true, passive: true });
-
 // service worker only in production builds so it never caches the dev server
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -52,11 +42,7 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   });
 }
 
-// Hindi, when chosen, is applied over the rendered page
-startI18n();
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+// touch phones and tablets: the app runs inside a frame that turns sideways when the phone is upright,
+// so the game opens in landscape even with the rotation lock on (lib/landscapeShell.ts)
+if (wantsShell() && !insideShell()) startShell();
+else void import('./boot');

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { SHELL_FS_STATE } from '../lib/landscapeShell';
 import { canFullscreen, isStandalone, lockLandscape, toggleFullscreen } from '../lib/orientation';
 
 /** phones held upright: a full screen "turn your phone" card over the app (CSS shows it only in portrait on touch screens) */
@@ -27,8 +28,16 @@ export function FullscreenButton({ className = 'icon-btn' }: { className?: strin
   const [on, setOn] = useState(() => !!document.fullscreenElement);
   useEffect(() => {
     const sync = () => setOn(!!document.fullscreenElement);
+    // inside the sideways shell, the shell says when it went full screen
+    const fromShell = (e: MessageEvent) => {
+      if (e.origin === location.origin && e.data?.type === SHELL_FS_STATE) setOn(!!e.data.on);
+    };
     document.addEventListener('fullscreenchange', sync);
-    return () => document.removeEventListener('fullscreenchange', sync);
+    window.addEventListener('message', fromShell);
+    return () => {
+      document.removeEventListener('fullscreenchange', sync);
+      window.removeEventListener('message', fromShell);
+    };
   }, []);
   if (!canFullscreen()) return null;
   return (

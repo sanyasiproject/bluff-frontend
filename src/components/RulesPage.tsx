@@ -122,7 +122,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
 
         <Section icon="📱" title="Landscape and the 3D table">
           <ul>
-            <li>Bluff plays with the phone sideways, like Uno. Held upright, a phone shows "Turn your phone" until it is turned; the game keeps running.</li>
+            <li>Bluff plays sideways, like Uno. It always opens in landscape: with the phone upright (rotation lock on), the game is already turned, so just hold the phone sideways. On Android it follows which way you hold it.</li>
             <li>Laptops and tablets show the same sideways layout, bigger. ⛶ in the game's top bar goes full screen (not on iPhone).</li>
             <li>The table is 3D: opponents round the far edge, the pile lying on the felt, your cards fanned at the bottom, Bluff / Play / Pass on the right.</li>
             <li>The table only shows the players, the cards and your buttons. Tap ☰ (top left, with the room code) for your secret mission, this table's rules, your counts and the last moves.</li>
