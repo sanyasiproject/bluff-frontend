@@ -110,3 +110,34 @@ export function OnlineAvatars({ auth, onOpen }: { auth: Auth; onOpen: () => void
     </button>
   );
 }
+
+/** Home, beside Play: who's online right now (up to 4, face, name and where they are); a tap opens Friends */
+export function OnlineList({ auth, onOpen }: { auth: Auth; onOpen: () => void }) {
+  const all = useOnlineFriends(auth.user ? auth.token : null);
+  if (!auth.user || !all) return null;
+  const online = onlineFirst(all);
+  return (
+    <aside className="home-online-list" aria-label="Friends online now">
+      <h3>
+        <i className="live-dot on" aria-hidden /> Online now <b>{online.length}</b>
+      </h3>
+      {online.length === 0 && <p className="muted">No friends online</p>}
+      {online.slice(0, 4).map((f) => (
+        <button key={f.id} type="button" className="home-online-row" onClick={onOpen}>
+          <Avatar name={f.displayName} avatar={f.avatar} size="sm">
+            <i className="presence on" />
+          </Avatar>
+          <span className="grow">
+            <b data-no-translate>{f.displayName}</b>
+            <small className={cx('online-where', f.inRoom === null && 'free')}>{status(f)}</small>
+          </span>
+        </button>
+      ))}
+      {online.length > 4 && (
+        <button type="button" className="home-online-more" onClick={onOpen}>
+          +{online.length - 4} more
+        </button>
+      )}
+    </aside>
+  );
+}

@@ -1,0 +1,817 @@
+/* ---------- landscape lobby: the room is the game's 3D table (LobbyRoom) ---------- */
+
+@media (orientation: landscape) {
+  .screen.lobby.lobby-room {
+    /* same table as the game (land-world.css reads these) */
+    --pw: min(100vw, 232dvh);
+    --ph: 88dvh;
+    --tilt: 62deg;
+    --seat-k: 1.35;
+    --top-h: 50px;
+    --dock-h: 60px;
+    --ui-k: 1.15;
+    position: relative;
+    display: block;
+    width: 100%;
+    max-width: none;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    isolation: isolate;
+    background: #020604;
+  }
+
+  .lobby-room .scene {
+    z-index: 0;
+  }
+
+  /* the table sits between the top bar and the dock, a little flatter than in the game */
+  .lobby-room .plane {
+    bottom: calc(var(--dock-h) + var(--safe-b) - 6px);
+  }
+
+  /* ---------- top bar: code, invite, game and mode on the left; voice, watchers, chat, account on the right ---------- */
+
+  .room-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: calc(var(--top-h) + env(safe-area-inset-top));
+    padding: env(safe-area-inset-top) var(--safe-r) 0 var(--safe-l);
+    pointer-events: none;
+  }
+
+  .room-top > *,
+  .room-top-right > * {
+    pointer-events: auto;
+  }
+
+  .room-top-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* the room code: a big gold chip; tapping it shares the invite */
+  .room-code-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 7px;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffe08a, var(--gold) 45%, var(--gold-deep));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      0 0 0 1px rgba(90, 60, 0, 0.5),
+      0 6px 16px rgba(0, 0, 0, 0.45);
+    color: var(--gold-ink);
+    line-height: 44px;
+    transition: transform 0.1s ease;
+  }
+
+  .room-code-chip small {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.75;
+  }
+
+  .room-code-chip b {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+  }
+
+  .room-code-chip:active,
+  .room-chip:active,
+  .room-gear:active,
+  .room-sign:active {
+    transform: scale(0.96);
+  }
+
+  /* small glass chips: invite, game, casual or ranked */
+  .room-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+    backdrop-filter: blur(6px);
+  }
+
+  button.room-chip {
+    min-height: 44px;
+  }
+
+  .room-chip.invite {
+    box-shadow: inset 0 0 0 1.5px rgba(246, 196, 83, 0.55);
+    color: var(--gold);
+  }
+
+  .room-chip.mode {
+    color: var(--muted);
+  }
+
+  .room-chip.mode.ranked {
+    background: linear-gradient(180deg, rgba(120, 84, 10, 0.85), rgba(60, 40, 2, 0.85));
+    box-shadow: inset 0 0 0 1.5px var(--gold);
+    color: var(--gold);
+  }
+
+  .room-top .icon-btn {
+    width: 44px;
+    height: 44px;
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(6px);
+  }
+
+  /* watchers: the eye and how many; the host's join requests ring on it */
+  .room-top .room-watch-btn {
+    position: relative;
+    display: inline-flex;
+    gap: 3px;
+    width: auto;
+    padding: 0 10px;
+    font-size: 17px;
+  }
+
+  .room-watch-btn b {
+    font-size: 14px;
+  }
+
+  .room-watch-btn .req-dot {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+  }
+
+  .lobby-room .live-notice {
+    position: absolute;
+    top: calc(var(--top-h) + env(safe-area-inset-top) + 4px);
+    left: 50%;
+    z-index: 9;
+    translate: -50% 0;
+  }
+}
+
+/* ---------- seats round the table ---------- */
+@media (orientation: landscape) {
+  .room-seat-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+
+  /* no cards in the lobby, so no card count */
+  .lobby-room .seat.room-seat .seat-count {
+    display: none;
+  }
+
+  /* full names on one line, never cut */
+  .lobby-room .seat-stand .seat-name {
+    max-width: none;
+    overflow: visible;
+    white-space: nowrap;
+    text-overflow: clip;
+    text-align: center;
+    line-height: 1.25;
+  }
+
+  .lobby-room .seat-stand .seat.team-a {
+    --seat-ring: #4a90ff;
+  }
+
+  .lobby-room .seat-stand .seat.team-b {
+    --seat-ring: #ff963c;
+  }
+
+  .room-seat-tags {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 0;
+  }
+
+  .room-seat-tags:empty {
+    display: none;
+  }
+
+  /* ready or not: a small mark on the avatar's right side, so the seat stays short */
+  .room-ready {
+    position: absolute;
+    top: 11px;
+    left: calc(50% + 15px);
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.75);
+    box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.5);
+    font-size: 10px;
+  }
+
+  .room-ready.no {
+    opacity: 0.9;
+  }
+
+  .room-coins {
+    padding: 0 7px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--ink);
+    font-size: 10.5px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .room-coins.warn {
+    color: #ff9a9d;
+    box-shadow: inset 0 0 0 1px rgba(255, 154, 157, 0.55);
+  }
+
+  .room-crown {
+    position: absolute;
+    top: -13px;
+    left: 50%;
+    z-index: 2;
+    translate: -50% 0;
+    font-size: 16px;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
+    pointer-events: none;
+  }
+
+  /* the host's ✕ on a bot, top right of its avatar */
+  .room-x {
+    position: absolute;
+    top: -6px;
+    right: 2px;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(40, 8, 10, 0.92);
+    box-shadow: inset 0 0 0 1.5px rgba(255, 154, 157, 0.6), 0 2px 6px rgba(0, 0, 0, 0.5);
+    color: #ffb3b5;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  /* a bigger invisible hit area for the small ✕ */
+  .room-x::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+  }
+
+  /* 2v2: ask to swap places, a round button on the avatar's left */
+  .room-swap {
+    position: absolute;
+    top: 9px;
+    right: calc(50% + 17px);
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.8);
+    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.45), 0 2px 6px rgba(0, 0, 0, 0.5);
+    font-size: 12px;
+  }
+
+  .room-swap::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+  }
+
+  .room-swap:disabled {
+    opacity: 0.6;
+  }
+
+  /* a free seat: a glowing dashed "+" waiting for someone */
+  .room-open {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 76px;
+    padding: 0 0 2px;
+    border: 0;
+    background: none;
+    color: var(--ink);
+  }
+
+  .room-open .open-ring {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 2px dashed rgba(246, 196, 83, 0.75);
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(246, 196, 83, 0.22), rgba(0, 0, 0, 0.35));
+    box-shadow: 0 0 14px 2px rgba(246, 196, 83, 0.3);
+    color: var(--gold);
+    font-size: 20px;
+    font-weight: 900;
+  }
+
+  .room-open.team-a .open-ring {
+    border-color: rgba(74, 144, 255, 0.85);
+    box-shadow: 0 0 14px 2px rgba(74, 144, 255, 0.35);
+    color: #8fbcff;
+  }
+
+  .room-open.team-b .open-ring {
+    border-color: rgba(255, 150, 60, 0.85);
+    box-shadow: 0 0 14px 2px rgba(255, 150, 60, 0.35);
+    color: #ffbf8a;
+  }
+
+  .room-open-label {
+    padding: 1px 9px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  /* ---------- the sign on the felt ---------- */
+
+  .room-sign-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .room-sign {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 0;
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(20, 14, 2, 0.92), rgba(40, 28, 4, 0.92));
+    box-shadow: 0 0 0 1.5px rgba(246, 196, 83, 0.55), 0 8px 14px rgba(0, 0, 0, 0.55);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .room-sign span {
+    display: inline-flex;
+    gap: 6px;
+  }
+
+  .room-sign i {
+    color: var(--gold);
+    font-style: normal;
+  }
+
+  .room-sign-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .room-sign-row:empty {
+    display: none;
+  }
+
+  .room-gear {
+    min-height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--gold), var(--gold-deep));
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    color: var(--gold-ink);
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .room-gear.ghost {
+    background: rgba(0, 0, 0, 0.65);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    color: var(--ink);
+  }
+}
+
+/* ---------- me at the near side, the dock under it ---------- */
+@media (orientation: landscape) {
+  /* sits on top of the dock, whatever its height */
+  .room-near {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 4px);
+    z-index: 4;
+    translate: -50% 0;
+    transform-origin: 50% 100%;
+    scale: var(--ui-k);
+  }
+
+  .room-watcher {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+  }
+
+  .room-watcher .avatar {
+    opacity: 0.85;
+    box-shadow: 0 0 0 2.5px rgba(255, 255, 255, 0.6), 0 8px 14px rgba(0, 0, 0, 0.6);
+  }
+
+  .room-watch-tag {
+    padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* one glass bar: Leave · Play/Watch and why not yet · Start or I'm ready */
+  .room-dock {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 6;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-height: calc(var(--dock-h) + var(--safe-b));
+    padding: 6px var(--safe-r) calc(var(--safe-b) + 2px) var(--safe-l);
+    border-top: 1px solid var(--land-edge);
+    background: linear-gradient(180deg, rgba(8, 34, 24, 0.82), rgba(3, 16, 11, 0.94));
+    box-shadow: 0 -10px 26px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+  }
+
+  .room-dock-left {
+    display: flex;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .room-dock .room-invite {
+    border-color: rgba(246, 196, 83, 0.55);
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  .room-dock-right {
+    display: flex;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  .room-dock .btn {
+    min-height: 46px;
+  }
+
+  .room-dock .leave-btn {
+    min-width: 84px;
+  }
+
+  .room-dock-mid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    min-width: 0;
+    max-width: min(46vw, 460px);
+  }
+
+  .room-dock .mode-row {
+    padding: 0;
+    background: none;
+  }
+
+  .room-dock .mode-row > .grow {
+    display: none;
+  }
+
+  .room-dock .mode-row .mini-seg button {
+    min-height: 44px;
+    padding: 0 14px;
+  }
+
+  .room-reason {
+    position: absolute;
+    right: var(--safe-r);
+    bottom: calc(100% + 8px);
+    max-width: min(36vw, 340px);
+    margin: 0;
+    padding: 6px 12px;
+    border: 1px solid rgba(255, 154, 157, 0.4);
+    border-radius: 14px;
+    background: rgba(40, 10, 12, 0.9);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+    color: #ffd0d2;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: right;
+    overflow-wrap: anywhere;
+    transform-origin: 100% 100%;
+  }
+
+  .room-dock-right > .btn.grow {
+    flex: none;
+    width: min(260px, 100%);
+    min-height: 50px;
+    font-size: 16px;
+  }
+
+  .room-dock-right .ready-btn,
+  .room-dock-right .ready-go {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.15;
+  }
+
+  .room-dock-right .btn small {
+    font-size: 10.5px;
+    font-weight: 700;
+    opacity: 0.85;
+  }
+
+  .room-dock-right .waiting {
+    margin: 0;
+    padding: 0;
+    font-size: 13px;
+    text-align: right;
+  }
+
+  /* ---------- the settings drawer: glass, from the right, scrolls inside ---------- */
+
+  .room-drawer-bd {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(0, 0, 0, 0.45);
+    animation: room-fade 0.2s ease-out;
+  }
+
+  .room-drawer {
+    position: absolute;
+    top: 8px;
+    right: var(--safe-r);
+    bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    width: min(560px, 62vw);
+    overflow: hidden;
+    border: 1px solid rgba(246, 196, 83, 0.4);
+    border-radius: 18px;
+    background: linear-gradient(160deg, rgba(20, 62, 45, 0.95), rgba(4, 20, 14, 0.97));
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    animation: room-drawer-in 0.3s var(--spring) backwards;
+  }
+
+  .room-drawer-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px 6px 16px;
+    font-size: 15px;
+  }
+
+  .room-drawer-head b {
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  .room-drawer-close {
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--ink);
+    font-size: 16px;
+  }
+
+  .room-drawer .lobby-scroll {
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* invite, open seat and watchers sheets */
+  .room-sheet h3 {
+    margin: 0 0 6px;
+  }
+
+  .room-sheet-code {
+    color: var(--gold);
+    letter-spacing: 0.14em;
+  }
+
+  .room-sheet-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .room-sheet-actions .btn {
+    min-height: 48px;
+  }
+
+  .room-sheet .player-list + h3 {
+    margin-top: 12px;
+  }
+}
+
+/* short phones (667x375): a little tighter */
+@media (orientation: landscape) and (max-width: 700px) {
+  .room-chip {
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .room-code-chip b {
+    font-size: 20px;
+  }
+
+  .room-dock .leave-btn {
+    min-width: 70px;
+  }
+
+  .room-dock-right > .btn.grow {
+    width: min(210px, 100%);
+  }
+}
+
+/* tablets and laptops: seats, top bar and dock grow with the table */
+@media (orientation: landscape) and (min-width: 1000px) and (min-height: 600px) {
+  .screen.lobby.lobby-room {
+    --ph: 104dvh;
+    --seat-k: 2.1;
+    --ui-k: 1.6;
+    --top-h: 70px;
+    --dock-h: 84px;
+  }
+
+  .room-top,
+  .room-dock-left,
+  .room-dock-mid,
+  .room-dock-right {
+    zoom: 1.25;
+  }
+
+  .room-top {
+    height: calc((var(--top-h) + env(safe-area-inset-top)) / 1.25);
+  }
+
+  .room-dock-mid {
+    max-width: calc(min(46vw, 560px) / 1.25);
+  }
+
+  /* the drawer: wider, its contents zoomed like the rest */
+  .room-drawer {
+    width: min(680px, 56vw);
+  }
+
+  .room-drawer > * {
+    zoom: 1.2;
+  }
+
+  .room-reason {
+    scale: 1.25;
+  }
+}
+
+@media (orientation: landscape) and (min-width: 1300px) and (min-height: 760px) {
+  .screen.lobby.lobby-room {
+    --ph: 106dvh;
+    --seat-k: 2.6;
+    --ui-k: 2;
+    --top-h: 80px;
+    --dock-h: 96px;
+  }
+
+  .room-top,
+  .room-dock-left,
+  .room-dock-mid,
+  .room-dock-right {
+    zoom: 1.45;
+  }
+
+  .room-top {
+    height: calc((var(--top-h) + env(safe-area-inset-top)) / 1.45);
+  }
+
+  .room-dock-mid {
+    max-width: calc(min(46vw, 620px) / 1.45);
+  }
+
+  .room-drawer {
+    width: min(760px, 54vw);
+  }
+
+  .room-drawer > * {
+    zoom: 1.35;
+  }
+
+  .room-reason {
+    scale: 1.45;
+  }
+}
+
+/* motion: free seats breathe, the drawer slides in (transform and opacity only) */
+@media (orientation: landscape) and (prefers-reduced-motion: no-preference) {
+  .room-open .open-ring {
+    animation: room-seat-glow 2.4s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-drawer,
+  .room-drawer-bd {
+    animation: none;
+  }
+}
+
+@keyframes room-seat-glow {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes room-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+}
+
+@keyframes room-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* my own name plate has the room for one line */
+@media (orientation: landscape) {
+  .lobby-room .room-near .seat-name {
+    max-width: 220px;
+    white-space: nowrap;
+  }
+
+  .room-sign .room-sign-more {
+    margin-left: 2px;
+    color: var(--gold);
+    font-size: 15px;
+    line-height: 1;
+  }
+}

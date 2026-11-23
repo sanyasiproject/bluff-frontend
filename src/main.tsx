@@ -27,6 +27,7 @@ import './styles/friends.css';
 import './styles/landscape.css';
 import './styles/land-home.css';
 import './styles/land-lobby.css';
+import './styles/land-room.css';
 import './styles/land-pages.css';
 import './styles/land-pages2.css';
 import './styles/land-overlays.css';

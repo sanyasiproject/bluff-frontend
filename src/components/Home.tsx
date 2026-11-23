@@ -9,7 +9,7 @@ import { HeroFan, ShineTitle, SuitDrift } from './Ambient';
 import { FriendsSheet } from './FriendsSheet';
 import { HomeDock } from './HomeDock';
 import { HomeNotice } from './HomeNotice';
-import { OnlineAvatars } from './OnlineFriends';
+import { OnlineList } from './OnlineFriends';
 import { LangToggle } from './LangToggle';
 import { Backdrop } from './Overlays';
 import { PlayPanel } from './PlayPanel';
@@ -96,9 +96,13 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
         <LangToggle />
         <HomeNotice auth={auth} />
         <div className="home-corner">
-          <AccountCorner auth={auth} onOpenAdmin={onOpenAdmin} onJoin={joinFriend} showOnline={false} />
+          {/* the green count beside my profile: how many friends are online */}
+          <AccountCorner auth={auth} onOpenAdmin={onOpenAdmin} onJoin={joinFriend} />
         </div>
       </header>
+
+      {/* left of the stage: who's online now */}
+      <OnlineList auth={auth} onOpen={() => setFriends(true)} />
 
       {/* centre stage: logo, title and one big Play */}
       <div className="home-stage">
@@ -129,7 +133,6 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
 
       {/* everything else: one row of round buttons */}
       <div className="home-bottom">
-        <OnlineAvatars auth={auth} onOpen={() => setFriends(true)} />
         <HomeDock auth={auth} online={online} onHowTo={() => setChooser(true)} onFriends={() => setFriends(true)} onLogin={() => setAccountSheet('login')} />
       </div>
 

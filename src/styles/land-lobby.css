@@ -1,232 +1,6 @@
-/* landscape: land-lobby (only inside @media (orientation: landscape) unless noted) */
+/* landscape lobby: what goes inside the settings drawer (tabs and settings blocks); the room itself is in land-room.css */
 
-/* the lobby as a game room: top bar, players left, settings tabs right, the action bar docked */
 @media (orientation: landscape) {
-  .screen.lobby.lobby-land {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    gap: calc(1.4 * var(--u));
-    max-width: none;
-    height: 100vh;
-    height: 100dvh;
-    min-height: 0;
-    padding: calc(1.2 * var(--u) + env(safe-area-inset-top)) var(--safe-r) 0 var(--safe-l);
-    overflow: hidden;
-  }
-
-  /* laptops: a centred room, not a stretched one */
-  .lobby-land > :is(.lobby-head, .lobby-body, .lobby-actions) {
-    width: 100%;
-    max-width: 1240px;
-    justify-self: center;
-  }
-
-  /* ---------- top bar: room code, casual or ranked, chat, account ---------- */
-
-  .lobby-land .lobby-head {
-    gap: calc(1.4 * var(--u));
-    min-width: 0;
-  }
-
-  .lobby-land .lobby-head > .grow {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    min-width: 0;
-  }
-
-  .lobby-land .lobby-head .label {
-    margin: 0;
-    font-size: 11px;
-    white-space: nowrap;
-  }
-
-  .lobby-land .room-code {
-    font-size: clamp(22px, calc(5.2 * var(--u)), 42px);
-    line-height: 1;
-    white-space: nowrap;
-  }
-
-  /* the casual / ranked strip shrinks to a pill beside the code */
-  .lobby-land .lobby-head .mode-banner {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-    max-width: 44%;
-    padding: 6px 14px;
-    border-radius: 999px;
-    font-size: 12.5px;
-    white-space: nowrap;
-  }
-
-  /* never cut with "…": the pill wraps instead */
-  .lobby-land .lobby-head .mode-banner > * {
-    min-width: 0;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-
-  /* ranked: title over the player's rank, a two-line pill */
-  .lobby-land .lobby-head .mode-banner.ranked {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0;
-    padding: 4px 14px;
-    border-radius: 16px;
-    line-height: 1.25;
-  }
-
-  .lobby-land .lobby-head .mode-banner.ranked b {
-    font-size: 13px;
-  }
-
-  .lobby-land .lobby-head .mode-banner.ranked span {
-    font-size: 12px;
-  }
-
-  /* ---------- two columns, each scrolls on its own ---------- */
-
-  .lobby-body {
-    display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: calc(1.6 * var(--u));
-    min-height: 0;
-  }
-
-  .lobby-side,
-  .lobby-scroll {
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(246, 196, 83, 0.35) transparent;
-  }
-
-  .lobby-side {
-    display: flex;
-    flex-direction: column;
-    gap: calc(1.2 * var(--u));
-    padding-bottom: calc(1.2 * var(--u));
-  }
-
-  .lobby-side > * {
-    flex-shrink: 0;
-  }
-
-  /* glassy cards on the left, like the seats of a room */
-  .lobby-side > .panel,
-  .lobby-side > .invite-bar,
-  .lobby-side > .live-voice-row {
-    padding: calc(1.4 * var(--u)) calc(1.6 * var(--u));
-    border: 1px solid var(--land-edge);
-    border-radius: 16px;
-    background: var(--land-panel);
-    box-shadow: var(--land-shadow);
-  }
-
-  .lobby-side .section-title {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    margin-bottom: calc(1 * var(--u));
-    font-size: 15px;
-  }
-
-  .lobby-side .player-list {
-    gap: 6px;
-  }
-
-  .lobby-side .player-row {
-    min-height: 44px;
-    padding: 4px 8px;
-    gap: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
-  }
-
-  .lobby-side .player-row .tag {
-    flex-shrink: 0;
-  }
-
-  /* a free seat: a dashed outline waiting for someone */
-  .lobby-side .player-row.open-seat {
-    min-height: 40px;
-    border: 1px dashed rgba(246, 196, 83, 0.28);
-    background: rgba(0, 0, 0, 0.14);
-    color: var(--muted);
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .open-ring {
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    border: 1.5px dashed rgba(246, 196, 83, 0.45);
-    border-radius: 50%;
-    color: rgba(246, 196, 83, 0.7);
-    font-weight: 800;
-  }
-
-  .lobby-side .add-bot {
-    min-height: 42px;
-    margin-top: 8px;
-    font-size: 14px;
-  }
-
-  .lobby-side .tap-hint,
-  .lobby-side .add-bot-note,
-  .lobby-side .watch-note {
-    margin-top: 6px;
-    font-size: 12px;
-  }
-
-  /* invite: one row of wide share buttons */
-  .lobby-side .invite-bar {
-    gap: 6px;
-  }
-
-  .lobby-side .invite-caption {
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  .lobby-side .invite-bar .share-row {
-    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
-    gap: 6px;
-  }
-
-  .lobby-side .share-btn {
-    position: relative;
-    flex-direction: row;
-    justify-content: center;
-    gap: 6px;
-    min-height: 40px;
-    padding: 4px 8px;
-    font-size: 13px;
-  }
-
-  .lobby-side .share-btn span {
-    font-size: 16px;
-  }
-}
-
-/* the settings panel on the right: tabs on top, the open tab scrolls below */
-@media (orientation: landscape) {
-  .lobby-main {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow: hidden;
-    border: 1px solid var(--land-edge);
-    border-radius: 18px;
-    background: var(--land-panel);
-    box-shadow: var(--land-shadow);
-  }
-
   .lobby-tabs {
     display: flex;
     flex-shrink: 0;
@@ -349,99 +123,21 @@
     min-height: 40px;
   }
 
-  /* ---------- docked bar: Leave · Play/Watch · why not yet · Start ---------- */
+  .lobby-scroll {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(246, 196, 83, 0.35) transparent;
+  }
 
-  .lobby-land .lobby-actions {
-    position: relative;
-    bottom: auto;
-    flex-direction: row;
-    align-items: center;
-    gap: calc(1.2 * var(--u));
+  /* the casual / ranked strip on top of the Game tab */
+  .lobby-scroll .mode-banner {
     margin: 0;
-    padding: calc(1 * var(--u)) calc(1.6 * var(--u)) calc(var(--safe-b) + 0.8 * var(--u));
-    border: 1px solid var(--land-edge);
-    border-bottom: 0;
-    border-radius: 18px 18px 0 0;
-    background: var(--land-panel);
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
-  }
-
-  .lobby-land .lobby-actions .sticky-row {
-    display: contents;
-  }
-
-  .lobby-land .lobby-actions .btn {
-    min-height: 44px;
-  }
-
-  .lobby-land .lobby-actions .leave-btn {
-    order: -2;
-    flex-shrink: 0;
-  }
-
-  .lobby-land .lobby-actions .mode-row {
-    order: -1;
-    flex-shrink: 0;
-    padding: 0;
-    background: transparent;
-  }
-
-  .lobby-land .lobby-actions .mode-row > .grow {
-    display: none;
-  }
-
-  .lobby-land .lobby-actions .mode-row .mini-seg button {
-    min-height: 40px;
-  }
-
-  .lobby-land .lobby-actions .start-block {
-    order: 0;
-    flex: 1 1 auto;
-    min-width: 0;
-    margin: 0;
-    padding: 5px 12px;
-    border-radius: 14px;
-    font-size: 12.5px;
-    line-height: 1.3;
-    text-align: center;
-    overflow-wrap: anywhere;
-  }
-
-  /* a locked Start shrinks to its label so the reason gets the room to show in full */
-  .lobby-land .lobby-actions .btn.grow.blocked {
-    flex: none;
-    min-width: 0;
-  }
-
-  /* Start / I'm ready on the right, wide enough to hit */
-  .lobby-land .lobby-actions .btn.grow {
-    order: 1;
-    flex: 0 1 auto;
-    min-width: min(300px, 36vw);
-    margin-left: auto;
-  }
-
-  .lobby-land .lobby-actions .waiting {
-    order: 1;
-    flex: 1;
-    text-align: right;
   }
 }
 
-/* short phone screens: tighter rows, no empty seats, smaller help text */
+/* short phones: smaller help text in the drawer */
 @media (orientation: landscape) and (max-height: 500px) {
-  .lobby-side .player-row.open-seat {
-    display: none;
-  }
-
-  .lobby-land .lobby-head .label {
-    display: none;
-  }
-
-  .lobby-side .section-title {
-    font-size: 14px;
-  }
-
   .lobby-scroll .setting-row b {
     font-size: 14px;
   }
@@ -454,72 +150,17 @@
     font-size: 14px;
   }
 
-  .lobby-scroll .game-seg .option b {
-    font-size: 15px;
-  }
-
   .lobby-tab {
+    padding: 0 10px;
     font-size: 13px;
-    padding: 0 10px;
-  }
-
-  .lobby-land .lobby-actions .leave-btn {
-    min-width: 64px;
-    padding: 0 12px;
-    font-size: 14px;
-  }
-
-  .lobby-land .lobby-actions .btn.grow {
-    padding: 0 14px;
-    font-size: 15px;
   }
 }
 
-/* narrow phones: smaller mode-row buttons */
-@media (orientation: landscape) and (max-width: 760px) {
-  .lobby-land .lobby-head .mode-banner.ranked span {
-    font-size: 11.5px;
-  }
-
-  .lobby-land .lobby-actions .mode-row .mini-seg button {
-    padding: 0 10px;
-  }
-}
-
-/* laptops and tablets: a little more air */
+/* tablets and laptops: bigger type in the drawer */
 @media (orientation: landscape) and (min-height: 700px) {
-  .lobby-body {
-    grid-template-columns: minmax(0, 4.6fr) minmax(0, 7.4fr);
-  }
-
-  .lobby-side .player-row {
-    min-height: 52px;
-  }
-
   .lobby-tab {
-    min-height: 46px;
+    min-height: 48px;
     font-size: 15px;
-  }
-
-  .lobby-land .lobby-actions {
-    padding-top: calc(1.2 * var(--u));
-  }
-
-  .lobby-land .lobby-actions .btn {
-    min-height: 52px;
-  }
-
-  .lobby-land > :is(.lobby-head, .lobby-body, .lobby-actions) {
-    max-width: 1180px;
-  }
-
-  /* bigger type so the room isn't lost on a big screen */
-  .lobby-side .section-title {
-    font-size: 17px;
-  }
-
-  .lobby-side .player-row {
-    font-size: 16px;
   }
 
   .lobby-scroll {
@@ -528,44 +169,26 @@
   }
 
   .lobby-scroll .option {
-    min-height: 72px;
+    min-height: 68px;
     padding: 12px 16px;
   }
 
-  .lobby-scroll .option b {
+  .lobby-scroll .option b,
+  .lobby-scroll .setting-row b {
     font-size: 16px;
   }
 
-  .lobby-scroll .game-seg .option b {
-    font-size: 18px;
-  }
-
-  .lobby-scroll .option span {
-    font-size: 13.5px;
+  .lobby-scroll .option span,
+  .lobby-scroll .setting-row span {
+    font-size: 13px;
   }
 
   .lobby-scroll .setting-row {
     padding: 12px 16px;
   }
 
-  .lobby-scroll .setting-row b {
-    font-size: 16px;
-  }
-
-  .lobby-scroll .setting-row span {
-    font-size: 13px;
-  }
-
-  .lobby-scroll .label {
-    font-size: 13px;
-  }
-
   .lobby-scroll .rules ul {
     font-size: 15px;
-  }
-
-  .lobby-land .lobby-actions .btn.grow {
-    font-size: 17px;
   }
 }
 
@@ -597,14 +220,10 @@
   }
 }
 
-/* motion: the open tab rises in; free seats breathe (transform and opacity only) */
+/* motion: the open tab rises in (transform and opacity only) */
 @media (orientation: landscape) and (prefers-reduced-motion: no-preference) {
   .lobby-scroll {
     animation: land-lobby-tab 0.28s ease-out backwards;
-  }
-
-  .open-ring {
-    animation: land-lobby-seat 2.4s ease-in-out infinite;
   }
 }
 
@@ -612,17 +231,5 @@
   from {
     opacity: 0;
     transform: translateY(6px);
-  }
-}
-
-@keyframes land-lobby-seat {
-  0%,
-  100% {
-    opacity: 0.55;
-    transform: scale(0.94);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1);
   }
 }

@@ -27,15 +27,15 @@ export function wantsShell() {
 
 /** builds the shell: a dark page with the game in a frame that turns with the phone */
 export function startShell() {
+  // the first intro (index.html, drawn sideways by CSS) stays until the game inside has loaded, so there's no blank moment
   const root = document.getElementById('root');
-  if (root) root.innerHTML = '';
   Object.assign(document.documentElement.style, { height: '100%', background: '#020604' });
   Object.assign(document.body.style, { margin: '0', height: '100%', overflow: 'hidden', background: '#020604' });
 
   // the notch and home bar stay outside the game
   const box = document.createElement('div');
   box.style.cssText =
-    'position:fixed;top:env(safe-area-inset-top);bottom:env(safe-area-inset-bottom);left:env(safe-area-inset-left);right:env(safe-area-inset-right);overflow:hidden;background:#020604';
+    'position:fixed;z-index:10;top:env(safe-area-inset-top);bottom:env(safe-area-inset-bottom);left:env(safe-area-inset-left);right:env(safe-area-inset-right);overflow:hidden;opacity:0;transition:opacity .25s ease';
   const frame = document.createElement('iframe');
   frame.title = 'Bluff';
   frame.allow = 'fullscreen; microphone; autoplay; clipboard-write; web-share';
@@ -48,7 +48,13 @@ export function startShell() {
   if (new URLSearchParams(location.search).has('room')) history.replaceState(null, '', location.pathname + location.hash);
 
   box.appendChild(frame);
-  (root ?? document.body).appendChild(box);
+  document.body.appendChild(box);
+  frame.addEventListener('load', () => {
+    // the game's own intro is up: show it and drop the first one
+    box.style.background = '#020604';
+    box.style.opacity = '1';
+    setTimeout(() => root?.replaceChildren(), 300);
+  }, { once: true });
 
   // which way the phone is held: 90 = left side down (the usual), -90 = right side down
   let side = 90;

@@ -841,58 +841,44 @@
     min-height: 44px;
   }
 
-  /* ---------- intro: logo on the left, words on the right ---------- */
+  /* ---------- intro: everything in one centred column, sized for a short screen ---------- */
   .splash {
-    display: grid;
-    grid-template-columns: auto minmax(0, 30rem);
-    grid-template-areas:
-      'logo title'
-      'logo tag'
-      'logo loader'
-      'logo status'
-      'logo retry';
-    justify-content: center;
-    align-content: center;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    column-gap: clamp(20px, calc(var(--u) * 6), 64px);
-    row-gap: 6px;
+    justify-content: center;
+    gap: clamp(4px, calc(var(--u) * 1.4), 12px);
+    min-height: 100dvh;
     padding: var(--safe-b) var(--safe-r) var(--safe-b) var(--safe-l);
-    text-align: left;
+    text-align: center;
   }
 
   .splash-logo {
-    grid-area: logo;
-    width: clamp(96px, calc(var(--u) * 30), 240px);
-    height: clamp(96px, calc(var(--u) * 30), 240px);
-    margin: 0;
+    width: clamp(72px, calc(var(--u) * 22), 180px);
+    height: clamp(72px, calc(var(--u) * 22), 180px);
+    margin: 0 0 calc(var(--u) * 1);
     border-radius: 24%;
   }
 
   .splash-title {
-    grid-area: title;
-    font-size: clamp(42px, calc(var(--u) * 12), 96px);
+    font-size: clamp(38px, calc(var(--u) * 11), 90px);
     line-height: 1;
   }
 
   .splash-tag {
-    grid-area: tag;
-    font-size: clamp(14px, calc(var(--u) * 2.4), 20px);
+    font-size: clamp(13px, calc(var(--u) * 2.4), 20px);
   }
 
   .splash-loader {
-    grid-area: loader;
-    margin-top: clamp(8px, calc(var(--u) * 2.4), 20px);
+    margin-top: clamp(6px, calc(var(--u) * 2), 18px);
   }
 
   .splash-status {
-    grid-area: status;
-    max-width: 30ch;
+    max-width: 44ch;
     min-height: 2.6em;
   }
 
   .splash > .btn {
-    grid-area: retry;
-    justify-self: start;
     min-height: 40px;
   }
 
@@ -922,6 +908,102 @@
   .home-play-btn.btn,
   .home-online,
   .home-dock > * {
+    animation: none;
+  }
+}
+
+/* ---------- who's online, beside Play (landscape only; portrait keeps its own layout) ---------- */
+.home-online-list {
+  display: none;
+}
+
+@media (orientation: landscape) {
+  .home-online-list {
+    position: absolute;
+    top: 50%;
+    left: calc(var(--safe-l) + 4px);
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: clamp(146px, 22vw, 270px);
+    max-height: calc(100dvh - 150px);
+    padding: 10px;
+    overflow-y: auto;
+    border-radius: 16px;
+    translate: 0 -50%;
+    background: var(--land-panel);
+    box-shadow: var(--land-shadow), inset 0 0 0 1px var(--land-edge);
+    animation: online-in 0.4s var(--spring) 0.2s backwards;
+  }
+
+  .home-online-list h3 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 2px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .home-online-list h3 b {
+    margin-left: auto;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(60, 207, 145, 0.2);
+    color: var(--ok);
+  }
+
+  .home-online-list > p {
+    margin: 2px 0;
+    font-size: 13px;
+  }
+
+  .home-online-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 4px 6px;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--ink);
+    text-align: left;
+  }
+
+  .home-online-row b {
+    display: block;
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  .home-online-row small {
+    display: block;
+    font-size: 11px;
+  }
+
+  .home-online-more {
+    min-height: 32px;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: var(--gold);
+    font-weight: 800;
+  }
+
+  @keyframes online-in {
+    from {
+      opacity: 0;
+      translate: -20px -50%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-online-list {
     animation: none;
   }
 }
