@@ -19,7 +19,7 @@ import { FlyingCards, type Flight } from './FlyingCards';
 import { Hand } from './Hand';
 import { FanHand } from './FanHand';
 import { OnTable, seatSpots, TableScene } from './TableScene';
-import { OppCards, Pile3D } from './Table3D';
+import { OppCards, PartnerCards, Pile3D } from './Table3D';
 import { TableInfo } from './TableInfo';
 import { useLandscape } from '../lib/useLandscape';
 import { LevelBadge } from './LevelBadge';
@@ -722,7 +722,10 @@ export function Table({ view, actions, bubbles, auth, notes = [] }: { view: Room
           )
   );
   // landscape: where everyone sits round the 3D table
-  const spots = seatSpots(opponents.length);
+  // landscape: everyone in play order starting with the player after me, so in 2v2 my partner sits straight across
+  const myAt = view.players.findIndex((p) => p.id === view.meId);
+  const around = myAt < 0 ? opponents : [...view.players.slice(myAt + 1), ...view.players.slice(0, myAt)];
+  const spots = seatSpots(around.length);
   // what only I need now and then, kept in the table info panel instead of on the table
   const infoMine = (
     <>
@@ -803,11 +806,23 @@ export function Table({ view, actions, bubbles, auth, notes = [] }: { view: Room
       <TableScene ranked={view.config.ranked}>
         {land && (
           <>
-            {opponents.map((p, i) => (
+            {around.map((p, i) => (
               <Fragment key={p.id}>
-                <OnTable x={spots[i].cards.x} y={spots[i].cards.y}>
-                  <OppCards count={p.cardCount} back={p.back} aura={aura(p.id)} turn={spots[i].cards.turn} />
-                </OnTable>
+                {/* 2v2: my partner's cards lie face up in front of them, for me only; everyone else's face down */}
+                {p.id === partnerId && view.partnerHand ? (
+                  <>
+                  <OnTable x={spots[i].cards.x} y={spots[i].cards.y + 9}>
+                    <i className={`partner-glow team-${teamOf(p.id)}`} />
+                  </OnTable>
+                  <OnTable x={spots[i].cards.x} y={spots[i].cards.y + 11} stand z={4} className="partner-spot">
+                    <PartnerCards cards={view.partnerHand} name={p.name} kismat={kismat} team={teamOf(p.id)} />
+                  </OnTable>
+                  </>
+                ) : (
+                  <OnTable x={spots[i].cards.x} y={spots[i].cards.y}>
+                    <OppCards count={p.cardCount} back={p.back} aura={aura(p.id)} turn={spots[i].cards.turn} />
+                  </OnTable>
+                )}
                 {p.id === view.turnId && (
                   <OnTable x={spots[i].cards.x} y={spots[i].cards.y} className="turn-spot">
                     <i />

@@ -849,3 +849,420 @@ body:has(main.lobby-room)::after {
     zoom: 1;
   }
 }
+
+/* ---------- each player's own table colour on their seat ---------- */
+@media (orientation: landscape) {
+  /* the seat is a small card in that player's table look (looks.css sets --seat-bg from data-table) */
+  .seat-stand .seat {
+    padding: 6px 8px 6px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    background: var(--seat-bg, rgba(6, 22, 15, 0.9));
+    box-shadow:
+      0 8px 14px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  }
+
+  .seat-stand .seat.turn {
+    border-color: var(--gold);
+    box-shadow:
+      0 0 0 2px rgba(246, 196, 83, 0.4),
+      0 0 22px rgba(246, 196, 83, 0.45),
+      0 8px 14px rgba(0, 0, 0, 0.55);
+  }
+
+  /* the bottom bar of the room follows my table's colours too */
+  .room-dock {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--felt-deep) 85%, transparent), color-mix(in srgb, var(--felt-deep) 70%, #000));
+  }
+}
+
+/* ---------- panels over the table: solid, darker behind, bigger on big screens ---------- */
+@media (orientation: landscape) {
+  /* over the room and the game the table behind is busy: a solid panel and a darker screen behind it */
+  :is(main.lobby-room, main.table) .backdrop {
+    background: rgba(0, 0, 0, 0.62);
+  }
+
+  :is(main.lobby-room, main.table) .backdrop :is(.sheet, .modal) {
+    background: linear-gradient(160deg, color-mix(in srgb, var(--felt) 45%, #0b2219), #04150e 70%);
+    border-color: rgba(246, 196, 83, 0.55);
+  }
+
+  /* the room's seat panel: clear, solid buttons */
+  .room-sheet .btn:not(.primary) {
+    min-height: 48px;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    font-weight: 800;
+  }
+
+  /* big screens (tablets, laptops): panels grow with the screen instead of staying phone-sized */
+  @media (min-height: 700px) {
+    .backdrop :is(.sheet, .modal):not(.lo-over):not(.lo-reveal) {
+      --pz: 1.3;
+      zoom: var(--pz);
+      max-height: calc((100dvh - 16px) / var(--pz));
+    }
+
+    .sheet:has(.lp2-fr-cols) {
+      width: calc(min(980px, 92vw) / var(--pz, 1));
+    }
+  }
+
+  @media (min-height: 880px) {
+    .backdrop :is(.sheet, .modal):not(.lo-over):not(.lo-reveal) {
+      --pz: 1.45;
+    }
+  }
+}
+
+/* a panel opened from inside another (a friend's card from Friends) already sits in the bigger size: don't grow it twice */
+@media (orientation: landscape) and (min-height: 700px) {
+  .backdrop .backdrop :is(.sheet, .modal):not(.lo-over):not(.lo-reveal) {
+    zoom: 1;
+  }
+}
+
+/* ---------- 2v2: my partner's cards, face up on the table in front of them ---------- */
+.partner-cards {
+  display: none;
+}
+
+@media (orientation: landscape) {
+  .partner-spot {
+    pointer-events: none;
+  }
+
+  .partner-cards {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 6px 6px;
+    border: 1.5px solid var(--team-edge, rgba(246, 196, 83, 0.6));
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(4, 16, 11, 0.9), rgba(4, 16, 11, 0.78));
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5), 0 0 14px color-mix(in srgb, var(--team-edge, #f6c453) 40%, transparent);
+  }
+
+  .partner-cards.team-a {
+    --team-edge: #4ea3ff;
+  }
+
+  .partner-cards.team-b {
+    --team-edge: #ff9a3c;
+  }
+
+  .partner-cards-title {
+    color: var(--ink);
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .partner-cards-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .partner-card {
+    position: relative;
+  }
+
+  .partner-card .card {
+    --cw: 22px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  }
+
+  /* only the top corner matters at this size: hide the big middle suit */
+  .partner-card .card .pip,
+  .partner-card .card .corner.br {
+    display: none;
+  }
+
+  .partner-card .card .corner.tl {
+    top: 2px;
+    left: 0;
+    width: 100%;
+  }
+
+  .partner-card .card .corner b {
+    font-size: 11px;
+  }
+
+  .partner-card .card .corner .suit {
+    width: 8px;
+    height: 8px;
+  }
+
+  .partner-card-n {
+    position: absolute;
+    right: -3px;
+    bottom: -4px;
+    z-index: 2;
+    padding: 0 3px;
+    border-radius: 999px;
+    background: var(--team-edge, var(--gold));
+    color: #081018;
+    font-size: 8.5px;
+    font-weight: 900;
+    line-height: 1.35;
+  }
+
+  .partner-cards-none {
+    color: var(--muted);
+    font-size: 10px;
+  }
+}
+
+/* ---------- 2v2: my partner's hand, held up in a 3D fan in front of them ---------- */
+.pfan,
+.partner-glow {
+  display: none;
+}
+
+@media (orientation: landscape) {
+  .partner-spot {
+    pointer-events: none;
+  }
+
+  .pfan {
+    --team-edge: #f6c453;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .pfan.team-a {
+    --team-edge: #4ea3ff;
+  }
+
+  .pfan.team-b {
+    --team-edge: #ff9a3c;
+  }
+
+  /* the hand: cards pivot round a point below them, leaning back a little, like cards held up */
+  .pfan-hand {
+    --pcw: 27px;
+    position: relative;
+    width: calc(var(--pcw) + (var(--m) - 1) * var(--step, 17px) + 24px);
+    height: calc(var(--pcw) * 1.4 + 14px);
+    perspective: 420px;
+    perspective-origin: 50% 120%;
+    transform-style: preserve-3d;
+  }
+
+  .pfan-card {
+    position: absolute;
+    left: 50%;
+    bottom: 2px;
+    width: var(--pcw);
+    transform-origin: 50% 160%;
+    transform: translateX(calc(-50% + var(--x))) translateY(var(--y)) rotate(var(--a)) rotateX(10deg);
+    animation: pfan-in 0.45s var(--spring) backwards;
+    animation-delay: calc(var(--i, 0) * 30ms);
+  }
+
+  .pfan-card .card {
+    --cw: var(--pcw);
+    /* the card's thickness, its edge catching the light, and its shadow on the felt */
+    box-shadow:
+      1px 1px 0 #e7decb,
+      2px 2px 0 #c9bea6,
+      3px 5px 6px rgba(0, 0, 0, 0.5);
+  }
+
+  /* glossy light across each card */
+  .pfan-card .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 38%, rgba(0, 0, 0, 0.08) 100%);
+    pointer-events: none;
+  }
+
+  /* at this size only the top corner reads: drop the big middle suit and the bottom corner */
+  .pfan-card .card .pip,
+  .pfan-card .card .corner.br,
+  .pfan-card .rang-card .rg-corner {
+    display: none;
+  }
+
+  /* Rang: spread wide so each card's colour panel and big number show whole */
+  .pfan-hand.wide {
+    --pcw: 32px;
+  }
+
+  /* a crisp white edge round each Rang card so neighbours never blur together */
+  .pfan-hand.wide .pfan-card .rang-card {
+    box-shadow:
+      0 0 0 1.5px #fff,
+      1px 2px 0 #c9bea6,
+      3px 5px 7px rgba(0, 0, 0, 0.55);
+  }
+
+  .pfan-card .card .corner.tl {
+    top: 2px;
+    left: 0;
+    width: 100%;
+  }
+
+  .pfan-card .card .corner b {
+    font-size: 13px;
+  }
+
+  .pfan-card .card .corner .suit {
+    width: 9px;
+    height: 9px;
+  }
+
+  /* how many of that rank: a small team-coloured coin on the card's corner */
+  /* on the card's left edge under its rank: the part the next card never covers */
+  .pfan-n {
+    position: absolute;
+    left: -3px;
+    top: 58%;
+    z-index: 2;
+    min-width: 13px;
+    padding: 0 3px;
+    border-radius: 999px;
+    background: var(--team-edge);
+    color: #071018;
+    font-size: 9px;
+    font-weight: 900;
+    line-height: 1.45;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+
+  .pfan-tag {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.72);
+    box-shadow: inset 0 0 0 1px var(--team-edge);
+    color: var(--ink);
+    font-size: 10.5px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .pfan-none {
+    position: absolute;
+    inset: auto 0 6px;
+    color: var(--muted);
+    font-size: 10px;
+    text-align: center;
+  }
+
+  /* a soft pool of the team's colour lying on the felt under the hand */
+  .partner-glow {
+    display: block;
+    width: calc(var(--pw) * 0.3);
+    height: calc(var(--pw) * 0.12);
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--team-edge, #f6c453) 45%, transparent), transparent);
+    opacity: 0.7;
+  }
+
+  .partner-glow.team-a {
+    --team-edge: #4ea3ff;
+  }
+
+  .partner-glow.team-b {
+    --team-edge: #ff9a3c;
+  }
+
+  @keyframes pfan-in {
+    from {
+      opacity: 0;
+      translate: 0 10px;
+    }
+  }
+}
+
+/* ---------- partner fan: clear counts, and corner numbers when a big Rang hand packs tight ---------- */
+@media (orientation: landscape) {
+  /* how many of that card: a clear coin on the card's bottom left, the part the next card never covers */
+  .pfan-n {
+    left: -4px;
+    top: auto;
+    bottom: -5px;
+    min-width: 17px;
+    padding: 1px 4px;
+    border: 1.5px solid #fff;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+
+  /* a big Rang hand: the middle sign would be hidden, so the top-left corner shows it instead */
+  .pfan-hand.wide.tight .pfan-card .rang-card .rg-corner.tl {
+    display: flex;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .pfan-hand.wide.tight .pfan-card .rang-card :is(.rg-big, .rg-icon, .rg-fan, .rg-disc) {
+    display: none;
+  }
+}
+
+@media (orientation: landscape) {
+  /* the count sits just above the card's top-left corner: in a fan nothing ever covers that spot */
+  .pfan-n {
+    left: -3px;
+    top: -15px;
+    bottom: auto;
+    z-index: 3;
+  }
+
+  /* room above the fan for those counts */
+  .pfan-hand:has(.pfan-n) {
+    margin-top: 12px;
+  }
+
+  /* a big Rang hand's corner numbers: white with a dark outline, readable on red, yellow, green, blue and black */
+  .pfan-hand.wide.tight .pfan-card .rang-card .rg-corner.tl {
+    color: #fff;
+    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.85);
+    paint-order: stroke fill;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
+  }
+
+  .pfan-hand.wide.tight .pfan-card .rang-card .rg-corner.tl svg {
+    filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000);
+  }
+}
+
+@media (orientation: landscape) {
+  /* a packed Rang card's sign: a chip in the card's colour above it, with the count beside */
+  .pfan-n.pfan-sign {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 1px;
+    left: 50%;
+    translate: -50% 0;
+    min-width: 15px;
+    background: var(--chip);
+    color: #fff;
+    font-size: 10px;
+    -webkit-text-stroke: 0.6px rgba(0, 0, 0, 0.6);
+    paint-order: stroke fill;
+  }
+
+  .pfan-n.pfan-sign small {
+    font-size: 8px;
+  }
+
+  /* alternate chip heights so neighbouring chips never sit on top of each other */
+  .pfan-hand.tight .pfan-card:nth-child(even) .pfan-sign {
+    top: -27px;
+  }
+
+  .pfan-hand.tight {
+    margin-top: 26px;
+  }
+}

@@ -1,5 +1,5 @@
-import type { CSSProperties, RefObject } from 'react';
-import { DEFAULT_CARD_BACK } from '../types';
+import type { CSSProperties, ReactNode, RefObject } from 'react';
+import { DEFAULT_CARD_BACK, RANKS, type Card, type Rank } from '../types';
 import { PlayingCard } from './PlayingCard';
 
 /** paper layers for a stack of n: at most 6 drawn, spread over the same height (each 3D layer costs the phone a lot) */
@@ -83,5 +83,59 @@ export function Pile3D({
         </span>
       )}
     </div>
+  );
+}
+
+/** a fan of small face-up cards held up like a real hand, for my 2v2 partner (Bluff and Rang share it) */
+export function PartnerFan({ name, total, team, cards, wide }: { name: string; total: number; team: 'a' | 'b' | null; cards: { key: string; node: ReactNode; n?: number; tag?: string; tagColor?: string }[]; wide?: boolean }) {
+  const m = cards.length;
+  // wide (Rang): cards spread far enough apart that each one's colour and number show whole; fewer cards, wider gaps
+  const step = wide ? Math.max(14, Math.min(26, 230 / Math.max(m - 1, 1))) : 17;
+  // a gentle arc, flatter when spread wide so the cards stay upright and easy to read
+  const spread = wide ? Math.min(24, 2.6 * Math.max(m - 1, 0)) : Math.min(46, 4.5 * Math.max(m - 1, 0));
+  // packed too tight to read each card's face: its sign shows in a chip above it instead
+  const tight = !!wide && step < 22;
+  return (
+    <div className={`pfan${team ? ` team-${team}` : ''}`} aria-label={`${name}'s cards, ${total}`}>
+      <div className={`pfan-hand${wide ? ' wide' : ''}${tight ? ' tight' : ''}`} style={{ ['--m' as string]: m, ['--step' as string]: `${step}px` } as CSSProperties}>
+        {m === 0 && <span className="pfan-none">No cards left</span>}
+        {cards.map((c, i) => {
+          const t = m > 1 ? i / (m - 1) - 0.5 : 0;
+          return (
+            <span
+              key={c.key}
+              className="pfan-card"
+              style={{ ['--a' as string]: `${(t * spread).toFixed(1)}deg`, ['--x' as string]: `${(t * (m - 1) * step).toFixed(1)}px`, ['--y' as string]: `${(t * t * 8).toFixed(1)}px`, zIndex: i } as CSSProperties}
+            >
+              {c.node}
+              {tight && c.tag ? (
+                <b className="pfan-n pfan-sign" style={{ ['--chip' as string]: c.tagColor ?? '#222' } as CSSProperties}>
+                  {c.tag}
+                  {c.n !== undefined && c.n > 1 && <small>×{c.n}</small>}
+                </b>
+              ) : (
+                c.n !== undefined && c.n > 1 && <b className="pfan-n">×{c.n}</b>
+              )}
+            </span>
+          );
+        })}
+      </div>
+      <span className="pfan-tag" data-no-translate>
+        🤝 {name} · {total}
+      </span>
+    </div>
+  );
+}
+
+/** 2v2 Bluff: my partner's cards in a held fan, one card per rank, A to K, with how many */
+export function PartnerCards({ cards, name, kismat, team }: { cards: Card[]; name: string; kismat: Rank | null; team: 'a' | 'b' | null }) {
+  const groups = RANKS.map((r) => cards.filter((c) => c.rank === r)).filter((g) => g.length > 0);
+  return (
+    <PartnerFan
+      name={name}
+      total={cards.length}
+      team={team}
+      cards={groups.map((g) => ({ key: g[0].rank, n: g.length, node: <PlayingCard card={g[0]} wild={kismat === g[0].rank} /> }))}
+    />
   );
 }

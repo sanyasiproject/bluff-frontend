@@ -27,7 +27,7 @@ import { Avatar } from './Avatar';
 import { SecretChip } from './SecretMissions';
 import { useBox, fanLayout } from './FanHand';
 import { OnTable, seatSpots, TableScene } from './TableScene';
-import { OppCards } from './Table3D';
+import { OppCards, PartnerFan } from './Table3D';
 import { TableInfo } from './TableInfo';
 import { RangArrows, RangDeck3D, RangPile3D, RangRing } from './RangTable3D';
 import { useLandscape } from '../lib/useLandscape';
@@ -161,6 +161,25 @@ function seatTag(rg: RangView, id: string, cards: number) {
 }
 
 /** landscape: my Rang cards fanned like a held hand (FanHand's layout with Rang cards) */
+/** a partner's Rang cards in a tidy order: by colour (wilds last), then number, then action */
+const COLOR_ORDER: Record<string, number> = { red: 0, yellow: 1, green: 2, blue: 3 };
+const VALUE_ORDER = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'skip', 'reverse', 'draw2', 'wild', 'wild4'];
+/** a card's sign in a few characters, for the chip over a packed partner fan */
+const rangTag = (c: RangCardData) => (c.value === 'wild' ? 'W' : c.value === 'wild4' ? '+4' : c.value === 'skip' ? '⊘' : c.value === 'reverse' ? '⇄' : c.value === 'draw2' ? '+2' : c.value);
+
+/** a partner's Rang cards sorted, the same colour and value together, so each shows once with how many */
+const groupRang = (cards: RangCardData[]) => {
+  const groups: RangCardData[][] = [];
+  for (const c of sortRang(cards)) {
+    const g = groups.find((x) => x[0].color === c.color && x[0].value === c.value);
+    if (g) g.push(c);
+    else groups.push([c]);
+  }
+  return groups;
+};
+const sortRang = (cards: RangCardData[]) =>
+  [...cards].sort((a, b) => (COLOR_ORDER[a.color ?? ''] ?? 9) - (COLOR_ORDER[b.color ?? ''] ?? 9) || VALUE_ORDER.indexOf(a.value) - VALUE_ORDER.indexOf(b.value));
+
 function RangFanHand({ cards, onTap, deal, fresh = [], playable, dimRest }: { cards: RangCardData[]; onTap?: (id: string) => void; deal?: boolean; fresh?: string[]; playable?: string[]; dimRest?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const box = useBox(ref);
@@ -870,9 +889,27 @@ function RangTableInner({ view, actions, bubbles, auth, notes = [] }: TableProps
           <>
             {opponents.map((p, i) => (
               <Fragment key={p.id}>
-                <OnTable x={spots[i].cards.x} y={spots[i].cards.y}>
-                  <OppCards count={p.cardCount} back={p.back} aura={p.shop?.aura ?? null} turn={spots[i].cards.turn} />
-                </OnTable>
+                {/* 2v2: my partner's cards held up face up in front of them, for me only; everyone else's face down */}
+                {p.id === partnerId && rg.partner ? (
+                  <>
+                    <OnTable x={spots[i].cards.x} y={spots[i].cards.y + 13}>
+                      <i className={`partner-glow team-${teamOf(p.id)}`} />
+                    </OnTable>
+                    <OnTable x={spots[i].cards.x} y={spots[i].cards.y + 16} stand z={4} className="partner-spot">
+                      <PartnerFan
+                        name={p.name}
+                        total={rg.partner.length}
+                        team={teamOf(p.id)}
+                        wide
+                        cards={groupRang(rg.partner).map((g) => ({ key: g[0].id, n: g.length, node: <RangCard card={g[0]} />, tag: rangTag(g[0]), tagColor: g[0].color ? RANG_HEX[g[0].color] : '#1b1b1b' }))}
+                      />
+                    </OnTable>
+                  </>
+                ) : (
+                  <OnTable x={spots[i].cards.x} y={spots[i].cards.y}>
+                    <OppCards count={p.cardCount} back={p.back} aura={p.shop?.aura ?? null} turn={spots[i].cards.turn} />
+                  </OnTable>
+                )}
                 {p.id === view.turnId && (
                   <OnTable x={spots[i].cards.x} y={spots[i].cards.y} className="turn-spot">
                     <i />

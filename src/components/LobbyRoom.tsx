@@ -186,6 +186,9 @@ export function LobbyRoom(props: Props) {
       return { player: byId(slots[s]), slot: s };
     });
     near = { player: byId(slots[base]), slot: base };
+    // anyone seated outside the four team slots (a 5th player) still shows, so the host can see why Start waits and remove them
+    const extra = view.players.filter((p) => !slots.includes(p.id) && p.id !== view.meId);
+    far = [...far, ...extra.map((p) => ({ player: p, slot: null }))];
   } else {
     const others = view.players.filter((p) => p.id !== view.meId);
     const free = Math.max(0, props.seatCap - view.players.length);
