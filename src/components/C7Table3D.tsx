@@ -1,3 +1,4 @@
+import { paperSteps } from './Table3D';
 import type { CSSProperties, RefObject } from 'react';
 import { cx, SUIT_SYMBOL } from '../lib/cards';
 import type { Crazy7View } from '../types';
@@ -19,7 +20,7 @@ export function Deck3D({ count, live, penalty, boxRef, onPick }: { count: number
     >
       {count === 0 && <span className="c7-3d-empty">Empty</span>}
       {live && <i className="c7-deck3d-glow" aria-hidden />}
-      {Array.from({ length: layers }, (_, i) => (
+      {paperSteps(layers).map((i) => (
         <i key={i} className="c7-3d-layer back" style={{ ['--i' as string]: i } as CSSProperties} />
       ))}
       {count > 0 && <PlayingCard faceDown className="c7-3d-card c7-deck3d-top" />}
@@ -46,7 +47,7 @@ export function Discard3D({ c7, boxRef }: { c7: Crazy7View; boxRef: RefObject<HT
       style={{ ['--layers' as string]: layers } as CSSProperties}
     >
       {!top && <span className="c7-3d-empty">Pile</span>}
-      {Array.from({ length: layers }, (_, i) => (
+      {paperSteps(layers).map((i) => (
         <i key={i} className="c7-3d-layer" style={{ ['--i' as string]: i, rotate: `${((i * 37) % 9) - 4}deg` } as CSSProperties} />
       ))}
       {under.map((c, i) => {

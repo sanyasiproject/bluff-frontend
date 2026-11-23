@@ -8,6 +8,9 @@ export const SERVER_URL = envUrl || `${location.protocol}//${location.hostname}:
 // the login token is read on every (re)connect, so the server knows which account this is
 export const socket = io(SERVER_URL, {
   reconnectionDelayMax: 4000,
+  // straight to a WebSocket (no polling round trips first); polling stays as the fallback for networks that block it
+  transports: ['websocket', 'polling'],
+  tryAllTransports: true,
   // ready: this app has the lobby's Ready button (older apps never hold up a start)
   // twists: this app shows the Kismat card and makes Seedhi claims; rang: it plays Rang and Crazy 7's power cards
   auth: (cb) => cb({ token: loadAuthToken() ?? '', ready: true, twists: true, rang: true }),

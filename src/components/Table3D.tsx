@@ -2,6 +2,12 @@ import type { CSSProperties, RefObject } from 'react';
 import { DEFAULT_CARD_BACK } from '../types';
 import { PlayingCard } from './PlayingCard';
 
+/** paper layers for a stack of n: at most 6 drawn, spread over the same height (each 3D layer costs the phone a lot) */
+export function paperSteps(n: number): number[] {
+  if (n <= 6) return Array.from({ length: n }, (_, i) => i);
+  return Array.from({ length: 6 }, (_, j) => Math.round(((j + 1) * n) / 6) - 1);
+}
+
 /** an opponent's cards lying face down on the felt in front of them: a small fan, more cards a wider fan */
 export function OppCards({ count, back, aura, turn }: { count: number; back?: string; aura?: string | null; turn: number }) {
   const shown = Math.min(count, 7);
@@ -48,7 +54,7 @@ export function Pile3D({
   return (
     <div className="pile3d" ref={boxRef} aria-label={`${count} cards in the pile`} style={{ ['--layers' as string]: layers } as CSSProperties}>
       {count === 0 && <div className="pile3d-empty">Pile</div>}
-      {Array.from({ length: layers }, (_, i) => (
+      {paperSteps(layers).map((i) => (
         <i key={`l${i}`} className="pile3d-layer" style={{ ['--i' as string]: i, rotate: `${((i * 37) % 9) - 4}deg` } as CSSProperties} />
       ))}
       {Array.from({ length: top }, (_, i) => {

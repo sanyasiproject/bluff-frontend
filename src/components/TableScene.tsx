@@ -2,7 +2,8 @@ import type { CSSProperties, ReactNode } from 'react';
 import { cx } from '../lib/cards';
 
 /** layers under the rail that give the table edge its thickness */
-const RIM_LAYERS = [1, 2, 3, 4, 5, 6];
+// three layers, spaced wider, give the same edge as six for half the phone's work
+const RIM_LAYERS = [1, 2, 3];
 
 /**
  * the 3D card table behind a landscape game: one tilted plane holding the felt, the rail and whatever lies on the table

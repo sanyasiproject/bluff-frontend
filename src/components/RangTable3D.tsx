@@ -1,3 +1,4 @@
+import { paperSteps } from './Table3D';
 import type { CSSProperties, RefObject } from 'react';
 import { cx } from '../lib/cards';
 import type { RangView } from '../types';
@@ -27,7 +28,7 @@ export function RangDeck3D({ count, live, penalty, boxRef, onPick }: { count: nu
     >
       {live && <span className="rg3-glow" aria-hidden />}
       {count === 0 && <span className="rg3-empty">Empty</span>}
-      {Array.from({ length: layers }, (_, i) => (
+      {paperSteps(layers).map((i) => (
         <i key={i} className="rg3-layer" style={{ ['--i' as string]: i, rotate: `${((i * 37) % 5) - 2}deg` } as CSSProperties} aria-hidden />
       ))}
       {Array.from({ length: backs }, (_, i) => (
@@ -60,7 +61,7 @@ export function RangPile3D({ rg, boxRef }: { rg: RangView; boxRef: RefObject<HTM
       style={{ ['--layers' as string]: layers } as CSSProperties}
       aria-label={rg.top ? `Top card ${rangCardName(rg.top)}, ${rg.pileCount} in the pile` : 'Pile'}
     >
-      {Array.from({ length: layers }, (_, i) => (
+      {paperSteps(layers).map((i) => (
         <i key={`l${i}`} className="rg3-layer" style={{ ['--i' as string]: i, rotate: `${((i * 41) % 13) - 6}deg` } as CSSProperties} aria-hidden />
       ))}
       {under.map((c, i) => {

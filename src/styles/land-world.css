@@ -67,7 +67,7 @@
     inset: 0;
     border-radius: 50%;
     background: linear-gradient(180deg, #2a160a, #0f0702);
-    translate: 0 0 calc(var(--z) * -3px);
+    translate: 0 0 calc(var(--z) * -6px);
   }
 
   .rim-edge.ranked {
@@ -676,5 +676,32 @@
       inset 0 3px 2px rgba(255, 230, 190, 0.25),
       0 0 0 3px rgba(246, 196, 83, 0.75),
       0 0 36px 8px rgba(246, 196, 83, 0.45);
+  }
+}
+
+/* ---------- speed on phones: at the table and in the room nothing moves or blurs behind the 3D scene ---------- */
+
+/* the slow light that drifts behind home is hidden by the table anyway; stop it so the phone doesn't redraw it */
+body:has(main.table)::after,
+body:has(main.lobby-room)::after {
+  display: none;
+  animation: none;
+}
+
+@media (orientation: landscape) {
+  /* frosted glass re-blurs everything behind it on every frame: plain dark glass looks the same over the dark room */
+  main.table *,
+  main.lobby-room * {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  main.table .topbar :is(.icon-btn, .code-chip, .pot-chip, .team-chip, .tinfo-btn) {
+    background: rgba(4, 14, 10, 0.82);
+  }
+
+  /* the BLUFF! button keeps its wiggle; its spreading glow repainted the button every frame */
+  .side-actions .bluff-btn:not(.locked) {
+    animation: nudge 2.4s ease-in-out infinite;
   }
 }
