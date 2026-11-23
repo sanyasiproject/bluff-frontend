@@ -629,3 +629,14 @@
     background: radial-gradient(60% 90% at 50% 100%, rgba(246, 196, 83, 0.38), transparent 70%);
   }
 }
+
+/* my turn: the whole table rim lights up gold, so it's clear without reading anything */
+@media (orientation: landscape) {
+  :is(.my-turn-table, .rg-my-turn) .rail {
+    box-shadow:
+      inset 0 0 0 2px rgba(255, 220, 170, 0.12),
+      inset 0 3px 2px rgba(255, 230, 190, 0.25),
+      0 0 0 3px rgba(246, 196, 83, 0.75),
+      0 0 36px 8px rgba(246, 196, 83, 0.45);
+  }
+}

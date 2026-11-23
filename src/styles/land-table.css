@@ -898,3 +898,90 @@
     }
   }
 }
+
+/* ---------- big hands: picked cards stay in their row, nothing covers another card ---------- */
+@media (orientation: landscape) {
+  /* several rows: a picked card only nudges up inside its own row (gold outline and its number), so it never hides the row behind */
+  .fan-hand.multi .card.fan-card.selected {
+    transform: translateY(calc(var(--cw) * -0.1));
+    box-shadow:
+      0 0 0 3px var(--gold),
+      0 0 14px rgba(246, 196, 83, 0.7),
+      0 6px 12px rgba(0, 0, 0, 0.45);
+  }
+
+  .fan-hand.multi .card.fan-card.playable:not(.selected) {
+    transform: translateY(calc(var(--cw) * -0.06));
+  }
+
+  /* the how-many chooser sits over everything near the hand, so every number can be tapped */
+  .fan-hand:has(.stack-picker) {
+    z-index: 20;
+  }
+
+  /* ---------- whose turn: YOUR TURN and Clear live in the empty left corner, never on the cards ---------- */
+  .table .hand-area .hand-head {
+    position: absolute;
+    left: calc(-1 * (var(--side-w) + 6px));
+    bottom: calc(var(--safe-b) + 56px);
+    width: var(--side-w);
+    min-height: 0;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 0;
+    text-align: center;
+  }
+
+  .table .hand-area .hand-head .your-turn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 4px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffd978, var(--gold));
+    color: var(--gold-ink);
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-shadow: none;
+    box-shadow: 0 0 18px rgba(246, 196, 83, 0.55);
+  }
+
+  .table .hand-area .hand-head .link-btn {
+    min-height: 36px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  /* Bluff when it's not my turn: the hint line takes the corner, the head sits just above it */
+  .bluff-table:not(.my-turn-table) .hand-area .hand-head {
+    bottom: calc(var(--safe-b) + 40px);
+  }
+
+  @media (min-height: 560px) {
+    .table .hand-area .hand-head {
+      bottom: calc(var(--safe-b) + 72px);
+    }
+  }
+}
+
+/* a picked stack's ✓ count sits on its visible left edge, so the next stack never hides it */
+@media (orientation: landscape) {
+  .stack-pick {
+    left: -4px;
+    top: -10px;
+    translate: none;
+    min-width: 30px;
+    padding: 2px 6px;
+    font-size: 13px;
+    text-align: center;
+  }
+}

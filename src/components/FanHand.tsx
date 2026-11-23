@@ -13,7 +13,7 @@ const MAX_CW = 128;
 // a row needs at least this much of each card showing to read its corner
 const MIN_STEP_SHARE = 0.3;
 // a later row sits this share of a card higher, behind the front row
-const ROW_RISE = 0.4;
+const ROW_RISE = 0.48;
 
 interface Props {
   cards: Card[];
@@ -55,7 +55,7 @@ export function useBox(ref: RefObject<HTMLElement>) {
 export const fanCardWidth = (h: number) => Math.round(Math.min(MAX_CW, Math.max(MIN_CW, (h * HEIGHT_SHARE) / 1.4)));
 
 /** fanned rows for any kind of card (Rang uses it too): more rows, a little smaller, when one row can't show every corner */
-export function fanLayout<T>(cards: T[], box: { w: number; h: number }): { cw: number; spots: Spot<T>[] } {
+export function fanLayout<T>(cards: T[], box: { w: number; h: number }): { cw: number; rows: number; spots: Spot<T>[] } {
   const n = cards.length;
   const baseCw = fanCardWidth(box.h);
   let rows = 1;
@@ -75,7 +75,7 @@ export function fanLayout<T>(cards: T[], box: { w: number; h: number }): { cw: n
     const top = frontTop - (rows - 1 - r) * ch * ROW_RISE;
     spots.push(...fanRow(row, cw, box.w, top, r * 100));
   }
-  return { cw, spots };
+  return { cw, rows, spots };
 }
 
 /** where each card of one fanned row goes: spread along a gentle arc, rotated round its foot */
@@ -119,7 +119,7 @@ export function FanHand({ cards, selected = [], onToggle, onSet, stackable, deal
   };
 
   return (
-    <div className={cx('fan-hand', stacks && 'stacked', !onToggle && !onSet && 'read-only')} ref={ref}>
+    <div className={cx('fan-hand', stacks && 'stacked', layout && layout.rows > 1 && 'multi', !onToggle && !onSet && 'read-only')} ref={ref}>
       {n === 0 && <p className="hand-empty">No cards left</p>}
       {layout &&
         layout.spots.map(({ card, style }, i) => {
@@ -136,7 +136,7 @@ export function FanHand({ cards, selected = [], onToggle, onSet, stackable, deal
               wild={!!kismat && card.rank === kismat}
               note={can ? ', playable' : undefined}
               className={cx('fan-card', deal && 'deal', fresh.includes(card.id) && 'fresh', can && 'playable', dimRest && playable && !can && 'dim')}
-              style={{ ...style, ['--cw' as string]: `${layout.cw}px`, animationDelay: deal ? `${i * 26}ms` : undefined, zIndex: pick !== -1 ? 900 + i : style.zIndex }}
+              style={{ ...style, ['--cw' as string]: `${layout.cw}px`, animationDelay: deal ? `${i * 26}ms` : undefined, zIndex: pick !== -1 && layout.rows === 1 ? 900 + i : style.zIndex }}
             />
           );
         })}
@@ -234,9 +234,8 @@ function Stacks({
               .reverse()}
             <span className="stack-count">×{group.length}</span>
             {picked.length > 0 && (
-              <span className="stack-pick" aria-hidden>
-                ✓ {picked.length}
-                <small>{orders.join(',')}</small>
+              <span className="stack-pick" aria-hidden title={`Order ${orders.join(', ')}`}>
+                ✓{picked.length}
               </span>
             )}
           </button>
