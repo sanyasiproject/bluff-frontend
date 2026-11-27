@@ -1,9 +1,9 @@
-// The Fruit Slice Duel table: a dojo with everyone's same fruit on a 60 fps canvas, my blade, live scores round the edge, countdown and timer
+// The Fruit Slice Duel table: one item at a time on the plate, everyone's talwar pointing at it, one big Strike button; fastest reaction takes the fruit
 import '../../styles/land-ludo-hud.css';
 import '../../styles/land-ludo-over.css';
 import '../../styles/land-arcade.css';
 import '../../styles/land-fruit.css';
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from 'react';
 import { LevelUp } from '../../components/LevelUp';
 import { LiveVoiceButtons, LiveVoiceNotice } from '../../components/LiveVoice';
 import { GameOver } from '../../components/Overlays';
@@ -15,24 +15,25 @@ import { cx } from '../../lib/cards';
 import { reducedMotion } from '../../lib/motion';
 import { unlockAudio } from '../../lib/sounds';
 import { unlockSpeech } from '../../lib/speech';
-import { FRUIT_POINTS, PARTY_COLORS, type FruitView } from '../../types';
+import { FRUIT_MAGNET_ROUNDS, FRUIT_MIN_REACTION_MS, PARTY_COLORS, type FruitView } from '../../types';
 import { LudoMenus, type LudoPanel } from '../ludo/LudoMenus';
 import type { TableProps } from '../registry';
+import { colorName, YouAreBanner } from '../turnkit/ColorMark';
 import { ArcadeSeat, seatOrder } from './ArcadeSeat';
 import { useServerClock } from './clock';
-import { FruitEngine, type Cut } from './engine';
-import { FruitOver } from './FruitOver';
+import { Duel, swordSpots, type Shown } from './Duel';
+import { FruitOver, type DuelStats } from './FruitOver';
 import { fruitSfx } from './sounds';
 
 const BUBBLE_MS = 4000;
-const COUNTDOWN_MS = 3000;
+const RESULT_MS = 1300;
 
 export function FruitTable(props: TableProps) {
   const fv = props.view.plugged?.kind === 'fruit' ? props.view.plugged.fruit : null;
   if (!fv) {
     return (
       <main className="screen center-screen">
-        <p className="muted">Sharpening the blade…</p>
+        <p className="muted">Sharpening the swords…</p>
       </main>
     );
   }
@@ -45,22 +46,30 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
   const [overSeen, setOverSeen] = useState(false);
   const [podium, setPodium] = useState(false);
   const [levelUp, setLevelUp] = useState<number | null>(null);
-  const [clockText, setClockText] = useState<{ count: number | null; left: number }>({ count: null, left: fv.seconds });
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [count, setCount] = useState<number | null>(null);
+  const [mine, setMine] = useState<{ round: number; reaction: number } | null>(null);
+  const [early, setEarly] = useState(0);
+  const [shown, setShown] = useState<Shown | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const leftRef = useRef<HTMLDivElement>(null);
-  const rightRef = useRef<HTMLDivElement>(null);
-  const engine = useRef<FruitEngine | null>(null);
   const startLevel = useRef<number | null>(null);
+  const painted = useRef<{ round: number; at: number } | null>(null);
+  const stats = useRef<Record<string, DuelStats>>({});
   const clock = useServerClock();
   useBack(() => setPanel('menu'));
+  clock.sample(fv.now);
 
   const me = view.players.find((p) => p.id === view.meId);
   const watching = !me;
   const playing = view.phase === 'playing';
   const isHost = view.hostId === view.meId;
+  const people = [...view.players, ...view.leftPlayers];
   const fresh = bubbles.filter((b) => Date.now() - b.at < BUBBLE_MS);
   const bubbleOf = (id: string) => [...fresh].reverse().find((b) => b.from === id) ?? null;
+  const shortName = (id: string) => {
+    if (id === view.meId) return 'You';
+    const n = (people.find((p) => p.id === id)?.name ?? '?').trim().split(/\s+/)[0];
+    return n.length > 7 ? `${n.slice(0, 6)}…` : n;
+  };
 
   const order = seatOrder(Object.keys(fv.scores), view.players);
   const colorOf = (id: string) => PARTY_COLORS[Math.max(0, order.indexOf(id)) % PARTY_COLORS.length];
@@ -72,19 +81,12 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
   const round = [...order.slice(at), ...order.slice(0, at)];
   const left = round.filter((_, i) => i % 2 === 0);
   const right = round.filter((_, i) => i % 2 === 1);
-
-  // the server clock: each view says when it was made (older servers: a countdown view came after the countdown began)
-  const seedRef = useRef(fv.seed);
-  if (seedRef.current !== fv.seed) {
-    seedRef.current = fv.seed;
-    clock.reset();
-  }
-  if (typeof fv.now === 'number') clock.sample(fv.now);
-  else if (fv.phase === 'countdown') clock.sample(fv.startsAt - COUNTDOWN_MS);
+  const spots = swordSpots(left, right);
 
   useEffect(() => {
     if (!playing) return;
     startLevel.current = me?.level ?? null;
+    stats.current = {};
     setOverSeen(false);
     setPodium(false);
   }, [playing]);
@@ -101,138 +103,131 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
     el.classList.add('fr-shake');
   };
 
-  // my cuts: popups and sounds at once, then off to the server
-  const onCut = (cut: Cut) => {
-    const e = engine.current;
-    const bomb = cut.kinds.includes('bomb');
-    const fruit = cut.kinds.filter((k) => k !== 'bomb');
-    const pts = fruit.reduce((s, k) => s + FRUIT_POINTS[k], 0) + Math.max(0, fruit.length - 2);
-    if (e) {
-      if (bomb) e.popup(cut.x, cut.y, '−10 💣', '#ff5252', true);
-      else if (fruit.length >= 3) {
-        e.popup(cut.x, cut.y - 34, `Combo ×${fruit.length}!`, '#ffd740', true);
-        e.popup(cut.x, cut.y + 8, `+${pts}`, '#fff');
-        fruitSfx.combo(fruit.length);
-      } else e.popup(cut.x, cut.y, `+${pts}`, '#fff');
-    }
-    void actions.gameMoveQuiet({ kind: 'fruit', move: { type: 'slice', ids: cut.ids, at: cut.at } });
-  };
-  const onHit = (kind: string) => {
-    if (kind === 'bomb') {
-      fruitSfx.bomb();
-      shake();
-      navigator.vibrate?.(180);
-    } else fruitSfx.slice(0.85 + Math.random() * 0.3);
-  };
+  // the item up now: null while its result is on show
+  const item = fv.item && fv.phase === 'play' && !(fv.result && fv.result.round === fv.item.round) ? fv.item : null;
+  const itemRound = item?.round ?? null;
+  useEffect(() => {
+    if (itemRound === null) return;
+    setShown(null);
+    fruitSfx.pop();
+  }, [itemRound]);
 
-  useLayoutEffect(() => {
-    const cv = canvasRef.current;
-    if (!cv) return;
-    const e = new FruitEngine(cv, clock.now, (c) => onCutRef.current(c), (k) => onHitRef.current(k));
-    engine.current = e;
-    // fruit fly between the seat columns
-    const fit = () => {
-      e.resize();
-      const box = cv.getBoundingClientRect();
-      const l = leftRef.current?.getBoundingClientRect();
-      const r = rightRef.current?.getBoundingClientRect();
-      const cap = box.width * 0.28;
-      e.inset = {
-        l: l && l.width ? Math.min(cap, Math.max(0, l.right - box.left + 8)) : 0,
-        r: r && r.width ? Math.min(cap, Math.max(0, box.right - r.left + 8)) : 0,
-      };
+  // a new result: swords swing, the fruit is cut (or the magnet zaps), tallies for the podium
+  const resultRound = fv.result?.round ?? null;
+  useEffect(() => {
+    const r = fv.result;
+    if (!r) return;
+    setShown({ round: r.round, kind: r.kind, winner: r.winner, reactions: r.reactions, slowed: r.slowed });
+    for (const [id, ms] of Object.entries(r.reactions)) {
+      const s = (stats.current[id] ??= { won: 0, best: null, magnets: 0 });
+      if (ms !== null && r.kind !== 'magnet') s.best = s.best === null ? ms : Math.min(s.best, ms);
+      if (ms !== null && r.kind === 'magnet') s.magnets++;
+    }
+    if (r.winner && r.kind !== 'magnet') stats.current[r.winner].won++;
+    if (r.kind === 'magnet') {
+      if (r.slowed.length) fruitSfx.magnet();
+      if (r.slowed.includes(view.meId)) {
+        shake();
+        navigator.vibrate?.(160);
+      }
+    } else if (r.winner) fruitSfx.slice(r.winner === view.meId ? 1.15 : 0.9);
+    const t = window.setTimeout(() => setShown((s) => (s?.round === r.round ? null : s)), RESULT_MS);
+    return () => window.clearTimeout(t);
+  }, [resultRound]);
+
+  // the Strike button: reaction = tap time - when this phone painted the item
+  const strike = (tapAt: number) => {
+    unlockAudio();
+    unlockSpeech();
+    if (watching || !playing || fv.phase !== 'play') return;
+    const p = painted.current;
+    if (item && mine?.round === item.round) return;
+    const reaction = item && p && p.round === item.round ? Math.round(tapAt - p.at) : -1;
+    // nothing up yet (or a guess faster than any human): too early, nothing sent
+    if (reaction < FRUIT_MIN_REACTION_MS || !item) {
+      setEarly((n) => n + 1);
+      fruitSfx.early();
+      return;
+    }
+    setMine({ round: item.round, reaction });
+    fruitSfx.swoosh();
+    void actions.gameMoveQuiet({ kind: 'fruit', move: { type: 'strike', round: item.round, reaction } });
+  };
+  const strikeRef = useRef(strike);
+  strikeRef.current = strike;
+  const onStrike = (e: RPointerEvent) => {
+    e.preventDefault();
+    const now = performance.now();
+    strikeRef.current(e.timeStamp > 0 && now - e.timeStamp < 1000 && e.timeStamp <= now ? e.timeStamp : now);
+  };
+  useEffect(() => {
+    if (!early) return;
+    const t = window.setTimeout(() => setEarly(0), 600);
+    return () => window.clearTimeout(t);
+  }, [early]);
+
+  // Space or Enter strikes on a keyboard
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.key !== ' ' && e.key !== 'Enter') || e.repeat || (e.target as HTMLElement)?.closest?.('input, textarea, button')) return;
+      e.preventDefault();
+      strikeRef.current(performance.now());
     };
-    fit();
-    const ro = new ResizeObserver(fit);
-    ro.observe(cv);
-    return () => {
-      ro.disconnect();
-      e.destroy();
-      engine.current = null;
-    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
-  const onCutRef = useRef(onCut);
-  onCutRef.current = onCut;
-  const onHitRef = useRef(onHit);
-  onHitRef.current = onHit;
 
-  // the game's fruit, what I already cut (after a reconnect), and whether my blade cuts now
-  const live = !watching && playing && fv.phase === 'play';
-  useEffect(() => {
-    const e = engine.current;
-    if (!e) return;
-    e.setGame(fv.seed, fv.seconds, fv.startsAt, fv.sliced[view.meId] ?? []);
-    e.live = live;
-    e.color = myColor;
-  }, [fv, live, myColor]);
-
-  // the others' cuts: a slash in their colour on the same fruit
-  const seen = useRef<Record<string, number>>({});
-  useEffect(() => {
-    for (const id of order) {
-      const list = fv.sliced[id] ?? [];
-      const was = seen.current[id] ?? list.length;
-      if (id !== view.meId && list.length > was) engine.current?.others(list.slice(was), colorOf(id));
-      seen.current[id] = list.length;
-    }
-  }, [fv.sliced]);
-
-  // the countdown, the timer and their beeps
+  // the 3-2-1 countdown and its beeps
   const beeped = useRef<number | null>(null);
   useEffect(() => {
-    if (view.phase === 'over') return;
+    if (fv.phase !== 'countdown' && count === null) return;
     const t = window.setInterval(() => {
-      const now = clock.now();
-      const toStart = fv.startsAt - now;
-      const count = toStart > 0 ? Math.ceil(toStart / 1000) : toStart > -700 ? 0 : null;
-      const leftS = Math.max(0, Math.min(fv.seconds, Math.ceil((fv.endsAt - now) / 1000)));
-      setClockText((p) => (p.count === count && p.left === leftS ? p : { count, left: leftS }));
-      const mark = count !== null ? 100 + count : leftS <= 5 && leftS > 0 ? leftS : null;
-      if (mark !== null && mark !== beeped.current) {
-        beeped.current = mark;
-        if (count !== null) fruitSfx.count(count === 0);
-        else fruitSfx.tick();
+      const leftMs = fv.startsAt - clock.now();
+      const c = leftMs > 0 ? Math.ceil(leftMs / 1000) : leftMs > -700 ? 0 : null;
+      setCount(c);
+      if (c !== null && c !== beeped.current) {
+        beeped.current = c;
+        fruitSfx.count(c === 0);
       }
     }, 100);
     return () => window.clearInterval(t);
-  }, [fv.startsAt, fv.endsAt, view.phase]);
+  }, [fv.phase, fv.startsAt, count === null]);
 
-  // time's up: a buzzer, then the podium
+  // the last item done: a buzzer, then the podium
   useEffect(() => {
     if (view.phase !== 'over') return;
     fruitSfx.end();
-    const t = window.setTimeout(() => setPodium(true), 1400);
+    const t = window.setTimeout(() => setPodium(true), 1600);
     return () => window.clearTimeout(t);
   }, [view.phase]);
 
-  const pos = (e: RPointerEvent) => {
-    const r = canvasRef.current!.getBoundingClientRect();
-    return [e.clientX - r.left, e.clientY - r.top] as const;
-  };
-  const onDown = (e: RPointerEvent) => {
-    unlockAudio();
-    unlockSpeech();
-    (e.target as Element).setPointerCapture?.(e.pointerId);
-    engine.current?.pointerDown(...pos(e));
-  };
-  const onMove = (e: RPointerEvent) => {
-    const evs = e.nativeEvent.getCoalescedEvents?.() ?? [e.nativeEvent];
-    const r = canvasRef.current!.getBoundingClientRect();
-    for (const ev of evs) engine.current?.pointerMove(ev.clientX - r.left, ev.clientY - r.top);
-    if (e.buttons || e.pointerType === 'touch') fruitSfx.swoosh();
-  };
-  const onUp = () => engine.current?.pointerUp();
-
-  const mine = fv.scores[view.meId];
+  const live = !watching && playing && fv.phase === 'play';
+  const mySlow = fv.slow[view.meId] ?? 0;
+  const myScore = fv.scores[view.meId] ?? 0;
+  const mineNow = stats.current[view.meId];
   const infoMine = !watching && (
     <p className="tinfo-counts">
-      <span>{`🍉 ${(fv.sliced[view.meId] ?? []).length} sliced`}</span>
-      <span>{`🔥 Best combo ${fv.combo[view.meId] ?? 0}`}</span>
-      <span>{`💣 ${fv.bombs[view.meId] ?? 0} bombs`}</span>
+      <span>{`⭐ ${myScore} points`}</span>
+      <span>{`🍉 ${mineNow?.won ?? 0} won`}</span>
+      <span>{`⚡ Best ${mineNow?.best ? `${(mineNow.best / 1000).toFixed(2)}s` : '—'}`}</span>
     </p>
   );
-  const tips = ['Swipe across fruit to slice it: everyone gets the same fruit', '3 or more in one swipe is a combo bonus', 'Bombs cost 10 points'];
-  const status = !playing ? '' : fv.phase === 'countdown' ? 'Get ready…' : fv.phase === 'play' ? (watching ? '👀 Watching' : 'Swipe to slice!') : "Time's up!";
+  const tips = ['Tap Strike the moment a fruit appears: fastest reaction wins it', `Never strike the magnet 🧲: your sword goes slow for ${FRUIT_MAGNET_ROUNDS} items`, 'Tapping before anything appears does nothing'];
+  const status = !playing
+    ? ''
+    : fv.phase === 'countdown'
+      ? 'Get ready…'
+      : fv.phase === 'over'
+        ? 'All done!'
+        : watching
+          ? '👀 Watching'
+          : mySlow > 0
+            ? `🧲 Slow sword · ${mySlow} more`
+            : item?.kind === 'magnet'
+              ? "🧲 Don't strike!"
+              : item
+                ? '⚔️ Strike!'
+                : 'Wait for it…';
   const seat = (id: string) => {
     const p = view.players.find((x) => x.id === id);
     const gone = view.leftPlayers.find((x) => x.id === id);
@@ -248,8 +243,9 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
         bubble={bubbleOf(id)}
         onTap={p && p.id !== view.meId ? () => setTarget(p.id) : undefined}
         tags={
-          <b key={score} className={cx('ar-num bump', score < 0 && 'neg')} title="Score">
+          <b key={score} className="ar-num bump" title="Score">
             {best > 0 && score === best ? '👑' : '⭐'} {score}
+            {(fv.slow[id] ?? 0) > 0 && <small className="fd-seat-slow">🧲</small>}
           </b>
         }
       />
@@ -257,18 +253,31 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
   };
 
   return (
-    <main className={cx('table lu-table ar-table fr-table', live && 'fr-live')} style={{ '--my-col': myColor } as CSSProperties}>
+    <main className={cx('table lu-table ar-table fr-table fd-table', live && 'fr-live')} style={{ '--my-col': myColor } as CSSProperties}>
       <div className="fr-dojo" aria-hidden>
         <i className="fr-bokeh" />
       </div>
-      <div ref={stageRef} className="fr-stage" onAnimationEnd={(e) => e.currentTarget.classList.remove('fr-shake')}>
-        <canvas ref={canvasRef} className="fr-canvas" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onPointerLeave={onUp} />
+      <div ref={stageRef} className="fd-stage" onAnimationEnd={(e) => e.target === e.currentTarget && e.currentTarget.classList.remove('fr-shake')}>
+        <Duel
+          fv={fv}
+          spots={spots}
+          meId={view.meId}
+          colorOf={colorOf}
+          nameOf={shortName}
+          live={item}
+          shown={item ? null : shown}
+          mine={mine}
+          early={early}
+          onPainted={(r, t) => (painted.current = { round: r, at: t })}
+        />
       </div>
-      <div ref={leftRef} className="ar-seats ar-left">{left.map(seat)}</div>
-      <div ref={rightRef} className="ar-seats ar-right">{right.map(seat)}</div>
+      <div className="ar-seats ar-left">{left.map(seat)}</div>
+      <div className="ar-seats ar-right fd-right">{right.map(seat)}</div>
 
       <div className="fr-hud" aria-live="off">
-        <span className={cx('fr-timer', clockText.left <= 5 && fv.phase === 'play' && 'hurry')}>⏱ {fv.phase === 'over' ? 0 : clockText.left}s</span>
+        <span className="fr-timer">
+          {fv.phase === 'countdown' ? `${fv.rounds} items` : `Item ${Math.min(fv.round, fv.rounds)} / ${fv.rounds}`}
+        </span>
         <ol className="fr-board">
           {ranked.map((id) => (
             <li key={id} style={{ '--c': colorOf(id) } as CSSProperties} className={cx(id === view.meId && 'me')}>
@@ -278,19 +287,35 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
           ))}
         </ol>
       </div>
-      {clockText.count !== null && playing && (
-        <div key={clockText.count} className={cx('ar-count', clockText.count === 0 && 'go')} aria-live="assertive">
-          {clockText.count === 0 ? 'SLICE!' : clockText.count}
+
+      {!watching && view.phase !== 'over' && (
+        <button
+          className={cx('fd-strike', item && !(mine?.round === item.round) && 'ready', mySlow > 0 && 'slow', early > 0 && 'early')}
+          aria-label="Strike"
+          onPointerDown={onStrike}
+          onContextMenu={(e) => e.preventDefault()}
+          disabled={!live}
+        >
+          <span key={early} className="fd-strike-face">
+            <b>⚔️</b>
+            <small>{early > 0 ? 'Too early!' : 'Strike'}</small>
+          </span>
+          {mySlow > 0 && <em className="fd-strike-slow">🧲 ×{mySlow}</em>}
+        </button>
+      )}
+
+      {count !== null && playing && (
+        <div key={count} className={cx('ar-count', count === 0 && 'go')} aria-live="assertive">
+          {count === 0 ? 'Ready!' : count}
         </div>
       )}
-      {view.phase === 'over' && !podium && <div className="ar-count go ar-end">Time's up!</div>}
+      {view.phase === 'over' && !podium && <div className="ar-count go ar-end">{view.winnerIds.includes(view.meId) ? 'Fastest sword!' : 'All done!'}</div>}
 
       <header className="topbar">
         <TableInfo view={view} notes={notes} mine={infoMine || undefined} tips={tips} />
         {status && (
           <span key={status} className={cx('lu-status', live && 'mine')} role="status">
             {status}
-            {mine !== undefined && live ? ` · ⭐ ${mine}` : ''}
           </span>
         )}
         <span className="grow" />
@@ -308,9 +333,10 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
         </div>
       </header>
       <LiveVoiceNotice />
+      {view.players.some((p) => p.id === view.meId) && <YouAreBanner on={view.phase === 'playing'} color={myColor} name={colorName(myColor)} />}
       {watching && <p className="lu-watch-note">👀 Watching · you'll play next game</p>}
 
-      {view.phase === 'over' && podium && !overSeen && <FruitOver view={view} fv={fv} order={order} colorOf={colorOf} onNext={() => setOverSeen(true)} />}
+      {view.phase === 'over' && podium && !overSeen && <FruitOver view={view} fv={fv} order={order} colorOf={colorOf} stats={stats.current} onNext={() => setOverSeen(true)} />}
       {view.phase === 'over' && overSeen && <GameOver view={view} onLobby={actions.toLobby} onRematch={isHost ? actions.rematch : undefined} startLevel={startLevel.current} />}
       {levelUp !== null && overSeen && <LevelUp level={levelUp} from={startLevel.current} onClose={() => setLevelUp(null)} />}
       {target && view.players.find((p) => p.id === target) && (

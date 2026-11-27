@@ -99,16 +99,101 @@
   color: #ff9a8a;
 }
 
-/* the dice sits beside whoever's turn it is */
+/* the dice has one fixed spot all game: bottom right, by the screen edge, clear of the seats */
 .lu-dice-spot {
   position: absolute;
   z-index: 4;
 }
 
-.lu-dice-spot.tl { right: calc(100% + 3% + var(--seat-w)); top: 4%; }
-.lu-dice-spot.bl { right: calc(100% + 1% + var(--seat-w)); bottom: 2%; }
-.lu-dice-spot.tr { left: calc(100% + 3% + var(--seat-w)); top: 4%; }
-.lu-dice-spot.br { left: calc(100% + 1% + var(--seat-w)); bottom: 2%; }
+.lu-dice-spot.lu-dice-fixed {
+  right: calc((var(--bs) - 100vw) / 2 + max(6px, env(safe-area-inset-right)));
+  bottom: 0;
+}
+
+/* the dock: ringed in the turn player's colour, their goti and name on top */
+.lu-dock {
+  --ds: clamp(40px, 12.5dvh, 76px);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 2px;
+  width: max(82px, calc(var(--ds) * 1.5 + 10px));
+  padding: 6px 5px 18px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(20, 12, 44, 0.86), rgba(8, 4, 20, 0.86));
+  box-shadow:
+    inset 0 0 0 2.5px var(--dock),
+    0 8px 18px rgba(0, 0, 0, 0.45);
+}
+
+.lu-dock .lu-dice {
+  --ds: inherit;
+}
+
+.lu-dock-who {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 3px 8px 3px 5px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--dock) 30%, rgba(0, 0, 0, 0.6));
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+/* a long name wraps to two lines, then cuts off */
+.lu-dock-who b {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.lu-dock.mine .lu-dock-who {
+  color: var(--nt-gold-hi, #ffd75e);
+}
+
+/* my roll: a bright ring in my colour; only the ring's glow breathes, slowly */
+.lu-dock.live {
+  box-shadow:
+    inset 0 0 0 3px var(--dock),
+    0 0 0 2px rgba(255, 255, 255, 0.9),
+    0 0 20px 5px color-mix(in srgb, var(--dock) 60%, transparent),
+    0 8px 18px rgba(0, 0, 0, 0.45);
+}
+
+.lu-dock.live::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 22px;
+  box-shadow: 0 0 16px 4px var(--dock);
+  pointer-events: none;
+  animation: lu-dock-breathe 2.6s ease-in-out infinite alternate;
+}
+
+@keyframes lu-dock-breathe {
+  from { opacity: 0.35; }
+  to { opacity: 0.8; }
+}
+
+.lu-dock .lu-dice-label {
+  bottom: -12px;
+  padding: 2px 10px;
+  background: var(--dock);
+  box-shadow: 0 0 0 1.5px #fff;
+  color: #10081f;
+  font-size: 11.5px;
+  font-weight: 900;
+}
 
 /* status pill, top middle */
 .lu-table .topbar .lu-status {
@@ -262,8 +347,34 @@
     transform-origin: 50% 100%;
   }
 
-  .lu-dice {
+  .lu-dice,
+  .lu-dock {
     --ds: 92px;
+  }
+
+  .lu-dock-who,
+  .lu-dock .lu-dice-label {
+    font-size: 15px;
+  }
+}
+
+/* tablets (about 4:3): the side columns are too narrow for a seat and the dice side by side, so the board slides left to give the dice room */
+@media (min-height: 640px) and (min-width: 900px) and (max-aspect-ratio: 3/2) {
+  .table.lu-table {
+    --lu-shift: max(0px, var(--lu-room, 300px) - (100vw - var(--bs)) / 2);
+  }
+
+  .lu-stage {
+    translate: calc(-50% - var(--lu-shift)) -47%;
+  }
+
+  .lu-dice-spot.lu-dice-fixed {
+    right: calc((var(--bs) - 100vw) / 2 - var(--lu-shift) + max(6px, env(safe-area-inset-right)));
+  }
+
+  .lu-dice,
+  .lu-dock {
+    --ds: 80px;
   }
 }
 
@@ -297,10 +408,7 @@
     right: 0;
   }
 
-  .lu-dice-spot.tl,
-  .lu-dice-spot.bl,
-  .lu-dice-spot.tr,
-  .lu-dice-spot.br {
+  .lu-dice-spot.lu-dice-fixed {
     left: 50%;
     right: auto;
     top: calc(100% + 8px);
@@ -310,6 +418,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .lu-dock.live::after,
   .lu-banner,
   .lu-table .topbar .lu-status {
     animation: none;

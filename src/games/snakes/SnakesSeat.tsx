@@ -4,6 +4,7 @@ import { Seat } from '../../components/Table';
 import { cx } from '../../lib/cards';
 import { LUDO_COLOR_HEX, type LudoColor, type PublicPlayer, type SnakesSeat as SeatData } from '../../types';
 import type { ChatBubble } from '../../useBluff';
+import { ColorMark, colorName, GOTI_HEX, MiniGoti } from '../turnkit/ColorMark';
 
 interface Props {
   seat: SeatData;
@@ -17,13 +18,16 @@ interface Props {
   turnEndsAt: number | null;
   turnSec?: number;
   onTap?: () => void;
+  /** this player's goti style, for the colour chip */
+  gotiStyle?: string;
 }
 
-export function SnakesSeatCorner({ seat, player, goneName, corner, turn, mine, needSix, bubble, turnEndsAt, turnSec, onTap }: Props) {
+export function SnakesSeatCorner({ seat, player, goneName, corner, turn, mine, needSix, bubble, turnEndsAt, turnSec, onTap, gotiStyle = 'classic' }: Props) {
   const col = LUDO_COLOR_HEX[seat.color as LudoColor];
   const style = { '--seat-ring': col, '--lu-col': col } as CSSProperties;
   const tags = (
     <span className="lu-seat-tags">
+      <ColorMark color={GOTI_HEX[seat.color as LudoColor]} name={colorName(seat.color)} icon={<MiniGoti color={seat.color as LudoColor} style={gotiStyle} />} mine={mine} />
       <b key={seat.pos} className={cx('sn-big bump', seat.place && 'good', seat.pos === 0 && !seat.place && 'small')} title="Square">
         {seat.place ? '🏁 100' : seat.pos === 0 ? (needSix ? '🎲 needs 6' : 'Start') : seat.pos}
       </b>

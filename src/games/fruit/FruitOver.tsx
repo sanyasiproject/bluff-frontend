@@ -1,4 +1,4 @@
-// Fruit Slice Duel game over: the score podium (ties share a place) with fireworks and each player's slices, best combo and bombs
+// Fruit Slice Duel game over: the score podium (ties share a place) with fireworks and each player's fruit won, best reaction and magnets struck
 import { useEffect, useRef, type CSSProperties } from 'react';
 import { Avatar } from '../../components/Avatar';
 import { Backdrop } from '../../components/Overlays';
@@ -8,15 +8,24 @@ import type { FruitView, RoomView } from '../../types';
 
 const MEDALS = ['🥇', '🥈', '🥉', '4th'];
 
+/** what this phone saw of each player this game */
+export interface DuelStats {
+  won: number;
+  /** best reaction on a fruit (ms) */
+  best: number | null;
+  magnets: number;
+}
+
 interface Props {
   view: RoomView;
   fv: FruitView;
   order: string[];
   colorOf: (id: string) => string;
+  stats: Record<string, DuelStats>;
   onNext: () => void;
 }
 
-export function FruitOver({ view, fv, order, colorOf, onNext }: Props) {
+export function FruitOver({ view, fv, order, colorOf, stats, onNext }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const people = [...view.players, ...view.leftPlayers.map((p) => ({ ...p, avatar: null, bot: false }))];
   const who = (id: string) => people.find((p) => p.id === id);
@@ -77,7 +86,7 @@ export function FruitOver({ view, fv, order, colorOf, onNext }: Props) {
               <li key={id}>
                 <b data-no-translate>{name(id)}</b>
                 <span>
-                  🍉 {(fv.sliced[id] ?? []).length} · 🔥 {fv.combo[id] ?? 0} · 💣 {fv.bombs[id] ?? 0}
+                  🍉 {stats[id]?.won ?? 0} · ⚡ {stats[id]?.best ? `${(stats[id].best! / 1000).toFixed(2)}s` : '—'} · 🧲 {stats[id]?.magnets ?? 0}
                 </span>
               </li>
             ))}

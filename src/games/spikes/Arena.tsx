@@ -1,6 +1,7 @@
-// The Spike Attack arena, redrawn every frame: tiles, red warning lines with their 3-2-1, spikes shooting across, and the round players
+// The Spike Attack arena, redrawn every frame: faint box lanes, red warning bands with their 3-2-1, spikes shooting across, and the free-running players
 import { memo, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { cx } from '../../lib/cards';
+import { inBand } from './sim';
 import { SPIKES_LIVES, type SpikeDir, type SpikesView } from '../../types';
 
 interface Props {
@@ -36,6 +37,7 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
   const seenStrikes = useRef(new Set<number>(sv.strikes.map((s) => s.id)));
   const flying = useRef<Flying[]>([]);
   const hitAt = useRef<Record<string, number>>({});
+  const lastPos = useRef<Record<string, { p: [number, number]; lean: number }>>({});
   const cbs = useRef({ onStrike, onHit, onTick, sv, posOf });
   cbs.current = { onStrike, onHit, onTick, sv, posOf };
 
@@ -58,7 +60,7 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
         }
         if (left > 0 && left < soonest) {
           soonest = left;
-          soonestOnMe = !!mine && (horizontal(w.dir) ? mine[1] === w.line : mine[0] === w.line);
+          soonestOnMe = !!mine && inBand(mine, w);
         }
       }
       if (soonest < Infinity) tick(soonest, soonestOnMe);
@@ -90,7 +92,7 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
   const n = sv.size;
   const pnow = performance.now();
   const lineStyle = (_dir: SpikeDir, line: number) => ({ '--line': line, '--n': n }) as CSSProperties;
-  const crowd: Record<string, number> = {};
+  const was = lastPos.current;
   // anyone hit just now: the arena flashes red
   const lastHit = Math.max(-1e9, ...Object.values(hitAt.current));
 
@@ -137,17 +139,21 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
         );
       })}
       {order.map((id) => {
-        const [c, r] = posOf(id);
+        const [x, y] = posOf(id);
         const lives = sv.lives[id] ?? 0;
-        const key = `${c},${r}`;
-        const k = (crowd[key] = (crowd[key] ?? -1) + 1);
+        // lean into the run, eased so it doesn't flicker
+        const prev = was[id];
+        const vx = prev ? x - prev.p[0] : 0;
+        const moved = prev ? Math.hypot(vx, y - prev.p[1]) > 0.004 : false;
+        const lean = (prev?.lean ?? 0) * 0.8 + Math.max(-1, Math.min(1, vx * 25)) * 0.2;
+        was[id] = { p: [x, y], lean };
         const hurt = (sv.safeUntil[id] ?? 0) > t || pnow - (hitAt.current[id] ?? -1e9) < 900;
         const popped = pnow - (hitAt.current[id] ?? -1e9) < 900;
         return (
           <div
             key={id}
-            className={cx('sp-player', id === meId && 'me', lives <= 0 && 'ghost', hurt && lives > 0 && 'hurt')}
-            style={{ '--c': colorOf(id), '--x': c, '--y': r, '--k': k } as CSSProperties}
+            className={cx('sp-player', id === meId && 'me', lives <= 0 && 'ghost', hurt && lives > 0 && 'hurt', moved && 'run')}
+            style={{ '--c': colorOf(id), '--x': x, '--y': y, '--lean': `${(lean * 12).toFixed(1)}deg` } as CSSProperties}
           >
             {lives > 0 && (
               <span className="sp-hp" aria-hidden>

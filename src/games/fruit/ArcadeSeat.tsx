@@ -4,6 +4,7 @@ import { Seat } from '../../components/Table';
 import { cx } from '../../lib/cards';
 import type { PublicPlayer } from '../../types';
 import type { ChatBubble } from '../../useBluff';
+import { ColorMark, colorName } from '../turnkit/ColorMark';
 
 interface Props {
   player: PublicPlayer | undefined;
@@ -17,13 +18,20 @@ interface Props {
   tags: ReactNode;
   seatRef?: (el: HTMLElement | null) => void;
   onTap?: () => void;
+  /** the player's piece for the colour chip (a colour dot by default) */
+  icon?: ReactNode;
 }
 
-export function ArcadeSeat({ player, goneName, color, mine, lead, out, bubble, tags, seatRef, onTap }: Props) {
+export function ArcadeSeat({ player, goneName, color, mine, lead, out, bubble, tags, seatRef, onTap, icon }: Props) {
   const style = { '--seat-ring': color, '--lu-col': color } as CSSProperties;
-  const tagRow = <span className="lu-seat-tags">{tags}</span>;
+  const tagRow = (
+    <span className="lu-seat-tags">
+      {tags}
+      <ColorMark color={color} name={colorName(color)} icon={icon} mine={mine} />
+    </span>
+  );
   return (
-    <div ref={seatRef} className={cx('ar-seat lu-seat seat-stand', lead && 'turn', mine && 'mine', out && 'ar-out')} style={style}>
+    <div ref={seatRef} className={cx('ar-seat lu-seat seat-stand has-chip', lead && 'turn', mine && 'mine', out && 'ar-out')} style={style}>
       {player ? (
         <Seat player={player} turn={!!lead} passed={false} bubble={bubble} onClick={onTap} label={onTap ? `Throw an emoji at ${player.name}` : player.name} tag={tagRow} extra="lu-seat-inner" />
       ) : (

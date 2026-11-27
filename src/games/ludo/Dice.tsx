@@ -1,4 +1,4 @@
-// A real CSS 3D dice: tumbles on every roll (rollSeq) and lands showing the value
+// A real CSS 3D dice: a short tumble in place on every roll (rollSeq), landing on the value
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { cx } from '../../lib/cards';
 import { reducedMotion } from '../../lib/motion';
@@ -34,7 +34,6 @@ interface Props {
 
 export function Dice({ value, rollSeq, skin, live, rolling, onRoll, label }: Props) {
   const cube = useRef<HTMLSpanElement>(null);
-  const hop = useRef<HTMLSpanElement>(null);
   const shown = value ?? 1;
   const seen = useRef(rollSeq);
   const spin = useRef<Animation | null>(null);
@@ -49,28 +48,18 @@ export function Dice({ value, rollSeq, skin, live, rolling, onRoll, label }: Pro
     };
   }, [rolling]);
 
-  // a new roll: tumble and land on the value
+  // a new roll: a few small tumbles in place (~0.5 s), no hop, then it settles on the value
   useLayoutEffect(() => {
     if (rollSeq === seen.current) return;
     seen.current = rollSeq;
-    if (reducedMotion() || !cube.current || !hop.current) return;
+    if (reducedMotion() || !cube.current) return;
     spin.current?.cancel();
-    const sx = 720 + 90 * Math.floor(Math.random() * 3);
-    const sy = 540 + 90 * Math.floor(Math.random() * 3);
-    cube.current.animate([{ transform: pose(shown, sx, sy, 200) }, { transform: pose(shown, sx * 0.25, sy * 0.25, 40), offset: 0.7 }, { transform: pose(shown) }], {
-      duration: 760,
-      easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)',
+    const sx = 270 + 90 * Math.floor(Math.random() * 2);
+    const sy = 180 + 90 * Math.floor(Math.random() * 2);
+    cube.current.animate([{ transform: pose(shown, sx, sy, 24) }, { transform: pose(shown, sx * 0.3, sy * 0.3, 8), offset: 0.55 }, { transform: pose(shown) }], {
+      duration: 500,
+      easing: 'cubic-bezier(0.25, 0.7, 0.35, 1)',
     });
-    hop.current.animate(
-      [
-        { transform: 'translateY(0) scale(1)' },
-        { transform: 'translateY(-46%) scale(1.08)', offset: 0.3 },
-        { transform: 'translateY(0) scale(1)', offset: 0.62 },
-        { transform: 'translateY(-12%) scale(1.02)', offset: 0.8 },
-        { transform: 'translateY(0) scale(1)' },
-      ],
-      { duration: 760, easing: 'ease-out' },
-    );
   }, [rollSeq]);
 
   return (
@@ -81,7 +70,7 @@ export function Dice({ value, rollSeq, skin, live, rolling, onRoll, label }: Pro
       disabled={!live}
       onClick={onRoll}
     >
-      <span ref={hop} className="lu-dice-hop">
+      <span className="lu-dice-hop">
         <span ref={cube} className="lu-cube" style={{ transform: pose(shown) }}>
           {[1, 2, 3, 4, 5, 6].map((n) => (
             <Face key={n} n={n} />

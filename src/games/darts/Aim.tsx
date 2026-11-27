@@ -1,132 +1,148 @@
-// Aiming: hold on the board to bring up a reticle that wobbles like a hand (steadiest after a moment, worse the longer you hold); let go to throw
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+// Aiming in two taps: a line sweeps up and down (tap to fix the height), then one sweeps left and right (tap to fix it); the dart flies to where they cross
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { cx } from '../../lib/cards';
-import { reducedMotion } from '../../lib/motion';
 import { BOARD_SPAN } from './DartBoard';
 
-/** how far the hand drifts (board units) after holding this long */
-export function wobbleAmp(ms: number): number {
-  if (ms < 650) return 0.16 - (0.125 * ms) / 650;
-  if (ms < 1300) return 0.035;
-  return Math.min(0.3, 0.035 + ((ms - 1300) / 1000) * 0.07);
+/** how far either side of the centre the lines travel (board units; the double ring ends at 1) */
+export const SWEEP_REACH = 1.08;
+/** one pass from edge to edge */
+export const SWEEP_PASS_MS = 1100;
+/** the locked crosshair shows this long before the dart goes */
+const CROSS_MS = 320;
+/** a second tap sooner than this is a double tap, not a choice */
+const TAP_GAP_MS = 160;
+
+/** where a sweeping line is after ms: edge to edge and back at a constant speed, starting at from × reach */
+export function sweepAt(ms: number, from: 1 | -1): number {
+  const t = (Math.max(0, ms) / SWEEP_PASS_MS) % 2;
+  const f = t < 1 ? t : 2 - t;
+  return from * SWEEP_REACH * (1 - 2 * f);
 }
 
-/** the drift itself: two slow wobbles mixed, so it never repeats neatly */
-export function wobble(ms: number): [number, number] {
-  const a = wobbleAmp(ms);
-  const t = ms / 1000;
-  return [a * (0.7 * Math.sin(t * 8.2) + 0.3 * Math.sin(t * 19.5 + 1)), a * (0.7 * Math.cos(t * 6.9 + 0.5) + 0.3 * Math.sin(t * 17 + 2))];
-}
+export type AimPhase = 'off' | 'y' | 'x' | 'locked';
 
 interface Props {
   live: boolean;
   onThrow: (x: number, y: number) => void;
+  /** the area that takes the taps (the whole stage); the board itself if not given */
+  zone?: RefObject<HTMLElement | null>;
+  onPhase?: (phase: AimPhase) => void;
   children: ReactNode;
 }
 
-export function AimBoard({ live, onThrow, children }: Props) {
+/** board units to px inside the square board box */
+const toPx = (v: number, w: number) => w / 2 + (v * w) / (BOARD_SPAN * 2);
+const pct = (v: number) => `${((v + BOARD_SPAN) / (BOARD_SPAN * 2)) * 100}%`;
+
+export function AimBoard({ live, onThrow, zone, onPhase, children }: Props) {
   const box = useRef<HTMLDivElement>(null);
-  const ret = useRef<HTMLSpanElement>(null);
-  const ghost = useRef<HTMLSpanElement>(null);
-  const hold = useRef<{ id: number; at: number; x: number; y: number; lift: number } | null>(null);
-  const [aiming, setAiming] = useState(false);
+  const hLine = useRef<HTMLSpanElement>(null);
+  const vLine = useRef<HTMLSpanElement>(null);
+  const [phase, setPhase] = useState<AimPhase>('off');
+  const [lock, setLock] = useState({ x: 0, y: 0 });
+  const [fading, setFading] = useState(false);
+  const st = useRef({ phase: 'off' as AimPhase, at: 0, y: 0, tapAt: 0 });
   const raf = useRef(0);
+  const timer = useRef(0);
+  const cb = useRef({ onThrow, onPhase });
+  cb.current = { onThrow, onPhase };
 
-  /** where the reticle is now, board units (y up) */
-  const spot = (now: number): [number, number] => {
-    const h = hold.current!;
-    const [wx, wy] = reducedMotion() ? [0, 0] : wobble(now - h.at);
-    return [h.x + wx, h.y + wy];
+  const go = (p: AimPhase) => {
+    st.current.phase = p;
+    setPhase(p);
+    cb.current.onPhase?.(p);
   };
-  const toBoard = (cx: number, cy: number, lift: number): [number, number] => {
-    const r = box.current!.getBoundingClientRect();
-    const s = r.width / (BOARD_SPAN * 2);
-    return [(cx - r.left - r.width / 2) / s, -(cy - lift - r.top - r.height / 2) / s];
-  };
+
   const paint = () => {
-    const h = hold.current;
-    const el = ret.current;
-    if (!h || !box.current) return;
-    // the reticle mounts on the next render
-    if (!el) {
-      raf.current = requestAnimationFrame(paint);
-      return;
-    }
+    const s = st.current;
+    const w = box.current?.offsetWidth ?? 0;
     const now = performance.now();
-    const [x, y] = spot(now);
-    const w = box.current.offsetWidth;
-    const s = w / (BOARD_SPAN * 2);
-    el.style.transform = `translate(${w / 2 + x * s}px, ${w / 2 - y * s}px)`;
-    const amp = wobbleAmp(now - h.at);
-    el.dataset.steady = amp <= 0.04 ? 'yes' : amp > 0.12 ? 'no' : 'mid';
-    // the steadiness meter: full and green when steady, short and red when shaky
-    const steady = Math.max(0.06, Math.min(1, 1 - (amp - 0.035) / 0.2));
-    el.style.setProperty('--steady', `${steady}`);
-    el.style.setProperty('--steady-col', `hsl(${Math.round(steady * 125)} 90% 55%)`);
-    // the ghost: where it'll land, round the spot the hand aims at
-    const g = ghost.current;
-    if (g) g.style.transform = `translate(${w / 2 + h.x * s}px, ${w / 2 - h.y * s}px) scale(${Math.max(0.05, amp * s * 2.1) / 100})`;
-    raf.current = requestAnimationFrame(paint);
+    if (s.phase === 'y' && hLine.current) hLine.current.style.transform = `translateY(${toPx(-sweepAt(now - s.at, 1), w)}px)`;
+    if (s.phase === 'x' && vLine.current) vLine.current.style.transform = `translateX(${toPx(sweepAt(now - s.at, -1), w)}px)`;
+    if (s.phase === 'y' || s.phase === 'x') raf.current = requestAnimationFrame(paint);
   };
-  useEffect(() => () => cancelAnimationFrame(raf.current), []);
-  useEffect(() => {
-    if (!live && hold.current) {
-      hold.current = null;
-      setAiming(false);
-      cancelAnimationFrame(raf.current);
-    }
-  }, [live]);
 
+  // a new dart: the up-down line starts at the top; the turn ending clears it (a thrown crosshair fades out)
+  useEffect(() => {
+    cancelAnimationFrame(raf.current);
+    if (live) {
+      window.clearTimeout(timer.current);
+      setFading(false);
+      st.current.at = performance.now();
+      go('y');
+      raf.current = requestAnimationFrame(paint);
+    } else if (st.current.phase === 'locked') setFading(true);
+    else go('off');
+    return () => cancelAnimationFrame(raf.current);
+  }, [live]);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  /** one tap: fix the height, then the left-right, then throw */
+  const tap = () => {
+    const s = st.current;
+    const now = performance.now();
+    if (now - s.tapAt < TAP_GAP_MS) return;
+    s.tapAt = now;
+    if (s.phase === 'y') {
+      s.y = sweepAt(now - s.at, 1);
+      s.at = now;
+      setLock({ x: -SWEEP_REACH, y: s.y });
+      go('x');
+      navigator.vibrate?.(12);
+    } else if (s.phase === 'x') {
+      const x = sweepAt(now - s.at, -1);
+      const y = s.y;
+      cancelAnimationFrame(raf.current);
+      setLock({ x, y });
+      go('locked');
+      navigator.vibrate?.(18);
+      const c = (v: number) => Math.round(Math.max(-1.9, Math.min(1.9, v)) * 1000) / 1000;
+      timer.current = window.setTimeout(() => cb.current.onThrow(c(x), c(y)), CROSS_MS);
+    }
+  };
+  const tapRef = useRef(tap);
+  tapRef.current = tap;
+
+  // taps anywhere on the zone (not on its buttons), and Space / Enter on a keyboard
+  useEffect(() => {
+    if (!live) return;
+    const el = zone?.current ?? box.current;
+    const down = (e: PointerEvent) => {
+      if (e.button > 0 || (e.target as Element | null)?.closest?.('button, a, input, [role="button"]')) return;
+      tapRef.current();
+    };
+    const key = (e: KeyboardEvent) => {
+      if (e.repeat || (e.key !== ' ' && e.key !== 'Enter')) return;
+      if ((e.target as Element | null)?.closest?.('input, textarea, button, select, [contenteditable="true"]')) return;
+      // a sheet or menu is open over the board
+      if (document.querySelector('[role="dialog"], .backdrop, .tinfo-panel')) return;
+      e.preventDefault();
+      tapRef.current();
+    };
+    el?.addEventListener('pointerdown', down);
+    window.addEventListener('keydown', key);
+    return () => {
+      el?.removeEventListener('pointerdown', down);
+      window.removeEventListener('keydown', key);
+    };
+  }, [live, zone]);
+
+  const w = box.current?.offsetWidth ?? 0;
+  const showV = phase === 'x' || phase === 'locked';
   return (
-    <div
-      ref={box}
-      className={cx('da-board', live && 'live', aiming && 'aiming')}
-      onPointerDown={(e) => {
-        if (!live || hold.current) return;
-        try {
-          e.currentTarget.setPointerCapture(e.pointerId);
-        } catch {
-          // a pointer the browser no longer tracks: aim without capture
-        }
-        // a finger hides the spot: aim a little above it
-        const lift = e.pointerType === 'touch' ? 56 : 0;
-        const [x, y] = toBoard(e.clientX, e.clientY, lift);
-        hold.current = { id: e.pointerId, at: performance.now(), x, y, lift };
-        setAiming(true);
-        cancelAnimationFrame(raf.current);
-        raf.current = requestAnimationFrame(paint);
-      }}
-      onPointerMove={(e) => {
-        const h = hold.current;
-        if (!h || h.id !== e.pointerId) return;
-        [h.x, h.y] = toBoard(e.clientX, e.clientY, h.lift);
-      }}
-      onPointerUp={(e) => {
-        const h = hold.current;
-        if (!h || h.id !== e.pointerId) return;
-        const [x, y] = spot(performance.now());
-        hold.current = null;
-        setAiming(false);
-        cancelAnimationFrame(raf.current);
-        const c = (v: number) => Math.round(Math.max(-1.9, Math.min(1.9, v)) * 1000) / 1000;
-        onThrow(c(x), c(y));
-      }}
-      onPointerCancel={() => {
-        hold.current = null;
-        setAiming(false);
-        cancelAnimationFrame(raf.current);
-      }}
-    >
+    <div ref={box} className={cx('da-board', live && 'live', `aim-${phase}`, fading && 'aim-gone')}>
       {children}
-      {aiming && <span ref={ghost} className="da-ghost" aria-hidden />}
-      {aiming && (
-        <span ref={ret} className="da-reticle" aria-hidden>
-          <i />
-          <em className="da-meter">
-            <span />
-          </em>
+      {phase !== 'off' && (
+        <span ref={hLine} className={cx('da-sweep h', phase !== 'y' && 'set')} style={{ transform: `translateY(${toPx(phase === 'y' ? -SWEEP_REACH : -lock.y, w)}px)` }} aria-hidden>
+          <b />
         </span>
       )}
+      {showV && (
+        <span ref={vLine} className={cx('da-sweep v', phase === 'locked' && 'set')} style={{ transform: `translateX(${toPx(lock.x, w)}px)` }} aria-hidden>
+          <b />
+        </span>
+      )}
+      {phase === 'locked' && <span className="da-cross" style={{ left: pct(lock.x), top: pct(-lock.y) }} aria-hidden />}
     </div>
   );
 }

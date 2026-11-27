@@ -29,10 +29,12 @@ interface Props {
   onFinish?: (el: Element) => void;
   /** the move's animation length, so banners wait for it */
   onPlayed?: (ms: number) => void;
+  /** a short name tag for a player's goti, shown when gotis share a square */
+  tagOf?: (id: string) => string;
 }
 
 /** the dice tumbles first, then the goti sets off */
-export const DICE_MS = 650;
+export const DICE_MS = 550;
 
 const px = (p: Pt, cell: number, dx = 0, dy = 0) => `translate3d(${(p[0] + dx) * cell}px, ${(p[1] + dy) * cell}px, 0)`;
 
@@ -43,7 +45,7 @@ export function moveMs(last: SnakesLastMove, six: boolean): number {
   return DICE_MS + walk + (last.via ? (last.via.kind === 'snake' ? 950 : 750) : 0);
 }
 
-export function TokenLayer({ seats, spots, cell, last, six, cornerOf, styleOf, turnId, meId, onBite, onFinish, onPlayed }: Props) {
+export function TokenLayer({ seats, spots, cell, last, six, cornerOf, styleOf, turnId, meId, onBite, onFinish, onPlayed, tagOf }: Props) {
   const els = useRef(new Map<string, Els>());
   const seen = useRef<number>(last?.seq ?? -1);
 
@@ -134,6 +136,11 @@ export function TokenLayer({ seats, spots, cell, last, six, cornerOf, styleOf, t
             <i className="lu-g-shadow" />
             <span className="lu-g-stand" aria-label={`${seat.color} goti on ${seat.pos || 'start'}`}>
               <Pawn color={seat.color as LudoColor} style={styleOf(s.playerId)} />
+              {tagOf && s.k < 0.8 && (
+                <b className={cx('sn-tag', `lu-c-${seat.color}`)} aria-hidden>
+                  {s.playerId === meId ? 'You' : tagOf(s.playerId)}
+                </b>
+              )}
             </span>
           </div>
         );

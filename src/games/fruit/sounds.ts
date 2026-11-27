@@ -1,4 +1,4 @@
-// Arcade sounds made with Web Audio (no files): Fruit Slice Duel's swoosh, squish, bomb, combo and countdown (Spike Attack reuses the helpers)
+// Arcade sounds made with Web Audio (no files): Fruit Slice Duel's swoosh, squish, magnet, pop and countdown (Spike Attack reuses the helpers)
 import { liveAudio } from '../../lib/sounds';
 import { isSoundOn } from '../../lib/speech';
 
@@ -68,6 +68,23 @@ export const fruitSfx = {
     const c = audio();
     if (!c) return;
     [659, 784, 988, 1175, 1319, 1568].slice(0, Math.min(6, n)).forEach((f, i) => tone(c, f, i * 0.06, 0.18, 'triangle', 0.07));
+  },
+  /** an item pops onto the plate */
+  pop() {
+    const c = audio();
+    if (c) tone(c, 380, 0, 0.12, 'sine', 0.08, 900);
+  },
+  /** a magnet struck: a buzzing zap and a sinking slide */
+  magnet() {
+    const c = audio();
+    if (!c) return;
+    tone(c, 110, 0, 0.45, 'sawtooth', 0.07, 70);
+    tone(c, 900, 0.02, 0.35, 'square', 0.03, 200);
+  },
+  /** tapped before anything was there */
+  early() {
+    const c = audio();
+    if (c) tone(c, 220, 0, 0.14, 'square', 0.04, 160);
   },
   /** 3-2-1 beeps, and a higher one for go */
   count(go = false) {

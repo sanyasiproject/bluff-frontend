@@ -12,6 +12,7 @@ import type { Auth } from '../../useAuth';
 import type { Actions, Note } from '../../useBluff';
 import { LudoMenus } from '../ludo/LudoMenus';
 import type { PartyBase } from './base';
+import { colorName, YouAreBanner } from './ColorMark';
 
 interface Props {
   view: RoomView;
@@ -30,9 +31,11 @@ interface Props {
   watchNote: string;
   /** the game's podium, shown before the coins screen */
   over: ReactNode;
+  /** my piece for the "You are Red" banner (a colour dot by default) */
+  myIcon?: ReactNode;
 }
 
-export function PartyChrome({ view, actions, auth, notes, base, status, mine, infoMine, tips, leaveWhat, kickWhat, watchNote, over }: Props) {
+export function PartyChrome({ view, actions, auth, notes, base, status, mine, infoMine, tips, leaveWhat, kickWhat, watchNote, over, myIcon }: Props) {
   const { banner, panel, setPanel, target, setTarget, overSeen, levelUp, setLevelUp, startLevel, isHost, me } = base;
   const targetPlayer = target ? view.players.find((p) => p.id === target) : undefined;
   return (
@@ -65,6 +68,7 @@ export function PartyChrome({ view, actions, auth, notes, base, status, mine, in
         </div>
       </header>
       <LiveVoiceNotice />
+      {me && <YouAreBanner on={view.phase === 'playing'} color={base.colorOf(view.meId)} name={colorName(base.colorOf(view.meId))} icon={myIcon} />}
       {!me && <p className="lu-watch-note">{watchNote}</p>}
 
       {view.phase === 'over' && !overSeen && over}

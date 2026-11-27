@@ -147,24 +147,54 @@
   .lu-step.at-3 .lu-step-block { height: 18px; }
 }
 
+/* nothing beside the podium (party games): it takes the whole width instead of leaving half the box empty */
+.lu-over-box > .lu-podium:nth-last-child(2) {
+  grid-column: 1 / -1;
+}
+
+/* tall tablets and big screens: a podium sized for the bigger box; steps shrink before they push the recap aside */
+@media (min-height: 800px) and (min-width: 900px) {
+  .lu-podium { min-width: 0; }
+  .lu-step { flex: 0 1 136px; width: auto; min-width: 0; }
+  .lu-step b { max-width: 100%; font-size: 16px; }
+  .lu-step-medal { font-size: 22px; }
+  .lu-step small { font-size: 13px; }
+  .lu-step-block { height: 32px; }
+  .lu-step.at-1 .lu-step-block { height: 80px; }
+  .lu-step.at-2 .lu-step-block { height: 56px; }
+  .lu-step.at-3 .lu-step-block { height: 42px; }
+  .lu-kills ul { max-height: 180px; font-size: 15px; }
+}
+
 /* ---------- the looks picker ---------- */
 
 .lu-looks {
   display: grid;
-  gap: 10px;
+  gap: 22px;
 }
 
-.lu-look-row {
-  display: flex;
-  flex-wrap: wrap;
+/* each section: heading, a note under it, then the choices */
+.lu-look-group {
+  display: grid;
   gap: 8px;
+}
+
+.lu-look-group > .label {
+  margin: 0;
+}
+
+/* a wrapping grid: every choice shows whole, none cut off at the edge */
+.lu-look-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 10px;
 }
 
 .lu-look {
   display: grid;
   justify-items: center;
   gap: 4px;
-  min-width: 82px;
+  min-width: 0;
   padding: 8px 6px 6px;
   border: 0;
   border-radius: 12px;
@@ -188,7 +218,8 @@
 }
 
 .lu-look-note {
-  margin: -4px 0 2px;
+  margin: 0 0 4px;
+  line-height: 1.35;
 }
 
 .lu-look-note.warn {

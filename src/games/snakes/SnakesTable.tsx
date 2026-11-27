@@ -21,12 +21,14 @@ import { sfx } from '../../lib/sounds';
 import { unlockSpeech } from '../../lib/speech';
 import { levelOf, LUDO_COLOR_HEX, SNAKES_BITE_BACK, type LudoColor, type SnakesView } from '../../types';
 import { Dice } from '../ludo/Dice';
+import { DiceDock } from '../ludo/DiceDock';
 import type { Banner } from '../ludo/LudoHud';
 import { LudoLooksSheet } from '../ludo/LudoLooks';
 import { LudoMenus, type LudoPanel } from '../ludo/LudoMenus';
 import { lookOfPlayer, useLudoLooks } from '../ludo/looks';
 import { ludoSfx } from '../ludo/sounds';
 import type { TableProps } from '../registry';
+import { colorName, GOTI_HEX, MiniGoti, YouAreBanner } from '../turnkit/ColorMark';
 import { CORNERS, tokenSpots } from './geometry';
 import { SnakesBoard } from './SnakesBoard';
 import { SnakesOver } from './SnakesOver';
@@ -198,7 +200,7 @@ function SnakesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
     if (myTurn) status = sv.rules.six && mySeat?.pos === 0 ? 'Roll a 6 to start' : 'Tap the dice to roll';
     else status = `${name(sv.turnId)}'s turn`;
   }
-  const dieCorner = cornerOf(diceBy.current);
+  const diceSeat = sv.seats.find((s) => s.playerId === diceBy.current);
   const infoMine = mySeat && (
     <p className="tinfo-counts">
       <span>{`🎨 You play ${mySeat.color}`}</span>
@@ -226,6 +228,7 @@ function SnakesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
               styleOf={styleOf}
               turnId={playing ? sv.turnId : null}
               meId={view.meId}
+              tagOf={(id) => name(id).slice(0, 1).toUpperCase()}
               onBite={onBite}
               onFinish={onFinish}
             />
@@ -248,12 +251,15 @@ function SnakesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
               turnEndsAt={s.playerId === sv.turnId ? turnEndsAt : null}
               turnSec={view.config.turnSec}
               onTap={p && p.id !== view.meId ? () => setTarget(p.id) : undefined}
+              gotiStyle={styleOf(s.playerId)}
             />
           );
         })}
         {playing && (
-          <div className={cx('lu-dice-spot', dieCorner)}>
-            <Dice value={sv.dice} rollSeq={sv.rollSeq} skin={diceLook} live={canRoll} rolling={rolling} onRoll={() => void roll()} label={canRoll ? 'Tap to roll' : undefined} />
+          <div className="lu-dice-spot lu-dice-fixed">
+            <DiceDock color={(diceSeat?.color as LudoColor | undefined) ?? null} gotiStyle={styleOf(diceBy.current)} who={name(diceBy.current)} mine={diceBy.current === view.meId} live={canRoll}>
+              <Dice value={sv.dice} rollSeq={sv.rollSeq} skin={diceLook} live={canRoll} rolling={rolling} onRoll={() => void roll()} label={canRoll ? 'Tap to roll' : undefined} />
+            </DiceDock>
           </div>
         )}
         {banner && (
@@ -289,6 +295,7 @@ function SnakesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
         </div>
       </header>
       <LiveVoiceNotice />
+      {mySeat && <YouAreBanner on={playing} color={GOTI_HEX[mySeat.color as LudoColor]} name={colorName(mySeat.color)} icon={<MiniGoti color={mySeat.color as LudoColor} style={styleOf(view.meId)} />} />}
       {watching && <p className="lu-watch-note">👀 Watching · you'll play next game</p>}
 
       {view.phase === 'over' && !overSeen && <SnakesOver view={view} sv={sv} styleOf={styleOf} onNext={() => setOverSeen(true)} />}

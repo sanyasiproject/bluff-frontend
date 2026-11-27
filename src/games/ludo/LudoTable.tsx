@@ -20,7 +20,9 @@ import { sfx } from '../../lib/sounds';
 import { unlockSpeech } from '../../lib/speech';
 import { levelOf, LUDO_COLOR_HEX, type LudoColor, type LudoView } from '../../types';
 import type { TableProps } from '../registry';
+import { colorName, GOTI_HEX, MiniGoti, YouAreBanner } from '../turnkit/ColorMark';
 import { Dice } from './Dice';
+import { DiceDock } from './DiceDock';
 import { BOARD_PAD, BOARD_SPAN, cornerOf, gotiSpots, turnPt, turnsFor, yardOf } from './geometry';
 import { GotiLayer } from './Gotis';
 import { LudoBoard } from './LudoBoard';
@@ -205,7 +207,6 @@ function LudoTableInner({ view, actions, bubbles, auth, notes = [], lv }: TableP
       status = forPartner ? `${name(lv.turnId)} is moving for ${name(lv.movesFor)}` : `${name(lv.turnId)}'s turn`;
     }
   }
-  const dieCorner = turnSeat ? cornerOf(turnSeat.color, turns) : 'bl';
   const yardGlow = turnSeat && playing ? turnPt(yardOf(turnSeat.color), turns) : null;
   const infoMine = (
     <p className="tinfo-counts">
@@ -241,6 +242,7 @@ function LudoTableInner({ view, actions, bubbles, auth, notes = [], lv }: TableP
               onPoint={setPoint}
               onKill={onKill}
               onHome={onHome}
+              you={mySeat?.color ?? null}
             />
           )}
         </div>
@@ -263,12 +265,15 @@ function LudoTableInner({ view, actions, bubbles, auth, notes = [], lv }: TableP
               turnEndsAt={s.playerId === lv.turnId ? turnEndsAt : null}
               turnSec={view.config.turnSec}
               onTap={p && p.id !== view.meId ? () => setTarget(p.id) : undefined}
+              gotiStyle={styleOf(s.color)}
             />
           );
         })}
         {playing && (
-          <div className={cx('lu-dice-spot', dieCorner)}>
-            <Dice value={lv.dice} rollSeq={lv.rollSeq} skin={diceLook} live={canRoll} rolling={rolling} onRoll={roll} label={canRoll ? 'Tap to roll' : undefined} />
+          <div className="lu-dice-spot lu-dice-fixed">
+            <DiceDock color={turnSeat?.color ?? null} gotiStyle={turnSeat ? styleOf(turnSeat.color) : 'classic'} who={name(lv.turnId)} mine={myTurn} live={canRoll}>
+              <Dice value={lv.dice} rollSeq={lv.rollSeq} skin={diceLook} live={canRoll} rolling={rolling} onRoll={roll} label={canRoll ? 'Tap to roll' : undefined} />
+            </DiceDock>
           </div>
         )}
         {banner && <LudoBanner banner={banner} />}
@@ -300,6 +305,7 @@ function LudoTableInner({ view, actions, bubbles, auth, notes = [], lv }: TableP
         </div>
       </header>
       <LiveVoiceNotice />
+      {mySeat && <YouAreBanner on={playing} color={GOTI_HEX[mySeat.color]} name={colorName(mySeat.color)} icon={<MiniGoti color={mySeat.color} style={styleOf(mySeat.color)} />} />}
       {watching && <p className="lu-watch-note">👀 Watching · you'll play next game</p>}
 
       {view.phase === 'over' && !overSeen && <LudoOver view={view} lv={lv} styleOf={styleOf} onNext={() => setOverSeen(true)} />}

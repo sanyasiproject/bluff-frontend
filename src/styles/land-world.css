@@ -626,6 +626,17 @@
   }
 }
 
+/* big tablets: the info panel grows a little so its text isn't phone-sized on a large screen */
+@media (orientation: landscape) and (min-width: 1000px) and (min-height: 760px) {
+  .tinfo-panel {
+    width: min(440px, 40vw);
+  }
+
+  .tinfo-panel > * {
+    zoom: 1.18;
+  }
+}
+
 /* the info button grows with the rest of the top bar on bigger screens */
 @media (orientation: landscape) and (min-height: 560px) {
   .table .topbar .tinfo-btn {

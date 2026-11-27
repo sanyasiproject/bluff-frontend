@@ -124,13 +124,9 @@
   box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.25);
 }
 
-/* my turn to roll: the dice glows and bobs, waiting for a tap */
+/* my turn to roll: a soft, still glow behind the dice (it never bobs or pulses) */
 .lu-dice.live {
   cursor: pointer;
-}
-
-.lu-dice.live .lu-dice-hop {
-  animation: lu-dice-wait 0.9s ease-in-out infinite alternate;
 }
 
 .lu-dice.live::before {
@@ -138,17 +134,8 @@
   position: absolute;
   inset: 6%;
   border-radius: 30%;
-  background: radial-gradient(closest-side, rgba(255, 230, 120, 0.75), transparent);
-  animation: lu-glow 0.8s ease-in-out infinite alternate;
-}
-
-@keyframes lu-dice-wait {
-  from {
-    translate: 0 0;
-  }
-  to {
-    translate: 0 -10%;
-  }
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--dock, #ffe678) 70%, #fff), transparent);
+  opacity: 0.75;
 }
 
 /* before the first roll: a little dimmer (opacity would flatten the cube) */
@@ -168,11 +155,4 @@
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lu-dice.live .lu-dice-hop,
-  .lu-dice.live::before {
-    animation: none;
-  }
 }

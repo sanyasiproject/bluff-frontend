@@ -207,6 +207,7 @@ function ColorWarTableInner({ view, actions, bubbles, auth, notes = [], cw }: Ta
                 bigKey={out ? 'out' : countOf(id)}
                 label={out ? 'out' : placing ? 'to place' : `cell${countOf(id) === 1 ? '' : 's'}`}
                 turnText="Tapping"
+                chip
               />
             ),
           };

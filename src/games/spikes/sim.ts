@@ -1,12 +1,20 @@
-// Dev only: a tiny Spike Attack server for the preview (warnings, strikes, lives, places and bots), close to the backend's rules
-import { SPIKES_LIVES, type SpikeDir, type SpikesMoveInput, type SpikesView } from '../../types';
+// Dev only: a tiny Spike Attack server for the preview (free movement, warnings, band hits, lives, places, bots), close to the backend's rules
+import { SPIKES_LIVES, SPIKES_RADIUS, SPIKES_SPEED, type SpikeDir, type SpikesView } from '../../types';
 
 const DIRS: SpikeDir[] = ['left', 'right', 'top', 'bottom'];
+const SLACK = 0.35;
 let nextId = 1;
-const onLine = (p: [number, number], w: { dir: SpikeDir; line: number }) => (w.dir === 'left' || w.dir === 'right' ? p[1] === w.line : p[0] === w.line);
+
+/** a spike on row/column `line` hits a body overlapping its band (a little forgiving) */
+export const inBand = (p: [number, number], w: { dir: SpikeDir; line: number }) => {
+  const c = w.dir === 'left' || w.dir === 'right' ? p[1] : p[0];
+  return Math.abs(c - (w.line + 0.5)) < 0.5 + SPIKES_RADIUS * 0.85;
+};
 
 export function newSpikes(ids: string[], size: number, now: number): SpikesView {
-  const corners: [number, number][] = [[0, 0], [size - 1, size - 1], [size - 1, 0], [0, size - 1]];
+  const lo = 0.5;
+  const hi = size - 0.5;
+  const corners: [number, number][] = [[lo, lo], [hi, hi], [hi, lo], [lo, hi]];
   return {
     size,
     phase: 'countdown',
@@ -21,12 +29,26 @@ export function newSpikes(ids: string[], size: number, now: number): SpikesView 
   };
 }
 
-export function stepIn(v: SpikesView, id: string, dir: SpikesMoveInput['dir']): SpikesView {
+/** last accepted move time per player (the server keeps the same) */
+const movedAt: Record<string, number> = {};
+
+/** a move as the server takes it: never refused, clamped to the distance allowed since the last one and to the arena */
+export function moveIn(v: SpikesView, id: string, x: number, y: number, now: number): SpikesView {
   if (v.phase !== 'play' || (v.lives[id] ?? 0) <= 0) return v;
-  const [c, r] = v.pos[id];
-  const n = v.size;
-  const p: [number, number] = dir === 'left' ? [Math.max(0, c - 1), r] : dir === 'right' ? [Math.min(n - 1, c + 1), r] : dir === 'up' ? [c, Math.max(0, r - 1)] : [c, Math.min(n - 1, r + 1)];
-  return { ...v, pos: { ...v.pos, [id]: p } };
+  const [px, py] = v.pos[id];
+  const dt = Math.max(0, (now - (movedAt[id] ?? now - 100)) / 1000);
+  movedAt[id] = now;
+  const max = SPIKES_SPEED * dt + SLACK;
+  let dx = x - px;
+  let dy = y - py;
+  const d = Math.hypot(dx, dy);
+  if (d > max) {
+    dx = (dx / d) * max;
+    dy = (dy / d) * max;
+  }
+  const r = SPIKES_RADIUS;
+  const q: [number, number] = [Math.min(v.size - r, Math.max(r, px + dx)), Math.min(v.size - r, Math.max(r, py + dy))];
+  return { ...v, pos: { ...v.pos, [id]: q } };
 }
 
 /** one server tick: start, spawn warnings, fire strikes, end */
@@ -51,7 +73,7 @@ export function tick(v: SpikesView, now: number, fast: boolean, rnd = Math.rando
   const strikes = [...s.strikes];
   const places = { ...s.places };
   for (const w of due) {
-    const hit = Object.keys(lives).filter((id) => lives[id] > 0 && (safe[id] ?? 0) <= now && onLine(s.pos[id], w));
+    const hit = Object.keys(lives).filter((id) => lives[id] > 0 && (safe[id] ?? 0) <= now && inBand(s.pos[id], w));
     for (const id of hit) {
       lives[id] -= 1;
       safe[id] = now + 1000;
@@ -69,24 +91,31 @@ export function tick(v: SpikesView, now: number, fast: boolean, rnd = Math.rando
   return s;
 }
 
-/** a bot's next step: off any line about to strike, else a little wander */
-export function botStep(v: SpikesView, id: string, late: boolean, rnd = Math.random): SpikesMoveInput['dir'] | null {
+/** where a bot heads: the nearest cell centre out of every band about to strike (seen `late` = only the last 0.7 s), else its wander spot */
+export function botGoal(v: SpikesView, id: string, late: boolean, wander: [number, number]): [number, number] {
   const p = v.pos[id];
-  const danger = (q: [number, number]) => v.warnings.some((w) => onLine(q, w) && w.strikeAt - v.now < (late ? 700 : 1800));
-  const moves: { d: SpikesMoveInput['dir']; q: [number, number] }[] = [
-    { d: 'left', q: [p[0] - 1, p[1]] },
-    { d: 'right', q: [p[0] + 1, p[1]] },
-    { d: 'up', q: [p[0], p[1] - 1] },
-    { d: 'down', q: [p[0], p[1] + 1] },
-  ];
-  const ok = moves.filter((m) => m.q.every((x) => x >= 0 && x < v.size));
-  if (danger(p)) {
-    const out = ok.filter((m) => !danger(m.q));
-    return (out[Math.floor(rnd() * out.length)] ?? ok[0])?.d ?? null;
-  }
-  if (rnd() < 0.25) {
-    const calm = ok.filter((m) => !v.warnings.some((w) => onLine(m.q, w)));
-    return calm[Math.floor(rnd() * calm.length)]?.d ?? null;
-  }
-  return null;
+  const soon = v.warnings.filter((w) => w.strikeAt - v.now < (late ? 700 : 1800));
+  if (!soon.some((w) => inBand(p, w)) && !v.warnings.some((w) => inBand(wander, w))) return wander;
+  let best: [number, number] = p;
+  let bd = Infinity;
+  for (let r = 0; r < v.size; r++)
+    for (let c = 0; c < v.size; c++) {
+      const q: [number, number] = [c + 0.5, r + 0.5];
+      if (v.warnings.some((w) => inBand(q, w))) continue;
+      const d = Math.hypot(q[0] - p[0], q[1] - p[1]);
+      if (d < bd) {
+        bd = d;
+        best = q;
+      }
+    }
+  return best;
+}
+
+/** a step of `dt` seconds towards a goal at full speed */
+export function stepToward(p: [number, number], goal: [number, number], dt: number): [number, number] {
+  const dx = goal[0] - p[0];
+  const dy = goal[1] - p[1];
+  const d = Math.hypot(dx, dy);
+  const k = d < 1e-3 ? 0 : Math.min(1, (SPIKES_SPEED * dt) / d);
+  return [p[0] + dx * k, p[1] + dy * k];
 }

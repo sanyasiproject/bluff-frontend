@@ -1,0 +1,145 @@
+/* ---------- player colour markers: seat chips, "You · Red", the "You are Red" banner (turnkit/ColorMark) ---------- */
+
+.cm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  min-height: 20px;
+  padding: 2px 8px 2px 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cm) 22%, rgba(0, 0, 0, 0.72));
+  box-shadow: inset 0 0 0 2px var(--cm);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.cm-chip b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* mine: brighter, gold text, so I find myself at a glance */
+.cm-chip.you {
+  background: color-mix(in srgb, var(--cm) 45%, rgba(0, 0, 0, 0.6));
+  box-shadow: inset 0 0 0 2px var(--cm), 0 0 0 1.5px rgba(255, 255, 255, 0.85);
+  color: #fff;
+}
+
+.cm-dot {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--cm) 40%, #fff), var(--cm) 60%);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.9);
+}
+
+/* a standing goti, small enough for a chip */
+.cm-goti {
+  position: relative;
+  flex: none;
+  display: inline-block;
+  width: 13px;
+  height: 17px;
+}
+
+.cm-goti .lu-pawn {
+  animation: none;
+}
+
+/* the chip always takes its own line in a seat's tag row */
+.lu-seat-tags > .cm-chip,
+.pr-seat .cm-chip {
+  order: -1;
+  flex-basis: auto;
+}
+
+.lu-seat-tags:has(> .cm-chip) {
+  row-gap: 4px;
+}
+
+/* "You are Red": a pill at the top, off the board, for 2 s */
+.cm-youare {
+  position: fixed;
+  left: 50%;
+  top: max(8px, env(safe-area-inset-top));
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  padding: 8px 18px 8px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cm) 35%, rgba(12, 6, 30, 0.94));
+  box-shadow: inset 0 0 0 2.5px var(--cm), 0 10px 26px rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  white-space: nowrap;
+  translate: -50% 0;
+  pointer-events: none;
+  animation:
+    cm-in 0.25s ease-out backwards,
+    cm-out 0.3s ease-in 1.7s forwards;
+}
+
+.cm-youare .cm-dot {
+  width: 18px;
+  height: 18px;
+}
+
+.cm-youare .cm-goti {
+  width: 18px;
+  height: 24px;
+}
+
+@keyframes cm-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes cm-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cm-youare {
+    animation: none;
+  }
+}
+
+/* a piece icon that is an emoji (Dots' box icons) */
+.cm-emoji {
+  flex: none;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* Spike Attack's blob: a round body with two eyes */
+.cm-dot.cm-blob {
+  border-radius: 50% 50% 45% 45%;
+  background:
+    radial-gradient(circle at 34% 42%, #fff 0 13%, transparent 15%),
+    radial-gradient(circle at 66% 42%, #fff 0 13%, transparent 15%),
+    radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--cm) 40%, #fff), var(--cm) 60%);
+}
+
+/* the arcade card's own "You" badge gives way to the chip */
+.ar-seat.has-chip.mine > .seat::after {
+  display: none;
+}
+
+/* rail cards: the chip under the big number, across the card */
+.pr-seat .cm-chip {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin-top: 4px;
+}

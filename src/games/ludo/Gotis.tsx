@@ -42,11 +42,13 @@ interface Props {
   /** a goti was knocked off: where it was hit, for the burst */
   onKill?: (el: Element) => void;
   onHome?: () => void;
+  /** my own colour: my gotis get a "you" ring at their foot */
+  you?: LudoColor | null;
 }
 
 const px = (p: Pt, cell: number, dx = 0, dy = 0) => `translate3d(${(p[0] + dx + BOARD_PAD) * cell}px, ${(p[1] + dy + BOARD_PAD) * cell}px, 0)`;
 
-export function GotiLayer({ spots, cell, turns, last, legal, ghost, styleOf, mine, onPick, onPoint, onKill, onHome }: Props) {
+export function GotiLayer({ spots, cell, turns, last, legal, ghost, styleOf, mine, onPick, onPoint, onKill, onHome, you }: Props) {
   const els = useRef(new Map<string, Els>());
   // the move already on the board when the table opened is not replayed
   const seen = useRef<number>(last?.seq ?? -1);
@@ -132,7 +134,7 @@ export function GotiLayer({ spots, cell, turns, last, legal, ghost, styleOf, min
               e.pawn = wrap?.querySelector('.lu-pawn') ?? null;
               els.current.set(s.key, e);
             }}
-            className={cx('lu-g', can && 'legal', almost && 'almost', s.progress >= LUDO_HOME && 'home', mine.includes(s.color) && 'mine')}
+            className={cx('lu-g', can && 'legal', almost && 'almost', s.progress >= LUDO_HOME && 'home', mine.includes(s.color) && 'mine', you === s.color && 'you')}
             style={{ transform: px(s.at, cell, s.dx, s.dy), ['--k' as string]: s.k } as CSSProperties}
           >
             <i className="lu-g-shadow" />

@@ -1,4 +1,4 @@
-// The Spike Attack table: the arena in the middle, players and hearts down the left, the arrow pad under the right thumb; swipe and keys work too
+// The Spike Attack table: the arena in the middle, players and hearts down the edges; drag anywhere for a joystick (keys on desktop), free running
 import '../../styles/land-ludo-hud.css';
 import '../../styles/land-ludo-over.css';
 import '../../styles/land-arcade.css';
@@ -15,24 +15,23 @@ import { cx } from '../../lib/cards';
 import { reducedMotion } from '../../lib/motion';
 import { unlockAudio } from '../../lib/sounds';
 import { unlockSpeech } from '../../lib/speech';
-import { PARTY_COLORS, SPIKES_LIVES, type SpikesMoveInput, type SpikesView } from '../../types';
+import { PARTY_COLORS, SPIKES_LIVES, type SpikesView } from '../../types';
 import { ArcadeSeat, seatOrder } from '../fruit/ArcadeSeat';
 import { useServerClock } from '../fruit/clock';
 import { fruitSfx } from '../fruit/sounds';
 import type { Banner } from '../ludo/LudoHud';
 import { LudoMenus, type LudoPanel } from '../ludo/LudoMenus';
 import type { TableProps } from '../registry';
+import { colorName, YouAreBanner } from '../turnkit/ColorMark';
 import { Arena } from './Arena';
-import { Pad } from './Pad';
+import { Joystick, joyVector, type JoyState } from './Joystick';
+import { useMotion } from './motion';
 import { SpikesOver } from './SpikesOver';
 import { spikesSfx } from './sounds';
 
-type Dir = SpikesMoveInput['dir'];
 const BUBBLE_MS = 4000;
-const STEP_MS = 140;
-const PRED_MS = 700;
-const SWIPE_PX = 28;
-const KEYS: Record<string, Dir> = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right' };
+const STEP_SOUND_MS = 260;
+const KEYS: Record<string, [number, number]> = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
 
 export function SpikesTable(props: TableProps) {
   const sv = props.view.plugged?.kind === 'spikes' ? props.view.plugged.spikes : null;
@@ -101,67 +100,89 @@ function SpikesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
   };
   useEffect(() => () => window.clearTimeout(bannerTimer.current), []);
 
-  // my steps show at once; the server's place takes over once it has caught up
-  const pred = useRef<{ pos: [number, number]; at: number } | null>(null);
-  const lastStep = useRef(0);
-  const queued = useRef<number>(0);
-  const posOf = (id: string): [number, number] => {
-    if (id === view.meId && pred.current && performance.now() - pred.current.at < PRED_MS) return pred.current.pos;
-    return sv.pos[id] ?? [0, 0];
-  };
-  const stepRef = useRef<(d: Dir) => void>(() => undefined);
-  stepRef.current = (d: Dir) => {
-    if (!live) return;
-    const wait = STEP_MS - (performance.now() - lastStep.current);
-    if (wait > 0) {
-      window.clearTimeout(queued.current);
-      queued.current = window.setTimeout(() => stepRef.current(d), wait + 5);
-      return;
+  // my character runs at once on this phone and its place goes to the server ~12 times a second
+  const motion = useMotion(sv, view.meId, live, clock.now, (p) => void actions.gameMoveQuiet({ kind: 'spikes', move: { type: 'move', x: p[0], y: p[1] } }));
+  const posOf = motion.posOf;
+  const [joy, setJoy] = useState<JoyState | null>(null);
+  const joyRef = useRef<(JoyState & { id: number }) | null>(null);
+  const keys = useRef(new Set<string>());
+  const steppedAt = useRef(0);
+  const [ranOnce, setRanOnce] = useState(false);
+  const liveRef = useRef(live);
+  liveRef.current = live;
+  const steer = () => {
+    const j = joyRef.current;
+    let v = j ? joyVector(j) : { x: 0, y: 0 };
+    if (!j && keys.current.size) {
+      let x = 0;
+      let y = 0;
+      keys.current.forEach((k) => ((x += KEYS[k][0]), (y += KEYS[k][1])));
+      const d = Math.hypot(x, y) || 1;
+      v = { x: x / d, y: y / d };
     }
-    const [c, r] = posOf(view.meId);
-    const n = sv.size;
-    const next: [number, number] = d === 'left' ? [Math.max(0, c - 1), r] : d === 'right' ? [Math.min(n - 1, c + 1), r] : d === 'up' ? [c, Math.max(0, r - 1)] : [c, Math.min(n - 1, r + 1)];
-    if (next[0] === c && next[1] === r) return;
-    lastStep.current = performance.now();
-    pred.current = { pos: next, at: performance.now() };
-    spikesSfx.step();
-    void actions.gameMoveQuiet({ kind: 'spikes', move: { type: 'step', dir: d } });
+    motion.input.x = v.x;
+    motion.input.y = v.y;
+    if (liveRef.current && Math.hypot(v.x, v.y) > 0.2 && performance.now() - steppedAt.current > STEP_SOUND_MS) {
+      steppedAt.current = performance.now();
+      spikesSfx.step();
+    }
   };
-  const step = (d: Dir) => {
-    unlockAudio();
-    unlockSpeech();
-    stepRef.current(d);
-  };
-  useEffect(() => () => window.clearTimeout(queued.current), []);
 
-  // keyboard arrows (and WASD) on desktop
+  // keyboard arrows (and WASD) on desktop: held keys run, diagonals too
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const d = KEYS[e.key];
-      if (!d || (e.target as HTMLElement)?.closest?.('input, textarea')) return;
+    const key = (e: KeyboardEvent) => {
+      const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      if (!KEYS[k] || (e.target as HTMLElement)?.closest?.('input, textarea')) return;
       e.preventDefault();
-      step(d);
+      if (e.type === 'keydown') {
+        unlockAudio();
+        keys.current.add(k);
+        setRanOnce(true);
+      } else keys.current.delete(k);
+      steer();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const blur = () => {
+      keys.current.clear();
+      steer();
+    };
+    window.addEventListener('keydown', key);
+    window.addEventListener('keyup', key);
+    window.addEventListener('blur', blur);
+    return () => (window.removeEventListener('keydown', key), window.removeEventListener('keyup', key), window.removeEventListener('blur', blur));
   }, []);
 
-  // swipe anywhere on the play area: each 28px drag is one step, so a long drag walks
-  const swipe = useRef<{ x: number; y: number; id: number } | null>(null);
+  // touch anywhere (not on a button or seat): a joystick under the thumb
+  const tableRef = useRef<HTMLElement>(null);
+  const at0 = (e: RPointerEvent) => {
+    const r = tableRef.current!.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
   const onDown = (e: RPointerEvent) => {
-    if ((e.target as HTMLElement).closest('button, .ar-seat')) return;
-    swipe.current = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    if (joyRef.current || !me || view.phase === 'over') return;
+    if ((e.target as HTMLElement).closest('button, a, input, .ar-seat, .topbar, .backdrop, .sheet')) return;
+    unlockAudio();
+    unlockSpeech();
+    const p = at0(e);
+    joyRef.current = { ox: p.x, oy: p.y, x: p.x, y: p.y, id: e.pointerId };
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+    setJoy({ ox: p.x, oy: p.y, x: p.x, y: p.y });
+    steer();
+    setRanOnce(true);
   };
   const onMove = (e: RPointerEvent) => {
-    const s = swipe.current;
-    if (!s || s.id !== e.pointerId) return;
-    const dx = e.clientX - s.x;
-    const dy = e.clientY - s.y;
-    if (Math.max(Math.abs(dx), Math.abs(dy)) < SWIPE_PX) return;
-    step(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up');
-    swipe.current = { ...s, x: e.clientX, y: e.clientY };
+    const j = joyRef.current;
+    if (!j || j.id !== e.pointerId) return;
+    const p = at0(e);
+    joyRef.current = { ...j, x: p.x, y: p.y };
+    setJoy({ ox: j.ox, oy: j.oy, x: p.x, y: p.y });
+    steer();
   };
-  const onUp = () => (swipe.current = null);
+  const onUp = (e: RPointerEvent) => {
+    if (joyRef.current?.id !== e.pointerId) return;
+    joyRef.current = null;
+    setJoy(null);
+    steer();
+  };
 
   // countdown 3-2-1
   const beeped = useRef<number | null>(null);
@@ -234,14 +255,14 @@ function SpikesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
     const n = Math.max(0, sv.lives[id] ?? 0);
     return '❤️'.repeat(n) + '🖤'.repeat(Math.max(0, SPIKES_LIVES - n));
   };
-  const status = !playing ? '' : sv.phase === 'countdown' ? 'Get ready…' : !me ? '👀 Watching' : myLives <= 0 ? '👻 You are out · watching' : 'Dodge the red lines!';
+  const status = !playing ? '' : sv.phase === 'countdown' ? 'Get ready…' : !me ? '👀 Watching' : myLives <= 0 ? '👻 You are out · watching' : ranOnce ? 'Dodge the red lines!' : '🕹️ Drag anywhere to run';
   const infoMine = me && (
     <p className="tinfo-counts">
       <span>{`❤️ ${myLives} of ${SPIKES_LIVES} lives`}</span>
       <span>{`🟥 Arena ${sv.size} × ${sv.size}`}</span>
     </p>
   );
-  const tips = ['Get off the red row or column before it counts down to 0', 'Arrow pad, swipe or keyboard arrows to move', 'After a hit you are safe for a second'];
+  const tips = ['Get your whole body off the red row or column before it counts down to 0', 'Drag anywhere: a joystick appears under your thumb (arrow keys / WASD on a keyboard)', 'After a hit you are safe for a second'];
   const alive = order.filter((id) => (sv.lives[id] ?? 0) > 0);
   const seatOf = (id: string) => {
     const p = view.players.find((x) => x.id === id);
@@ -253,6 +274,7 @@ function SpikesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
         color={colorOf(id)}
         mine={id === view.meId}
         out={(sv.lives[id] ?? 0) <= 0 && sv.phase !== 'countdown'}
+        icon={<i className="cm-dot cm-blob" aria-hidden />}
         lead={playing && sv.phase === 'play' && alive.length === 1 && alive[0] === id}
         bubble={bubbleOf(id)}
         onTap={p && p.id !== view.meId ? () => setTarget(p.id) : undefined}
@@ -266,14 +288,14 @@ function SpikesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
   };
 
   return (
-    <main className={cx('table lu-table ar-table sp-table', live && 'sp-live')} style={{ '--my-col': colorOf(view.meId) } as CSSProperties} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
+    <main ref={tableRef} className={cx('table lu-table ar-table sp-table', live && 'sp-live')} style={{ '--my-col': colorOf(view.meId) } as CSSProperties} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
       <div className="sp-room" aria-hidden />
       <div className="ar-seats ar-left sp-seats">{leftSeats.map((id) => seatOf(id))}</div>
       <div className="ar-seats ar-right sp-seats sp-right">{rightSeats.map((id) => seatOf(id))}</div>
       <div ref={arenaRef} className="sp-stage" onAnimationEnd={(e) => e.currentTarget.classList.remove('sp-shake')}>
         <Arena sv={sv} now={clock.now} order={order} colorOf={colorOf} initialOf={initialOf} nameOf={shortName} meId={view.meId} posOf={posOf} onStrike={() => spikesSfx.strike()} onHit={onHit} onTick={onTick} />
       </div>
-      {me && view.phase !== 'over' && <Pad onStep={step} disabled={!live} />}
+      {me && view.phase !== 'over' && myLives > 0 && <Joystick joy={joy} />}
       {count !== null && playing && (
         <div key={count} className={cx('ar-count', count === 0 && 'go')} aria-live="assertive">
           {count === 0 ? 'Go!' : count}
@@ -309,6 +331,7 @@ function SpikesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
         </div>
       </header>
       <LiveVoiceNotice />
+      {view.players.some((p) => p.id === view.meId) && <YouAreBanner on={view.phase === 'playing'} color={colorOf(view.meId)} name={colorName(colorOf(view.meId))} icon={<i className="cm-dot cm-blob" aria-hidden />} />}
       {!me && <p className="lu-watch-note">👀 Watching · you'll play next game</p>}
 
       {view.phase === 'over' && podium && !overSeen && <SpikesOver view={view} sv={sv} order={order} colorOf={colorOf} onNext={() => setOverSeen(true)} />}

@@ -106,78 +106,120 @@
   pointer-events: none;
 }
 
-/* the ghost: where the dart will land, round the aim point */
-.da-ghost {
-  position: absolute;
-  left: -50px;
-  top: -50px;
-  z-index: 4;
-  width: 100px;
-  height: 100px;
-  border: 3px dashed rgba(255, 255, 255, 0.75);
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04));
-  pointer-events: none;
-}
-
-/* the reticle: a ring with a cross, a steadiness meter under it */
-.da-reticle {
+/* the sweep aim: a line glides up and down, then one left and right; each tap fixes one, the crosshair shows where it goes */
+.da-sweep {
   position: absolute;
   left: 0;
   top: 0;
   z-index: 5;
-  color: #fff;
+  color: #ffe066;
   pointer-events: none;
 }
 
-.da-reticle i {
-  position: absolute;
-  width: max(34px, calc(var(--bs) * 0.1));
-  aspect-ratio: 1;
-  border: 2.5px solid currentColor;
-  border-radius: 50%;
-  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.6), inset 0 0 0 1.5px rgba(0, 0, 0, 0.6), 0 0 16px currentColor;
-  translate: -50% -50%;
+.da-sweep.h {
+  width: 100%;
+  height: 0;
 }
 
-.da-reticle i::before,
-.da-reticle i::after {
+.da-sweep.v {
+  width: 0;
+  height: 100%;
+}
+
+.da-sweep b {
+  position: absolute;
+  border-radius: 99px;
+  background: currentColor;
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.65), 0 0 14px 2px currentColor;
+}
+
+.da-sweep.h b { left: 4%; right: 4%; top: -2px; height: 4px; }
+.da-sweep.v b { top: 4%; bottom: 4%; left: -2px; width: 4px; }
+
+/* arrowheads at both ends, pointing at the board */
+.da-sweep b::before,
+.da-sweep b::after {
   content: '';
   position: absolute;
-  left: 50%;
-  top: 50%;
-  background: currentColor;
+  width: 0;
+  height: 0;
+  border: 11px solid transparent;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8));
+}
+
+.da-sweep.h b::before { left: -18px; top: 50%; border-left: 16px solid currentColor; border-right-width: 0; translate: 0 -50%; }
+.da-sweep.h b::after { right: -18px; top: 50%; border-right: 16px solid currentColor; border-left-width: 0; translate: 0 -50%; }
+.da-sweep.v b::before { top: -18px; left: 50%; border-top: 16px solid currentColor; border-bottom-width: 0; translate: -50% 0; }
+.da-sweep.v b::after { bottom: -18px; left: 50%; border-bottom: 16px solid currentColor; border-top-width: 0; translate: -50% 0; }
+
+/* a fixed line takes my colour and thins out */
+.da-sweep.set {
+  color: var(--turn-col, #fff);
+}
+
+.da-sweep.set b {
+  opacity: 0.9;
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.65), 0 0 8px currentColor;
+}
+
+.da-sweep.h.set b { top: -1.5px; height: 3px; }
+.da-sweep.v.set b { left: -1.5px; width: 3px; }
+
+/* where the lines cross: a ring that snaps in */
+.da-cross {
+  position: absolute;
+  z-index: 6;
+  width: max(30px, calc(var(--bs, 300px) * 0.085));
+  aspect-ratio: 1;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.6), inset 0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 18px var(--turn-col, #fff);
   translate: -50% -50%;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: da-cross-in 0.22s cubic-bezier(0.2, 1.6, 0.4, 1) backwards;
 }
 
-.da-reticle i::before { width: 150%; height: 2px; }
-.da-reticle i::after { width: 2px; height: 150%; }
+@keyframes da-cross-in {
+  from { transform: scale(2.2); opacity: 0; }
+}
 
-.da-reticle[data-steady='yes'] { color: #69f0ae; }
-.da-reticle[data-steady='mid'] { color: #ffe066; }
-.da-reticle[data-steady='no'] { color: #ff8a80; }
+/* thrown: the crosshair fades while the dart flies in */
+.aim-gone .da-sweep,
+.aim-gone .da-cross {
+  opacity: 0;
+  transition: opacity 0.45s ease 0.15s;
+}
 
-.da-meter {
+/* which step: a pill under the board */
+.da-step {
   position: absolute;
-  left: 0;
-  top: calc(max(34px, var(--bs) * 0.1) / 2 + 8px);
-  width: 64px;
-  height: 8px;
-  overflow: hidden;
-  border-radius: 99px;
-  background: rgba(0, 0, 0, 0.7);
-  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.7);
+  left: 50%;
+  bottom: -5%;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.78);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--turn-col) 70%, transparent);
+  color: #fff;
+  font-size: clamp(13px, calc(var(--bs, 300px) * 0.042), 19px);
+  font-weight: 900;
+  white-space: nowrap;
   translate: -50% 0;
+  pointer-events: none;
 }
 
-.da-meter span {
-  position: absolute;
-  inset: 0;
-  border-radius: 99px;
-  background: var(--steady-col, #69f0ae);
-  transform: scaleX(var(--steady, 1));
-  transform-origin: 0 50%;
+.da-step i {
+  display: grid;
+  place-items: center;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+  background: var(--turn-col);
+  color: #111;
+  font-style: normal;
 }
 
 /* a dart in the board: its tip on the spot */
@@ -447,6 +489,7 @@
   .da-impact,
   .da-burst,
   .da-stamp,
+  .da-cross,
   .pt-my-turn .da-board::after {
     animation: none;
   }

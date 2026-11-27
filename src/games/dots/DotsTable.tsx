@@ -133,6 +133,8 @@ function DotsTableInner({ view, actions, bubbles, auth, notes = [], dv }: TableP
                 bigKey={score(id)}
                 label={<>{iconOf(id)} box{score(id) === 1 ? '' : 'es'}</>}
                 turnText="Drawing"
+                chip
+                icon={<span className="cm-emoji">{iconOf(id)}</span>}
               />
             ),
           };
@@ -151,6 +153,7 @@ function DotsTableInner({ view, actions, bubbles, auth, notes = [], dv }: TableP
         leaveWhat="Your boxes stay on the board"
         kickWhat="Their boxes stay on the board"
         watchNote="👀 Watching · you'll play next game"
+        myIcon={<span className="cm-emoji">{iconOf(view.meId)}</span>}
         over={overReady && <PartyOver view={view} ids={order} placeOf={placeOf} colorOf={colorOf} line={(id) => `${score(id)} box${score(id) === 1 ? '' : 'es'}`} onNext={() => base.setOverSeen(true)} />}
       />
       {fxLayer}

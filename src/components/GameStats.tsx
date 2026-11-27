@@ -66,7 +66,7 @@ export function GameStats({ stats }: { stats: LifetimeStats }) {
             )}
             {g.kind === 'fruit' && t && (
               <span className="gs-extra">
-                🍉 {t.sliced ?? 0} sliced · 🔥 {t.bestCombo ?? 0} best combo · 💣 {t.bombs ?? 0} bombs
+                🍉 {t.won ?? 0} fruit won · ⚡ {bestReaction(t)} best · 🧲 {t.magnets ?? 0} magnets
               </span>
             )}
             {g.kind === 'spikes' && t && (
@@ -85,4 +85,10 @@ export function GameStats({ stats }: { stats: LifetimeStats }) {
       {!stats.perGame && <p className="muted small">Wins per game count from your next game.</p>}
     </section>
   );
+}
+
+/** Fruit Slice Duel's best reaction: the server keeps bestReflex = 1000 − ms (a $max best) */
+function bestReaction(t: Partial<Record<string, number>>): string {
+  const ms = t.bestReflex ? 1000 - t.bestReflex : null;
+  return ms && ms > 0 ? `${(ms / 1000).toFixed(2)}s` : '—';
 }

@@ -1,4 +1,4 @@
-// The Darts table: a big dartboard in a lit cabinet, hold-to-aim with a shaky hand, darts that arc in and thud, chalk slates of points left
+// The Darts table: a big dartboard in a lit cabinet, two-tap sweep aim (up-down line, then left-right line), darts that arc in and thud, chalk slates of points left
 import '../../styles/land-ludo.css';
 import '../../styles/land-ludo-hud.css';
 import '../../styles/land-ludo-over.css';
@@ -17,7 +17,7 @@ import { useOverReady, useSeatOrder, usePartyBase } from '../turnkit/base';
 import { PartyChrome } from '../turnkit/PartyChrome';
 import { PartyOver } from '../turnkit/PartyOver';
 import { Rails, RailSeat } from '../turnkit/RailSeat';
-import { AimBoard } from './Aim';
+import { AimBoard, type AimPhase } from './Aim';
 import { bigCall, checkoutHint } from './calls';
 import { StuckDart, toPct } from './Dart';
 import { DartBoard } from './DartBoard';
@@ -66,6 +66,8 @@ function DartsTableInner({ view, actions, bubbles, auth, notes = [], dv }: Table
   const [thud, setThud] = useState<{ key: number; x: number; y: number } | null>(null);
   const [stamp, setStamp] = useState(0);
   const boardRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [aim, setAim] = useState<AimPhase>('off');
   const turnEndsAt = useTurnEndsAt(view);
   const overReady = useOverReady(view, 2600);
   const people = [...view.players, ...view.leftPlayers];
@@ -141,7 +143,7 @@ function DartsTableInner({ view, actions, bubbles, auth, notes = [], dv }: Table
   let status = '';
   if (playing && dv.turnId) {
     if (turnOver) status = last?.bust ? 'Bust!' : `${name(dv.turnId)}: ${dv.thrown.reduce((a, d) => a + d.score, 0)} this turn`;
-    else if (myTurn) status = `Hold to aim, let go to throw · dart ${dv.thrown.length + 1} of ${DARTS_PER_TURN}`;
+    else if (myTurn) status = `Tap to stop each line · dart ${dv.thrown.length + 1} of ${DARTS_PER_TURN}`;
     else status = `${name(dv.turnId)} is throwing`;
   }
   const mine = dv.left[view.meId];
@@ -151,7 +153,7 @@ function DartsTableInner({ view, actions, bubbles, auth, notes = [], dv }: Table
       <span>{`🏁 Start ${dv.start}, finish on exactly 0`}</span>
     </p>
   );
-  const tips = ['Your hand is steadiest a moment after you start aiming', 'Inner ring treble, outer ring double, bull 50', "Below 0 is a bust: the turn's darts don't count"];
+  const tips = ['Tap once to stop the up-down line, then again to stop the left-right line', 'Inner ring treble, outer ring double, bull 50', "Below 0 is a bust: the turn's darts don't count"];
   const placeOf = (id: string) => dv.places[id] ?? Object.keys(dv.places).length + 1 + order.filter((o) => !dv.places[o] && (dv.left[o] ?? 0) < (dv.left[id] ?? 0)).length;
   const bust = !!last?.bust && dv.thrown.some((d) => d.bust);
 
@@ -181,10 +183,10 @@ function DartsTableInner({ view, actions, bubbles, auth, notes = [], dv }: Table
   return (
     <main className={cx('table lu-table pt-table pr-wide da-table', canThrow && 'pt-my-turn')} style={{ ['--turn-col' as string]: dv.turnId ? colorOf(dv.turnId) : '#fff' } as CSSProperties}>
       <div className="lu-room da-room" aria-hidden />
-      <div className="lu-stage pt-stage da-stage">
+      <div ref={stageRef} className="lu-stage pt-stage da-stage">
         <div className="da-cabinet" aria-hidden />
         <div ref={boardRef} key={`s${shake}`} className={cx('da-mount', shake > 0 && 'shake', stamp === shake && stamp > 0 && 'hard')}>
-          <AimBoard live={canThrow} onThrow={(x, y) => void toss(x, y)}>
+          <AimBoard live={canThrow} zone={stageRef} onPhase={setAim} onThrow={(x, y) => void toss(x, y)}>
             <DartBoard />
             {thud && <span key={`t${thud.key}`} className="da-impact" style={{ left: toPct(thud.x), top: toPct(-thud.y) }} aria-hidden />}
             {dv.thrown.map((d, i) => (
@@ -202,7 +204,12 @@ function DartsTableInner({ view, actions, bubbles, auth, notes = [], dv }: Table
               BUST
             </span>
           )}
-          {canThrow && dv.thrown.length === 0 && <span className="da-hint">👆 Hold to aim · let go to throw</span>}
+          {canThrow && (aim === 'y' || aim === 'x') && (
+            <span key={aim} className="da-step" aria-live="polite">
+              <i>{aim === 'y' ? 1 : 2}</i>
+              {aim === 'y' ? '👆 Tap to stop: up-down' : '👆 Tap to stop: left-right'}
+            </span>
+          )}
         </div>
       </div>
       <Rails
@@ -228,6 +235,7 @@ function DartsTableInner({ view, actions, bubbles, auth, notes = [], dv }: Table
                 bigKey={place ? `p${place}` : dv.left[id]}
                 label={place ? 'checked out' : 'left'}
                 turnText="Throwing"
+                chip
               >
                 {slate(id)}
               </RailSeat>

@@ -1,9 +1,9 @@
-/* ---------- Spike Attack: a neon arena as big as the screen allows, red striped warnings, a spike wall, cute blobs and a big arrow pad ---------- */
+/* ---------- Spike Attack: a neon arena as big as the screen allows, red striped warnings, a spike wall, free-running blobs and a thumb joystick ---------- */
 
 .table.sp-table {
   --b: clamp(54px, 17dvh, 78px);
   --lr: calc(var(--card-w) + 18px);
-  --rr: max(calc(3 * var(--b) + 26px), calc(var(--card-w) + 18px));
+  --rr: calc(var(--card-w) + 18px);
   --as: min(calc(100dvh - 72px), calc(100vw - var(--lr) - var(--rr) - 12px));
   --pad: calc(var(--as) * 0.075);
   touch-action: none;
@@ -65,6 +65,7 @@
   display: grid;
   grid-template-columns: repeat(var(--n), 1fr);
   gap: calc(var(--cell) * 0.06);
+  opacity: 0.6;
 }
 
 /* neon tiles with a raised lip */
@@ -309,7 +310,7 @@
 .sp-fly.row .sp-wall-tips i { width: 100%; height: 31%; clip-path: polygon(0 0, 100% 50%, 0 100%); }
 .sp-fly.col .sp-wall-tips i { height: 100%; width: 31%; clip-path: polygon(0 0, 100% 0, 50% 100%); background: linear-gradient(90deg, #eceff1, #90a4ae 55%, #455a64); }
 
-/* the players: cute round blobs in their colour, hearts over their heads and a name tag below; they hop square to square */
+/* the players: cute round blobs in their colour, hearts over their heads and a name tag below; centred on their free [x, y] */
 .sp-player {
   position: absolute;
   left: 0;
@@ -319,18 +320,19 @@
   place-items: center;
   width: var(--cell);
   height: var(--cell);
-  transform: translate(calc(var(--pad) + var(--x) * var(--cell) + var(--k) * var(--cell) * 0.16), calc(var(--pad) + var(--y) * var(--cell) - var(--k) * var(--cell) * 0.1));
-  transition: transform 0.12s cubic-bezier(0.3, 1.4, 0.5, 1);
+  transform: translate(calc(var(--pad) + (var(--x) - 0.5) * var(--cell)), calc(var(--pad) + (var(--y) - 0.5) * var(--cell)));
   pointer-events: none;
+  will-change: transform;
 }
 
 .sp-body {
   position: relative;
   display: grid;
   place-items: end center;
-  width: 84%;
-  height: 80%;
-  margin-top: 6%;
+  width: 74%;
+  height: 70%;
+  margin-top: 4%;
+  rotate: var(--lean, 0deg);
   border-radius: 50% 50% 44% 44%;
   background: radial-gradient(circle at 35% 26%, color-mix(in srgb, var(--c) 35%, #fff), var(--c) 52%, color-mix(in srgb, var(--c) 62%, #000));
   box-shadow: 0 0 0 2.5px #fff, 0 6px 0 rgba(0, 0, 0, 0.35), 0 10px 16px rgba(0, 0, 0, 0.5);
@@ -371,6 +373,21 @@
   font-size: calc(var(--cell) * 0.16);
   font-weight: 900;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.sp-player.run .sp-body {
+  animation-duration: 0.22s;
+}
+
+/* a soft shadow under each runner, so they read as standing on the floor */
+.sp-player::before {
+  content: '';
+  position: absolute;
+  bottom: 10%;
+  width: 56%;
+  height: 14%;
+  border-radius: 50%;
+  background: rgba(5, 2, 20, 0.45);
 }
 
 .sp-player.me .sp-body {
@@ -470,69 +487,57 @@
   letter-spacing: -1px;
 }
 
-/* the right column sits above the arrow pad */
-.sp-seats.ar-left {
+/* both seat columns use the full height */
+.sp-seats.ar-left,
+.sp-seats.sp-right {
   justify-content: space-evenly;
 }
 
-.sp-seats.sp-right {
-  bottom: calc(3 * var(--b) + 24px + env(safe-area-inset-bottom));
-  justify-content: flex-start;
-}
-
-/* the big arrow pad under the right thumb */
-.sp-pad {
+/* the joystick: base and knob in my colour where the thumb landed */
+.sp-joy {
   position: absolute;
-  right: max(12px, env(safe-area-inset-right));
-  bottom: max(10px, env(safe-area-inset-bottom));
-  z-index: 5;
-  display: grid;
-  grid-template: repeat(3, var(--b)) / repeat(3, var(--b));
-  touch-action: none;
+  z-index: 7;
+  width: 0;
+  height: 0;
+  pointer-events: none;
 }
 
-.sp-pad-btn {
-  display: grid;
-  place-items: center;
-  margin: 3px;
-  border: 0;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #a57bff, #6a3cf0 60%, #5126c4);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), inset 0 0 0 2px rgba(255, 255, 255, 0.18), 0 5px 0 #2c1170, 0 8px 14px rgba(5, 2, 20, 0.5);
-  color: #fff;
-  font-size: calc(var(--b) * 0.4);
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
-  touch-action: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.sp-pad-btn:active {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--my-col) 70%, #fff), var(--my-col));
-  transform: translateY(4px);
-  box-shadow: inset 0 0 0 2px #fff, 0 1px 0 #2c1170;
-}
-
-.sp-pad-btn.d-up { grid-area: 1 / 2; }
-.sp-pad-btn.d-left { grid-area: 2 / 1; }
-.sp-pad-btn.d-right { grid-area: 2 / 3; }
-.sp-pad-btn.d-down { grid-area: 3 / 2; }
-
-.sp-pad-hub {
-  grid-area: 2 / 2;
-  margin: 20%;
+.sp-joy-base,
+.sp-joy-knob {
+  position: absolute;
+  left: 0;
+  top: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--my-col) 40%, #fff), var(--my-col) 60%, color-mix(in srgb, var(--my-col) 60%, #000));
-  box-shadow: 0 0 14px var(--my-col), 0 0 0 3px rgba(255, 255, 255, 0.6);
+  translate: -50% -50%;
 }
 
-.sp-pad.off {
-  opacity: 0.35;
+.sp-joy-base {
+  width: 132px;
+  height: 132px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--my-col) 18%, transparent) 0 55%, color-mix(in srgb, var(--my-col) 38%, transparent) 70%, transparent 72%);
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--my-col) 85%, #fff), 0 0 22px color-mix(in srgb, var(--my-col) 55%, transparent);
+}
+
+.sp-joy-knob {
+  width: 62px;
+  height: 62px;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--my-col) 40%, #fff), var(--my-col) 60%, color-mix(in srgb, var(--my-col) 60%, #000));
+  box-shadow: 0 0 0 3px #fff, 0 0 18px var(--my-col), 0 6px 10px rgba(5, 2, 20, 0.5);
+  transform: translate(var(--kx, 0px), var(--ky, 0px));
+}
+
+.sp-joy.on .sp-joy-base {
+  animation: sp-joy-in 0.14s ease-out both;
+}
+
+@keyframes sp-joy-in {
+  from { transform: scale(0.6); opacity: 0; }
 }
 
 /* an upright window: the arena on top, the pad under it */
 @media (orientation: portrait) {
   .table.sp-table {
-    --as: min(94vw, calc(100dvh - 330px));
+    --as: min(94vw, calc(100dvh - 240px));
   }
 
   .sp-stage {
@@ -540,14 +545,10 @@
     top: 64px;
   }
 
-  .sp-pad {
-    right: calc(50% - 1.5 * var(--b));
-  }
-
   .sp-seats.ar-left,
   .sp-seats.sp-right {
     top: auto;
-    bottom: calc(3 * var(--b) + 24px);
+    bottom: 12px;
   }
 }
 
@@ -558,5 +559,5 @@
   .sp-warn.last .sp-warn-tint,
   .sp-flash,
   .sp-shake { animation: none; }
-  .sp-player { transition: none; }
+  .sp-joy.on .sp-joy-base { animation: none; }
 }

@@ -4,6 +4,7 @@ import { Seat } from '../../components/Table';
 import { cx } from '../../lib/cards';
 import { LUDO_COLOR_HEX, LUDO_TOKENS, type LudoSeat as SeatData, type LudoView, type PublicPlayer } from '../../types';
 import type { ChatBubble } from '../../useBluff';
+import { ColorMark, colorName, GOTI_HEX, MiniGoti } from '../turnkit/ColorMark';
 
 interface Props {
   seat: SeatData;
@@ -21,12 +22,15 @@ interface Props {
   turnSec?: number;
   onTap?: () => void;
   seatRef?: (el: HTMLElement | null) => void;
+  /** this player's goti style, for the colour chip */
+  gotiStyle?: string;
 }
 
-export function LudoSeatCorner({ seat, player, goneName, lv, corner, turn, mine, team, partner, bubble, turnEndsAt, turnSec, onTap, seatRef }: Props) {
+export function LudoSeatCorner({ seat, player, goneName, lv, corner, turn, mine, team, partner, bubble, turnEndsAt, turnSec, onTap, seatRef, gotiStyle = 'classic' }: Props) {
   const style = { '--seat-ring': LUDO_COLOR_HEX[seat.color], '--lu-col': LUDO_COLOR_HEX[seat.color] } as CSSProperties;
   const tags = (
     <span className="lu-seat-tags">
+      <ColorMark color={GOTI_HEX[seat.color]} name={colorName(seat.color)} icon={<MiniGoti color={seat.color} style={gotiStyle} />} mine={mine} />
       <span className={cx('lu-tag', seat.home > 0 && 'good')} title="Gotis home">
         🏠 {seat.home}/{LUDO_TOKENS}
       </span>

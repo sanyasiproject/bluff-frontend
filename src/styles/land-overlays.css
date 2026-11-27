@@ -1104,3 +1104,35 @@
     height: min(calc((100dvh - 16px) / 1.5), 640px);
   }
 }
+
+/* ---------- in-game panels: room to breathe (16px inside on phones, 20px on wide screens, 12px between items) ---------- */
+@media (orientation: landscape) {
+  main.table .backdrop:not(.center) .sheet {
+    --lo-pad: clamp(16px, calc(var(--u) * 3.2), 20px);
+    gap: 12px;
+    padding: var(--lo-pad) max(var(--lo-pad), env(safe-area-inset-right)) calc(var(--lo-pad) + 2px) var(--lo-pad);
+  }
+
+  main.table .sheet .btn {
+    padding-inline: max(14px, 1em);
+  }
+
+  main.table .sheet h3 {
+    margin: 0 0 2px;
+  }
+
+  main.table .confirm-box {
+    gap: 12px;
+    padding: 20px;
+  }
+
+  main.table .confirm-actions {
+    gap: 12px;
+  }
+}
+
+@media (orientation: landscape) and (min-width: 900px) {
+  main.table .backdrop:not(.center) .sheet {
+    --lo-pad: 20px;
+  }
+}

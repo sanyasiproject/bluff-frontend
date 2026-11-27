@@ -4,6 +4,7 @@ import { Seat } from '../../components/Table';
 import { cx } from '../../lib/cards';
 import type { PublicPlayer } from '../../types';
 import type { ChatBubble } from '../../useBluff';
+import { ColorMark, colorName } from './ColorMark';
 
 /** corners → which rail and where on it (top or bottom) */
 export const railOf = (corner: string): 'l' | 'r' => (corner === 'tl' || corner === 'bl' ? 'l' : 'r');
@@ -35,9 +36,12 @@ interface Props {
   skin?: string;
   numRef?: Ref<HTMLElement>;
   onTap?: () => void;
+  /** show the colour chip ("You · Red" on mine); icon is the player's piece, a colour dot by default */
+  chip?: boolean;
+  icon?: ReactNode;
 }
 
-export function RailSeat({ player, goneName, color, turn, mine, out, bubble, turnEndsAt, turnSec, big, bigKey, label, turnText, myTurnText, children, skin, numRef, onTap }: Props) {
+export function RailSeat({ player, goneName, color, turn, mine, out, bubble, turnEndsAt, turnSec, big, bigKey, label, turnText, myTurnText, children, skin, numRef, onTap, chip, icon }: Props) {
   const style = { '--pc': color, '--seat-ring': color, '--lu-col': color } as CSSProperties;
   const stat = (
     <span className="pr-stat">
@@ -47,8 +51,16 @@ export function RailSeat({ player, goneName, color, turn, mine, out, bubble, tur
       {label && <small className="pr-label">{label}</small>}
     </span>
   );
+  const tag = chip ? (
+    <>
+      {stat}
+      <ColorMark color={color} name={colorName(color)} icon={icon} mine={mine} />
+    </>
+  ) : (
+    stat
+  );
   return (
-    <div className={cx('pr-seat', skin, turn && 'turn', mine && 'mine', out && 'out')} style={style}>
+    <div className={cx('pr-seat', skin, chip && 'has-chip', turn && 'turn', mine && 'mine', out && 'out')} style={style}>
       {turn && <span className="pr-pill">{mine ? (myTurnText ?? 'Your turn!') : (turnText ?? 'Their turn')}</span>}
       {player ? (
         <Seat
@@ -58,7 +70,7 @@ export function RailSeat({ player, goneName, color, turn, mine, out, bubble, tur
           bubble={bubble}
           onClick={onTap}
           label={onTap ? `Throw an emoji at ${player.name}` : player.name}
-          tag={stat}
+          tag={tag}
           extra="pr-seat-inner"
           turnEndsAt={turn ? (turnEndsAt ?? null) : null}
           turnSec={turnSec}
@@ -67,7 +79,7 @@ export function RailSeat({ player, goneName, color, turn, mine, out, bubble, tur
         <div className="seat pr-seat-inner gone">
           <span className="avatar pr-gone-av">👋</span>
           <span className="seat-name">{goneName ?? '?'}</span>
-          {stat}
+          {tag}
         </div>
       )}
       {children && <div className="pr-extra">{children}</div>}
