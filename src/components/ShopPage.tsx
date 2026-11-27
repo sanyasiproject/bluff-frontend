@@ -14,6 +14,7 @@ import { MAX_SHIELDS, MIN_REWARD_GAME_SEC, SHOP_ITEMS, shopItemOf, type ShopItem
 import type { Auth } from '../useAuth';
 import { ConfirmBox } from './ConfirmBox';
 import { FullPage } from './FullPage';
+import { Icon } from '../art/icons';
 
 const HOUR_MS = 3_600_000;
 
@@ -297,7 +298,9 @@ export function ShopPage({ auth, onClose, initial = null, onChange }: Props) {
       {/* sideways: coins and what's running on the left, the shelves on the right */}
       <aside className="lp-rail">
         <section className="shop-hero">
-          <span className="shop-hero-label">Your coins</span>
+          <span className="shop-hero-label">
+            <Icon name="shop" size={18} /> Your coins
+          </span>
           <b className="shop-hero-coins">
             <span aria-hidden>🪙</span> {formatCoins(shown)}
           </b>
@@ -414,7 +417,7 @@ export function ShopButton({ auth, online = true }: { auth: Auth; online?: boole
     <>
       <button className="panel shop-entry" onClick={() => setOpen(true)}>
         <span className="shop-entry-emoji" aria-hidden>
-          🛍️
+          <Icon name="shop" size={26} />
         </span>
         <span className="grow">Coin shop</span>
         {running > 0 ? (

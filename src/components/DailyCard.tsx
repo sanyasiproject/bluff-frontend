@@ -4,6 +4,7 @@ import { formatCoins } from '../lib/coins';
 import { LOGIN_STREAK_REWARDS, loginRewardOf, SPIN_PRIZES, type SpinResponse } from '../types';
 import type { Auth } from '../useAuth';
 import { Backdrop } from './Overlays';
+import { Icon } from '../art/icons';
 
 const SLICE = 360 / SPIN_PRIZES.length;
 const SPIN_MS = 4200;
@@ -57,7 +58,7 @@ export function SpinButton({ auth }: { auth: Auth }) {
     <>
       <button className="panel missions-entry spin-entry" onClick={() => setOpen(true)}>
         <span className="missions-entry-emoji" aria-hidden>
-          🎡
+          <Icon name="spin" size={26} />
         </span>
         <span className="grow">Free spin</span>
         <span className="missions-pill">up to 🪙 {formatCoins(TOP_PRIZE)}</span>
@@ -107,7 +108,9 @@ function SpinSheet({ auth, onClose }: { auth: Auth; onClose: () => void }) {
   return (
     <Backdrop center onClose={state === 'spinning' ? undefined : close}>
       <div className="reveal popup spin-pop">
-        <h3 className="reveal-title">Daily spin</h3>
+        <h3 className="reveal-title">
+          <Icon name="spin" size={26} /> Daily spin
+        </h3>
         <div className="spin-wheel-wrap">
           <i className="spin-pointer" aria-hidden />
           <svg

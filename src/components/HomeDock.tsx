@@ -1,3 +1,4 @@
+import { Icon, type IconName } from '../art/icons';
 import type { Auth } from '../useAuth';
 import { SpinButton } from './DailyCard';
 import { GetAppButton } from './InstallCard';
@@ -16,11 +17,11 @@ interface Props {
 }
 
 /** a dock item for guests: looks the same, opens Log in */
-function GuestItem({ icon, label, onLogin }: { icon: string; label: string; onLogin: () => void }) {
+function GuestItem({ icon, label, onLogin }: { icon: IconName; label: string; onLogin: () => void }) {
   return (
-    <button type="button" className="dock-item guest" aria-label={`${label}: log in first`} onClick={onLogin}>
+    <button type="button" className={`dock-item guest dock-g-${icon}`} aria-label={`${label}: log in first`} onClick={onLogin}>
       <span className="dock-icon" aria-hidden>
-        {icon}
+        <Icon name={icon} size={26} />
       </span>
       <span className="dock-label">{label}</span>
       <b className="dock-badge lock" aria-hidden>
@@ -47,16 +48,16 @@ export function HomeDock({ auth, online, onHowTo, onFriends, onLogin }: Props) {
       ) : (
         guestItems && (
           <>
-            <GuestItem icon="🎯" label="Missions" onLogin={onLogin} />
-            <GuestItem icon="🏆" label="Friends league" onLogin={onLogin} />
-            <GuestItem icon="🛍️" label="Coin shop" onLogin={onLogin} />
-            <GuestItem icon="👥" label="Friends" onLogin={onLogin} />
+            <GuestItem icon="missions" label="Missions" onLogin={onLogin} />
+            <GuestItem icon="league" label="Friends league" onLogin={onLogin} />
+            <GuestItem icon="shop" label="Coin shop" onLogin={onLogin} />
+            <GuestItem icon="friends" label="Friends" onLogin={onLogin} />
           </>
         )
       )}
-      <button type="button" className="dock-item" onClick={onHowTo}>
+      <button type="button" className="dock-item dock-howto" onClick={onHowTo}>
         <span className="dock-icon" aria-hidden>
-          📘
+          <Icon name="howto" size={26} />
         </span>
         <span className="dock-label">How to play</span>
       </button>

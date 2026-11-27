@@ -19,11 +19,13 @@ autoFullscreen();
 // Hindi, when chosen, is applied over the rendered page
 startI18n();
 
-// dev only: ?ludoPreview / ?homePreview / ?lobbyPreview show screens on fake data (no server); dropped from production builds
+// dev only: ?art=1 / ?ludoPreview / ?homePreview / ?lobbyPreview show screens on fake data (no server); dropped from production builds
 const q = new URLSearchParams(location.search);
 const LudoPreview = !import.meta.env.DEV
   ? null
-  : q.has('ludoPreview')
+  : q.has('art')
+    ? lazy(() => import('./art/ArtGallery').then((m) => ({ default: m.ArtGallery })))
+    : q.has('ludoPreview')
     ? lazy(() => import('./games/ludo/preview').then((m) => ({ default: m.LudoPreview })))
     : q.has('homePreview')
       ? lazy(() => import('./games/devPreviews').then((m) => ({ default: m.HomePreview })))

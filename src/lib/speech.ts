@@ -1,6 +1,7 @@
 import { loadPref, savePref } from './storage';
 
-export type VoiceGender = 'female' | 'male';
+/** cute: a soft girl's voice pitched up, for Ludo's quick lines and everything else */
+export type VoiceGender = 'female' | 'male' | 'cute';
 
 // Uses the browser's built-in text-to-speech, so no audio files or paid service
 const synth: SpeechSynthesis | null = 'speechSynthesis' in window ? window.speechSynthesis : null;
@@ -14,15 +15,23 @@ const MALE =
 const NOVELTY =
   /bad news|good news|bells|boing|bubbles|cellos|wobble|zarvox|trinoids|whisper|jester|organ|superstar|albert|bahh|grandma|grandpa|junior|eddy|\bflo\b|reed|rocko|sandy|shelley/i;
 const LANGS = ['en-IN', 'en-GB', 'en-US', 'en', 'hi-IN'];
+// natural-sounding voices (neural, enhanced, premium) sound far less robotic than the basic ones
+const NATURAL = /natural|neural|enhanced|premium|siri|google|online/i;
+// emoji are read out as their names ("pleading face"), so they're dropped before speaking
+const EMOJI = /[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\uFE0F\u200D]/gu;
 
-let gender: VoiceGender = loadPref('voice') === 'male' ? 'male' : 'female';
+const saved = loadPref('voice');
+// nobody picked yet: the cute voice
+let gender: VoiceGender = saved === 'male' ? 'male' : saved === 'female' ? 'female' : 'cute';
+/** the voice family to match: cute uses a girl's voice */
+const family = (): 'female' | 'male' => (gender === 'male' ? 'male' : 'female');
 let voice: SpeechSynthesisVoice | null = null;
 let enabled = loadPref('sound') !== 'off';
 let unlocked = false;
 let queued = 0;
 const listeners = new Set<() => void>();
 
-function genderOf(v: SpeechSynthesisVoice): VoiceGender | null {
+function genderOf(v: SpeechSynthesisVoice): 'female' | 'male' | null {
   if (FEMALE.test(v.name)) return 'female';
   if (MALE.test(v.name)) return 'male';
   return null;
@@ -38,16 +47,19 @@ function langRank(v: SpeechSynthesisVoice): number {
 function pickVoice(): void {
   const genderRank = (v: SpeechSynthesisVoice) => {
     const g = genderOf(v);
-    return g === gender ? 0 : g === null ? 1 : 2;
+    return g === family() ? 0 : g === null ? 1 : 2;
   };
+  const natural = (v: SpeechSynthesisVoice) => (NATURAL.test(v.name) ? 0 : 1);
   const voices = (synth?.getVoices() ?? []).filter((v) => langRank(v) < 99 && !NOVELTY.test(v.name));
-  voices.sort((a, b) => genderRank(a) - genderRank(b) || langRank(a) - langRank(b));
+  voices.sort((a, b) => genderRank(a) - genderRank(b) || natural(a) - natural(b) || langRank(a) - langRank(b));
   voice = voices[0] ?? null;
 }
 
 /** many Android phones have one voice per language, so without a matching voice the pitch alone makes Boy and Girl clearly different */
 function pitch(): number {
   const g = voice ? genderOf(voice) : null;
+  // cute: a girl's voice lifted well up, kept below the chipmunk range
+  if (gender === 'cute') return g === 'female' ? 1.5 : g === null ? 1.6 : 1.85;
   if (g === gender) return 1;
   if (g === null) return gender === 'female' ? 1.15 : 0.6;
   return gender === 'female' ? 1.35 : 0.55;
@@ -96,9 +108,17 @@ export function unlockSpeech(): void {
   synth.speak(u);
 }
 
-/** force plays even when muted (used by the voice test button) */
-export function speak(text: string, force = false): void {
-  if (!synth || (!enabled && !force)) return;
+/** a small pitch step per speaker id, so each player at the table sounds a little different */
+export function voiceShiftOf(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return [0.9, 0.95, 1, 1.05, 1.1][h % 5];
+}
+
+/** force plays even when muted (used by the voice test button); shift scales the pitch (one speaker's own step) */
+export function speak(text: string, force = false, shift = 1): void {
+  text = text.replace(EMOJI, '').replace(/\s+/g, ' ').trim();
+  if (!synth || (!enabled && !force) || !text) return;
   // drop a backlog so the voice never lags far behind the table
   if (queued >= 3) {
     synth.cancel();
@@ -107,8 +127,8 @@ export function speak(text: string, force = false): void {
   const u = new SpeechSynthesisUtterance(text);
   if (voice) u.voice = voice;
   u.lang = voice?.lang ?? 'en-IN';
-  u.pitch = pitch();
-  u.rate = gender === 'male' ? 0.98 : 1.05;
+  u.pitch = Math.min(2, pitch() * shift);
+  u.rate = gender === 'male' ? 0.98 : gender === 'cute' ? 1.08 : 1.05;
   u.onend = u.onerror = () => {
     queued = Math.max(0, queued - 1);
   };

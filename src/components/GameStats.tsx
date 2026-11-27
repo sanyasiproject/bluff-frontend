@@ -2,6 +2,8 @@
 import type { CSSProperties } from 'react';
 import { GAME_CATALOG, type GameKind, type LifetimeStats } from '../types';
 import { percent } from '../lib/progress';
+import { GameArt } from '../art/GameArt';
+import { Icon } from '../art/icons';
 
 /** games played before per-game counts began, from the old totals */
 function oldPlayed(s: LifetimeStats, kind: GameKind): number | null {
@@ -22,12 +24,14 @@ export function GameStats({ stats }: { stats: LifetimeStats }) {
   });
   return (
     <section className="panel stack-tight game-stats">
-      <h3 className="section-title">🎮 Games</h3>
+      <h3 className="section-title">
+        <Icon name="play" size={20} /> Games
+      </h3>
       <div className="gs-grid">
         {cards.map(({ g, t, played, wins }) => (
           <div key={g.kind} className="gs-card" style={{ '--c1': g.colors[0], '--c2': g.colors[1] } as CSSProperties}>
-            <span className="gs-emoji" aria-hidden>
-              {g.emoji}
+            <span className="gs-art" aria-hidden>
+              <GameArt kind={g.kind} />
             </span>
             <b>{g.name}</b>
             <span className="gs-nums">

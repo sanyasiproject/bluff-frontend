@@ -1,0 +1,469 @@
+/* night lobby: the landscape room's chrome (top bar, seats' tags, open seats, sign, dock, settings drawer); the felt table stays the player's own */
+
+/* the game picker's art shows only sideways */
+.option-art {
+  display: none;
+}
+
+@media (orientation: landscape) {
+  /* ---------- the room around the table: night sky instead of a dark felt room ---------- */
+  .screen.lobby.lobby-room {
+    background: var(--nt-bg-1);
+    font-family: var(--nt-font);
+  }
+
+  .lobby-room .scene-room {
+    background:
+      radial-gradient(60% 45% at 50% 12%, rgba(255, 228, 170, 0.12), transparent 70%),
+      radial-gradient(ellipse 60% 55% at 0% 0%, rgba(255, 79, 216, 0.2), transparent 70%),
+      radial-gradient(ellipse 55% 55% at 100% 100%, rgba(62, 230, 255, 0.14), transparent 70%),
+      radial-gradient(120% 110% at 50% 60%, transparent 45%, rgba(8, 4, 26, 0.7) 100%),
+      linear-gradient(180deg, var(--nt-bg-2) 0%, var(--nt-bg-1) 100%);
+  }
+
+  /* faint stars over the sky, behind the table */
+  .lobby-room .scene-room::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(1.2px 1.2px at 23px 41px, rgba(255, 255, 255, 0.85), transparent 60%),
+      radial-gradient(1px 1px at 141px 17px, rgba(255, 255, 255, 0.6), transparent 60%),
+      radial-gradient(1.4px 1.4px at 97px 133px, rgba(255, 230, 250, 0.8), transparent 60%),
+      radial-gradient(1px 1px at 201px 91px, rgba(255, 255, 255, 0.55), transparent 60%);
+    background-size: 240px 240px;
+    opacity: 0.45;
+    animation: nt-twinkle 6s ease-in-out infinite alternate;
+  }
+
+  /* ---------- top bar ---------- */
+  .lobby-room .room-code-chip {
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: linear-gradient(135deg, var(--nt-violet), var(--nt-pink));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      0 4px 0 #5a2a9e,
+      0 8px 18px rgba(255, 79, 163, 0.3);
+    color: #fff;
+    transition: transform 0.18s var(--nt-bounce);
+  }
+
+  .lobby-room .room-code-chip small {
+    opacity: 0.85;
+  }
+
+  .lobby-room .room-code-chip b {
+    color: #fff;
+    text-shadow: 0 2px 0 rgba(60, 20, 110, 0.45);
+  }
+
+  .lobby-room .room-chip,
+  .lobby-room .room-top .icon-btn {
+    border: 1px solid var(--nt-border);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05)), rgba(18, 11, 46, 0.6);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 12px rgba(5, 2, 20, 0.35);
+    color: var(--nt-text);
+  }
+
+  .lobby-room .room-top .icon-btn {
+    border-radius: 50%;
+  }
+
+  /* the game chip: a little drawing of the game before its name */
+  .lobby-room .room-chip.game {
+    gap: 8px;
+    padding-left: 4px;
+  }
+
+  .room-chip-art {
+    display: block;
+    flex: none;
+    width: 40px;
+    height: 26px;
+    overflow: hidden;
+    border-radius: 999px 8px 8px 999px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+
+  .lobby-room .room-chip.mode {
+    color: var(--nt-dim);
+  }
+
+  .lobby-room .room-chip.mode.ranked {
+    border-color: transparent;
+    background: linear-gradient(180deg, var(--nt-gold-hi), var(--nt-gold-lo));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 3px 0 #b86e00;
+    color: var(--nt-gold-ink);
+  }
+
+  .lobby-room .room-top .account-btn .coin-mini {
+    border: 1px solid var(--nt-border);
+    background: rgba(18, 11, 46, 0.65);
+  }
+
+  /* ---------- seat extras: crown, ✕, swap, ready and coins as night pills (the seat box is the player's own) ---------- */
+  .lobby-room .room-x {
+    background: linear-gradient(180deg, #ff6b8b, #d81b5a);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 0 2px rgba(18, 11, 46, 0.9), 0 3px 8px rgba(5, 2, 20, 0.5);
+    color: #fff;
+  }
+
+  .lobby-room .room-swap,
+  .lobby-room .room-ready {
+    background: rgba(18, 11, 46, 0.92);
+    box-shadow: inset 0 0 0 1.5px rgba(62, 230, 255, 0.6), 0 2px 6px rgba(5, 2, 20, 0.5);
+  }
+
+  .lobby-room .room-coins,
+  .lobby-room .room-watch-tag {
+    border: 1px solid var(--nt-border);
+    background: rgba(18, 11, 46, 0.82);
+    color: var(--nt-text);
+  }
+
+  .lobby-room .room-coins.warn {
+    color: #ffb0c8;
+    border-color: rgba(255, 79, 163, 0.6);
+  }
+
+  .lobby-room .room-crown {
+    filter: drop-shadow(0 0 6px rgba(255, 197, 49, 0.7)) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
+  }
+
+  /* ---------- open seats: a glowing cyan "+" that breathes ---------- */
+  .lobby-room .room-open .open-ring {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border: 2px dashed rgba(62, 230, 255, 0.85);
+    background: radial-gradient(closest-side, rgba(62, 230, 255, 0.28), rgba(18, 11, 46, 0.6));
+    box-shadow: 0 0 16px 3px rgba(62, 230, 255, 0.35), inset 0 0 10px rgba(62, 230, 255, 0.3);
+    color: #bff6ff;
+    font-size: 22px;
+    transition: transform 0.18s var(--nt-bounce);
+  }
+
+  .lobby-room .room-open .open-ring::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 2px solid rgba(62, 230, 255, 0.5);
+    animation: nt-room-ping 2.4s ease-out infinite;
+    pointer-events: none;
+  }
+
+  .lobby-room .room-open:active .open-ring {
+    transform: scale(0.9);
+  }
+
+  .lobby-room .room-open.team-a .open-ring {
+    border-color: rgba(74, 144, 255, 0.9);
+    color: #a9cbff;
+  }
+
+  .lobby-room .room-open.team-b .open-ring {
+    border-color: rgba(255, 150, 60, 0.9);
+    color: #ffc79a;
+  }
+
+  .lobby-room .room-open-label {
+    border: 1px solid var(--nt-border);
+    background: rgba(18, 11, 46, 0.82);
+    color: var(--nt-dim);
+  }
+}
+
+@keyframes nt-room-ping {
+  0% { transform: scale(0.85); opacity: 0.8; }
+  80%, 100% { transform: scale(1.35); opacity: 0; }
+}
+
+@media (orientation: landscape) {
+  /* ---------- the sign on the felt: a glass plaque, the host's Settings in gold ---------- */
+  .lobby-room .room-sign {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(52, 34, 128, 0.94), rgba(24, 14, 64, 0.94));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 0 1px rgba(139, 92, 255, 0.35), 0 8px 16px rgba(5, 2, 20, 0.55);
+    color: var(--nt-text);
+    transition: transform 0.18s var(--nt-bounce);
+  }
+
+  .lobby-room .room-sign i {
+    color: var(--nt-cyan);
+  }
+
+  .lobby-room .room-gear {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: linear-gradient(180deg, var(--nt-gold-hi) 0%, var(--nt-gold) 55%, var(--nt-gold-lo) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 3px 0 #b86e00, 0 6px 12px rgba(5, 2, 20, 0.5);
+    color: var(--nt-gold-ink);
+    transition: transform 0.18s var(--nt-bounce);
+  }
+
+  .lobby-room .room-gear.ghost {
+    border: 1px solid var(--nt-border);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06)), rgba(18, 11, 46, 0.8);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 3px 0 rgba(10, 4, 40, 0.6);
+    color: var(--nt-text);
+  }
+
+  /* ---------- the dock: a night glass bar with a pink-to-cyan top line ---------- */
+  .lobby-room .room-dock {
+    border-top: 0;
+    background: linear-gradient(180deg, rgba(29, 18, 80, 0.78), rgba(18, 11, 46, 0.95));
+    box-shadow: 0 -10px 26px rgba(5, 2, 20, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .lobby-room .room-dock::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 8%;
+    right: 8%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 79, 163, 0.7), rgba(62, 230, 255, 0.7), transparent);
+    pointer-events: none;
+  }
+
+  .lobby-room .room-dock .btn {
+    border-radius: 999px;
+  }
+
+  .lobby-room .room-dock .room-invite {
+    border-color: rgba(255, 79, 163, 0.55);
+    color: #ffd0e6;
+  }
+
+  /* Play / Watch: a glass pill with the chosen side lit violet to pink */
+  .lobby-room .room-dock .mini-seg {
+    padding: 3px;
+    border: 1px solid var(--nt-border);
+    border-radius: 999px;
+    background: rgba(10, 5, 34, 0.6);
+  }
+
+  .lobby-room .room-dock .mini-seg button {
+    border-radius: 999px;
+    color: var(--nt-dim);
+    font-weight: 800;
+  }
+
+  .lobby-room .room-dock .mini-seg button.on {
+    background: linear-gradient(135deg, var(--nt-violet), var(--nt-pink));
+    box-shadow: 0 3px 10px rgba(255, 79, 163, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    color: #fff;
+  }
+
+  .lobby-room .room-dock-right .ready-btn {
+    border-color: rgba(157, 255, 90, 0.5);
+    background: linear-gradient(180deg, rgba(157, 255, 90, 0.24), rgba(157, 255, 90, 0.08));
+    color: #e6ffd4;
+  }
+
+  .lobby-room .room-reason {
+    border-color: rgba(255, 79, 163, 0.5);
+    background: rgba(40, 12, 60, 0.92);
+    box-shadow: 0 6px 16px rgba(5, 2, 20, 0.5);
+    color: #ffd6ea;
+  }
+
+  .lobby-room .room-dock-right .waiting {
+    color: var(--nt-dim);
+  }
+
+  /* ---------- the settings drawer: deep violet glass ---------- */
+  .lobby-room .room-drawer-bd {
+    background: rgba(8, 4, 26, 0.5);
+  }
+
+  .lobby-room .room-drawer {
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 22px;
+    background: var(--lo-glass);
+    box-shadow: 0 16px 40px rgba(5, 2, 20, 0.65), var(--lo-shine);
+  }
+
+  .lobby-room .room-drawer-head b {
+    color: var(--nt-text);
+    font-weight: 900;
+  }
+
+  .room-drawer-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .room-drawer-icon {
+    color: var(--nt-cyan);
+  }
+
+  .lobby-room .room-drawer-close {
+    border: 1px solid var(--nt-border);
+    border-radius: 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
+    color: var(--nt-text);
+  }
+
+  .lobby-room .lobby-tabs {
+    gap: 6px;
+    padding: 6px 8px;
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+    background: rgba(10, 5, 34, 0.35);
+  }
+
+  .lobby-room .lobby-tab {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--nt-dim);
+    transition: transform 0.18s var(--nt-bounce);
+  }
+
+  .lobby-room .lobby-tab.on {
+    background: linear-gradient(135deg, var(--nt-violet), var(--nt-pink));
+    box-shadow: 0 4px 14px rgba(255, 79, 163, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    color: #fff;
+  }
+
+  .lobby-room .lobby-tab:focus-visible {
+    outline-color: var(--nt-cyan);
+  }
+
+  .lobby-room .lobby-scroll {
+    scrollbar-color: rgba(139, 92, 255, 0.5) transparent;
+  }
+
+  /* options and setting rows: glass cards, the chosen one lit with a violet-pink edge */
+  .lobby-room :is(.option, .setting-row) {
+    border-color: transparent;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.04));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+
+  .lobby-room .option {
+    transition: transform 0.18s var(--nt-bounce);
+  }
+
+  .lobby-room .option:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  .lobby-room .option.on {
+    border-color: transparent;
+    background: linear-gradient(135deg, rgba(139, 92, 255, 0.38), rgba(255, 79, 163, 0.26));
+    box-shadow: inset 0 0 0 2px rgba(255, 79, 163, 0.85), 0 6px 16px rgba(255, 79, 163, 0.22);
+  }
+
+  .lobby-room .mini-seg {
+    background: rgba(10, 5, 34, 0.55);
+  }
+
+  .lobby-room .mini-seg button.on {
+    background: linear-gradient(180deg, var(--nt-gold-hi), var(--nt-gold-lo));
+    color: var(--nt-gold-ink);
+  }
+
+  .lobby-room .lobby-scroll > .panel + .panel {
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+@media (orientation: landscape) {
+  /* ---------- game picker: small art tiles, the name and a line under them ---------- */
+  .lobby-scroll .option.has-art {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: 6px 6px 8px;
+    overflow: hidden;
+    text-align: left;
+  }
+
+  .option.has-art .option-art {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin-bottom: 4px;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), 0 4px 10px rgba(5, 2, 20, 0.35);
+  }
+
+  .option.has-art .option-art > .nt-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 9.5px;
+  }
+
+  .option.has-art > :is(b, span) {
+    padding: 0 4px;
+  }
+
+  .option.has-art:disabled .option-art {
+    filter: grayscale(0.7);
+  }
+
+  /* wide drawers: the art grows, two rows of three for a longer catalog */
+  .lobby-scroll .game-seg:has(.has-art) {
+    grid-template-columns: repeat(auto-fill, minmax(min(150px, 30%), 1fr));
+  }
+}
+
+/* short phones: smaller art so the Game tab fits */
+@media (orientation: landscape) and (max-height: 430px) {
+  .option.has-art .option-art {
+    aspect-ratio: 2 / 1;
+  }
+
+  .room-chip-art {
+    width: 34px;
+    height: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lobby-room .scene-room::after,
+  .lobby-room .room-open .open-ring::after {
+    animation: none;
+  }
+
+  .lobby-room :is(.room-code-chip, .room-sign, .room-gear, .open-ring, .lobby-tab, .option) {
+    transition: none;
+  }
+}
+
+/* sheets and popups over the room: solid night glass instead of the felt-tinted panel (game tables keep theirs) */
+@media (orientation: landscape) {
+  main.lobby-room .backdrop {
+    background: rgba(8, 4, 26, 0.62);
+  }
+
+  main.lobby-room .backdrop :is(.sheet, .modal) {
+    border-color: rgba(255, 255, 255, 0.18);
+    background: linear-gradient(160deg, #34228a 0%, #20145a 55%, #150c3a 100%);
+  }
+
+  main.lobby-room .room-sheet .btn:not(.primary) {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), 0 3px 0 rgba(10, 4, 40, 0.5);
+  }
+
+  main.lobby-room .room-sheet-code {
+    color: var(--nt-gold);
+  }
+}
+
+/* a locked Start reads as locked on the gold button */
+.lobby-room .room-dock-right .btn.primary:disabled {
+  opacity: 0.85;
+  filter: saturate(0.3) brightness(0.72);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3), 0 3px 0 #6e4a10;
+}

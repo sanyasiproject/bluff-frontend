@@ -2,6 +2,18 @@ import { useEffect, useState } from 'react';
 import { canPrompt, isInstalled, isIos, onInstallChange, promptInstall } from '../lib/install';
 import { Backdrop } from './Overlays';
 
+/** a duotone phone with a down arrow, matching the dock's icons */
+function PhoneIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" focusable="false" aria-hidden>
+      <rect x="6" y="2.5" width="12" height="19" rx="3" fill="currentColor" opacity="0.28" />
+      <rect x="6" y="2.5" width="12" height="19" rx="3" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 7v7M9 11.5l3 3 3-3" fill="none" stroke="#3ee6ff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10.5 18.5h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /** Offers "Install app"; hidden once Bluff is opened from the home screen */
 export function InstallCard() {
   const [, refresh] = useState(0);
@@ -102,9 +114,9 @@ export function GetAppButton() {
 
   return (
     <>
-      <button type="button" className="dock-item" onClick={() => void install()}>
+      <button type="button" className="dock-item dock-getapp" onClick={() => void install()}>
         <span className="dock-icon" aria-hidden>
-          📲
+          <PhoneIcon />
         </span>
         <span className="dock-label">Get app</span>
       </button>

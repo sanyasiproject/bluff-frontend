@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { cx } from '../lib/cards';
-import { formatCoins, signedCoins } from '../lib/coins';
+import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
 import { monthYear } from '../lib/dates';
 import { achievementsOf, levelInfo, percent, winStreak } from '../lib/progress';
 import { divisionOf, LOGIN_BONUS, RANK_DIVISIONS, rankName, type GameSummary, type ProfileOverview } from '../types';
@@ -32,6 +32,7 @@ import '../styles/land-hub.css';
 import { LudoLookRows } from '../games/ludo/LudoLooks';
 import { ProfileTabs, useProfileTab } from './ProfileTabs';
 import { Rolling } from './Rolling';
+import { Icon } from '../art/icons';
 
 interface Props {
   auth: Auth;
@@ -127,6 +128,15 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
           <p className="level-title">
             {division.emoji} {rankName(user.rank?.points ?? 0, division.id)}
           </p>
+          {/* night hero: coins and XP as pills */}
+          <div className="pf-pills">
+            <span className="pf-pill coins">
+              <Icon name="coins" size={18} /> {compactCoins(user.coins)}
+            </span>
+            <span className="pf-pill xp">
+              <Icon name="xp" size={18} /> {formatCoins(lvl.xp)} XP
+            </span>
+          </div>
           <div className="xp-bar" aria-label={`${lvl.toNext} XP to level ${lvl.level + 1}`}>
             <i style={{ width: `${Math.round(lvl.progress * 100)}%` }} />
           </div>

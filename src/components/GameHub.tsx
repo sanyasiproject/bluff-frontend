@@ -1,6 +1,8 @@
-// Home's game grid: a tile per game in the catalog, category chips, NEW and Last played marks; built for 40 games
+// Home's game rail: a tile per game in the catalog (drawn art, name, players), category chips, NEW and Last played marks; built for 40 games
 import '../styles/land-hub.css';
 import { useState, type CSSProperties } from 'react';
+import { GameArt } from '../art/GameArt';
+import { Icon } from '../art/icons';
 import { lastGame } from '../games/lastPlayed';
 import { cx } from '../lib/cards';
 import { loadPref, savePref } from '../lib/storage';
@@ -26,11 +28,11 @@ export function GameHub({ onPick }: { onPick: (kind: GameKind) => void }) {
   return (
     <section className="hub" aria-label="Games">
       <nav className="hub-chips" role="tablist" aria-label="Game types">
-        <button type="button" role="tab" aria-selected={cat === 'all'} className={cx('hub-chip', cat === 'all' && 'on')} onClick={() => pick('all')}>
+        <button type="button" role="tab" aria-selected={cat === 'all'} className={cx('hub-chip nt-chip', cat === 'all' && 'on')} onClick={() => pick('all')}>
           ✨ All <small>{GAME_CATALOG.length}</small>
         </button>
         {GAME_CATEGORIES.map((c) => (
-          <button key={c.id} type="button" role="tab" aria-selected={cat === c.id} className={cx('hub-chip', cat === c.id && 'on')} onClick={() => pick(c.id)}>
+          <button key={c.id} type="button" role="tab" aria-selected={cat === c.id} className={cx('hub-chip nt-chip', cat === c.id && 'on')} onClick={() => pick(c.id)}>
             {c.emoji} {c.name} <small>{count(c.id)}</small>
           </button>
         ))}
@@ -46,17 +48,19 @@ export function GameHub({ onPick }: { onPick: (kind: GameKind) => void }) {
             aria-label={`${g.name}: ${g.tagline}. ${g.minPlayers} to ${g.maxPlayers} players`}
             onClick={() => onPick(g.kind)}
           >
-            <span className="hub-emoji" aria-hidden>
-              {g.emoji}
+            <span className="hub-art" aria-hidden>
+              <GameArt kind={g.kind} />
+              {g.isNew && <i className="hub-new nt-badge new">New</i>}
+              {g.kind === last && <i className="hub-last">▶ Last played</i>}
             </span>
-            <b className="hub-name">{g.name}</b>
-            <span className="hub-tag">{g.tagline}</span>
-            <span className="hub-meta">
-              👥 {g.minPlayers}–{g.maxPlayers}
-              {g.teams && ' · 2v2'}
+            <span className="hub-body">
+              <b className="hub-name">{g.name}</b>
+              <span className="hub-tag">{g.tagline}</span>
+              <span className="hub-meta">
+                <Icon name="friends" size={14} /> {g.minPlayers}–{g.maxPlayers}
+                {g.teams && ' · 2v2'}
+              </span>
             </span>
-            {g.isNew && <i className="hub-new">NEW</i>}
-            {g.kind === last && <i className="hub-last">▶ Last played</i>}
           </button>
         ))}
       </div>

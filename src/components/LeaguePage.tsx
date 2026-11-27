@@ -6,6 +6,7 @@ import { LEAGUE_CROWNS, LEAGUE_POINTS, MIN_REWARD_GAME_SEC, type LeagueBoard, ty
 import type { Auth } from '../useAuth';
 import { Avatar } from './Avatar';
 import { FullPage } from './FullPage';
+import { Icon } from '../art/icons';
 import { LevelBadge } from './LevelBadge';
 
 type Crown = (typeof LEAGUE_CROWNS)[number];
@@ -202,8 +203,8 @@ export function LeaguePage({ auth, onClose, initial = null, onChange }: Props) {
   return (
     <FullPage title="Friends league" onBack={onClose} className="lp-league">
       <section className="panel league-head">
-        <span className="league-head-emoji" aria-hidden>
-          🏆
+        <span className="league-head-emoji nt-head-icon" aria-hidden>
+          <Icon name="league" size={30} />
         </span>
         <div className="grow">
           <b className="league-head-title">{me ? `You're #${me.place} this week` : "This week's board"}</b>
@@ -361,7 +362,7 @@ export function LeagueButton({ auth, online = true }: { auth: Auth; online?: boo
     <>
       <button className="panel league-entry" onClick={() => setOpen(true)}>
         <span className="league-entry-emoji" aria-hidden>
-          🏆
+          <Icon name="league" size={26} />
         </span>
         <span className="grow">Friends league</span>
         {me && (

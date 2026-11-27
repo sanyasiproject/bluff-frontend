@@ -10,6 +10,7 @@ import { ConfirmBox } from './ConfirmBox';
 import { DmPage } from './DmPage';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
+import { Icon } from '../art/icons';
 import { PlayerSheet } from './PlayerSheet';
 import { Avatar } from './Avatar';
 
@@ -279,7 +280,9 @@ export function FriendsSheet({ auth, roomCode, onInvite, onJoin, onClose }: Prop
   return (
     // a friend's card or chat opened from here hides this sheet, so the two never show stacked
     <Backdrop onClose={onClose} panel={viewing || chatWith ? 'fr-covered' : undefined}>
-      <h3>Friends</h3>
+      <h3 className="nt-sheet-title">
+        <Icon name="friends" size={24} /> Friends
+      </h3>
       {/* landscape: search and requests on the left, your friends on the right */}
       <div className="lp2-fr-cols">
         <div className="lp2-fr-side">

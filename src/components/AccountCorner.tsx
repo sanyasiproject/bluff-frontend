@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
+import { Icon } from '../art/icons';
+import { levelInfo } from '../lib/progress';
 import { compactCoins } from '../lib/coins';
 import { levelOf } from '../types';
 import type { Auth } from '../useAuth';
@@ -22,10 +24,12 @@ interface Props {
   onJoin?: (userId: string, watch: boolean) => Promise<boolean>;
   /** the green online-friends count; off where the screen has its own Friends button (lobby) */
   showOnline?: boolean;
+  /** Home: a level pill with progress beside the coins */
+  showLevel?: boolean;
 }
 
 /** top-right corner: coins + avatar that opens the profile page, or a Log in button for guests */
-export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite, onJoin, showOnline = true }: Props) {
+export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite, onJoin, showOnline = true, showLevel = false }: Props) {
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const friends = useOnlineFriends(auth.user && showOnline ? auth.token : null);
   const unread = useDmUnread(auth.user ? auth.token : null);
@@ -51,7 +55,10 @@ export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite, onJoin, s
       )}
       {user ? (
         <button className="account-btn" aria-label="My profile" onClick={() => setSheet('profile')}>
-          <span className="coin-mini">🪙 {compactCoins(user.coins)}</span>
+          {showLevel && <LevelPill user={user} />}
+          <span className="coin-mini">
+            <Icon name="coins" size={18} /> {compactCoins(user.coins)}
+          </span>
           <Avatar name={user.displayName} avatar={user.avatar} size="sm">
             <span className="seat-lv">{levelOf(user.stats)}</span>
           </Avatar>
@@ -73,5 +80,17 @@ export function AccountCorner({ auth, onOpenAdmin, roomCode, onInvite, onJoin, s
         <ProfilePage auth={auth} onClose={close} onOpenAdmin={onOpenAdmin} roomCode={roomCode} onInvite={onInvite} onJoin={onJoin} />
       )}
     </>
+  );
+}
+
+/** level number with a thin progress bar to the next level */
+function LevelPill({ user }: { user: NonNullable<Auth['user']> }) {
+  const info = levelInfo(user.stats);
+  return (
+    <span className="nt-lv-pill" aria-label={`Level ${info.level}`}>
+      <Icon name="xp" size={18} />
+      <b>Lv {info.level}</b>
+      <i className="nt-bar" style={{ '--nt-pct': Math.round(info.progress * 100) } as CSSProperties} />
+    </span>
   );
 }

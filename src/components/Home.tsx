@@ -5,7 +5,8 @@ import type { Auth } from '../useAuth';
 import type { Actions, ConnStatus, PendingWatch } from '../useBluff';
 import { AccountCorner } from './AccountCorner';
 import { AccountSheet } from './AccountSheet';
-import { ShineTitle, SuitDrift } from './Ambient';
+import { BaithakLogo, BaithakWordmark } from '../art/BaithakLogo';
+import { HomeFeatured, featuredGame } from './HomeFeatured';
 import { GameHub } from './GameHub';
 import { lastGame } from '../games/lastPlayed';
 import { FriendsSheet } from './FriendsSheet';
@@ -18,7 +19,7 @@ import { PlayPanel } from './PlayPanel';
 import { LessonChooser } from './tutorial/LessonOffer';
 import { TutorialPage } from './tutorial/TutorialPage';
 import { markTutorialSeen } from '../lib/tutorial';
-import { APP_NAME, type GameKind } from '../types';
+import type { GameKind } from '../types';
 
 interface HomeProps {
   status: ConnStatus;
@@ -43,6 +44,8 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
     setGame(kind);
     setPlay(true);
   };
+  /** the banner's game, picked once per visit */
+  const [featured] = useState<GameKind>(featuredGame);
   const [friends, setFriends] = useState(false);
   const [accountSheet, setAccountSheet] = useState<'login' | 'register' | null>(null);
   /** How to play: choosing a lesson, then the lesson itself */
@@ -98,50 +101,52 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
   );
 
   return (
-    <main className="screen home">
-      <SuitDrift />
+    <main className="screen home nt-night nt-home">
       <header className="home-top">
-        <LangToggle />
+        <div className="nt-brand" aria-label="Game Baithak">
+          <BaithakLogo size={40} className="nt-brand-logo" />
+          <BaithakWordmark size={26} className="nt-brand-word" />
+        </div>
         <HomeNotice auth={auth} />
         <div className="home-corner">
+          <LangToggle />
           {/* the green count beside my profile: how many friends are online */}
-          <AccountCorner auth={auth} onOpenAdmin={onOpenAdmin} onJoin={joinFriend} />
+          <AccountCorner auth={auth} onOpenAdmin={onOpenAdmin} onJoin={joinFriend} showLevel />
         </div>
       </header>
 
-      {/* left of the stage: who's online now */}
-      <OnlineList auth={auth} onOpen={() => setFriends(true)} />
-
-      {/* centre stage: the title, Play, and a tile for every game */}
-      <div className="home-stage hub-stage">
-        <div className="hub-head">
-          <div className="hero">
-            <ShineTitle text={APP_NAME} />
-            <p className="muted hero-tag">Your games, your friends, one baithak.</p>
-          </div>
-          <button className="btn primary shine home-play-btn" onClick={() => setPlay(true)}>
-            <span aria-hidden>▶</span> Play
-          </button>
-          {pendingWatch ? (
-            <button className="home-sub home-chip" onClick={() => setPlay(true)}>
-              <span className="dot" /> Room <b>{pendingWatch.code}</b>
-            </button>
-          ) : (
-            // offline, the server line takes this place (the rejoin would be disabled anyway)
-            saved &&
-            !invite &&
-            online && (
-              <button className="home-sub home-chip" disabled={!online || busy} onClick={() => go(actions.rejoinSaved)}>
-                ↩ Rejoin room <b>{saved.code}</b>
+      {/* the stage: the featured game on the left, every game's tile on the right */}
+      <div className="home-stage hub-stage nt-stage">
+        <HomeFeatured
+          kind={featured}
+          onPlay={() => openGame(featured)}
+          onCode={() => setPlay(true)}
+          chip={
+            pendingWatch ? (
+              <button className="home-sub home-chip" onClick={() => setPlay(true)}>
+                <span className="dot" /> Room <b>{pendingWatch.code}</b>
               </button>
+            ) : (
+              // offline, the server line takes this place (the rejoin would be disabled anyway)
+              saved &&
+              !invite &&
+              online && (
+                <button className="home-sub home-chip" disabled={!online || busy} onClick={() => go(actions.rejoinSaved)}>
+                  ↩ Rejoin <b>{saved.code}</b>
+                </button>
+              )
             )
-          )}
+          }
+        />
+        <div className="nt-side">
+          <GameHub onPick={openGame} />
+          {serverStatus && <div className="home-sub">{serverStatus}</div>}
+          {/* wide screens: who's online now */}
+          <OnlineList auth={auth} onOpen={() => setFriends(true)} />
         </div>
-        <GameHub onPick={openGame} />
-        {serverStatus && <div className="home-sub">{serverStatus}</div>}
       </div>
 
-      {/* everything else: one row of round buttons */}
+      {/* everything else: one floating dock */}
       <div className="home-bottom">
         <HomeDock auth={auth} online={online} onHowTo={() => setChooser(true)} onFriends={() => setFriends(true)} onLogin={() => setAccountSheet('login')} />
       </div>

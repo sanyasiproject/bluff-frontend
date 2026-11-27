@@ -6,6 +6,7 @@ import type { FriendView } from '../types';
 import type { Auth } from '../useAuth';
 import { Avatar } from './Avatar';
 import { FriendsSheet } from './FriendsSheet';
+import { Icon } from '../art/icons';
 
 interface Props {
   auth: Auth;
@@ -79,9 +80,9 @@ export function FriendsDockButton({ auth, onOpen }: { auth: Auth; onOpen: () => 
   const all = useOnlineFriends(auth.user ? auth.token : null);
   const count = all ? all.filter((f) => f.online).length : 0;
   return (
-    <button type="button" className="dock-item" aria-label={count > 0 ? `Friends, ${count} online` : 'Friends'} onClick={onOpen}>
+    <button type="button" className="dock-item dock-friends" aria-label={count > 0 ? `Friends, ${count} online` : 'Friends'} onClick={onOpen}>
       <span className="dock-icon" aria-hidden>
-        👥
+        <Icon name="friends" size={26} />
       </span>
       <span className="dock-label">Friends</span>
       {count > 0 && <b className="dock-badge online">{count}</b>}

@@ -6,6 +6,7 @@ import { MIN_REWARD_GAME_SEC, missionOf, SECRET_XP, type MissionDef, type Missio
 import type { Auth } from '../useAuth';
 import { ConfirmBox } from './ConfirmBox';
 import { FullPage } from './FullPage';
+import { Icon } from '../art/icons';
 import { DailyLadder } from './ProfileParts';
 
 /** one of my missions with its catalogue entry */
@@ -230,9 +231,14 @@ export function MissionsPage({ auth, onClose, initial = null, onChange }: Props)
 
   return (
     <FullPage title="Missions" onBack={onClose} className="lp-missions">
-      <p className="muted small mission-intro">
-        Finish games of {MIN_REWARD_GAME_SEC / 60} min or more to fill these up. Coins and XP are added as soon as a mission is done.
-      </p>
+      <div className="nt-page-hero">
+        <span className="nt-head-icon" aria-hidden>
+          <Icon name="missions" size={28} />
+        </span>
+        <p className="muted small mission-intro">
+          Finish games of {MIN_REWARD_GAME_SEC / 60} min or more to fill these up. Coins and XP are added as soon as a mission is done.
+        </p>
+      </div>
       {error && (
         <p ref={errorRef} className="form-error">
           {error}
@@ -327,7 +333,7 @@ export function MissionsButton({ auth, online = true }: { auth: Auth; online?: b
     <>
       <button className="panel missions-entry" onClick={() => setOpen(true)}>
         <span className="missions-entry-emoji" aria-hidden>
-          🎯
+          <Icon name="missions" size={26} />
         </span>
         <span className="grow">Missions</span>
         {count && count.total > 0 && (

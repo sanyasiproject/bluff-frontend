@@ -1,6 +1,8 @@
 import { insideShell, startShell, wantsShell } from './lib/landscapeShell';
 // styles load with the page so the intro screen is styled from the first paint
 import './styles.css';
+// night lobby design system: tokens and shared pieces (both apps)
+import './styles/night.css';
 // table themes and card backs, after the base styles so they win
 import './styles/looks.css';
 import './styles/missions.css';
@@ -39,6 +41,11 @@ import './styles/land-c7.css';
 import './styles/land-rang.css';
 // skip, reverse, +2/+4, wild and last-card effects (components/TableFx.tsx)
 import './styles/table-fx.css';
+// night lobby restyle of the app's chrome (home, pages, sheets, room), last so it wins
+import './styles/land-night-chrome.css';
+import './styles/land-night-home.css';
+import './styles/land-night-room.css';
+import './styles/land-night-pages.css';
 
 // service worker only in production builds so it never caches the dev server
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {

@@ -1,4 +1,6 @@
 import { useState, type CSSProperties, type ReactNode } from 'react';
+import { GameArt } from '../art/GameArt';
+import { Icon } from '../art/icons';
 import { gameInfo, type GameKind } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions, PendingWatch } from '../useBluff';
@@ -134,7 +136,9 @@ export function PlayPanel(p: Props) {
             <p className="hp-way-title">New game</p>
             {/* the game this room starts in; the host can still change it in the lobby */}
             <div className="hp-game" style={{ '--c1': info.colors[0], '--c2': info.colors[1] } as CSSProperties}>
-              <span aria-hidden>{info.emoji}</span>
+              <span className="hp-game-art" aria-hidden>
+                <GameArt kind={info.kind} />
+              </span>
               <span>
                 <b>{info.name}</b>
                 <small>
@@ -175,7 +179,9 @@ export function PlayPanel(p: Props) {
   return (
     <div className="hp-panel">
       <header className="hp-head">
-        <h2 className="hp-title">Play {info.emoji}</h2>
+        <h2 className="hp-title">
+          <Icon name="play" size={24} /> Play
+        </h2>
         <button className="icon-btn hp-close" aria-label="Close" onClick={p.onClose}>
           ✕
         </button>

@@ -1,0 +1,914 @@
+/* night lobby: Home (brand bar, featured banner, game rail, floating dock), the Play panel and the intro.
+   Colours are global so portrait windows match; the sideways layout is inside @media (orientation: landscape).
+   land-hub.css loads after this file, so hub rules carry a .nt-home prefix */
+
+/* ---------- screen ---------- */
+.screen.home.nt-home {
+  max-width: none;
+  font-family: var(--nt-font);
+}
+
+/* the old gold spotlight is off; the night background has its own glows */
+.nt-home .home-stage::before {
+  content: none;
+}
+
+/* ---------- top bar: brand left, account right ---------- */
+.screen.home.nt-home > .home-top {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'brand notice corner';
+}
+
+.nt-brand {
+  grid-area: brand;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  animation: nt-pop 0.6s var(--nt-bounce) backwards;
+}
+
+.nt-brand-logo {
+  flex: none;
+  filter: drop-shadow(0 4px 10px rgba(255, 79, 163, 0.35));
+}
+
+.nt-brand-word {
+  flex: none;
+  filter: drop-shadow(0 2px 8px rgba(255, 215, 94, 0.25));
+}
+
+.nt-home .home-notice {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: linear-gradient(180deg, rgba(52, 34, 128, 0.95), rgba(29, 18, 80, 0.95));
+  box-shadow: 0 8px 22px rgba(5, 2, 20, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.nt-home .home-corner {
+  gap: 8px;
+}
+
+/* language: a small glass pill in the corner */
+.nt-home .home-corner > .lang-toggle {
+  flex: none;
+  gap: 2px;
+  margin: 0;
+  padding: 0 4px;
+  border: 1px solid var(--nt-border);
+  border-radius: 999px;
+  background: var(--nt-card);
+  font-size: 12px;
+  opacity: 1;
+}
+
+.nt-home .home-corner > .lang-toggle button {
+  min-width: 34px;
+  min-height: 34px;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+.nt-home .home-corner > .lang-toggle button.on {
+  background: rgba(255, 255, 255, 0.14);
+  text-decoration: none;
+}
+
+/* coins, level and avatar in one glass pill */
+.nt-home .account-btn {
+  gap: 8px;
+  min-height: 44px;
+  padding: 3px 3px 3px 10px;
+  border: 1px solid var(--nt-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 14px rgba(5, 2, 20, 0.35);
+  transition: transform 0.18s var(--nt-bounce);
+}
+
+.nt-home .account-btn:active {
+  transform: scale(0.95);
+}
+
+.nt-home .coin-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--nt-gold-hi);
+  font-weight: 900;
+}
+
+.nt-lv-pill {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  column-gap: 4px;
+  row-gap: 2px;
+  color: var(--nt-text);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.nt-lv-pill > svg {
+  grid-row: span 2;
+}
+
+.nt-lv-pill > b {
+  font-weight: 900;
+}
+
+.nt-lv-pill > .nt-bar {
+  display: block;
+  width: 40px;
+  height: 5px;
+}
+
+.nt-home .login-pill.btn {
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+}
+
+.nt-home .online-pill {
+  border-color: rgba(157, 255, 90, 0.35);
+  background: var(--nt-card);
+}
+
+/* ---------- featured banner ---------- */
+.nt-feature {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--nt-radius-lg);
+  background: linear-gradient(150deg, var(--c1), var(--c2));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.18),
+    0 0 34px color-mix(in srgb, var(--c1) 45%, transparent),
+    0 16px 36px rgba(5, 2, 20, 0.55);
+  text-align: left;
+  animation: nt-pop 0.55s var(--nt-bounce) 0.1s backwards;
+}
+
+/* the art fills the card; a dark fade at the bottom keeps the words readable */
+.nt-feature-art {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.nt-feature-art > svg {
+  display: block;
+}
+
+.nt-feature::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(18, 11, 46, 0) 38%, rgba(18, 11, 46, 0.55) 66%, rgba(18, 11, 46, 0.92) 100%);
+  pointer-events: none;
+}
+
+.nt-feature-top,
+.nt-feature-body {
+  position: relative;
+  z-index: 1;
+}
+
+.nt-feature-top {
+  grid-row: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 12px 12px 0;
+  pointer-events: none;
+}
+
+.nt-feature-top > * {
+  pointer-events: auto;
+}
+
+.nt-feature-top .nt-badge {
+  font-size: 0.78rem;
+}
+
+.nt-feature-body {
+  grid-row: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 16px 14px;
+}
+
+.nt-feature-name {
+  margin: 0;
+  font-size: 34px;
+  text-shadow: 0 3px 12px rgba(5, 2, 20, 0.6);
+}
+
+.nt-feature-tag {
+  margin: 2px 0 6px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(5, 2, 20, 0.6);
+}
+
+.nt-feature-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 7px;
+  border-radius: 999px;
+  background: rgba(18, 11, 46, 0.5);
+  color: var(--nt-text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.nt-feature-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.nt-feature-play {
+  white-space: nowrap;
+}
+
+.nt-feature-code {
+  min-height: 44px;
+  padding-inline: 1em;
+  font-size: 0.92rem;
+}
+
+/* rejoin / waiting chip over the art */
+.nt-feature .home-chip {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(18, 11, 46, 0.62);
+  color: var(--nt-text);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.nt-feature .home-chip b {
+  color: var(--nt-gold-hi);
+}
+
+/* ---------- game rail: chips and tiles (art on top, words below) ---------- */
+.nt-home .hub {
+  gap: 8px;
+}
+
+.nt-home .hub-chips {
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 2px 2px 0;
+}
+
+.nt-home .hub-chip.nt-chip {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--nt-border);
+  background: var(--nt-card);
+  color: var(--nt-dim);
+  font-size: 13px;
+}
+
+.nt-home .hub-chip.nt-chip.on {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--nt-violet), var(--nt-pink));
+  color: #fff;
+}
+
+.nt-home .hub-chip small {
+  color: inherit;
+  opacity: 0.75;
+}
+
+.nt-home .hub-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  min-height: 0;
+  padding: 0;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(52, 34, 128, 0.96), rgba(29, 18, 80, 0.98));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 0 20px color-mix(in srgb, var(--c1) 28%, transparent),
+    0 10px 22px rgba(5, 2, 20, 0.45);
+  transition: transform 0.22s var(--nt-bounce), box-shadow 0.22s ease;
+}
+
+.nt-home .hub-tile:active {
+  transform: scale(0.95);
+}
+
+@media (hover: hover) {
+  .nt-home .hub-tile:hover {
+    transform: translateY(-4px) scale(1.02);
+  }
+}
+
+.nt-home .hub-tile.last {
+  box-shadow:
+    inset 0 0 0 2px var(--nt-gold),
+    0 0 22px rgba(255, 197, 49, 0.35),
+    0 10px 22px rgba(5, 2, 20, 0.45);
+}
+
+/* the drawing: 16:10, or whatever room the rail gives it */
+.hub-art {
+  position: relative;
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 18px 18px 0 0;
+  background: linear-gradient(150deg, var(--c1), var(--c2));
+}
+
+.hub-art > svg {
+  position: absolute;
+  inset: 0;
+}
+
+/* marks sit on the art's corners, never over the words */
+.nt-home .hub-art > .hub-new {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  right: auto;
+  padding: 0.15em 0.55em;
+  color: #fff;
+  background: linear-gradient(135deg, var(--nt-pink), var(--nt-orange));
+  font-size: 10px;
+  font-style: normal;
+}
+
+.nt-home .hub-art > .hub-last {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  bottom: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--nt-gold-hi), var(--nt-gold-lo));
+  color: var(--nt-gold-ink);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 900;
+  box-shadow: 0 3px 8px rgba(5, 2, 20, 0.4);
+}
+
+.hub-body {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 7px 10px 9px;
+  text-align: left;
+}
+
+.nt-home .hub-name {
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.15;
+  text-shadow: none;
+}
+
+.nt-home .hub-tag {
+  max-width: 100%;
+  color: var(--nt-dim);
+  font-size: 11.5px;
+  -webkit-line-clamp: 1;
+}
+
+.nt-home .hub-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  padding: 1px 8px 1px 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--nt-text);
+  font-size: 11px;
+  opacity: 1;
+}
+
+/* ---------- floating dock ---------- */
+.nt-home .home-dock::before {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04) 55%, rgba(18, 11, 46, 0.4));
+  box-shadow: 0 12px 30px rgba(5, 2, 20, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.nt-home .home-dock > :is(.dock-item, .missions-entry, .league-entry, .shop-entry) {
+  color: var(--nt-text);
+  transition: transform 0.2s var(--nt-bounce);
+}
+
+.nt-home .home-dock > :is(.dock-item, .missions-entry, .league-entry, .shop-entry):active {
+  transform: translateY(2px) scale(0.92);
+}
+
+@media (hover: hover) {
+  .nt-home .home-dock > :is(.dock-item, .missions-entry, .league-entry, .shop-entry):hover {
+    transform: translateY(-3px);
+  }
+}
+
+/* each icon on its own glossy coloured disc */
+.nt-home .home-dock :is(.dock-icon, .missions-entry-emoji, .league-entry-emoji, .shop-entry-emoji) {
+  border: 0;
+  border-radius: 34%;
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.45), transparent 50%),
+    linear-gradient(160deg, color-mix(in srgb, var(--disc) 80%, #fff 20%), color-mix(in srgb, var(--disc) 70%, #120b2e 30%));
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--disc) 45%, #120b2e 55%), 0 8px 16px rgba(5, 2, 20, 0.4), inset 0 -2px 4px rgba(18, 11, 46, 0.25);
+  color: #fff;
+}
+
+.nt-home .home-dock :is(.dock-icon, .missions-entry-emoji, .league-entry-emoji, .shop-entry-emoji) > svg {
+  width: 58%;
+  height: 58%;
+  filter: drop-shadow(0 1px 1px rgba(18, 11, 46, 0.35));
+}
+
+/* disc colour per item */
+.nt-home .home-dock > * { --disc: #8b5cff; }
+.nt-home .home-dock > .missions-entry:not(.spin-entry) { --disc: #ff4fa3; }
+.nt-home .home-dock > .league-entry { --disc: #ffab1a; }
+.nt-home .home-dock > .shop-entry { --disc: #2fb8ff; }
+.nt-home .home-dock > .spin-entry { --disc: #ff7a3d; }
+.nt-home .home-dock > .dock-g-missions { --disc: #ff4fa3; }
+.nt-home .home-dock > .dock-g-league { --disc: #ffab1a; }
+.nt-home .home-dock > .dock-g-shop { --disc: #2fb8ff; }
+.nt-home .home-dock > .dock-friends { --disc: #8b5cff; }
+.nt-home .home-dock > .dock-howto { --disc: #3ec7e6; }
+.nt-home .home-dock > .dock-getapp { --disc: #22c58b; }
+
+.nt-home .home-dock > .dock-item.guest .dock-icon {
+  opacity: 0.85;
+}
+
+.nt-home .home-dock :is(.dock-label, .missions-entry > .grow, .league-entry > .grow, .shop-entry > .grow) {
+  color: var(--nt-text);
+  font-weight: 800;
+  text-shadow: 0 1px 3px rgba(5, 2, 20, 0.7);
+}
+
+.nt-home .home-dock :is(.dock-badge, .missions-pill, .league-pill, .shop-entry-pill) {
+  border-color: var(--nt-bg-2);
+  background: var(--nt-gold);
+  color: var(--nt-gold-ink);
+}
+
+.nt-home .home-dock .dock-badge.online {
+  background: var(--nt-lime);
+  color: #10240a;
+}
+
+.nt-home .home-dock .dock-badge.lock {
+  background: rgba(18, 11, 46, 0.9);
+}
+
+.nt-home .home-dock :is(.missions-pill:not(.done), .shop-entry-pill.on) {
+  background: var(--nt-pink);
+}
+
+/* ---------- sideways: banner left, rail right, dock below; nothing scrolls but the rail ---------- */
+@media (orientation: landscape) {
+  .screen.home.nt-home {
+    gap: clamp(6px, calc(var(--u) * 1.6), 18px);
+    padding-top: max(calc(var(--u) * 1.4), env(safe-area-inset-top));
+  }
+
+  .screen.home.nt-home > .home-top {
+    width: 100%;
+    max-width: 1280px;
+    min-height: 44px;
+    margin: 0 auto;
+  }
+
+  .nt-brand-logo {
+    width: clamp(34px, calc(var(--u) * 6), 52px);
+    height: clamp(34px, calc(var(--u) * 6), 52px);
+  }
+
+  .nt-brand-word {
+    height: clamp(20px, calc(var(--u) * 3.6), 34px);
+    width: calc(clamp(20px, calc(var(--u) * 3.6), 34px) * 420 / 72);
+  }
+
+  /* a notice in the bar: the wordmark steps aside on phones */
+  @media (max-width: 1000px) {
+    .nt-home > .home-top:has(> .home-notice) .nt-brand-word {
+      display: none;
+    }
+  }
+
+  .screen.home.nt-home .home-stage.nt-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 45fr) minmax(0, 55fr);
+    align-items: stretch;
+    gap: clamp(10px, 1.8vw, 24px);
+    width: 100%;
+    max-width: 1200px;
+    min-height: 0;
+    margin: 0 auto;
+    padding: 0;
+    text-align: left;
+  }
+
+  .nt-side {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    grid-auto-rows: auto;
+    gap: 8px;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .nt-side > .home-sub .server-status {
+    max-width: none;
+  }
+
+  /* the rail measures its own height, so tiles grow with the screen */
+  .nt-home .hub {
+    container-type: size;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 6px;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .nt-home .hub-grid {
+    --text-h: 74px;
+    grid-template-columns: none;
+    grid-template-rows: minmax(0, 1fr);
+    grid-auto-flow: column;
+    grid-auto-columns: clamp(124px, calc((100cqh - 54px - var(--text-h)) * 1.6), 300px);
+    justify-content: start;
+    gap: clamp(8px, 1.2vw, 14px);
+    min-height: 0;
+    padding: 4px 4px 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  .nt-home .hub-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nt-home .hub-tile {
+    min-height: 0;
+    height: 100%;
+  }
+
+  /* in the rail the art takes whatever height is left */
+  .nt-home .hub-art {
+    aspect-ratio: auto;
+  }
+
+  /* the banner fills its column */
+  .nt-feature {
+    height: 100%;
+  }
+
+  .nt-feature-name {
+    font-size: clamp(26px, calc(var(--u) * 6.4), 56px);
+  }
+
+  .nt-feature-tag {
+    font-size: clamp(12.5px, calc(var(--u) * 2), 18px);
+  }
+
+  .nt-feature-body {
+    gap: clamp(6px, calc(var(--u) * 1.6), 16px);
+    padding: 0 clamp(12px, 1.6vw, 24px) clamp(10px, calc(var(--u) * 2.2), 22px);
+  }
+
+  .nt-feature-play.nt-btn.big {
+    min-height: clamp(44px, calc(var(--u) * 8), 64px);
+    padding-inline: clamp(16px, 2vw, 30px);
+    font-size: clamp(16px, calc(var(--u) * 3), 24px);
+  }
+
+  .nt-feature-code.nt-btn {
+    min-height: clamp(40px, calc(var(--u) * 6.4), 52px);
+  }
+
+  /* the floating dock */
+  .nt-home .home-bottom {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+
+  .nt-home .home-bottom > .home-dock {
+    grid-column: 1;
+  }
+
+  .nt-home .home-dock {
+    --ic: clamp(38px, calc(var(--u) * 7), 60px);
+    --dock-w: clamp(62px, max(8.4vw, calc(var(--u) * 11)), 104px);
+    gap: 0;
+    padding: clamp(6px, calc(var(--u) * 1.2), 12px) clamp(8px, calc(var(--u) * 1.8), 18px) clamp(4px, calc(var(--u) * 0.9), 10px);
+    border-radius: 24px;
+  }
+
+  .nt-home .home-dock > :is(.dock-item, .missions-entry, .league-entry, .shop-entry) {
+    gap: 5px;
+  }
+
+  /* who's online: a slim strip under the rail on tall screens only */
+  .nt-home .home-online-list {
+    display: none;
+  }
+
+  @media (min-height: 640px) and (min-width: 1000px) {
+    .nt-home .home-online-list {
+      position: static;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      width: auto;
+      max-height: none;
+      padding: 8px 10px;
+      overflow: hidden;
+      border: 1px solid var(--nt-border);
+      border-radius: 16px;
+      background: var(--nt-card);
+      box-shadow: none;
+      translate: none;
+      animation: nt-pop 0.5s var(--nt-bounce) 0.3s backwards;
+    }
+
+    .nt-home .home-online-list h3 {
+      margin: 0 6px 0 4px;
+    }
+
+    .nt-home .home-online-list h3 b {
+      margin-left: 6px;
+      background: rgba(157, 255, 90, 0.18);
+      color: var(--nt-lime);
+    }
+
+    .nt-home .home-online-row {
+      min-height: 40px;
+      padding: 3px 10px 3px 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .nt-home .home-online-more {
+      color: var(--nt-gold-hi);
+    }
+  }
+
+  /* laptops: the rail gets two rows of big tiles */
+  @media (min-height: 640px) {
+    .nt-home .hub-grid {
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      grid-auto-columns: clamp(150px, calc(((100cqh - 66px) / 2 - var(--text-h)) * 1.6), 300px);
+    }
+  }
+
+  /* short phones: tighter banner words */
+  @media (max-height: 430px) {
+    .nt-home .hub-grid {
+      --text-h: 66px;
+    }
+
+    .nt-home .hub-tag {
+      display: none;
+    }
+
+    .nt-feature-tag {
+      display: none;
+    }
+
+    .nt-feature-top {
+      padding: 8px 8px 0;
+    }
+
+    .nt-lv-pill > .nt-bar {
+      width: 32px;
+    }
+  }
+}
+
+/* small phones: the level pill steps aside (the avatar keeps its level badge) */
+@media (orientation: landscape) and (max-width: 760px) {
+  .nt-home .nt-lv-pill {
+    display: none;
+  }
+}
+
+/* ---------- the Play panel and Get app steps: night glass ---------- */
+.modal.hp,
+.install-pop,
+.modal.hp-name > .name-card {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: var(--lo-glass, linear-gradient(160deg, rgba(52, 34, 128, 0.97), rgba(20, 12, 54, 0.99)));
+  box-shadow: 0 18px 44px rgba(5, 2, 20, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  color: var(--nt-text);
+}
+
+.hp-panel::before {
+  background: linear-gradient(90deg, transparent, var(--nt-pink), var(--nt-cyan), transparent);
+}
+
+.hp-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--nt-text);
+  font-family: var(--nt-font);
+  font-weight: 900;
+}
+
+.hp-title > svg {
+  color: var(--nt-gold);
+}
+
+.hp-way-title {
+  color: var(--nt-dim);
+}
+
+.hp-panel .guest-hint {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--nt-dim);
+}
+
+/* the chosen game: its drawing beside the name */
+.hp-game {
+  gap: 12px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 6px 16px rgba(5, 2, 20, 0.35);
+}
+
+.hp-game > .hp-game-art {
+  position: relative;
+  flex: none;
+  width: 72px;
+  height: 45px;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+  font-size: 0;
+}
+
+.hp-game > .hp-game-art > svg {
+  position: absolute;
+  inset: 0;
+}
+
+.hp-panel .divider.hp-or span {
+  color: var(--nt-faint);
+}
+
+.hp-panel .code-input {
+  letter-spacing: 0.3em;
+  font-weight: 900;
+}
+
+.hp-panel .link-btn {
+  color: var(--nt-cyan);
+}
+
+/* ---------- intro (Splash and index.html): logo, wordmark, three bouncing gotis ---------- */
+.splash.nt-night {
+  font-family: var(--nt-font);
+}
+
+.splash .nt-splash-logo {
+  flex: none;
+  width: clamp(84px, 22vh, 150px);
+  height: clamp(84px, 22vh, 150px);
+  filter: drop-shadow(0 12px 28px rgba(255, 79, 163, 0.45));
+  animation: nt-pop 0.7s var(--nt-bounce) backwards, nt-float 4s ease-in-out 0.7s infinite;
+}
+
+.splash .nt-splash-word {
+  flex: none;
+  width: min(86vw, calc(clamp(40px, 11vh, 80px) * 420 / 72));
+  height: auto;
+  filter: drop-shadow(0 3px 14px rgba(255, 215, 94, 0.3));
+  animation: nt-pop 0.6s var(--nt-bounce) 0.15s backwards;
+}
+
+.splash.nt-night .splash-tag {
+  color: var(--nt-dim);
+  font-weight: 600;
+}
+
+.splash.nt-night .splash-status {
+  color: var(--nt-faint);
+}
+
+/* the loader: red, green and yellow gotis hopping in turn */
+.splash.nt-night .splash-loader {
+  gap: 12px;
+  align-items: flex-end;
+  height: 30px;
+}
+
+.splash.nt-night .splash-loader i {
+  position: relative;
+  width: 16px;
+  height: 20px;
+  border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.75), transparent 38%), var(--goti, #ff4e5e);
+  box-shadow: 0 3px 0 rgba(18, 11, 46, 0.45), 0 0 12px color-mix(in srgb, var(--goti, #ff4e5e) 60%, transparent);
+  opacity: 1;
+  animation: nt-goti-hop 1.05s var(--nt-bounce) infinite;
+}
+
+.splash.nt-night .splash-loader i:nth-child(1) { --goti: #ff4e5e; }
+.splash.nt-night .splash-loader i:nth-child(2) { --goti: #2fd27a; animation-delay: 0.17s; }
+.splash.nt-night .splash-loader i:nth-child(3) { --goti: #ffc531; animation-delay: 0.34s; }
+
+@keyframes nt-goti-hop {
+  0%, 60%, 100% { transform: translateY(0) scale(1, 1); }
+  20% { transform: translateY(-12px) scale(0.95, 1.06); }
+  40% { transform: translateY(0) scale(1.08, 0.92); }
+}
+
+.splash.nt-night > .btn {
+  border-radius: 999px;
+}
+
+/* ---------- portrait windows: banner over the grid, the page scrolls ---------- */
+@media (orientation: portrait) {
+  .screen.home.nt-home > .home-top {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'brand corner'
+      'notice notice';
+  }
+
+  .nt-home .nt-brand-word {
+    display: none;
+  }
+
+  .nt-home .nt-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    width: 100%;
+    text-align: left;
+  }
+
+  .nt-feature {
+    min-height: 300px;
+  }
+
+  .nt-side {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .nt-home .hub-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nt-brand,
+  .nt-feature,
+  .nt-home .hub-tile,
+  .nt-home .home-dock > *,
+  .nt-home .account-btn,
+  .splash .nt-splash-logo,
+  .splash .nt-splash-word,
+  .splash.nt-night .splash-loader i {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* the wordmark is the intro's heading */
+.splash .splash-h1 {
+  margin: 0;
+  line-height: 0;
+}

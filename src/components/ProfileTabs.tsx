@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { cx } from '../lib/cards';
+import { Icon, type IconName } from '../art/icons';
 
 export type ProfileTab = 'stats' | 'social' | 'looks' | 'settings';
 
-const TABS: { id: ProfileTab; emoji: string; label: string }[] = [
-  { id: 'stats', emoji: '📊', label: 'Stats' },
-  { id: 'social', emoji: '👥', label: 'Social' },
-  { id: 'looks', emoji: '🎨', label: 'Looks' },
-  { id: 'settings', emoji: '⚙️', label: 'Settings' },
+const TABS: { id: ProfileTab; icon: IconName; label: string }[] = [
+  { id: 'stats', icon: 'league', label: 'Stats' },
+  { id: 'social', icon: 'friends', label: 'Social' },
+  { id: 'looks', icon: 'gem', label: 'Looks' },
+  { id: 'settings', icon: 'settings', label: 'Settings' },
 ];
 
 /** the last tab opened, remembered on this phone */
@@ -62,7 +63,9 @@ export function ProfileTabs({ tab, onPick, requests = 0 }: Props) {
           className={cx(tab === t.id && 'on')}
           onClick={() => onPick(t.id)}
         >
-          <span aria-hidden>{t.emoji}</span>
+          <span aria-hidden>
+            <Icon name={t.icon} size={20} />
+          </span>
           {t.label}
           {t.id === 'social' && requests > 0 && <i className="req-dot">{requests}</i>}
         </button>

@@ -1,0 +1,476 @@
+/* night lobby: Profile, Missions, Shop, League, Season pass, Spin and Friends (colours global, layout in landscape) */
+
+/* ---------- shared: glossy icon badges for page heads, sheet titles ---------- */
+.nt-head-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  color: #fff;
+  background: linear-gradient(145deg, var(--nt-violet), var(--nt-pink));
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -3px 0 rgba(60, 10, 90, 0.35), 0 6px 18px rgba(255, 79, 163, 0.35);
+}
+
+.nt-page-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.nt-page-hero > .mission-intro {
+  margin: 0;
+  max-width: 60ch;
+  text-align: left;
+}
+
+.nt-sheet-title,
+.spin-pop .reveal-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nt-sheet-title .nt-icon,
+.spin-pop .reveal-title .nt-icon {
+  flex: none;
+  color: var(--nt-cyan);
+}
+
+/* ---------- progress bars: one cyan to violet to pink gradient everywhere ---------- */
+:is(.page, .sheet, .modal) :is(.xp-bar, .meter-bar, .badge-progress, .mission-bar, .pass-bar, .pass-tier-bar) {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+:is(.page, .sheet, .modal) :is(.xp-bar, .meter-bar, .badge-progress, .mission-bar, .pass-bar, .pass-tier-bar) > i {
+  background: linear-gradient(90deg, var(--nt-cyan), var(--nt-violet) 55%, var(--nt-pink));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 10px rgba(255, 79, 163, 0.35);
+}
+
+:is(.page, .sheet) .mission.done .mission-bar > i {
+  background: linear-gradient(90deg, #4ee0a0, var(--nt-lime));
+}
+
+/* ---------- glass cards on night pages ---------- */
+.page :is(.mission, .league-crown, .league-row, .mission-note, .league-hint, .league-how li, .streak-days li, .past-list li) {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.page .mission {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.035));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.page .mission.done {
+  background: linear-gradient(180deg, rgba(157, 255, 90, 0.14), rgba(78, 224, 160, 0.06));
+}
+
+.page .mission-emoji {
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(139, 92, 255, 0.45), rgba(255, 79, 163, 0.3));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.page .mission-note {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.page .mission-note.secret {
+  background: linear-gradient(135deg, rgba(139, 92, 255, 0.22), rgba(255, 79, 163, 0.1));
+}
+
+/* the wallet, rank, streak and league head cards: glass with a soft colour wash */
+.page .wallet-card {
+  border: 1px solid rgba(255, 197, 49, 0.3);
+  background:
+    radial-gradient(90% 120% at 0% 0%, rgba(255, 197, 49, 0.22), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 8px 24px rgba(5, 2, 20, 0.35);
+}
+
+.page .wallet-amount {
+  color: var(--nt-gold);
+  text-shadow: 0 0 18px rgba(255, 197, 49, 0.35);
+}
+
+.page .panel.league-head {
+  border-color: rgba(255, 197, 49, 0.28);
+  background:
+    radial-gradient(90% 140% at 0% 0%, rgba(255, 197, 49, 0.2), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+}
+
+.page .league-head-emoji.nt-head-icon {
+  font-size: 0;
+  background: linear-gradient(145deg, #ffd75e, #ff8a3d);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), inset 0 -3px 0 rgba(150, 60, 0, 0.3), 0 6px 18px rgba(255, 171, 26, 0.35);
+}
+
+.page .league-row.me {
+  border-color: rgba(255, 79, 163, 0.45);
+  background: linear-gradient(90deg, rgba(139, 92, 255, 0.3), rgba(255, 79, 163, 0.16));
+}
+
+.page .league-crown.held {
+  background: linear-gradient(135deg, rgba(255, 197, 49, 0.16), rgba(255, 255, 255, 0.04));
+}
+
+.page .league-crown-emoji,
+.page .league-place {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* streak days: today glows pink to orange */
+.page .streak-days li {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.page .streak-days li.today {
+  background: linear-gradient(135deg, rgba(255, 79, 163, 0.5), rgba(255, 138, 61, 0.45));
+  box-shadow: 0 4px 14px rgba(255, 79, 163, 0.3);
+}
+
+/* the daily games ladder */
+.page .ladder .step.next {
+  border-color: var(--nt-gold);
+  box-shadow: 0 0 14px rgba(255, 197, 49, 0.35);
+}
+
+.page .ladder .step.done {
+  background: linear-gradient(135deg, rgba(157, 255, 90, 0.22), rgba(78, 224, 160, 0.1));
+}
+
+/* ---------- season pass ---------- */
+.page .pass-head-top {
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.page .pass-head-top .nt-head-icon {
+  background: linear-gradient(145deg, var(--nt-cyan), var(--nt-violet));
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.4), 0 6px 18px rgba(62, 230, 255, 0.3);
+}
+
+.page .pass-head-tier {
+  font-weight: 900;
+}
+
+.page .pass-tier {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.035));
+}
+
+.page .pass-tier.reached .pass-tier-num,
+.page .pass-tier.reached:not(:last-child)::after {
+  background: linear-gradient(135deg, var(--nt-gold-hi), var(--nt-gold-lo));
+}
+
+.page .pass-tier.ready {
+  border-color: rgba(255, 197, 49, 0.55);
+  background: linear-gradient(135deg, rgba(255, 197, 49, 0.18), rgba(255, 79, 163, 0.08));
+  box-shadow: 0 0 18px rgba(255, 197, 49, 0.2);
+}
+
+.page .pass-tier.current {
+  border-color: rgba(62, 230, 255, 0.5);
+}
+
+/* ---------- shop chrome: the coins hero and rent cards (the look previews keep their own looks) ---------- */
+.page .shop-hero {
+  border-color: rgba(255, 197, 49, 0.35);
+  background:
+    radial-gradient(100% 120% at 50% 0%, rgba(255, 197, 49, 0.26), transparent 65%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 24px rgba(5, 2, 20, 0.35);
+}
+
+.page .shop-hero-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.page .shop-hero-coins {
+  color: var(--nt-gold);
+  text-shadow: 0 0 20px rgba(255, 197, 49, 0.4);
+}
+
+.page .shop-card {
+  border-color: rgba(255, 255, 255, 0.13);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035) 55%, rgba(18, 11, 46, 0.4));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 8px 22px rgba(5, 2, 20, 0.35);
+}
+
+.page .shop-card.running {
+  border-color: rgba(157, 255, 90, 0.4);
+}
+
+.page .shop-len {
+  background: linear-gradient(135deg, rgba(139, 92, 255, 0.45), rgba(255, 79, 163, 0.35));
+  color: #fff;
+}
+
+.page .shop-section .section-title {
+  font-weight: 900;
+}
+
+.page .shop-chip {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.page .shop-toast {
+  background: rgba(29, 18, 80, 0.96);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* ---------- spin sheet ---------- */
+.spin-pop .reveal-title {
+  justify-content: center;
+}
+
+.spin-pop .spin-prize {
+  color: var(--nt-gold);
+  font-weight: 900;
+}
+
+/* ---------- profile hero: glow behind the level ring, gradient ring, coin and XP pills ---------- */
+.page .profile-hero {
+  position: relative;
+  isolation: isolate;
+}
+
+/* a soft violet to pink glow around the ring; the avatar itself is untouched */
+.page .level-ring {
+  background: conic-gradient(from -90deg, var(--nt-cyan), var(--nt-violet) calc(var(--p) * 180deg), var(--nt-pink) calc(var(--p) * 360deg), rgba(255, 255, 255, 0.12) 0);
+  box-shadow: 0 0 0 3px rgba(18, 11, 46, 0.6), 0 0 24px rgba(255, 79, 163, 0.45), 0 0 48px rgba(139, 92, 255, 0.35);
+}
+
+.page .level-ring .avatar {
+  box-shadow: 0 0 0 5px var(--nt-bg-1);
+}
+
+.page .level-ring .level-badge {
+  background: linear-gradient(180deg, var(--nt-gold-hi), var(--nt-gold-lo));
+  color: var(--nt-gold-ink);
+  box-shadow: 0 2px 0 #b86e00, 0 4px 10px rgba(255, 171, 26, 0.35);
+}
+
+.page .profile-name {
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 14px rgba(139, 92, 255, 0.45);
+}
+
+.page .level-title {
+  color: var(--nt-gold);
+}
+
+.pf-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 4px 0 2px;
+}
+
+.pf-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 2px 11px 2px 6px;
+  border: 1px solid var(--nt-border);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: var(--nt-text);
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.pf-pill.coins {
+  color: var(--nt-gold);
+}
+
+.pf-pill.xp {
+  color: var(--nt-cyan);
+}
+
+.page .profile-hero .xp-bar {
+  height: 10px;
+}
+
+/* ---------- profile tabs as pills ---------- */
+.page .profile-tabs {
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(18, 11, 46, 0.82);
+  box-shadow: inset 0 0 0 1px var(--nt-border);
+}
+
+.page .profile-tabs button {
+  border-radius: 999px;
+  color: var(--nt-dim);
+  font-weight: 800;
+  transition: transform 0.18s var(--nt-bounce), background-color 0.2s ease, color 0.2s ease;
+}
+
+.page .profile-tabs button > span {
+  display: inline-grid;
+  place-items: center;
+  line-height: 0;
+}
+
+.page .profile-tabs button.on {
+  color: #fff;
+  background: linear-gradient(135deg, var(--nt-violet), var(--nt-pink));
+  box-shadow: 0 4px 14px rgba(255, 79, 163, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* the active tab's icon goes white so it reads on the gradient */
+.page .profile-tabs button.on .nt-icon {
+  color: #fff;
+}
+
+/* ---------- stat cards: glass tiles ---------- */
+.page .record-numbers > div {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.page .record-numbers b {
+  font-weight: 900;
+}
+
+.page .win-ring {
+  background:
+    radial-gradient(closest-side, var(--nt-bg-2) 78%, transparent 80%),
+    conic-gradient(var(--nt-lime) 0deg, var(--nt-cyan) calc(var(--p) * 360deg), rgba(255, 255, 255, 0.12) 0);
+  box-shadow: 0 0 22px rgba(62, 230, 255, 0.22);
+}
+
+.page .section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 900;
+}
+
+.page .section-title .nt-icon {
+  flex: none;
+  color: var(--nt-cyan);
+}
+
+.page .badge-tile {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+}
+
+.page .badge-tile.done {
+  border-color: rgba(255, 197, 49, 0.45);
+  background: linear-gradient(135deg, rgba(255, 197, 49, 0.2), rgba(255, 79, 163, 0.08));
+}
+
+.page .game-card {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+}
+
+/* ---------- per-game cards: the game's art on top, numbers below ---------- */
+/* .page prefix: land-hub.css loads with the app chunk, after this file */
+.page .gs-grid {
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 10px;
+}
+
+.page .gs-card {
+  gap: 3px;
+  padding: 6px 6px 10px;
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 6px 16px rgba(5, 2, 20, 0.35);
+}
+
+.gs-card > :not(.gs-art) {
+  padding-inline: 6px;
+}
+
+.gs-art {
+  display: block;
+  aspect-ratio: 16 / 10;
+  margin-bottom: 4px;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 4px 10px rgba(5, 2, 20, 0.35);
+}
+
+.gs-art > svg {
+  display: block;
+}
+
+.gs-card > b {
+  font-weight: 900;
+}
+
+/* ---------- friends sheet: glass rows ---------- */
+.sheet .friend-list > li {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.sheet .lp2-fr-tip-icon {
+  background: linear-gradient(145deg, rgba(139, 92, 255, 0.5), rgba(255, 79, 163, 0.35));
+}
+
+@media (orientation: landscape) {
+  /* sideways rail: hero pills sit left with the rest of the hero */
+  .lp-profile .profile-hero > .pf-pills {
+    justify-content: flex-start;
+    margin: 2px 0 0;
+  }
+
+  .lp-profile .pf-pill {
+    min-height: 26px;
+    font-size: clamp(11.5px, calc(var(--u) * 1.9), 14px);
+  }
+
+  /* the rail's tab menu: stacked pills */
+  .lp-profile .profile-tabs {
+    border-radius: 20px;
+    background: rgba(18, 11, 46, 0.45);
+  }
+
+  .lp-profile .profile-tabs button.on {
+    box-shadow: 0 4px 14px rgba(255, 79, 163, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  .lp-missions .nt-page-hero {
+    justify-content: center;
+  }
+
+  /* short phones: a smaller head badge */
+  @media (max-height: 430px) {
+    .nt-head-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+    }
+
+    .nt-head-icon > .nt-icon {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page .profile-tabs button {
+    transition: none;
+  }
+}

@@ -1,4 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { GameArt } from '../art/GameArt';
+import { Icon } from '../art/icons';
 import { useBack } from '../lib/back';
 import { cx } from '../lib/cards';
 import { getVoiceGender, onVoicesChanged, setVoiceGender, speak, unlockSpeech, type VoiceGender } from '../lib/speech';
@@ -64,7 +66,7 @@ export function BotLevelPicker({ value, onPick }: { value: BotLevel; onPick: (le
   );
 }
 
-/** per-phone voice choice; Girl is the default */
+/** per-phone voice choice; Cute is the default */
 function VoicePicker({ sample }: { sample: string }) {
   const [gender, setGender] = useState<VoiceGender>(getVoiceGender);
   const [, refresh] = useState(0);
@@ -90,6 +92,9 @@ function VoicePicker({ sample }: { sample: string }) {
         <button className={cx(gender === 'male' && 'on')} aria-pressed={gender === 'male'} onClick={() => choose('male')}>
           Boy
         </button>
+        <button className={cx(gender === 'cute' && 'on')} aria-pressed={gender === 'cute'} onClick={() => choose('cute')}>
+          Cute 🎀
+        </button>
       </div>
       <button className="btn ghost small" onClick={test}>
         🔊 Test
@@ -104,6 +109,8 @@ interface OptionProps {
   title: string;
   desc: string;
   onClick: () => void;
+  /** a small picture on the left (the game picker's art, shown sideways only) */
+  art?: ReactNode;
 }
 
 /** a newer setting: title, a few words on what it does, and its switch on the right */
@@ -132,9 +139,14 @@ export function Choice<T>({ value, options, onPick }: { value: T; options: [T, s
   );
 }
 
-export function Option({ on, disabled, title, desc, onClick }: OptionProps) {
+export function Option({ on, disabled, title, desc, onClick, art }: OptionProps) {
   return (
-    <button type="button" className={cx('option', on && 'on')} disabled={disabled} aria-pressed={on} onClick={onClick}>
+    <button type="button" className={cx('option', on && 'on', !!art && 'has-art')} disabled={disabled} aria-pressed={on} onClick={onClick}>
+      {art && (
+        <span className="option-art" aria-hidden>
+          {art}
+        </span>
+      )}
       <b>{title}</b>
       <span>{desc}</span>
     </button>
@@ -288,6 +300,12 @@ export function SettingsBody({ view, isHost, coinsOn, tab, set, onLesson }: Body
                 on={view.config.game === g.kind}
                 disabled={view.players.length > Math.min(5, g.maxPlayers)}
                 title={`${g.emoji} ${g.name}${g.isNew ? ' 🆕' : ''}`}
+                art={
+                  <>
+                    <GameArt kind={g.kind} />
+                    {g.isNew && <i className="nt-badge new">New</i>}
+                  </>
+                }
                 desc={view.players.length > Math.min(5, g.maxPlayers) ? `Up to ${g.maxPlayers} players: move someone to watching first` : (GAME_DESC[g.kind] ?? g.tagline)}
                 // ranked kept on from before can't come back while bots sit at the table
                 onClick={() => set({ game: g.kind, ...(g.kind === 'bluff' && bots.length > 0 && view.config.ranked ? { ranked: false } : {}) })}
@@ -625,7 +643,7 @@ export function SettingsBody({ view, isHost, coinsOn, tab, set, onLesson }: Body
       </details>
       )}
 
-      {show('help') && <VoicePicker sample={plugged ? `${me?.name ?? 'Ravi'} rolled a six` : rang ? `${me?.name ?? 'Ravi'} played a red seven. Priya is skipped` : crazy7 ? `${me?.name ?? 'Ravi'} played seven of spades. Priya picks 2` : `${me?.name ?? 'Ravi'} played four Queens`} />}
+      {show('help') && <VoicePicker sample={plugged ? 'Please mera goti mat kaato' : rang ? `${me?.name ?? 'Ravi'} played a red seven. Priya is skipped` : crazy7 ? `${me?.name ?? 'Ravi'} played seven of spades. Priya picks 2` : `${me?.name ?? 'Ravi'} played four Queens`} />}
     </>
   );
 }
@@ -673,7 +691,10 @@ export function SettingsDrawer({ isHost, tabs, tab, onTab, banner, children, onC
     <div className="room-drawer-bd" onClick={onClose}>
       <aside className="room-drawer" role="dialog" aria-modal aria-label={isHost ? 'Settings' : 'Table settings'} onClick={(e) => e.stopPropagation()}>
         <header className="room-drawer-head">
-          <b>{isHost ? '⚙ Settings' : '📋 Table settings'}</b>
+          <b className="room-drawer-title">
+            <Icon name="settings" size={22} className="room-drawer-icon" />
+            {isHost ? 'Settings' : 'Table settings'}
+          </b>
           {!isHost && <span className="muted small">Only the host can change these</span>}
           <span className="grow" />
           <button type="button" className="room-drawer-close" aria-label="Close" onClick={onClose}>

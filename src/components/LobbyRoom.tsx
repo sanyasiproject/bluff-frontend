@@ -1,4 +1,6 @@
 import { useState, type ReactNode, useEffect } from 'react';
+import { GameArt } from '../art/GameArt';
+import { Icon } from '../art/icons';
 import { cx } from '../lib/cards';
 import { compactCoins } from '../lib/coins';
 import { inviteLink, inviteMessage, inviteText } from '../lib/invite';
@@ -54,8 +56,15 @@ interface Props {
 
 type Sheet = { kind: 'invite' } | { kind: 'seat'; slot: number | null } | { kind: 'watchers' };
 
-/** the game chip in the top bar, from the catalog */
-const gameChip = (v: RoomView) => `${gameInfo(v.config.game).emoji} ${gameInfo(v.config.game).name}`;
+/** the game chip in the top bar, from the catalog: a small drawing and the name */
+const gameChip = (v: RoomView) => (
+  <>
+    <span className="room-chip-art" aria-hidden>
+      <GameArt kind={v.config.game} />
+    </span>
+    {gameInfo(v.config.game).name}
+  </>
+);
 
 /** landscape lobby: the room is the game's 3D table, players seated round it, settings in a side drawer */
 export function LobbyRoom(props: Props) {
@@ -204,7 +213,7 @@ export function LobbyRoom(props: Props) {
   const canSit = !!seatSheet && seatSheet.slot !== null && !!me && !slots[seatSheet.slot];
 
   return (
-    <main className={cx('screen lobby lobby-room', ranked && 'ranked-room', teamGame && 'teams-room')}>
+    <main className={cx('screen lobby lobby-room nt-scope', ranked && 'ranked-room', teamGame && 'teams-room')}>
       <TableScene ranked={ranked}>
         {far.map((s, i) => (
           <OnTable key={s.player?.id ?? `open-${s.slot ?? i}`} x={spots[i].seat.x} y={spots[i].seat.y} stand className="seat-stand room-spot">
@@ -230,7 +239,7 @@ export function LobbyRoom(props: Props) {
               </button>
               {isHost && (
                 <button type="button" className="room-gear" onClick={() => setDrawer(true)}>
-                  ⚙ Settings
+                  <Icon name="settings" size={16} /> Settings
                 </button>
               )}
             </div>

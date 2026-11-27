@@ -2,11 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { inviteCode } from './lib/invite';
 import { pushPileReaction } from './lib/pileReactions';
 import { request, ServerError, socket } from './lib/socket';
-import { speak } from './lib/speech';
+import { speak, voiceShiftOf } from './lib/speech';
 import { clearSession, loadSavedSession, loadTabSession, saveName, saveSession, type Session } from './lib/storage';
 import {
-  QUICK_MESSAGES,
-  REACTIONS,
+  chatSetOf,
+  speaksQuickChat,
   THROWS,
   type Announcement,
   type ChatEvent,
@@ -174,25 +174,29 @@ export function useBluff() {
     };
     const onAnnounce = (n: Announcement) => {
       pushNote(n.kind, n.text);
-      if (n.kind !== 'room') speak(n.text);
+      // tables that speak quick lines (Ludo) have no announcer voice: moves are shown, not read out
+      if (n.kind !== 'room' && !speaksQuickChat(viewRef.current?.config.game)) speak(n.text);
     };
-    // chat is shown, never spoken, so the voice stays for game moves
+    // chat is shown; at tables that speak quick lines (Ludo) a quick line is also said aloud, typed lines never are
     const onChat = (c: ChatEvent) => {
       const v = viewRef.current;
       // muted by me: nothing from them reaches me
       if (mutedMember(v, c.from)) return;
       const who =
         c.from === v?.meId ? 'You' : ([...(v?.players ?? []), ...(v?.watchers ?? [])].find((p) => p.id === c.from)?.name ?? 'Someone');
-      const text = QUICK_MESSAGES[c.index] ?? '';
+      const set = chatSetOf(v?.config.game);
+      const text = set.messages[c.index] ?? '';
       // dropped on the last play: it pops onto the pile instead of floating up
       if (c.kind === 'reaction' && c.on === 'pile') {
-        pushPileReaction(REACTIONS[c.index] ?? '❓', who);
+        pushPileReaction(set.reactions[c.index] ?? '❓', who);
         return;
       }
       if (c.kind === 'reaction') {
-        setReactions((prev) => [...prev.slice(-12), { key: ++noteSeq, emoji: REACTIONS[c.index] ?? '❓', who, at: Date.now() }]);
+        setReactions((prev) => [...prev.slice(-12), { key: ++noteSeq, emoji: set.reactions[c.index] ?? '❓', who, at: Date.now() }]);
         return;
       }
+      // each player in their own pitch, so you can tell who said it
+      if (speaksQuickChat(v?.config.game)) speak(text, false, voiceShiftOf(c.from));
       // one place only: at the table, another player's message is a bubble on their seat; my own, a watcher's and the lobby's float up
       const onSeat = !!v && v.phase !== 'lobby' && c.from !== v.meId && v.players.some((p) => p.id === c.from);
       if (onSeat) setBubbles((prev) => [...prev.slice(-10), { key: ++noteSeq, from: c.from, text, at: Date.now() }]);

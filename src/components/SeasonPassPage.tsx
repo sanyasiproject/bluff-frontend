@@ -16,6 +16,7 @@ import {
 } from '../types';
 import type { Auth } from '../useAuth';
 import { FullPage } from './FullPage';
+import { Icon } from '../art/icons';
 
 const DAY_MS = 86_400_000;
 
@@ -184,7 +185,10 @@ export function SeasonPassPage({ auth, onClose, initial = null, onChange }: Prop
         <>
           <section className="panel pass-head">
             <div className="pass-head-top">
-              <div>
+              <span className="nt-head-icon" aria-hidden>
+                <Icon name="xp" size={30} />
+              </span>
+              <div className="grow">
                 <span className="label">Season {data.season}</span>
                 <b className="pass-head-tier">
                   Tier {tier}
