@@ -217,7 +217,7 @@ export function useBluff() {
       // each player in their own pitch, so you can tell who said it
       if (speaksQuickChat(v?.config.game)) {
         // Ludo lines carry their Hindi words and a mood; other tables' lines are read as written
-        const line = v?.config.game === 'ludo' ? LUDO_QUICK_VOICE[c.index] : undefined;
+        const line = set.messages === chatSetOf('ludo').messages ? LUDO_QUICK_VOICE[c.index] : undefined;
         if (line) speakLine(line, text, voiceShiftOf(c.from));
         else speak(text, false, voiceShiftOf(c.from));
       }
@@ -444,6 +444,8 @@ export function useBluff() {
       c7Call: () => run(() => request('c7:call')),
       /** registry games (Ludo, ...): one move for the game on the table */
       gameMove: async (move: PluggedMove) => (await run(() => request('game:move', move))) !== null,
+      /** a real-time game's move (a slice, a step): routine refusals (late, too quick) stay quiet */
+      gameMoveQuiet: (move: PluggedMove) => request('game:move', move).then(() => true, () => false),
       /** my Ludo looks for the room (gotis and dice everyone sees, the board when I'm host); quiet on older servers */
       ludoLook: (look: LudoLookChoice) => request('ludo:look', look).catch(() => undefined),
       shuffleTeams: () => run(() => request('room:teams')),

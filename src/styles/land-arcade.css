@@ -1,0 +1,202 @@
+/* ---------- Arcade tables (Fruit Slice Duel, Spike Attack): full-screen play area, seats down the edges, big countdown ---------- */
+
+.table.ar-table {
+  --seat-w: 88px;
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  isolation: isolate;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* seats stacked down the left and right edges */
+.ar-seats {
+  position: absolute;
+  top: calc(52px + var(--safe-t, 0px));
+  bottom: 8px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: clamp(8px, 4dvh, 22px);
+  pointer-events: none;
+}
+
+.ar-seats.ar-left { left: max(6px, env(safe-area-inset-left)); }
+.ar-seats.ar-right { right: max(6px, env(safe-area-inset-right)); }
+
+.ar-seats .ar-seat {
+  position: relative;
+  pointer-events: auto;
+}
+
+/* each player is a chunky card: avatar, name and the game's big number in their colour */
+.ar-table {
+  --card-w: clamp(128px, 17vw, 240px);
+  --ar-av: clamp(44px, 12dvh, 76px);
+}
+
+.ar-seat.lu-seat {
+  width: auto;
+}
+
+.ar-seat.lu-seat > .seat {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--ar-av) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  justify-items: start;
+  column-gap: 9px;
+  row-gap: 1px;
+  width: var(--card-w);
+  min-width: 0;
+  padding: 7px 10px 7px 7px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(36, 20, 78, 0.9), rgba(16, 9, 40, 0.9));
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--lu-col) 80%, transparent),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.3),
+    0 8px 18px rgba(5, 2, 20, 0.45);
+  text-align: left;
+  scale: 1;
+  transition: box-shadow 0.25s ease;
+}
+
+.ar-seat.lu-seat > .seat > .avatar {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  --av: var(--ar-av);
+  width: var(--ar-av);
+  height: var(--ar-av);
+}
+
+.ar-seat.lu-seat > .seat > .seat-name {
+  grid-column: 2;
+  grid-row: 1;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: none;
+  box-shadow: none;
+  color: var(--nt-text, #fff);
+  font-size: clamp(12px, 3.4dvh, 16px);
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ar-seat.lu-seat > .seat > .lu-seat-tags {
+  grid-column: 2;
+  grid-row: 2;
+  justify-content: flex-start;
+  margin: 0;
+}
+
+/* the game's key number, big */
+.ar-num {
+  color: #fff;
+  font-size: clamp(19px, 5.6dvh, 30px);
+  font-weight: 900;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+}
+
+.ar-num.neg {
+  color: #ff8a80;
+}
+
+/* leading (or my turn): the card glows in the player's colour */
+.ar-seat.lu-seat.turn > .seat {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--lu-col) 38%, #24144e), rgba(16, 9, 40, 0.92));
+  box-shadow:
+    inset 0 0 0 2.5px var(--lu-col),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.3),
+    0 0 22px 3px color-mix(in srgb, var(--lu-col) 60%, transparent),
+    0 8px 18px rgba(5, 2, 20, 0.45);
+}
+
+/* my card says so */
+.ar-seat.mine > .seat::after {
+  content: 'You';
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: var(--nt-gold, #ffc531);
+  color: var(--nt-gold-ink, #3a2400);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+}
+
+.ar-seat.ar-out {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+
+/* 3-2-1 and Go, big in the middle */
+.ar-count {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 6;
+  color: #fff;
+  font-size: clamp(84px, 36dvh, 220px);
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-text-stroke: clamp(4px, 1.6dvh, 9px) #2a0b4a;
+  paint-order: stroke fill;
+  text-shadow: 0 8px 0 rgba(20, 4, 40, 0.55), 0 0 40px var(--my-col, #ffd740);
+  pointer-events: none;
+  translate: -50% -50%;
+  animation: ar-count-pop 0.9s ease-out both;
+}
+
+.ar-count.go {
+  color: var(--nt-gold, #ffc531);
+  font-size: clamp(56px, 24dvh, 150px);
+}
+
+.ar-count.ar-end {
+  animation-duration: 1.4s;
+}
+
+@keyframes ar-count-pop {
+  0% { opacity: 0; transform: scale(2.2); }
+  20% { opacity: 1; transform: scale(0.92); }
+  32% { transform: scale(1.05); }
+  75% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.85); }
+}
+
+.ar-recap li::before {
+  content: none;
+}
+
+.ar-recap li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+@media (max-height: 420px) {
+  .table.ar-table { --seat-w: 76px; }
+  .ar-seats { top: 48px; gap: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ar-count { animation: none; }
+}

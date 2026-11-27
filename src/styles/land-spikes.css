@@ -1,0 +1,562 @@
+/* ---------- Spike Attack: a neon arena as big as the screen allows, red striped warnings, a spike wall, cute blobs and a big arrow pad ---------- */
+
+.table.sp-table {
+  --b: clamp(54px, 17dvh, 78px);
+  --lr: calc(var(--card-w) + 18px);
+  --rr: max(calc(3 * var(--b) + 26px), calc(var(--card-w) + 18px));
+  --as: min(calc(100dvh - 72px), calc(100vw - var(--lr) - var(--rr) - 12px));
+  --pad: calc(var(--as) * 0.075);
+  touch-action: none;
+}
+
+/* a night arena: neon haze round the board */
+.sp-room {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(40% 60% at 50% 55%, rgba(62, 230, 255, 0.22), transparent 70%),
+    radial-gradient(60% 70% at 50% 60%, rgba(255, 79, 163, 0.18), transparent 75%),
+    radial-gradient(130% 110% at 50% 60%, transparent 40%, rgba(5, 2, 20, 0.85) 100%),
+    repeating-linear-gradient(90deg, rgba(139, 92, 255, 0.07) 0 1px, transparent 1px 40px),
+    repeating-linear-gradient(0deg, rgba(139, 92, 255, 0.07) 0 1px, transparent 1px 40px),
+    linear-gradient(180deg, var(--nt-bg-2, #1d1250) 0%, var(--nt-bg-1, #120b2e) 100%);
+}
+
+/* the arena sits in the middle of the room between the seats and the pad */
+.sp-stage {
+  position: absolute;
+  left: calc(var(--lr) + (100vw - var(--lr) - var(--rr) - var(--as)) / 2);
+  top: calc(50px + (100dvh - 56px - var(--as)) / 2);
+  z-index: 2;
+  width: var(--as);
+  height: var(--as);
+}
+
+.sp-shake {
+  animation: sp-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes sp-shake {
+  20%, 80% { transform: translate(-5px, 2px); }
+  40%, 60% { transform: translate(8px, -4px); }
+  50% { transform: translate(-8px, 4px); }
+}
+
+.sp-arena {
+  --cell: calc((var(--as) - 2 * var(--pad)) / var(--n));
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
+  background: linear-gradient(160deg, #2b1c6e, #140c3a);
+  box-shadow:
+    inset 0 0 0 3px var(--nt-cyan, #3ee6ff),
+    inset 0 0 18px rgba(62, 230, 255, 0.45),
+    inset 0 0 0 7px rgba(5, 2, 20, 0.6),
+    0 0 0 3px rgba(255, 79, 163, 0.55),
+    0 0 36px rgba(62, 230, 255, 0.35),
+    0 22px 40px rgba(0, 0, 0, 0.7);
+}
+
+.sp-tiles {
+  position: absolute;
+  inset: var(--pad);
+  display: grid;
+  grid-template-columns: repeat(var(--n), 1fr);
+  gap: calc(var(--cell) * 0.06);
+}
+
+/* neon tiles with a raised lip */
+.sp-tile {
+  border-radius: calc(var(--cell) * 0.16);
+  background: linear-gradient(150deg, #5d8bff, #3a55e0 60%, #2b3cb8);
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -5px 0 rgba(10, 10, 60, 0.45),
+    0 0 10px rgba(93, 139, 255, 0.35);
+}
+
+.sp-tile.alt {
+  background: linear-gradient(150deg, #a57bff, #7a4bea 60%, #5a2bd1);
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -5px 0 rgba(30, 5, 70, 0.45),
+    0 0 10px rgba(165, 123, 255, 0.35);
+}
+
+/* someone was hit: a red flash over the arena */
+.sp-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  background: radial-gradient(closest-side, rgba(255, 40, 70, 0.15), rgba(255, 23, 68, 0.55));
+  pointer-events: none;
+  animation: sp-flash 0.4s ease-out both;
+}
+
+@keyframes sp-flash {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* a warning: the whole line flashes red with moving stripes, a launcher at the edge and a big count */
+.sp-warn,
+.sp-fly {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.sp-warn.row,
+.sp-fly.row {
+  left: var(--pad);
+  top: calc(var(--pad) + var(--line) * var(--cell));
+  width: calc(var(--n) * var(--cell));
+  height: var(--cell);
+}
+
+.sp-warn.col,
+.sp-fly.col {
+  left: calc(var(--pad) + var(--line) * var(--cell));
+  top: var(--pad);
+  width: var(--cell);
+  height: calc(var(--n) * var(--cell));
+}
+
+.sp-warn-tint {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: calc(var(--cell) * 0.18);
+  background: #ff1744;
+  box-shadow: 0 0 22px #ff1744, inset 0 0 0 2px rgba(255, 255, 255, 0.55);
+}
+
+.sp-warn-tint::after {
+  content: '';
+  position: absolute;
+  inset: 0 -60px 0 -60px;
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.3) 0 12px, transparent 12px 26px);
+  animation: sp-stripes 0.6s linear infinite;
+}
+
+@keyframes sp-stripes {
+  to { transform: translateX(36.77px); }
+}
+
+.sp-warn.last .sp-warn-tint {
+  animation: sp-blink 0.25s steps(2) infinite;
+}
+
+@keyframes sp-blink {
+  50% { opacity: 0.55; }
+}
+
+.sp-warn-fill {
+  position: absolute;
+  inset: 42% 0;
+  border-radius: 4px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff);
+  box-shadow: 0 0 10px #fff;
+  transform-origin: left center;
+}
+
+.sp-warn.col .sp-warn-fill { inset: 0 42%; background: linear-gradient(180deg, rgba(255, 255, 255, 0), #fff); transform-origin: center top; }
+.sp-warn.from-right .sp-warn-fill { transform-origin: right center; }
+.sp-warn.from-bottom .sp-warn-fill { transform-origin: center bottom; }
+
+/* the launcher: a steel box just outside the line, its spike and arrow pointing in */
+.sp-warn-edge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  filter: drop-shadow(0 0 6px #ff1744);
+}
+
+.sp-warn.row .sp-warn-edge { top: 6%; bottom: 6%; width: calc(var(--pad) * 1.4); }
+.sp-warn.col .sp-warn-edge { left: 6%; right: 6%; height: calc(var(--pad) * 1.4); }
+.sp-warn.from-left .sp-warn-edge { right: calc(100% - 4px); }
+.sp-warn.from-right .sp-warn-edge { left: calc(100% - 4px); rotate: 180deg; }
+.sp-warn.from-top .sp-warn-edge { bottom: calc(100% - 4px); flex-direction: column; }
+.sp-warn.from-bottom .sp-warn-edge { top: calc(100% - 4px); flex-direction: column-reverse; }
+
+.sp-launch {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #78909c, #37474f 55%, #263238);
+  box-shadow: inset 0 0 0 2px #ff5252, inset 0 2px 0 rgba(255, 255, 255, 0.4);
+}
+
+.sp-warn-edge .sp-spike {
+  position: relative;
+  width: calc(var(--pad) * 1.1);
+  animation: sp-edge 0.45s ease-in-out infinite alternate;
+}
+
+.sp-warn.from-top .sp-spike { rotate: 90deg; }
+.sp-warn.from-bottom .sp-spike { rotate: -90deg; }
+
+.sp-arrow {
+  position: absolute;
+  color: #fff;
+  font-size: calc(var(--pad) * 0.55);
+  font-style: normal;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+.sp-warn.row .sp-arrow { right: -2px; }
+.sp-warn.from-top .sp-arrow { bottom: -2px; rotate: 90deg; }
+.sp-warn.from-bottom .sp-arrow { top: -2px; rotate: -90deg; }
+
+@keyframes sp-edge {
+  to { transform: scale(1.2); }
+}
+
+.sp-warn-count {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  color: #fff;
+  font-size: calc(var(--cell) * 0.95);
+  font-weight: 900;
+  line-height: 1;
+  -webkit-text-stroke: calc(var(--cell) * 0.05) #7a0018;
+  paint-order: stroke fill;
+  text-shadow: 0 0 16px #ff1744, 0 4px 0 rgba(0, 0, 0, 0.5);
+  translate: -50% -50%;
+  animation: sp-count 1s ease-out both;
+}
+
+@keyframes sp-count {
+  0% { transform: scale(1.7); opacity: 0.2; }
+  25% { transform: scale(1); opacity: 1; }
+}
+
+/* the strike: a steel spike wall slides across the line, a white slash behind it */
+.sp-fly .sp-slash {
+  position: absolute;
+  inset: 40% calc(-1 * var(--pad));
+  border-radius: 99px;
+  background: linear-gradient(90deg, transparent, #fff 60%, #ffd6e0);
+  box-shadow: 0 0 18px #ff4081;
+  transform: scaleX(var(--p));
+  transform-origin: left center;
+}
+
+.sp-fly.col .sp-slash {
+  inset: calc(-1 * var(--pad)) 40%;
+  background: linear-gradient(180deg, transparent, #fff 60%, #ffd6e0);
+  transform: scaleY(var(--p));
+  transform-origin: center top;
+}
+
+.sp-fly.from-right,
+.sp-fly.from-bottom {
+  scale: -1 -1;
+}
+
+.sp-spikes {
+  position: absolute;
+  filter: drop-shadow(0 0 8px #ff4081);
+}
+
+.sp-fly.row .sp-spikes {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(var(--cell) * 0.8);
+  transform: translateX(calc(var(--cell) * -0.8 + var(--p) * (var(--n) + 1.6) * var(--cell)));
+}
+
+.sp-fly.col .sp-spikes {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: calc(var(--cell) * 0.8);
+  transform: translateY(calc(var(--cell) * -0.8 + var(--p) * (var(--n) + 1.6) * var(--cell)));
+}
+
+.sp-wall-base {
+  position: absolute;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #37474f, #cfd8dc 50%, #37474f);
+  box-shadow: inset 0 0 0 1.5px #263238;
+}
+
+.sp-fly.row .sp-wall-base { left: 0; top: 2%; bottom: 2%; width: 24%; }
+.sp-fly.col .sp-wall-base { top: 0; left: 2%; right: 2%; height: 24%; background: linear-gradient(180deg, #37474f, #cfd8dc 50%, #37474f); }
+
+.sp-wall-tips {
+  position: absolute;
+  display: flex;
+  justify-content: space-around;
+}
+
+.sp-fly.row .sp-wall-tips { left: 20%; right: 0; top: 2%; bottom: 2%; flex-direction: column; }
+.sp-fly.col .sp-wall-tips { top: 20%; bottom: 0; left: 2%; right: 2%; flex-direction: row; }
+
+.sp-wall-tips i {
+  display: block;
+  background: linear-gradient(180deg, #eceff1, #90a4ae 55%, #455a64);
+}
+
+.sp-fly.row .sp-wall-tips i { width: 100%; height: 31%; clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.sp-fly.col .sp-wall-tips i { height: 100%; width: 31%; clip-path: polygon(0 0, 100% 0, 50% 100%); background: linear-gradient(90deg, #eceff1, #90a4ae 55%, #455a64); }
+
+/* the players: cute round blobs in their colour, hearts over their heads and a name tag below; they hop square to square */
+.sp-player {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: var(--cell);
+  height: var(--cell);
+  transform: translate(calc(var(--pad) + var(--x) * var(--cell) + var(--k) * var(--cell) * 0.16), calc(var(--pad) + var(--y) * var(--cell) - var(--k) * var(--cell) * 0.1));
+  transition: transform 0.12s cubic-bezier(0.3, 1.4, 0.5, 1);
+  pointer-events: none;
+}
+
+.sp-body {
+  position: relative;
+  display: grid;
+  place-items: end center;
+  width: 84%;
+  height: 80%;
+  margin-top: 6%;
+  border-radius: 50% 50% 44% 44%;
+  background: radial-gradient(circle at 35% 26%, color-mix(in srgb, var(--c) 35%, #fff), var(--c) 52%, color-mix(in srgb, var(--c) 62%, #000));
+  box-shadow: 0 0 0 2.5px #fff, 0 6px 0 rgba(0, 0, 0, 0.35), 0 10px 16px rgba(0, 0, 0, 0.5);
+  animation: sp-bob 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes sp-bob {
+  to { transform: translateY(-5%) scaleY(1.04); }
+}
+
+.sp-eyes {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 20%;
+  height: 36%;
+  background:
+    radial-gradient(circle at 30% 58%, #111 0 14%, #fff 15% 34%, transparent 35%),
+    radial-gradient(circle at 70% 58%, #111 0 14%, #fff 15% 34%, transparent 35%);
+}
+
+.sp-mouth {
+  position: absolute;
+  left: 40%;
+  right: 40%;
+  top: 58%;
+  height: 10%;
+  border-radius: 0 0 99px 99px;
+  background: #3a0a1a;
+}
+
+/* the initial stays for screen readers only: the name tag says who it is */
+.sp-body b {
+  position: absolute;
+  opacity: 0;
+  margin-bottom: 4%;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: calc(var(--cell) * 0.16);
+  font-weight: 900;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.sp-player.me .sp-body {
+  box-shadow: 0 0 0 3px #fff, 0 0 18px 5px var(--c), 0 6px 0 rgba(0, 0, 0, 0.35);
+}
+
+.sp-player.me {
+  z-index: 4;
+}
+
+.sp-hp {
+  position: absolute;
+  top: -12%;
+  display: flex;
+  gap: 1px;
+  color: #ff2d55;
+  font-size: max(10px, calc(var(--cell) * 0.23));
+  line-height: 1;
+  text-shadow: 0 0 2px #fff, 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.sp-hp i {
+  font-style: normal;
+}
+
+.sp-hp i.lost {
+  color: rgba(20, 10, 40, 0.75);
+  text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.sp-tag {
+  position: absolute;
+  bottom: -14%;
+  max-width: 130%;
+  overflow: hidden;
+  padding: 0 5px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--c) 70%, #000);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.7);
+  color: #fff;
+  font-size: max(9px, calc(var(--cell) * 0.15));
+  font-weight: 900;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sp-player.me .sp-tag {
+  background: var(--nt-gold, #ffc531);
+  color: var(--nt-gold-ink, #3a2400);
+}
+
+.sp-player.hurt .sp-body {
+  animation: sp-hurt 0.16s steps(2) infinite;
+}
+
+@keyframes sp-hurt {
+  50% { opacity: 0.35; filter: brightness(2) saturate(0.3); }
+}
+
+.sp-player.ghost {
+  z-index: 1;
+}
+
+.sp-player.ghost .sp-body {
+  opacity: 0.45;
+  filter: grayscale(1) brightness(1.5);
+  border-radius: 50% 50% 20% 20%;
+  animation: sp-ghost 1.6s ease-in-out infinite alternate;
+}
+
+.sp-player.ghost .sp-tag {
+  opacity: 0.5;
+}
+
+@keyframes sp-ghost {
+  to { transform: translateY(-16%); }
+}
+
+.sp-minus {
+  position: absolute;
+  top: -30%;
+  font-size: calc(var(--cell) * 0.4);
+  font-style: normal;
+  animation: sp-minus 0.9s ease-out both;
+}
+
+@keyframes sp-minus {
+  from { transform: translateY(30%) scale(0.4); opacity: 0; }
+  20% { transform: translateY(0) scale(1.3); opacity: 1; }
+  to { transform: translateY(-90%) scale(1); opacity: 0; }
+}
+
+/* the seat cards: hearts as the big number */
+.ar-num.sp-hearts {
+  font-size: clamp(12px, 3.8dvh, 20px);
+  letter-spacing: -1px;
+}
+
+/* the right column sits above the arrow pad */
+.sp-seats.ar-left {
+  justify-content: space-evenly;
+}
+
+.sp-seats.sp-right {
+  bottom: calc(3 * var(--b) + 24px + env(safe-area-inset-bottom));
+  justify-content: flex-start;
+}
+
+/* the big arrow pad under the right thumb */
+.sp-pad {
+  position: absolute;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 5;
+  display: grid;
+  grid-template: repeat(3, var(--b)) / repeat(3, var(--b));
+  touch-action: none;
+}
+
+.sp-pad-btn {
+  display: grid;
+  place-items: center;
+  margin: 3px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #a57bff, #6a3cf0 60%, #5126c4);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), inset 0 0 0 2px rgba(255, 255, 255, 0.18), 0 5px 0 #2c1170, 0 8px 14px rgba(5, 2, 20, 0.5);
+  color: #fff;
+  font-size: calc(var(--b) * 0.4);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sp-pad-btn:active {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--my-col) 70%, #fff), var(--my-col));
+  transform: translateY(4px);
+  box-shadow: inset 0 0 0 2px #fff, 0 1px 0 #2c1170;
+}
+
+.sp-pad-btn.d-up { grid-area: 1 / 2; }
+.sp-pad-btn.d-left { grid-area: 2 / 1; }
+.sp-pad-btn.d-right { grid-area: 2 / 3; }
+.sp-pad-btn.d-down { grid-area: 3 / 2; }
+
+.sp-pad-hub {
+  grid-area: 2 / 2;
+  margin: 20%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--my-col) 40%, #fff), var(--my-col) 60%, color-mix(in srgb, var(--my-col) 60%, #000));
+  box-shadow: 0 0 14px var(--my-col), 0 0 0 3px rgba(255, 255, 255, 0.6);
+}
+
+.sp-pad.off {
+  opacity: 0.35;
+}
+
+/* an upright window: the arena on top, the pad under it */
+@media (orientation: portrait) {
+  .table.sp-table {
+    --as: min(94vw, calc(100dvh - 330px));
+  }
+
+  .sp-stage {
+    left: calc((100vw - var(--as)) / 2);
+    top: 64px;
+  }
+
+  .sp-pad {
+    right: calc(50% - 1.5 * var(--b));
+  }
+
+  .sp-seats.ar-left,
+  .sp-seats.sp-right {
+    top: auto;
+    bottom: calc(3 * var(--b) + 24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-body,
+  .sp-warn-edge .sp-spike,
+  .sp-warn-tint::after,
+  .sp-warn.last .sp-warn-tint,
+  .sp-flash,
+  .sp-shake { animation: none; }
+  .sp-player { transition: none; }
+}

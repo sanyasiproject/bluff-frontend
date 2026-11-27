@@ -26,10 +26,13 @@ import * as landTable from './hi.landTable';
 import * as landC7 from './hi.landC7';
 import * as landRang from './hi.landRang';
 import * as ludo from './hi.ludo';
+import * as games2 from './hi.games2';
+import * as fruitSpikes from './hi.fruitSpikes';
+import * as dartsDots from './hi.dartsDots';
 import type { Dict, Pattern } from './types';
 
 // later files win on the same exact line
-const dicts: Dict[] = [common.D, cards.D, titles.D, home.D, lobby1.D, lobby2.D, table.D, over.D, crazy7.D, rang.D, profile.D, social.D, missions.D, shop.D, league.D, extra.D, land.D, landHome.D, landLobby.D, landPages.D, landPages2.D, landOverlays.D, landTable.D, landC7.D, landRang.D, ludo.D, errors.D];
+const dicts: Dict[] = [common.D, fruitSpikes.D, dartsDots.D, cards.D, titles.D, home.D, lobby1.D, lobby2.D, table.D, over.D, crazy7.D, rang.D, profile.D, social.D, missions.D, shop.D, league.D, extra.D, land.D, landHome.D, landLobby.D, landPages.D, landPages2.D, landOverlays.D, landTable.D, landC7.D, landRang.D, games2.D, ludo.D, errors.D];
 
 export const HI_DICT = new Map<string, string>(dicts.flatMap((d) => Object.entries(d)));
 
@@ -40,6 +43,9 @@ export const HI_PATTERNS: Pattern[] = [
   // before Crazy 7's, whose card patterns would match Rang's lines first
   ...rang.P,
   ...ludo.P,
+  ...games2.P,
+  ...fruitSpikes.P,
+  ...dartsDots.P,
   ...crazy7.P,
   ...over.P,
   ...lobby2.P,

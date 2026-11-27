@@ -1,0 +1,259 @@
+/* ---------- Raja Mantri moments: announcer, Mantri spotlight, siren flash, flying points, the runner, cuffs, score board ---------- */
+
+.rm-table .rm-room {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+@keyframes rm-glow {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+
+@keyframes rm-bob {
+  from { translate: 0 0; }
+  to { translate: 0 -6px; }
+}
+
+/* the announcer: a big line across the table */
+.rm-announce {
+  position: absolute;
+  left: 50%;
+  top: 53%;
+  z-index: 6;
+  display: grid;
+  justify-items: center;
+  max-width: 88vw;
+  padding: 8px 26px;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.82);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25), 0 14px 30px rgba(0, 0, 0, 0.6);
+  color: #fff;
+  text-align: center;
+  translate: -50% -50%;
+  pointer-events: none;
+  animation: rm-pop 0.4s var(--spring) backwards;
+}
+
+.rm-announce b {
+  font-size: clamp(20px, 7dvh, 38px);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.rm-announce small {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.rm-announce.tone-gold {
+  background: linear-gradient(180deg, rgba(60, 40, 0, 0.94), rgba(30, 18, 0, 0.94));
+  box-shadow: 0 0 0 2px var(--gold), 0 0 30px rgba(255, 200, 60, 0.5);
+  color: var(--gold);
+}
+
+.rm-announce.tone-red {
+  background: linear-gradient(180deg, rgba(110, 10, 20, 0.95), rgba(50, 0, 10, 0.95));
+  box-shadow: 0 0 0 2px #ff6b6b, 0 0 30px rgba(255, 60, 60, 0.5);
+  color: #ffd0d0;
+}
+
+.rm-announce.tone-blue {
+  background: linear-gradient(180deg, rgba(10, 30, 90, 0.95), rgba(0, 10, 40, 0.95));
+  box-shadow: 0 0 0 2px #6aa8ff, 0 0 30px rgba(80, 140, 255, 0.5);
+  color: #d6e6ff;
+}
+
+@keyframes rm-pop {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* the Mantri in a spotlight */
+.rm-spot {
+  position: absolute;
+  z-index: 2;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(150, 200, 255, 0.55), rgba(90, 150, 255, 0.2) 60%, transparent);
+  translate: -50% -50%;
+  pointer-events: none;
+  animation: rm-glow 0.9s ease-in-out infinite alternate;
+}
+
+.rm-spot.at-b { left: 30%; top: 84%; }
+.rm-spot.at-l { left: 8%; top: 52%; }
+.rm-spot.at-t { left: 50%; top: 21%; }
+.rm-spot.at-r { left: 92%; top: 52%; }
+
+/* caught: the room flashes red and blue */
+.rm-siren {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.rm-siren::before,
+.rm-siren::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(80% 70% at 20% 30%, rgba(255, 30, 50, 0.45), transparent 70%);
+  animation: rm-siren 0.28s steps(1) 6 forwards;
+}
+
+.rm-siren::after {
+  background: radial-gradient(80% 70% at 80% 30%, rgba(40, 110, 255, 0.45), transparent 70%);
+  animation-delay: 0.14s;
+}
+
+@keyframes rm-siren {
+  0% { opacity: 1; }
+  50%,
+  100% { opacity: 0; }
+}
+
+/* things flying over the whole screen (made in fx.ts) */
+.rm-fly,
+.rm-runner,
+.rm-cuffs {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.rm-fly {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe27a, #e0a21a);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  color: #3a2400;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.rm-runner {
+  font-size: 44px;
+}
+
+.rm-cuffs {
+  font-size: 54px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6));
+}
+
+/* the running score, bottom right */
+.rm-board {
+  position: absolute;
+  right: max(10px, env(safe-area-inset-right));
+  bottom: max(8px, env(safe-area-inset-bottom));
+  z-index: 4;
+  min-width: 128px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+}
+
+.rm-board > b {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--gold);
+}
+
+.rm-board ol {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rm-board li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rm-board li.me {
+  color: var(--gold);
+}
+
+/* game over: the round history table */
+.rm-history .rm-hist-scroll {
+  max-height: 30dvh;
+  overflow: auto;
+}
+
+.rm-history table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rm-history th,
+.rm-history td {
+  padding: 2px 5px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.rm-history thead th {
+  position: sticky;
+  top: 0;
+  background: rgba(20, 10, 30, 0.95);
+}
+
+.rm-history tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.rm-history tfoot td {
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* big screens: bigger seats */
+@media (min-height: 640px) and (min-width: 900px) {
+  .table.rm-table {
+    --seat-w: 150px;
+  }
+
+  .rm-seat > .seat {
+    scale: 1.4;
+  }
+
+  .rm-board {
+    font-size: 14px;
+    min-width: 170px;
+  }
+}
+
+/* an upright window: seats closer to the middle */
+@media (orientation: portrait) {
+  .rm-seat.at-l, .rm-spot.at-l { left: 14%; top: 40%; }
+  .rm-seat.at-r, .rm-spot.at-r { left: 86%; top: 40%; }
+  .rm-chit-spot.at-l { left: 22%; top: 58%; }
+  .rm-chit-spot.at-r { left: 78%; top: 58%; }
+  .rm-wood { width: 86vw; height: 50dvh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rm-announce,
+  .rm-spot,
+  .rm-siren::before,
+  .rm-siren::after,
+  .rm-hint,
+  .rm-chit.live {
+    animation: none;
+  }
+
+  .rm-chit-in {
+    transition: none;
+  }
+}

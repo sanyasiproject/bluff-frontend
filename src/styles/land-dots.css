@@ -1,0 +1,179 @@
+/* ---------- Dots and Boxes: a flat notebook page, big dots, marker lines, boxes that pop shut in the owner's colour ---------- */
+
+.table.dt-table {
+  --pr-below: 50px;
+}
+
+/* a desk under a warm lamp */
+.dt-table .dt-room {
+  background:
+    radial-gradient(45% 60% at 50% 50%, rgba(255, 236, 200, 0.2), transparent 72%),
+    radial-gradient(120% 110% at 50% 55%, transparent 45%, rgba(0, 0, 0, 0.75) 100%),
+    linear-gradient(180deg, #2a1d52 0%, #140c30 100%);
+}
+
+/* the notebook page: ruled lines and a red margin (no holes: they read as game dots) */
+.dt-paper {
+  position: absolute;
+  inset: -2.5%;
+  border-radius: 14px;
+  background:
+    linear-gradient(90deg, transparent 4.6%, rgba(255, 90, 110, 0.55) 4.8%, transparent 5.1%),
+    repeating-linear-gradient(0deg, rgba(90, 140, 230, 0.2) 0 1.5px, transparent 1.5px 18px),
+    linear-gradient(160deg, #fffef8 0%, #f2efe2 100%);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.08),
+    0 4px 0 #dcd6c2,
+    0 8px 0 #c8c1aa,
+    0 24px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* my turn: the page glows in my colour */
+.pt-my-turn .dt-paper {
+  box-shadow:
+    0 0 0 3px var(--turn-col),
+    0 0 26px 6px color-mix(in srgb, var(--turn-col) 45%, transparent),
+    0 4px 0 #dcd6c2,
+    0 24px 40px rgba(0, 0, 0, 0.6);
+}
+
+.dt-area {
+  position: absolute;
+  inset: 3%;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dt-area.live {
+  cursor: pointer;
+}
+
+.dt-area > * {
+  position: absolute;
+}
+
+/* big round dots */
+.dt-dot {
+  z-index: 3;
+  width: max(12px, calc(100% / var(--dt-n) * 0.2));
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #6b6fa8, #191b36 70%);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.35), inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+  translate: -50% -50%;
+  pointer-events: none;
+}
+
+/* invisible tap areas, one diamond per free line (each as wide as a box) */
+.dt-hit {
+  z-index: 4;
+  width: calc(100% / var(--dt-n) * 0.7071);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  rotate: 45deg;
+}
+
+/* a marker stroke that grows from its first dot */
+.dt-line {
+  --t: max(6px, calc(100% / var(--dt-n) * 0.085));
+  z-index: 2;
+  border-radius: 99px;
+  background: var(--c);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, 0.45), 0 1px 2px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+.dt-line.d-h {
+  width: calc(100% / var(--dt-n));
+  height: var(--t);
+  translate: 0 -50%;
+  transform-origin: 0 50%;
+}
+
+.dt-line.d-v {
+  width: var(--t);
+  height: calc(100% / var(--dt-n));
+  translate: -50% 0;
+  transform-origin: 50% 0;
+}
+
+.dt-line.new.d-h {
+  animation: dt-draw-h 0.3s cubic-bezier(0.3, 0.7, 0.4, 1) backwards;
+}
+
+.dt-line.new.d-v {
+  animation: dt-draw-v 0.3s cubic-bezier(0.3, 0.7, 0.4, 1) backwards;
+}
+
+.dt-line.new {
+  box-shadow: 0 0 10px var(--c), inset 0 1.5px 0 rgba(255, 255, 255, 0.45);
+}
+
+@keyframes dt-draw-h {
+  from { transform: scaleX(0); }
+}
+
+@keyframes dt-draw-v {
+  from { transform: scaleY(0); }
+}
+
+/* the line I'm about to draw: dashed, pulsing, in my colour */
+.dt-ghost {
+  z-index: 2;
+  background: repeating-linear-gradient(90deg, var(--c) 0 8px, transparent 8px 13px);
+  box-shadow: 0 0 12px var(--c);
+  animation: dt-ghost 0.5s ease-in-out infinite alternate;
+}
+
+.dt-ghost.d-v {
+  background: repeating-linear-gradient(180deg, var(--c) 0 8px, transparent 8px 13px);
+}
+
+@keyframes dt-ghost {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
+
+/* a closed box: the owner's colour, glossy, with their icon */
+.dt-box {
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: calc(100% / var(--dt-n) * 0.9);
+  aspect-ratio: 1;
+  margin: calc(100% / var(--dt-n) * 0.05);
+  border-radius: 10%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 45%),
+    var(--c);
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+  font-size: calc(var(--bs) / var(--dt-n) * 0.46);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.dt-box.pop {
+  animation: dt-pop 0.5s var(--spring) 0.25s backwards;
+}
+
+@keyframes dt-pop {
+  from { transform: scale(0.2) rotate(-20deg); opacity: 0; }
+  60% { transform: scale(1.18); opacity: 1; }
+}
+
+/* the share of boxes, under the page */
+.dt-share {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: calc(103% + 6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dt-line.new.d-h,
+  .dt-line.new.d-v,
+  .dt-box.pop,
+  .dt-ghost {
+    animation: none;
+  }
+}

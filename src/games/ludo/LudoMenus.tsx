@@ -11,7 +11,7 @@ import type { Actions } from '../../useBluff';
 
 export type LudoPanel = 'menu' | 'people' | 'requests' | null;
 
-export function LudoMenus({ view, actions, panel, setPanel }: { view: RoomView; actions: Actions; panel: LudoPanel; setPanel: (p: LudoPanel) => void }) {
+export function LudoMenus({ view, actions, panel, setPanel, leaveWhat = 'Your gotis leave the board', kickWhat = 'Their gotis leave the board' }: { view: RoomView; actions: Actions; panel: LudoPanel; setPanel: (p: LudoPanel) => void; leaveWhat?: string; kickWhat?: string }) {
   const [sound, setSound] = useState(isSoundOn);
   const [confirm, setConfirm] = useState<'stop' | 'leave' | null>(null);
   const [kick, setKick] = useState<{ id: string; name: string } | null>(null);
@@ -66,7 +66,7 @@ export function LudoMenus({ view, actions, panel, setPanel }: { view: RoomView; 
         playing &&
         box(
           'Leave this game?',
-          `Your gotis leave the board and it counts as a loss${view.config.stake > 0 ? `; you still pay your 🪙 ${formatCoins(view.config.stake)} stake` : ''}.`,
+          `${leaveWhat} and it counts as a loss${view.config.stake > 0 ? `; you still pay your 🪙 ${formatCoins(view.config.stake)} stake` : ''}.`,
           'Stay',
           'Leave game',
           () => void actions.leave(),
@@ -75,7 +75,7 @@ export function LudoMenus({ view, actions, panel, setPanel }: { view: RoomView; 
       {kick &&
         box(
           `Remove ${kick.name}?`,
-          playing && view.players.some((p) => p.id === kick.id) ? "Their gotis leave the board and they won't pay or win coins." : 'They leave the room.',
+          playing && view.players.some((p) => p.id === kick.id) ? `${kickWhat} and they won't pay or win coins.` : 'They leave the room.',
           'Cancel',
           'Remove',
           () => void actions.kick(kick.id),

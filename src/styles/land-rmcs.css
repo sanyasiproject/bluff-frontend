@@ -1,0 +1,266 @@
+/* ---------- Raja Mantri Chor Sipahi: the room, the wooden table, seats round it and the paper chits ---------- */
+
+.table.rm-table {
+  --seat-w: 96px;
+  --chit-w: clamp(62px, 9vw, 104px);
+  --lu-col: #ffb300;
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.rm-room {
+  background:
+    radial-gradient(50% 45% at 50% 40%, rgba(255, 214, 150, 0.2), transparent 70%),
+    radial-gradient(120% 110% at 50% 60%, transparent 40%, rgba(0, 0, 0, 0.8) 100%),
+    linear-gradient(180deg, #2a1236 0%, #12061a 100%);
+}
+
+/* a round wooden table, seen from above at a slant */
+.rm-wood {
+  position: absolute;
+  left: 50%;
+  top: 57%;
+  z-index: 1;
+  width: min(60vw, 120dvh);
+  height: min(64dvh, 34vw);
+  border-radius: 50%;
+  background:
+    radial-gradient(60% 55% at 45% 35%, rgba(255, 230, 190, 0.3), transparent 70%),
+    repeating-radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.05) 0 3px, transparent 3px 9px),
+    linear-gradient(160deg, #a0632e 0%, #7a4519 50%, #4a2509 100%);
+  box-shadow:
+    inset 0 0 0 6px #5c3010,
+    inset 0 0 0 8px rgba(255, 210, 150, 0.25),
+    inset 0 -10px 24px rgba(0, 0, 0, 0.45),
+    0 24px 50px rgba(0, 0, 0, 0.7);
+  translate: -50% -50%;
+}
+
+.rm-wood-mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-size: clamp(26px, 8dvh, 54px);
+  opacity: 0.16;
+  filter: grayscale(1);
+  translate: -50% -50%;
+}
+
+/* seats round the table: me at the near side, a little left, so my chit has the middle */
+.rm-seat {
+  z-index: 3;
+  translate: -50% -50%;
+}
+
+.rm-seat.at-b { left: 30%; top: 84%; --lu-col: #ffb300; }
+.rm-seat.at-l { left: 8%; top: 52%; --lu-col: #26a69a; }
+.rm-seat.at-t { left: 50%; top: 21%; --lu-col: #8e24aa; }
+.rm-seat.at-r { left: 92%; top: 52%; --lu-col: #ef5350; }
+
+.rm-role-tag {
+  color: #ffe08a;
+}
+
+.rm-role-tag.r-mantri {
+  color: #9fd4ff;
+}
+
+/* chits sit on the table in front of each player */
+.rm-chit-spot {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  translate: -50% -50%;
+}
+
+.rm-chit-spot.at-b { left: 50%; top: 76%; }
+.rm-chit-spot.at-l { left: 26%; top: 54%; }
+.rm-chit-spot.at-t { left: 50%; top: 44%; }
+.rm-chit-spot.at-r { left: 74%; top: 54%; }
+
+.rm-hint {
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 800;
+  pointer-events: none;
+  animation: rm-glow 0.8s ease-in-out infinite alternate;
+}
+
+.rm-hint.chor {
+  color: #ff8a80;
+}
+
+/* the chit: a folded slip that flips over into the open role card */
+.rm-chit {
+  position: relative;
+  width: var(--chit-w);
+  height: calc(var(--chit-w) * 0.72);
+  padding: 0;
+  border: 0;
+  background: none;
+  perspective: 500px;
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+  transition: height 0.35s var(--spring);
+}
+
+.rm-chit.open {
+  height: calc(var(--chit-w) * 1.18);
+}
+
+.rm-chit.big {
+  --chit-w: clamp(78px, 12vw, 132px);
+}
+
+.rm-chit:disabled {
+  opacity: 1;
+}
+
+.rm-chit.live {
+  cursor: pointer;
+}
+
+.rm-chit-in {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.rm-chit.open .rm-chit-in {
+  transform: rotateY(180deg);
+}
+
+.rm-chit-back,
+.rm-chit-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  backface-visibility: hidden;
+}
+
+/* folded paper: off-white, a crease, a wax seal */
+.rm-chit-back {
+  background:
+    linear-gradient(180deg, transparent 47%, rgba(120, 90, 50, 0.25) 49%, rgba(255, 255, 255, 0.6) 51%, transparent 53%),
+    linear-gradient(135deg, #fffaf0 0%, #f1e6cf 60%, #e2d2b0 100%);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(120, 90, 50, 0.25);
+  rotate: -3deg;
+}
+
+.rm-chit-spot.at-l .rm-chit-back { rotate: 4deg; }
+.rm-chit-spot.at-r .rm-chit-back { rotate: -5deg; }
+.rm-chit-spot.at-t .rm-chit-back { rotate: 2deg; }
+
+.rm-fold {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 26%;
+  height: 34%;
+  background: linear-gradient(225deg, transparent 50%, #e8dbbd 50%, #d6c39c 100%);
+  border-bottom-left-radius: 4px;
+  box-shadow: -2px 2px 3px rgba(0, 0, 0, 0.15);
+}
+
+.rm-seal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 34%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff6b6b, #b71c1c 70%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 0 0 2px rgba(255, 255, 255, 0.15);
+  color: #ffe2e2;
+  font-size: calc(var(--chit-w) * 0.16);
+  font-style: normal;
+  font-weight: 900;
+  translate: -50% -50%;
+}
+
+/* the open card: big emoji, name and points */
+.rm-chit-face {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 1px;
+  background: linear-gradient(160deg, #fffdf6 0%, #f6ecd5 100%);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5), inset 0 0 0 2px var(--role-col, #c9a24a);
+  color: #2a1a0a;
+  transform: rotateY(180deg);
+}
+
+.rm-chit.r-raja { --role-col: #e0a21a; }
+.rm-chit.r-mantri { --role-col: #3d7bff; }
+.rm-chit.r-chor { --role-col: #444; }
+.rm-chit.r-sipahi { --role-col: #2e9d57; }
+
+.rm-role-emoji {
+  font-size: calc(var(--chit-w) * 0.42);
+  font-style: normal;
+  line-height: 1.1;
+}
+
+.rm-role-name {
+  font-size: calc(var(--chit-w) * 0.17);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.rm-role-pts {
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--role-col, #c9a24a);
+  color: #fff;
+  font-size: calc(var(--chit-w) * 0.12);
+  font-weight: 800;
+}
+
+/* opened by its owner, still secret: lifted a touch with a small tick */
+.rm-chit.peeked .rm-chit-in {
+  transform: translateY(-4px) rotateX(14deg);
+}
+
+.rm-peek-tick {
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #2e9d57;
+  color: #fff;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+/* my closed chit and the Mantri's suspects glow and bob */
+.rm-chit.live .rm-chit-back {
+  box-shadow: 0 0 0 3px #ffe066, 0 0 18px 6px rgba(255, 224, 102, 0.7), 0 6px 12px rgba(0, 0, 0, 0.45);
+}
+
+.rm-chit.live {
+  animation: rm-bob 0.75s ease-in-out infinite alternate;
+}
+
+.rm-chit-spot.suspect .rm-chit-back {
+  box-shadow: 0 0 0 3px #ff8a80, 0 0 18px 6px rgba(255, 90, 90, 0.7), 0 6px 12px rgba(0, 0, 0, 0.45);
+}

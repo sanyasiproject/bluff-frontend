@@ -39,6 +39,41 @@ export function GameStats({ stats }: { stats: LifetimeStats }) {
               {wins !== null && ` · ${wins} won`}
               {wins !== null && played > 0 && ` · ${percent(wins, played)}%`}
             </span>
+            {g.kind === 'snakes' && t && (
+              <span className="gs-extra">
+                🪜 {t.ladders ?? 0} ladders · 🐍 {t.snakes ?? 0} snakes · 🦷 {t.bites ?? 0} bites
+              </span>
+            )}
+            {g.kind === 'rmcs' && t && (
+              <span className="gs-extra">
+                🧐 {t.caught ?? 0} caught · 🦹 {t.escaped ?? 0} escaped · 👑 {t.raja ?? 0} Raja
+              </span>
+            )}
+            {g.kind === 'darts' && t && (
+              <span className="gs-extra">
+                🎯 {t.t180 ?? 0} × 180 · 🐂 {t.bulls ?? 0} bulls · ✅ {t.checkouts ?? 0} checkouts
+              </span>
+            )}
+            {g.kind === 'dots' && t && (
+              <span className="gs-extra">
+                ⬛ {t.boxes ?? 0} boxes closed
+              </span>
+            )}
+            {g.kind === 'colorwar' && t && (
+              <span className="gs-extra">
+                🎨 {t.captures ?? 0} cells taken · 💥 {t.bursts ?? 0} bursts
+              </span>
+            )}
+            {g.kind === 'fruit' && t && (
+              <span className="gs-extra">
+                🍉 {t.sliced ?? 0} sliced · 🔥 {t.bestCombo ?? 0} best combo · 💣 {t.bombs ?? 0} bombs
+              </span>
+            )}
+            {g.kind === 'spikes' && t && (
+              <span className="gs-extra">
+                🏃 {t.dodges ?? 0} dodges · 💥 {t.hits ?? 0} hits
+              </span>
+            )}
             {g.kind === 'ludo' && t && (
               <span className="gs-extra">
                 ⚔️ {t.kills ?? 0} kills · 🏠 {t.home ?? 0} home · 🎲 {t.sixes ?? 0} sixes

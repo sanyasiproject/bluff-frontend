@@ -19,7 +19,7 @@ autoFullscreen();
 // Hindi, when chosen, is applied over the rendered page
 startI18n();
 
-// dev only: ?art=1 / ?ludoPreview / ?homePreview / ?lobbyPreview show screens on fake data (no server); dropped from production builds
+// dev only: ?art=1 / ?ludoPreview / ?snakesPreview / ?rmcsPreview / ?homePreview / ?lobbyPreview show screens on fake data (no server); dropped from production builds
 const q = new URLSearchParams(location.search);
 const LudoPreview = !import.meta.env.DEV
   ? null
@@ -27,6 +27,20 @@ const LudoPreview = !import.meta.env.DEV
     ? lazy(() => import('./art/ArtGallery').then((m) => ({ default: m.ArtGallery })))
     : q.has('ludoPreview')
     ? lazy(() => import('./games/ludo/preview').then((m) => ({ default: m.LudoPreview })))
+    : q.has('snakesPreview')
+    ? lazy(() => import('./games/snakes/preview').then((m) => ({ default: m.SnakesPreview })))
+    : q.has('dartsPreview')
+    ? lazy(() => import('./games/darts/preview').then((m) => ({ default: m.DartsPreview })))
+    : q.has('colorwarPreview')
+    ? lazy(() => import('./games/colorwar/preview').then((m) => ({ default: m.ColorWarPreview })))
+    : q.has('dotsPreview')
+    ? lazy(() => import('./games/dots/preview').then((m) => ({ default: m.DotsPreview })))
+    : q.has('fruitPreview')
+    ? lazy(() => import('./games/fruit/preview').then((m) => ({ default: m.FruitPreview })))
+    : q.has('spikesPreview')
+    ? lazy(() => import('./games/spikes/preview').then((m) => ({ default: m.SpikesPreview })))
+    : q.has('rmcsPreview')
+    ? lazy(() => import('./games/rmcs/preview').then((m) => ({ default: m.RmcsPreview })))
     : q.has('homePreview')
       ? lazy(() => import('./games/devPreviews').then((m) => ({ default: m.HomePreview })))
       : q.has('lobbyPreview')

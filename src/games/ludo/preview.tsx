@@ -160,7 +160,7 @@ export function LudoPreview() {
           if (key === 'gameMove')
             return async (m: PluggedMove) => {
               if (m.move.type === 'roll') window.setTimeout(() => roll(), 350);
-              else move(m.move.token);
+              else if (m.kind === 'ludo' && m.move.type === 'move') move(m.move.token);
               return true;
             };
           if (key === 'toast') return (text: string) => console.info('toast', text);

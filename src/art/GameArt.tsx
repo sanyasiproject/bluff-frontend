@@ -2,10 +2,17 @@
 import { GAME_CATALOG, type GameKind } from '../types';
 import { useArtIds } from './scenes/common';
 import { BluffScene } from './scenes/BluffScene';
+import { ColorWarScene } from './scenes/ColorWarScene';
 import { Crazy7Scene } from './scenes/Crazy7Scene';
+import { DartsScene } from './scenes/DartsScene';
+import { DotsScene } from './scenes/DotsScene';
 import { FallbackScene } from './scenes/FallbackScene';
+import { FruitScene } from './scenes/FruitScene';
 import { LudoScene } from './scenes/LudoScene';
 import { RangScene } from './scenes/RangScene';
+import { RmcsScene } from './scenes/RmcsScene';
+import { SnakesScene } from './scenes/SnakesScene';
+import { SpikesScene } from './scenes/SpikesScene';
 
 export interface GameArtProps {
   /** a GameKind, or any future kind (drawn as its emoji) */
@@ -21,7 +28,8 @@ export interface GameArtProps {
   title?: string;
 }
 
-const DRAWN = { ludo: LudoScene, bluff: BluffScene, crazy7: Crazy7Scene, rang: RangScene } as const;
+const DRAWN = { ludo: LudoScene, bluff: BluffScene, crazy7: Crazy7Scene, rang: RangScene, snakes: SnakesScene, rmcs: RmcsScene,
+  darts: DartsScene, dots: DotsScene, colorwar: ColorWarScene, fruit: FruitScene, spikes: SpikesScene } as const;
 
 export function GameArt({ kind, className, colors, emoji, fit = 'slice', title }: GameArtProps) {
   const id = useArtIds();

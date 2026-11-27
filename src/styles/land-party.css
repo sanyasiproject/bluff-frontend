@@ -1,0 +1,119 @@
+/* ---------- Party tables (Darts, Dots and Boxes, Colour Wars): the stage, seats, banners and the podium ---------- */
+
+.table.pt-table {
+  --lu-tilt: 16deg;
+  --bs: min(calc(100dvh - 84px), 48vw);
+}
+
+/* a dark room with a warm lamp, tinted by whoever's turn it is */
+.pt-table .lu-room {
+  background:
+    radial-gradient(50% 45% at 50% 32%, color-mix(in srgb, var(--turn-col, #fff) 16%, transparent), transparent 70%),
+    radial-gradient(55% 50% at 50% 30%, rgba(255, 228, 170, 0.14), transparent 70%),
+    radial-gradient(120% 110% at 50% 60%, transparent 40%, rgba(0, 0, 0, 0.82) 100%),
+    linear-gradient(180deg, #1b1530 0%, #07050d 100%);
+}
+
+.pt-stage {
+  translate: -50% -46%;
+}
+
+.pt-plane {
+  transform-origin: 50% 70%;
+}
+
+.pt-seat .pt-count {
+  min-width: 34px;
+  color: #fff;
+  font-size: 12px;
+  box-shadow: inset 0 0 0 1.5px var(--lu-col);
+}
+
+/* a little square in the player's colour, before a count */
+.pt-sw {
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  margin-right: 2px;
+  border-radius: 3px;
+  background: var(--lu-col);
+  vertical-align: -0.05em;
+}
+
+/* out of the game: faded, a little smaller */
+.pt-seat.pt-out {
+  opacity: 0.5;
+  filter: grayscale(0.8);
+}
+
+/* the announcer over the board */
+.pt-banner {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: 7;
+  display: grid;
+  justify-items: center;
+  max-width: 88vw;
+  padding: 8px 26px;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.82);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25), 0 14px 30px rgba(0, 0, 0, 0.6);
+  color: #fff;
+  text-align: center;
+  translate: -50% -50%;
+  pointer-events: none;
+  animation:
+    pt-pop 0.4s var(--spring) backwards,
+    lu-fade 0.35s ease-in 1.4s forwards;
+}
+
+.pt-banner b {
+  font-size: clamp(20px, 7dvh, 38px);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.pt-banner small {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.pt-banner.tone-gold {
+  background: linear-gradient(180deg, rgba(60, 40, 0, 0.94), rgba(30, 18, 0, 0.94));
+  box-shadow: 0 0 0 2px var(--gold), 0 0 30px rgba(255, 200, 60, 0.5);
+  color: var(--gold);
+}
+
+.pt-banner.tone-red {
+  background: linear-gradient(180deg, rgba(110, 10, 20, 0.95), rgba(50, 0, 10, 0.95));
+  box-shadow: 0 0 0 2px #ff6b6b, 0 0 30px rgba(255, 60, 60, 0.5);
+  color: #ffd0d0;
+}
+
+.pt-banner.tone-good {
+  background: linear-gradient(180deg, rgba(10, 60, 30, 0.95), rgba(0, 30, 12, 0.95));
+  box-shadow: 0 0 0 2px #69f0ae, 0 0 30px rgba(80, 240, 160, 0.45);
+  color: #c8ffe0;
+}
+
+@keyframes pt-pop {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal.pt-over .lu-step small {
+  white-space: nowrap;
+}
+
+@media (orientation: portrait) {
+  .table.pt-table {
+    --bs: min(92vw, calc(100dvh - 300px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pt-banner {
+    animation: none;
+  }
+}

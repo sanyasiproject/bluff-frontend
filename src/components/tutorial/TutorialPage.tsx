@@ -4,12 +4,13 @@ import { cx } from '../../lib/cards';
 import { confettiAt } from '../../lib/motion';
 import { gameName } from '../../lib/tutorial';
 import '../../styles/tutorial.css';
-import { RANKS, type GameKind, type Rank } from '../../types';
+import { isPlugged, RANKS, type GameKind, type Rank } from '../../types';
 import { BackButton } from '../BackButton';
 import { Hand } from '../Hand';
 import { BluffBoard, Crazy7Board } from './Boards';
 import { LESSONS, START, type ButtonId, type TableState } from './lessons';
 import { LudoLesson } from '../../games/ludo/LudoLesson';
+import { RulesSheet } from '../../games/RulesSheet';
 
 interface Props {
   game: GameKind;
@@ -21,6 +22,7 @@ interface Props {
 
 /** the practice lesson for a game: Ludo has its own board lesson, the card games a scripted game */
 export function TutorialPage(props: Props) {
+  if (isPlugged(props.game) && props.game !== 'ludo') return <RulesSheet game={props.game} onDone={props.onDone} onClose={props.onClose} />;
   return props.game === 'ludo' ? <LudoLesson onDone={props.onDone} onClose={props.onClose} /> : <CardTutorialPage {...props} />;
 }
 

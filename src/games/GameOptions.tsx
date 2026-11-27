@@ -17,7 +17,7 @@ export function pluggedSummary(view: RoomView): string[] {
     if (!visible(c, o)) continue;
     const v = gameOpt<Val>(c, o.id);
     const choice = o.choices.find((ch) => ch.value === v);
-    if (choice) out.push(o.id === 'mode' ? `🎮 ${choice.label}` : `⏱ ${choice.label}`);
+    if (choice) out.push(o.id === 'mode' ? `🎮 ${choice.label}` : o.id === 'time' ? `⏱ ${choice.label}` : o.id === 'rounds' ? `🔁 ${choice.label}` : /^(On|Off)$/.test(choice.label) ? `${o.label} ${choice.label.toLowerCase()}` : choice.label);
   }
   if (c.teams && info.teams) out.push('👥 2 vs 2');
   if (view.players.some((p) => p.bot)) out.push('🤖 Bots');

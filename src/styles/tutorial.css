@@ -191,3 +191,17 @@
     translate: -50% -6px;
   }
 }
+
+/* rules sheet (games without a practice lesson): left-aligned list that scrolls on short screens */
+.rules-sheet-body {
+  max-height: 52dvh;
+  overflow: auto;
+  text-align: left;
+}
+
+.rules-sheet-body ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+}

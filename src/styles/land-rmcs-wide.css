@@ -1,0 +1,277 @@
+/* ---------- Raja Mantri, wide layout: a festive wooden table with a rangoli, big chits in a 2x2 by each player's card ---------- */
+
+.table.rm-wide {
+  --wood-l: calc(var(--pr-safe) + var(--rail-w) + 12px);
+  --wood-top: calc(var(--pr-top) + 4px);
+  --ww: calc(100vw - 2 * var(--wood-l));
+  --wh: calc(100dvh - var(--wood-top) - max(8px, env(safe-area-inset-bottom)));
+  --rm-chit: min(calc(var(--wh) * 0.3), calc(var(--ww) * 0.26));
+}
+
+/* a warm festive room: plum walls and a string of lights */
+.rm-wide .rm-room {
+  background:
+    radial-gradient(circle at 50% 50%, #ffd36b 0 2px, transparent 3px) 0 10px / 46px 30px repeat-x,
+    radial-gradient(55% 60% at 50% 55%, rgba(255, 190, 110, 0.22), transparent 72%),
+    radial-gradient(120% 110% at 50% 55%, transparent 45%, rgba(0, 0, 0, 0.75) 100%),
+    linear-gradient(180deg, #3a1230 0%, #1c0818 100%);
+}
+
+/* the table: warm wood planks with a gold inlay */
+.rm-wide .rm-wood {
+  left: var(--wood-l);
+  right: var(--wood-l);
+  top: var(--wood-top);
+  bottom: max(8px, env(safe-area-inset-bottom));
+  width: auto;
+  height: auto;
+  overflow: hidden;
+  border-radius: 28px;
+  background:
+    radial-gradient(60% 55% at 50% 40%, rgba(255, 230, 190, 0.28), transparent 70%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 58px),
+    linear-gradient(160deg, #b06f35 0%, #8a4f1f 50%, #5c3010 100%);
+  box-shadow:
+    inset 0 0 0 5px #5c3010,
+    inset 0 0 0 8px #e0a64a,
+    inset 0 0 0 10px #5c3010,
+    inset 0 -12px 26px rgba(0, 0, 0, 0.4),
+    0 20px 40px rgba(0, 0, 0, 0.6);
+  translate: none;
+}
+
+/* a rangoli in the middle: petals, rings and dots in festival colours */
+.rm-rangoli {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(calc(var(--wh) * 0.78), calc(var(--ww) * 0.5));
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #ffd54a 0 7%, #ff4f7b 7% 12%, transparent 12%),
+    repeating-conic-gradient(from 0deg, #ff8a3d 0 15deg, #ffd54a 15deg 30deg),
+    #000;
+  -webkit-mask: radial-gradient(circle, #000 0 30%, transparent 30% 34%, #000 34% 38%, transparent 38%);
+  mask: radial-gradient(circle, #000 0 30%, transparent 30% 34%, #000 34% 38%, transparent 38%);
+  opacity: 0.5;
+  translate: -50% -50%;
+}
+
+.rm-rangoli::before,
+.rm-rangoli::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.rm-rangoli::before {
+  background: repeating-conic-gradient(from 7deg, #2ec4b6 0 10deg, transparent 10deg 30deg);
+}
+
+.rm-rangoli::after {
+  inset: 18%;
+  background: repeating-conic-gradient(from 0deg, #c64dff 0 12deg, #ff4f7b 12deg 24deg);
+}
+
+/* the middle plaque: the round, or the Mantri's job */
+.rm-plaque {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--wood-top) + var(--wh) / 2);
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  max-width: calc(var(--ww) * 0.3);
+  padding: 6px 12px;
+  border-radius: 16px;
+  background: rgba(40, 12, 20, 0.82);
+  box-shadow: 0 0 0 2px #e0a64a, 0 8px 18px rgba(0, 0, 0, 0.5);
+  color: #ffe8b0;
+  text-align: center;
+  translate: -50% -50%;
+  pointer-events: none;
+}
+
+.rm-plaque b {
+  font-size: clamp(16px, 6dvh, 30px);
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.rm-plaque small {
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.rm-plaque.hot {
+  background: linear-gradient(180deg, #7a0e1e, #3a0610);
+  box-shadow: 0 0 0 3px #ff8a80, 0 0 30px 6px rgba(255, 80, 80, 0.6);
+  color: #fff;
+  animation: rm-throb 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes rm-throb {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
+
+/* chits in a 2x2, each by its owner's card */
+.rm-wide .rm-chit-spot {
+  z-index: 4;
+  gap: 3px;
+  transition: opacity 0.25s;
+}
+
+.rm-wide .rm-chit-spot.at-l { left: calc(var(--wood-l) + var(--ww) * 0.22); top: calc(var(--wood-top) + var(--wh) * 0.27); }
+.rm-wide .rm-chit-spot.at-b { left: calc(var(--wood-l) + var(--ww) * 0.22); top: calc(var(--wood-top) + var(--wh) * 0.74); }
+.rm-wide .rm-chit-spot.at-t { left: calc(var(--wood-l) + var(--ww) * 0.78); top: calc(var(--wood-top) + var(--wh) * 0.27); }
+.rm-wide .rm-chit-spot.at-r { left: calc(var(--wood-l) + var(--ww) * 0.78); top: calc(var(--wood-top) + var(--wh) * 0.74); }
+
+.rm-wide .rm-chit,
+.rm-wide .rm-chit.big {
+  --chit-w: var(--rm-chit);
+}
+
+/* whose chit: a pill in their colour */
+.rm-owner {
+  max-width: calc(var(--rm-chit) * 1.2);
+  overflow: hidden;
+  padding: 1px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 -2px 0 var(--pc);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rm-chit-spot.mine .rm-owner {
+  background: var(--pc);
+  color: #2a1600;
+}
+
+/* guessing: only the two suspects stay bright */
+.rm-wide .rm-chit-spot.dim {
+  opacity: 0.4;
+}
+
+.rm-wide .rm-chit-spot.suspect .rm-chit {
+  scale: 1.08;
+}
+
+/* a suspect's name stays readable above its glowing chit */
+.rm-wide .rm-chit-spot.suspect .rm-owner {
+  position: relative;
+  z-index: 3;
+}
+
+.rm-wide .rm-hint {
+  font-size: 12px;
+}
+
+/* player cards: festive maroon with a gold edge */
+.pr-seat.rm-card {
+  background:
+    radial-gradient(90% 70% at 15% 0%, color-mix(in srgb, var(--pc) 35%, transparent), transparent 70%),
+    linear-gradient(160deg, #5a1a32 0%, #2a0a18 100%);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 200, 110, 0.55),
+    inset 0 -3px 0 var(--pc),
+    0 10px 22px rgba(0, 0, 0, 0.55);
+}
+
+.pr-seat.rm-card.turn {
+  box-shadow:
+    inset 0 0 0 2.5px var(--pc),
+    0 0 0 3px color-mix(in srgb, var(--pc) 35%, transparent),
+    0 0 28px 6px color-mix(in srgb, var(--pc) 55%, transparent);
+}
+
+.rm-card .rm-role-tag {
+  display: inline-block;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffe08a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.rm-card .rm-role-tag.r-mantri {
+  color: #9fd4ff;
+}
+
+/* the announcer: a strip at the top, or big in the middle for results */
+.rm-wide .rm-announce.top {
+  top: max(4px, env(safe-area-inset-top));
+  z-index: 30;
+  padding: 3px 20px 4px;
+  border-radius: 999px;
+  translate: -50% 0;
+}
+
+.rm-wide .rm-announce.top b {
+  font-size: clamp(16px, 5.4dvh, 28px);
+}
+
+.rm-wide .rm-announce.top small {
+  font-size: 11px;
+}
+
+.rm-wide .rm-announce.mid {
+  top: calc(var(--wood-top) + var(--wh) / 2);
+  z-index: 8;
+  padding: 10px 30px;
+}
+
+.rm-wide .rm-announce.mid b {
+  font-size: clamp(28px, 11dvh, 60px);
+}
+
+.rm-wide .rm-announce.mid small {
+  font-size: clamp(13px, 4dvh, 20px);
+}
+
+/* an upright window: the table between the rows of cards */
+@media (orientation: portrait) {
+  .table.rm-wide {
+    --wood-l: 8px;
+    --wood-top: 150px;
+    --wh: calc(100dvh - 300px);
+  }
+
+  .rm-wide .rm-wood {
+    bottom: 150px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rm-plaque.hot {
+    animation: none;
+  }
+}
+
+/* scores run to four digits: a little smaller than other games */
+.rm-card .pr-num {
+  font-size: min(clamp(20px, 7.4dvh, 40px), 17cqi);
+}
+
+.rm-wide .rm-owner {
+  position: relative;
+  z-index: 2;
+}
+
+@media (min-height: 640px) and (min-width: 900px) {
+  .rm-card .pr-num {
+    font-size: min(46px, 17cqi);
+  }
+
+  .rm-owner {
+    font-size: 14px;
+  }
+}

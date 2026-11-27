@@ -2,6 +2,13 @@ import type { ReactNode } from 'react';
 import { compactCoins, formatCoins, stakeLabel } from '../lib/coins';
 import { achievementsOf, TITLES } from '../lib/progress';
 import { ludoRuleLines } from '../games/ludo/LudoRules';
+import { rmcsRuleLines } from '../games/rmcs/RmcsRules';
+import { snakesRuleLines } from '../games/snakes/SnakesRules';
+import { fruitRuleLines } from '../games/fruit/FruitRules';
+import { spikesRuleLines } from '../games/spikes/SpikesRules';
+import { dartsRuleLines } from '../games/darts/DartsRules';
+import { dotsRuleLines } from '../games/dots/DotsRules';
+import { colorwarRuleLines } from '../games/colorwar/ColorWarRules';
 import { LUDO_BOARDS, LUDO_DICE, LUDO_GOTIS } from '../games/ludo/looks';
 import {
   AVATAR_BACKGROUNDS,
@@ -137,7 +144,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
         </Section>
         <Section icon="🏠" title="Game Baithak: the game hub">
           <ul>
-            <li>The app is now Game Baithak: Home shows a tile for every game (category chips All / Cards / Board, a NEW badge, ▶ Last played on this phone). Tap a tile: the Play panel opens with that game picked, so Create a room starts in it. The host can still switch games in the lobby.</li>
+            <li>The app is now Game Baithak: Home shows a tile for every game (category chips All / Cards / Board / Party, a NEW badge, ▶ Last played on this phone). Tap a tile: the Play panel opens with that game picked, so Create a room starts in it. The host can still switch games in the lobby.</li>
             <li>Bluff, Crazy 7 and Rang are wired by hand; every new game plugs into the game registry (Ludo first), with its lobby options drawn from the catalog.</li>
             <li>An app without a game can't start it: the server asks that player to reload the app.</li>
           </ul>
@@ -154,6 +161,88 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             <li>Game over: a finish-order podium with fireworks and the list of every kill, then the usual coins screen. Leaving mid-game is a loss and your gotis leave the board.</li>
             <li>Looks (picked from 🎨 at the table or Profile › Looks, sent to the room): everyone sees each player's gotis in their style, the dice in the skin of whoever's turn it is, and the host's board. Boards {LUDO_BOARDS.map((l) => `${l.name} (Lv ${l.level})`).join(', ')}; gotis {LUDO_GOTIS.map((l) => `${l.name} (Lv ${l.level})`).join(', ')}; dice {LUDO_DICE.map((l) => `${l.name} (Lv ${l.level})`).join(', ')}.</li>
             <li>Profile: a 🎮 Games card per game (played, won), with Ludo kills, gotis home and sixes, and Ludo achievements. Ludo daily and weekly missions count kills, gotis home, sixes, games and wins.</li>
+          </ul>
+        </Section>
+
+        <Section icon="🐍" title="Saanp Seedhi (board game)">
+          <ul>
+            {snakesRuleLines().map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            <li>2 to 4 players, one goti each (red, blue, green, yellow in seat order). Host options: Finish (exact roll / any roll), Start (need a 6 / go straight), Sixes (roll again / one roll), Bite (on / off); all on by default.</li>
+            <li>The board sits tilted on the table like Ludo: our own curvy snakes and wooden ladders. Tap the dice on your turn; the goti hops square by square, bounces off 100, slides down a snake's body or climbs a ladder; a bitten goti jumps back with a "Bite! 🐍" burst.</li>
+            <li>Each player's goti in their Ludo goti style, the dice in the skin of whoever rolled (🎨 at the table). Turn timer: the dice rolls itself.</li>
+            <li>Game over: a finish-order podium with fireworks and everyone's ladders, snakes and bites, then the usual coins screen. Profile 🎮 Games counts ladders, snakes and bites.</li>
+          </ul>
+        </Section>
+
+        <Section icon="👑" title="Raja Mantri Chor Sipahi (party game)">
+          <ul>
+            {rmcsRuleLines().map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            <li>The lobby won't start without exactly 4 players: add bots to fill the seats. Bots open their chit after a moment; a bot Mantri guesses at random between the two.</li>
+            <li>At the table: four seats round a wooden table, a folded chit in front of each. Tap yours to unfold it; the Raja's chit flips open for all with a crown burst; the Mantri glows in a spotlight and taps one of the two glowing chits (or their seat) before the countdown ends.</li>
+            <li>Result: every chit flips; "Pakda gaya! 🦹" with handcuffs and a siren flash, or "Chor bach gaya! 😈" as the Chor runs off; points fly to each score. A running score sits bottom right.</li>
+            <li>Game over: a ranking podium (ties share the place) with fireworks and every round's chits, then the coins screen. Profile 🎮 Games counts Chors caught, escapes and times as Raja.</li>
+          </ul>
+        </Section>
+
+        <Section icon="🍉" title="Fruit Slice Duel (arcade)">
+          <ul>
+            {fruitRuleLines().map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            <li>2 to 4 players, all at once. Host option: Time (45 / 60 seconds). The server picks a seed; every phone throws the same fruit from it (`fruitWave`) and lines up its clock with the server from each view, so the fruit fly at the same moment for everyone.</li>
+            <li>At the table: a dojo (paper screens, wooden floor) with the fruit drawn on a 60 fps canvas: glossy apple, orange, melon, banana, mango, grapes and a bomb with a sparking fuse. Swipe (finger or mouse) to slice: a glowing blade in your colour, the fruit splits along the cut into two halves with juice and a stain on the wood, "+N" popups, "Combo ×N!" for 3+ in one swipe; a bomb flashes the screen, shakes it and buzzes the phone.</li>
+            <li>Everyone's score sits on their seat and in the mini scoreboard by the timer; another player's cut shows as a slash in their colour on your fruit. 3-2-1 countdown with beeps, ticks in the last 5 seconds, then the podium (ties share a place) with slices, best combo and bombs.</li>
+            <li>Bots slice fruit near the top of their flight (Normal 55%, Hard 72%, Expert 85%) and mostly leave bombs. Profile 🎮 Games counts fruit sliced, best combo and bombs.</li>
+          </ul>
+        </Section>
+
+        <Section icon="🔺" title="Spike Attack (arcade)">
+          <ul>
+            {spikesRuleLines().map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            <li>2 to 4 players, all at once. Host options: Arena (5 × 5 / 6 × 6), Speed (Normal: 3 second warnings to start; Fast: 2).</li>
+            <li>At the table: a neon arena of steel tiles, each player a round character in their colour with big eyes and their initial. Move with the arrow pad under your right thumb (hold to keep walking), a swipe anywhere (a long drag walks several squares) or the keyboard arrows / WASD; your own steps show at once.</li>
+            <li>A warning tints its row or column red, glows a spike at the edge it comes from and counts 3-2-1 on the line, ticking faster (and louder when you're on it). The strike: steel spikes shoot across with a white slash; a hit player blinks, loses a heart ("−1 ❤️") and the phone shakes; at 0 hearts they float as a ghost 👻.</li>
+            <li>Hearts show under each seat down the left. Game over: a survival podium (players out on the same strike share a place) with hearts left and hits. Bots step off lines about to strike (Normal sometimes late) and wander otherwise. Profile 🎮 Games counts dodges and hits.</li>
+          </ul>
+        </Section>
+
+        <Section icon="🎯" title="Darts (arcade)">
+          <ul>
+            {dartsRuleLines().map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            <li>2 to 4 players, one at a time. Host option: Start at (301 / 501). The server adds a small hand shake to every dart and scores it; bots aim at treble 20, or at the exact finish, with a steadier hand on Hard and Expert.</li>
+            <li>At the table: a dartboard on a pub wall (our own drawing: black and cream beds, red and green rings, wires and numbers). Hold on the board to bring up a reticle that wobbles: steadiest (green) a moment after you start, shakier (red) the longer you hold; on a phone it sits a little above your finger. Let go to throw.</li>
+            <li>The dart flies in, thuds and wobbles in the board; a pop shouts the score ("Treble 20!", "BULL!", "Miss!"). Bust: the turn's darts go grey with a sad slide; 180: a fanfare and confetti; checkout: confetti and the finishing place. The chalkboard on the right shows everyone's points left and the darts of the turn.</li>
+            <li>Game over: the finishing-order podium with fireworks, then the coins screen. Profile 🎮 Games counts 180s, bulls and checkouts.</li>
+          </ul>
+        </Section>
+
+        <Section icon="⬛" title="Dots and Boxes (board game)">
+          <ul>
+            {dotsRuleLines().map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            <li>2 to 4 players in turn. Host option: Board (4 × 4, 5 × 5, 6 × 6 boxes). Bots take any box they can, avoid drawing a third side, and on Expert give away the shortest chain.</li>
+            <li>At the table: a sheet of graph paper lying on the table. Tap the gap between two dots or drag from dot to dot; a faint line in your colour shows where it will go. Lines grow like a pen stroke; a closed box fills with the owner's colour and initial with a pop and confetti, and "Go again!" shows.</li>
+            <li>Box counts sit on each seat. Game over: a podium by boxes (ties share), then the coins screen. Profile 🎮 Games counts boxes closed.</li>
+          </ul>
+        </Section>
+
+        <Section icon="🎨" title="Colour Wars (board game)">
+          <ul>
+            {colorwarRuleLines().map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            <li>2 to 4 players in turn. Host option: Board (5 × 5 / 7 × 7). Bots try each tap and keep the one that takes the most cells while keeping their own 3-dot cells safe (Normal plays looser).</li>
+            <li>At the table: a purple tray of rounded cells; each cell shows its dots as glossy blobs in the owner's colour and a 3-dot cell trembles. Cells you can tap glow. A burst is replayed wave by wave: a flash, blobs fly into the neighbours and captured cells flip colour; long chains get a "Chain ×N!" shout.</li>
+            <li>A player wiped out gets a "💥 out" toast and a faded seat. Game over: the survival podium, then the coins screen. Profile 🎮 Games counts cells taken and bursts.</li>
           </ul>
         </Section>
 

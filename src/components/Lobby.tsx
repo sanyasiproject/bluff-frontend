@@ -219,8 +219,10 @@ export function Lobby({ view, actions, auth, nudged = null }: { view: RoomView; 
   // people who haven't tapped I'm ready (the host, bots and older apps always count as ready)
   const notReady = view.players.filter((p) => !p.bot && p.id !== view.hostId && !p.ready);
   const startBlock =
-    view.players.length < 2
+    view.players.length < 2 && gameInfo(view.config.game).minPlayers <= 2
       ? 'Need at least 2 players'
+      : view.players.length < gameInfo(view.config.game).minPlayers
+        ? `${gameInfo(view.config.game).name} needs exactly ${gameInfo(view.config.game).minPlayers} players: add bots to fill the seats`
       : bots.length === view.players.length
         ? 'Someone has to play with the bots'
       : view.players.length > maxSeats

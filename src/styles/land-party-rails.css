@@ -1,0 +1,360 @@
+/* ---------- Party tables, wide layout: a flat play surface filling the height, player cards on left and right rails ---------- */
+
+.table.pr-wide {
+  --pr-top: 48px;
+  --rail-w: clamp(140px, 20vw, 270px);
+  --pr-gap: 12px;
+  --pr-below: 0px;
+  --pr-safe: max(8px, env(safe-area-inset-left), env(safe-area-inset-right));
+  --bs: min(calc(100dvh - var(--pr-top) - var(--pr-below) - 10px), calc(100vw - 2 * var(--rail-w) - 2 * var(--pr-safe) - 4 * var(--pr-gap)));
+}
+
+/* the play surface: centred under the top bar, facing the player */
+.pr-wide .lu-stage.pt-stage {
+  top: calc(var(--pr-top) + (100dvh - var(--pr-top) - var(--pr-below) - 6px - var(--bs)) / 2);
+  translate: -50% 0;
+  perspective: none;
+}
+
+.pr-wide .pt-plane {
+  transform: none;
+}
+
+/* rails down each side */
+.pr-rail {
+  position: absolute;
+  top: calc(var(--pr-top) + 6px);
+  bottom: max(8px, env(safe-area-inset-bottom));
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: 10px;
+  width: var(--rail-w);
+}
+
+.pr-left { left: var(--pr-safe); }
+.pr-right { right: var(--pr-safe); }
+
+.pr-slot {
+  display: grid;
+}
+
+/* a player card in their colour */
+.pr-seat {
+  position: relative;
+  container-type: inline-size;
+  padding: 9px 10px 8px;
+  border-radius: 18px;
+  background:
+    radial-gradient(90% 70% at 15% 0%, color-mix(in srgb, var(--pc) 30%, transparent), transparent 70%),
+    linear-gradient(160deg, #241a4a 0%, #130c2c 100%);
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--pc) 55%, transparent),
+    inset 0 -3px 0 color-mix(in srgb, var(--pc) 35%, transparent),
+    0 10px 22px rgba(4, 2, 16, 0.55);
+  color: var(--nt-text, #fff);
+  transition: scale 0.3s var(--spring);
+}
+
+.pr-seat.turn {
+  scale: 1.04;
+  box-shadow:
+    inset 0 0 0 2.5px var(--pc),
+    0 0 0 3px color-mix(in srgb, var(--pc) 30%, transparent),
+    0 0 28px 6px color-mix(in srgb, var(--pc) 50%, transparent),
+    0 10px 22px rgba(4, 2, 16, 0.55);
+}
+
+/* a breathing glow round whoever's turn it is */
+.pr-seat.turn::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 22px;
+  box-shadow: 0 0 18px 4px var(--pc);
+  pointer-events: none;
+  animation: pr-breathe 1s ease-in-out infinite alternate;
+}
+
+@keyframes pr-breathe {
+  from { opacity: 0.25; }
+  to { opacity: 0.9; }
+}
+
+.pr-seat.out {
+  opacity: 0.5;
+  filter: grayscale(0.85);
+}
+
+.pr-pill {
+  position: absolute;
+  left: 50%;
+  top: -11px;
+  z-index: 3;
+  padding: 2px 11px;
+  border-radius: 999px;
+  background: var(--pc);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+  color: #160c26;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  translate: -50% 0;
+  animation: pt-pop 0.35s var(--spring) backwards;
+}
+
+.pr-seat.mine.turn .pr-pill {
+  background: linear-gradient(180deg, var(--nt-gold-hi, #ffd75e), var(--nt-gold-lo, #ffab1a));
+  color: var(--nt-gold-ink, #3a2400);
+  font-size: 12.5px;
+}
+
+/* the shared seat, laid out as a row: avatar, then name over the big number */
+.pr-seat .seat {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  justify-items: start;
+  gap: 0 10px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  text-align: left;
+}
+
+.pr-seat .seat.turn {
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.pr-seat .seat.turn::before,
+.pr-seat .seat-count {
+  display: none;
+}
+
+.pr-seat .seat > .avatar {
+  grid-row: 1 / 3;
+  width: 48px;
+  height: 48px;
+  font-size: 21px;
+  box-shadow: 0 0 0 2.5px rgba(255, 255, 255, 0.9), 0 0 0 5px var(--pc), 0 6px 12px rgba(0, 0, 0, 0.5);
+}
+
+.pr-seat .seat-name {
+  max-width: 100%;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pr-seat.mine .seat-name {
+  color: var(--nt-gold-hi, #ffd75e);
+}
+
+.pr-stat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 5px;
+  min-width: 0;
+}
+
+.pr-num {
+  color: #fff;
+  font-size: min(clamp(24px, 8.5dvh, 46px), 26cqi);
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35), 0 0 14px color-mix(in srgb, var(--pc) 45%, transparent);
+}
+
+.pr-label {
+  color: var(--nt-dim, #b9b0e0);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pr-extra {
+  margin-top: 6px;
+}
+
+/* chat bubbles open towards the board */
+.pr-left .seat-bubble {
+  top: 50%;
+  left: calc(100% + 14px);
+  translate: 0 -50%;
+}
+
+.pr-right .seat-bubble {
+  top: 50%;
+  left: auto;
+  right: calc(100% + 14px);
+  translate: 0 -50%;
+}
+
+.pr-rail .seat-bubble::before {
+  display: none;
+}
+
+.pr-seat .seat-clock {
+  left: auto;
+  right: -8px;
+  bottom: auto;
+  top: -14px;
+  transform: none;
+}
+
+/* someone who left */
+.pr-seat .seat.gone {
+  opacity: 0.6;
+}
+
+.pr-gone-av {
+  background: #3b335c;
+}
+
+/* a share bar: each player's part of the board */
+.pr-share {
+  display: flex;
+  gap: 2px;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.pr-share i {
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  flex-basis: 0;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18), inset 0 2px 0 rgba(255, 255, 255, 0.35);
+}
+
+.pr-share i.rest {
+  min-width: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.pr-share b {
+  color: #160c26;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* banners sit in the strip at the top, over the status pill, never on the board */
+.pr-wide .pt-banner {
+  top: max(4px, env(safe-area-inset-top));
+  z-index: 30;
+  padding: 3px 20px 4px;
+  border-radius: 999px;
+  translate: -50% 0;
+}
+
+.pr-wide .pt-banner b {
+  font-size: clamp(16px, 5.4dvh, 28px);
+  line-height: 1.15;
+}
+
+.pr-wide .pt-banner small {
+  font-size: 11px;
+}
+
+.pr-wide .lu-watch-note {
+  bottom: auto;
+  top: calc(var(--pr-top) - 4px);
+  z-index: 6;
+}
+
+/* short phones: tighter cards */
+@media (max-height: 420px) {
+  .pr-seat {
+    padding: 7px 8px 6px;
+  }
+
+  .pr-seat .seat > .avatar {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* big screens: bigger cards */
+@media (min-height: 640px) and (min-width: 900px) {
+  .table.pr-wide {
+    --pr-top: 60px;
+  }
+
+  .pr-seat {
+    padding: 14px 16px 12px;
+    border-radius: 22px;
+  }
+
+  .pr-seat .seat > .avatar {
+    width: 68px;
+    height: 68px;
+    font-size: 30px;
+  }
+
+  .pr-seat .seat-name {
+    font-size: 17px;
+  }
+
+  .pr-num {
+    font-size: min(54px, 26cqi);
+  }
+
+  .pr-label {
+    font-size: 12px;
+  }
+
+  .pr-pill {
+    font-size: 13px;
+  }
+}
+
+/* an upright window: the cards go in rows above and below the board */
+@media (orientation: portrait) {
+  .table.pr-wide {
+    --bs: min(94vw, calc(100dvh - 330px));
+  }
+
+  .pr-wide .lu-stage.pt-stage {
+    top: 50%;
+    translate: -50% -50%;
+  }
+
+  .pr-rail {
+    left: 8px;
+    right: 8px;
+    bottom: auto;
+    width: auto;
+    flex-direction: row;
+  }
+
+  .pr-right {
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .pr-slot {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pr-seat.turn::after,
+  .pr-pill {
+    animation: none;
+  }
+}

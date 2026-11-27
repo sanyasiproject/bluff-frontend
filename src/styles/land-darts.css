@@ -1,0 +1,463 @@
+/* ---------- Darts: a lit cabinet, the big board, the aiming reticle and ghost, darts arcing in, big calls and chalk slates ---------- */
+
+/* a dark pub wall: wood panels, a warm spotlight on the board */
+.da-table .da-room {
+  background:
+    radial-gradient(34% 62% at 50% 52%, rgba(255, 226, 170, 0.3), transparent 72%),
+    radial-gradient(120% 110% at 50% 55%, transparent 45%, rgba(0, 0, 0, 0.8) 100%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0 2px, transparent 2px 64px),
+    linear-gradient(180deg, #4a2c18 0%, #2a170b 60%, #1a0e06 100%);
+}
+
+.da-stage {
+  perspective: none;
+}
+
+/* the cabinet the board hangs in: a wooden backboard, wider than the board */
+.da-cabinet {
+  position: absolute;
+  inset: -1.5% -10%;
+  border-radius: 22px;
+  background:
+    radial-gradient(52% 50% at 50% 50%, rgba(0, 0, 0, 0.55), transparent 75%),
+    radial-gradient(60% 40% at 50% 0%, rgba(255, 230, 190, 0.22), transparent 70%),
+    linear-gradient(90deg, #5b3418 0%, #7b4a24 12%, #3d2210 14%, #2a170b 50%, #3d2210 86%, #7b4a24 88%, #5b3418 100%);
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 210, 150, 0.18),
+    inset 0 0 40px rgba(0, 0, 0, 0.6),
+    0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.da-mount {
+  position: absolute;
+  inset: 0;
+}
+
+.da-mount.shake {
+  animation: da-shake 0.35s ease-out;
+}
+
+.da-mount.shake.hard {
+  animation: da-shake-hard 0.5s ease-out;
+}
+
+@keyframes da-shake {
+  20% { transform: translate(3px, -2px); }
+  45% { transform: translate(-3px, 2px); }
+  70% { transform: translate(2px, 1px); }
+}
+
+@keyframes da-shake-hard {
+  15% { transform: translate(-8px, 2px) rotate(-1deg); }
+  35% { transform: translate(7px, -2px) rotate(1deg); }
+  55% { transform: translate(-5px, 1px); }
+  75% { transform: translate(3px, 0); }
+}
+
+.da-board {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.75));
+}
+
+.da-board.live {
+  cursor: crosshair;
+}
+
+.da-board-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.da-nums text {
+  fill: #fff;
+  font: 900 0.125px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.da-wires path,
+.da-wires circle {
+  stroke: url(#db-chrome);
+  stroke-width: 0.009;
+}
+
+.da-wires.shadow path,
+.da-wires.shadow circle {
+  stroke: #000;
+  stroke-opacity: 0.45;
+}
+
+/* my turn: the board breathes a glow in my colour */
+.pt-my-turn .da-board::after {
+  content: '';
+  position: absolute;
+  inset: -1.5%;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--turn-col) 75%, transparent), 0 0 30px 8px color-mix(in srgb, var(--turn-col) 45%, transparent);
+  animation: da-glow 1s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+/* the ghost: where the dart will land, round the aim point */
+.da-ghost {
+  position: absolute;
+  left: -50px;
+  top: -50px;
+  z-index: 4;
+  width: 100px;
+  height: 100px;
+  border: 3px dashed rgba(255, 255, 255, 0.75);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04));
+  pointer-events: none;
+}
+
+/* the reticle: a ring with a cross, a steadiness meter under it */
+.da-reticle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  color: #fff;
+  pointer-events: none;
+}
+
+.da-reticle i {
+  position: absolute;
+  width: max(34px, calc(var(--bs) * 0.1));
+  aspect-ratio: 1;
+  border: 2.5px solid currentColor;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.6), inset 0 0 0 1.5px rgba(0, 0, 0, 0.6), 0 0 16px currentColor;
+  translate: -50% -50%;
+}
+
+.da-reticle i::before,
+.da-reticle i::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: currentColor;
+  translate: -50% -50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.da-reticle i::before { width: 150%; height: 2px; }
+.da-reticle i::after { width: 2px; height: 150%; }
+
+.da-reticle[data-steady='yes'] { color: #69f0ae; }
+.da-reticle[data-steady='mid'] { color: #ffe066; }
+.da-reticle[data-steady='no'] { color: #ff8a80; }
+
+.da-meter {
+  position: absolute;
+  left: 0;
+  top: calc(max(34px, var(--bs) * 0.1) / 2 + 8px);
+  width: 64px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.7);
+  translate: -50% 0;
+}
+
+.da-meter span {
+  position: absolute;
+  inset: 0;
+  border-radius: 99px;
+  background: var(--steady-col, #69f0ae);
+  transform: scaleX(var(--steady, 1));
+  transform-origin: 0 50%;
+}
+
+/* a dart in the board: its tip on the spot */
+.da-dart {
+  position: absolute;
+  z-index: 3;
+  width: calc(var(--bs) * 0.2);
+  aspect-ratio: 1;
+  pointer-events: none;
+}
+
+.da-dart-in {
+  position: absolute;
+  inset: 0;
+  translate: -6.25% -6.25%;
+  rotate: var(--tilt);
+  transform-origin: 6.25% 6.25%;
+}
+
+.da-dart svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(3px 6px 3px rgba(0, 0, 0, 0.5));
+}
+
+/* flying in on a slight arc from the thrower, then a wobble once it sticks */
+.da-dart.fresh .da-dart-in {
+  animation:
+    da-fly 0.28s cubic-bezier(0.35, 0.1, 0.7, 0.7) backwards,
+    da-wobble 0.6s ease-out 0.28s;
+}
+
+@keyframes da-fly {
+  from { transform: translate(40%, 280%) scale(2.8); opacity: 0.2; }
+  50% { transform: translate(18%, 40%) scale(1.7); opacity: 1; }
+  to { transform: none; opacity: 1; }
+}
+
+@keyframes da-wobble {
+  20% { transform: rotate(8deg); }
+  45% { transform: rotate(-5deg); }
+  70% { transform: rotate(2.5deg); }
+}
+
+.da-dart.dead svg {
+  filter: grayscale(1) brightness(0.7) drop-shadow(3px 6px 3px rgba(0, 0, 0, 0.5));
+  opacity: 0.75;
+}
+
+/* the thud: a ring of dust where it went in */
+.da-impact {
+  position: absolute;
+  z-index: 2;
+  width: calc(var(--bs) * 0.09);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.75), 0 0 14px rgba(255, 240, 200, 0.7);
+  translate: -50% -50%;
+  pointer-events: none;
+  animation: da-impact 0.45s ease-out 0.27s both;
+}
+
+@keyframes da-impact {
+  from { transform: scale(0.2); opacity: 1; }
+  to { transform: scale(1.6); opacity: 0; }
+}
+
+/* BULL: a burst of gold rays */
+.da-burst {
+  position: absolute;
+  z-index: 4;
+  width: calc(var(--bs) * 0.5);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 214, 74, 0.85) 0 7deg, transparent 7deg 22deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 18%, #000 30%, transparent 100%);
+  mask: radial-gradient(closest-side, transparent 18%, #000 30%, transparent 100%);
+  translate: -50% -50%;
+  pointer-events: none;
+  animation: da-burst 0.8s ease-out 0.28s both;
+}
+
+@keyframes da-burst {
+  from { transform: scale(0.2) rotate(0deg); opacity: 1; }
+  to { transform: scale(1.4) rotate(40deg); opacity: 0; }
+}
+
+/* the caller's shout, big, by the dart */
+.da-pop {
+  position: absolute;
+  z-index: 6;
+  padding: 4px 16px 5px;
+  border-radius: 16px;
+  background: rgba(10, 6, 20, 0.85);
+  box-shadow: 0 0 0 2.5px rgba(255, 255, 255, 0.85), 0 10px 20px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: clamp(22px, 8.5dvh, 46px);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  translate: -50% -130%;
+  pointer-events: none;
+  animation: da-pop 1.4s ease-out forwards;
+}
+
+.da-pop.tone-gold,
+.da-pop.tone-bull {
+  background: linear-gradient(180deg, #ffe27a, #f2a400);
+  box-shadow: 0 0 0 3px #fff6cc, 0 0 30px rgba(255, 200, 60, 0.8);
+  color: #3a2000;
+}
+
+.da-pop.tone-bull {
+  font-size: clamp(30px, 12dvh, 64px);
+}
+
+.da-pop.tone-good {
+  background: linear-gradient(180deg, #5ef09d, #11924c);
+  box-shadow: 0 0 0 3px #d6ffe6, 0 0 24px rgba(80, 240, 160, 0.7);
+  color: #fff;
+}
+
+.da-pop.tone-red {
+  background: linear-gradient(180deg, #ff6b6b, #b71c1c);
+}
+
+@keyframes da-pop {
+  from { transform: scale(0.3); opacity: 0; }
+  14% { transform: scale(1.2); opacity: 1; }
+  24% { transform: scale(1); }
+  75% { transform: translateY(-6px); opacity: 1; }
+  to { transform: translateY(-18px); opacity: 0; }
+}
+
+/* BUST: a red rubber stamp across the board */
+.da-stamp {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 7;
+  padding: 2px 26px;
+  border: 6px solid #ff3b3b;
+  border-radius: 14px;
+  background: rgba(60, 0, 0, 0.35);
+  color: #ff3b3b;
+  font-size: calc(var(--bs) * 0.2);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-shadow: 0 0 18px rgba(255, 60, 60, 0.6);
+  translate: -50% -50%;
+  rotate: -14deg;
+  pointer-events: none;
+  animation: da-stamp 0.35s cubic-bezier(0.2, 1.6, 0.4, 1) backwards;
+}
+
+@keyframes da-stamp {
+  from { transform: scale(2.4); opacity: 0; }
+}
+
+.da-hint {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: 3%;
+  z-index: 5;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.75);
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  translate: -50% 0;
+  pointer-events: none;
+  animation: da-glow 0.8s ease-in-out infinite alternate;
+}
+
+/* the player cards are chalk slates in wooden frames */
+.pr-seat.da-slate {
+  border: 4px solid #8a5426;
+  border-radius: 14px;
+  background:
+    radial-gradient(80% 60% at 30% 15%, rgba(255, 255, 255, 0.1), transparent 70%),
+    linear-gradient(160deg, #2f4d3e 0%, #1a2e24 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45), inset 0 -4px 0 var(--pc), 0 10px 20px rgba(0, 0, 0, 0.55);
+}
+
+.pr-seat.da-slate.turn {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45), inset 0 -4px 0 var(--pc), 0 0 0 3px var(--pc), 0 0 26px 6px color-mix(in srgb, var(--pc) 55%, transparent);
+}
+
+.da-slate .pr-num,
+.da-slate .da-slate-darts,
+.da-slate .da-hint-line {
+  color: #f4f4ea;
+  font-family: 'Chalkboard SE', 'Comic Sans MS', 'Segoe Print', system-ui, sans-serif;
+}
+
+.da-slate-darts {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.da-slate-darts i {
+  min-width: 22px;
+  padding: 0 2px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  font-style: normal;
+  text-align: center;
+  opacity: 0.55;
+}
+
+.da-slate-darts i.hit {
+  opacity: 1;
+  color: #fff3c0;
+}
+
+.da-slate-darts i.r-treble,
+.da-slate-darts i.r-bull { background: rgba(255, 200, 60, 0.35); }
+.da-slate-darts i.r-double,
+.da-slate-darts i.r-outerBull { background: rgba(80, 230, 140, 0.3); }
+
+.da-slate-darts i.bust {
+  color: #ff8a80;
+  text-decoration: line-through;
+}
+
+.da-slate-darts em {
+  margin-left: auto;
+  font-style: normal;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.da-slate-darts em.bust {
+  color: #ff8a80;
+}
+
+.da-hint-line {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: #ffe082 !important;
+  font-size: 12px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-height: 640px) and (min-width: 900px) {
+  .da-slate-darts { font-size: 17px; }
+  .da-slate-darts i { min-width: 32px; }
+  .da-hint-line { font-size: 15px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .da-mount.shake,
+  .da-dart.fresh .da-dart-in,
+  .da-pop,
+  .da-hint,
+  .da-impact,
+  .da-burst,
+  .da-stamp,
+  .pt-my-turn .da-board::after {
+    animation: none;
+  }
+
+  .da-impact,
+  .da-burst {
+    display: none;
+  }
+}
+
+@keyframes da-glow {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
