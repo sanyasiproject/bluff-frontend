@@ -23,7 +23,8 @@ import { LobbyRoom } from './LobbyRoom';
 import { lobbyTabs, SettingsBody, type LobbyTab } from './LobbySettings';
 
 import type { Auth } from '../useAuth';
-import type { Actions } from '../useBluff';
+import type { Actions, Nudged } from '../useBluff';
+import { BuzzButton, NudgeBanner } from './LobbyNudge';
 import { AccountCorner } from './AccountCorner';
 import { ConfirmBox } from './ConfirmBox';
 import { SuitDrift } from './Ambient';
@@ -166,7 +167,7 @@ const ROOM_LIMIT = 12;
 
 const names = (players: PublicPlayer[]) => players.map((p) => p.name).join(', ');
 
-export function Lobby({ view, actions, auth }: { view: RoomView; actions: Actions; auth: Auth }) {
+export function Lobby({ view, actions, auth, nudged = null }: { view: RoomView; actions: Actions; auth: Auth; nudged?: Nudged | null }) {
   const [friendsOpen, setFriendsOpen] = useState(false);
   const friendsNow = useOnlineFriends(auth.user ? auth.token : null);
   const isHost = view.hostId === view.meId;
@@ -236,6 +237,14 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
             ? `⏳ Waiting for ${names(notReady)} to tap I'm ready`
             : null;
   const seated = view.players.find((p) => p.id === view.meId);
+  // host's Start waits only on people not ready: offer the buzz
+  const readyBlocked = isHost && notReady.length > 0 && !!startBlock?.startsWith('⏳');
+  // the buzz banner shows until I'm ready (or close it); gone when I leave the lobby
+  const showNudge = !!nudged && !isHost && !!seated && !seated.ready;
+  useEffect(() => {
+    if (nudged && !showNudge) actions.clearNudge();
+  }, [nudged?.key, showNudge]);
+  useEffect(() => () => actions.clearNudge(), []);
 
   // friend status of everyone here, so logged-in players can add each other from the lobby
   const [links, setLinks] = useState<FriendsResponse | null>(null);
@@ -400,13 +409,16 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
 
   // host: Start; seated players: I'm ready; watchers: waiting for the host
   const mainButton = isHost ? (
-    <button className={cx('btn primary grow', startBlock === null ? 'shine' : 'blocked')} disabled={startBlock !== null} onClick={actions.start}>
-      {startBlock === null
-        ? `Start · ${view.players.length} players${stake > 0 ? ` · 🪙 ${compactCoins(pot)}` : ''}`
-        : notReady.length > 0 && startBlock.startsWith('⏳')
-          ? `⏳ Waiting for ${notReady.length} ${notReady.length === 1 ? 'player' : 'players'}`
-          : '🔒 Start game'}
-    </button>
+    <>
+      {readyBlocked && <BuzzButton actions={actions} waiting={notReady.length} />}
+      <button className={cx('btn primary grow', startBlock === null ? 'shine' : 'blocked')} disabled={startBlock !== null} onClick={actions.start}>
+        {startBlock === null
+          ? `Start · ${view.players.length} players${stake > 0 ? ` · 🪙 ${compactCoins(pot)}` : ''}`
+          : readyBlocked
+            ? `⏳ ${notReady.length} not ready`
+            : '🔒 Start game'}
+      </button>
+    </>
   ) : seated ? (
     seated.ready ? (
       // ready: tapping again asks everyone to wait a minute
@@ -415,7 +427,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         <small>Waiting for the host · tap to wait</small>
       </button>
     ) : (
-      <button className="btn primary grow shine ready-go" onClick={() => void actions.setReady(true)}>
+      <button className={cx('btn primary grow shine ready-go', showNudge && 'nudge-glow')} onClick={() => void actions.setReady(true)}>
         <span>👍 I'm ready</span>
         <small>Host starts when all are ready</small>
       </button>
@@ -438,6 +450,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   // sheets and popups both layouts share
   const overlays = (
     <>
+      {showNudge && nudged && <NudgeBanner key={nudged.key} nudged={nudged} onClose={actions.clearNudge} />}
       {viewing && (
         <PlayerSheet
           auth={auth}

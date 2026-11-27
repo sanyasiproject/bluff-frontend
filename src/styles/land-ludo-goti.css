@@ -31,7 +31,8 @@
 .lu-g-stand {
   position: absolute;
   left: calc(var(--cell) * -0.46);
-  bottom: calc(var(--cell) * -0.16);
+  /* the base disc's middle on the square at any size */
+  bottom: calc(var(--cell) * -0.16 * var(--k));
   width: calc(var(--cell) * 0.92);
   height: calc(var(--cell) * 1.22);
   padding: 0;
@@ -138,6 +139,62 @@
   box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
 }
 
+/* Metal: brushed steel tinted in the goti's colour, with a hard bright edge */
+.lu-pawn.gs-metal .lu-pawn-base {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse 70% 60% at 42% 30%, #fff 0%, color-mix(in srgb, var(--c) 55%, #c9ced6) 35%, color-mix(in srgb, var(--c2) 70%, #2a2e35) 100%);
+}
+
+.lu-pawn.gs-metal .lu-pawn-body {
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.06) 0 1px, rgba(0, 0, 0, 0.04) 1px 2px, transparent 2px 4px),
+    linear-gradient(90deg, color-mix(in srgb, var(--c2) 70%, #1d2026) 0%, color-mix(in srgb, var(--c) 60%, #b8bec8) 24%, #fff 36%, color-mix(in srgb, var(--c) 70%, #dfe3ea) 46%, var(--c) 64%, color-mix(in srgb, var(--c2) 80%, #111) 100%);
+  box-shadow: inset 0 -2px 3px rgba(0, 0, 0, 0.35);
+}
+
+.lu-pawn.gs-metal .lu-pawn-head {
+  background:
+    radial-gradient(circle at 33% 28%, #fff 0 11%, transparent 18%),
+    conic-gradient(from 210deg at 50% 50%, color-mix(in srgb, var(--c) 45%, #f2f4f8), var(--c), color-mix(in srgb, var(--c2) 75%, #1d2026), color-mix(in srgb, var(--c) 50%, #e8ebf0), var(--c), color-mix(in srgb, var(--c) 45%, #f2f4f8));
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+/* Raja: royal gradient, a gold band at the waist and a small crown on top */
+.lu-pawn.gs-crown .lu-pawn-base {
+  background:
+    radial-gradient(ellipse 70% 60% at 42% 30%, var(--c3) 0%, var(--c) 40%, var(--c2) 100%);
+  box-shadow: inset 0 0 0 1.5px #e0b14a, inset 0 -2px 2px rgba(0, 0, 0, 0.35);
+}
+
+.lu-pawn.gs-crown .lu-pawn-body {
+  background:
+    linear-gradient(180deg, transparent 58%, #ffe9a3 60%, #c9962e 66%, #8a5d12 70%, transparent 72%),
+    linear-gradient(90deg, transparent 22%, rgba(255, 255, 255, 0.5) 30%, transparent 40%),
+    linear-gradient(160deg, var(--c3) 0%, var(--c) 35%, var(--c2) 78%, color-mix(in srgb, var(--c2) 60%, #2a0a3a) 100%);
+}
+
+.lu-pawn.gs-crown .lu-pawn-head {
+  top: 14%;
+  height: 38%;
+  background: radial-gradient(circle at 34% 30%, #fff 0 9%, var(--c3) 22%, var(--c) 55%, var(--c2) 100%);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(224, 177, 74, 0.8);
+}
+
+.lu-pawn.gs-crown .lu-pawn-head::after {
+  content: '';
+  position: absolute;
+  left: 14%;
+  bottom: 78%;
+  width: 72%;
+  height: 62%;
+  background:
+    radial-gradient(circle at 50% 70%, var(--c3) 0 9%, var(--c) 12%, transparent 15%),
+    linear-gradient(180deg, #fff4c2 0%, #f0c75e 40%, #b8841f 100%);
+  clip-path: polygon(0 100%, 0 30%, 20% 62%, 33% 10%, 50% 50%, 67% 10%, 80% 62%, 100% 30%, 100% 100%);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+}
+
 /* legal: the goti bobs and a ring pulses under it */
 .lu-g.legal .lu-pawn {
   animation: lu-bob 0.75s ease-in-out infinite alternate;
@@ -196,7 +253,15 @@
   opacity: 0.4;
 }
 
-/* the ghost: where the pointed goti would land */
+/* the ghost: where the pointed goti would land; in the home triangle a small round mark */
+.lu-g.ghost.home .lu-g-mark {
+  left: calc(var(--cell) * -0.34);
+  top: calc(var(--cell) * -0.34);
+  width: calc(var(--cell) * 0.68);
+  height: calc(var(--cell) * 0.68);
+  border-radius: 50%;
+}
+
 .lu-g.ghost {
   pointer-events: none;
 }

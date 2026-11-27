@@ -4,7 +4,7 @@ import { Avatar } from '../../components/Avatar';
 import { Backdrop } from '../../components/Overlays';
 import { cx } from '../../lib/cards';
 import { confetti, reducedMotion } from '../../lib/motion';
-import { LUDO_COLOR_HEX, type LudoView, type RoomView } from '../../types';
+import { LUDO_COLOR_HEX, type LudoColor, type LudoView, type RoomView } from '../../types';
 import { Pawn } from './Gotis';
 
 const MEDALS = ['🥇', '🥈', '🥉', '4th'];
@@ -12,11 +12,12 @@ const MEDALS = ['🥇', '🥈', '🥉', '4th'];
 interface Props {
   view: RoomView;
   lv: LudoView;
-  gotiStyle: string;
+  /** each colour's goti style */
+  styleOf: (color: LudoColor) => string;
   onNext: () => void;
 }
 
-export function LudoOver({ view, lv, gotiStyle, onNext }: Props) {
+export function LudoOver({ view, lv, styleOf, onNext }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const people = [...view.players, ...view.leftPlayers.map((p) => ({ ...p, avatar: null, bot: false }))];
   const who = (id: string) => people.find((p) => p.id === id);
@@ -57,7 +58,7 @@ export function LudoOver({ view, lv, gotiStyle, onNext }: Props) {
                 <span className="lu-step-who">
                   <Avatar name={p?.name ?? '?'} avatar={p?.avatar ?? null} bot={p?.bot} size="sm" />
                   <span className="lu-step-goti" style={{ ['--cell' as string]: '22px' }}>
-                    <Pawn color={s.color} style={gotiStyle} />
+                    <Pawn color={s.color} style={styleOf(s.color)} />
                   </span>
                 </span>
                 <b data-no-translate>{name(s.playerId)}</b>

@@ -24,17 +24,20 @@ import { useBluff } from './useBluff';
 import { useLandscape } from './lib/useLandscape';
 import { PluggedTable } from './games/registry';
 import { markPlayed } from './games/lastPlayed';
-import { isPlugged } from './types';
+import { useSendLudoLook } from './games/ludo/looks';
+import { isPlugged, levelOf } from './types';
 
 /** moves the table already shows; in a landscape game they go to the info panel's log, not a pop-up */
 const QUIET_IN_GAME = ['play', 'pass', 'round', 'room', 'chat', 'bluff'];
 
 export default function App() {
-  const { status, connectionId, view, notes, reactions, bubbles, flyers, invites, replaced, pendingWatch, actions } = useBluff();
+  const { status, connectionId, roomKey, view, notes, reactions, bubbles, flyers, invites, replaced, pendingWatch, nudged, actions } = useBluff();
   const auth = useAuth();
   const land = useLandscape();
   // the table theme and card back this player picked
   useLook(auth);
+  // my Ludo gotis, dice and board go to the room so everyone sees them
+  useSendLudoLook(view ? roomKey : null, auth.user ? levelOf(auth.user.stats) : 1, actions.ludoLook);
   const [adminOpen, setAdminOpen] = useState(false);
   // the intro stays until the server first answers and a saved login is checked, and at least a moment
   const [booted, setBooted] = useState(false);
@@ -101,7 +104,7 @@ export default function App() {
       />
     );
   } else if (view.phase === 'lobby') {
-    screen = <Lobby view={view} actions={actions} auth={auth} />;
+    screen = <Lobby view={view} actions={actions} auth={auth} nudged={nudged} />;
   } else if (isPlugged(view.config.game)) {
     // registry games (Ludo, ...): one route for all of them
     screen = <PluggedTable kind={view.config.game} view={view} actions={actions} bubbles={bubbles} auth={auth} notes={notes} />;

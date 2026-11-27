@@ -6,6 +6,7 @@ import { cx, rankPlural } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
 import { gameInfo, isPlugged, secretMissionOf, type RoomView } from '../types';
 import type { Note } from '../useBluff';
+import { VoiceSettings } from './VoiceSettings';
 
 /** the table's rules in short lines, for all three games */
 export function tableRules(view: RoomView): string[] {
@@ -121,6 +122,7 @@ function InfoPanel({ view, notes, mine, tips, onClose }: Required<Omit<Props, 'm
               ))}
             </ul>
           </section>
+          <VoiceSettings compact />
           {recent.length > 0 && (
             <section>
               <h4>Just now</h4>

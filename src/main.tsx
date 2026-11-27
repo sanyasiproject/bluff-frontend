@@ -46,6 +46,9 @@ import './styles/land-night-chrome.css';
 import './styles/land-night-home.css';
 import './styles/land-night-room.css';
 import './styles/land-night-pages.css';
+// voice picker and the host's get-ready buzz
+import './styles/voice-pick.css';
+import './styles/nudge.css';
 
 // service worker only in production builds so it never caches the dev server
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {

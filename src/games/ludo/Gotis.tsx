@@ -3,7 +3,7 @@ import { useLayoutEffect, useRef, type CSSProperties } from 'react';
 import { cx } from '../../lib/cards';
 import { reducedMotion } from '../../lib/motion';
 import { LUDO_HOME, LUDO_LAST_RING, type LudoColor, type LudoLastMove } from '../../types';
-import { spotOf, type GotiSpot, type Pt } from './geometry';
+import { BOARD_PAD, homeSlot, spotOf, type GotiSpot, type Pt } from './geometry';
 import { ludoSfx } from './sounds';
 
 /** one pawn: base, body and head, lit from the top left */
@@ -33,7 +33,8 @@ interface Props {
   legal: Set<string>;
   /** the goti being pointed at: its landing square shows as a ghost */
   ghost: { color: LudoColor; to: number; token: number } | null;
-  gotiStyle: string;
+  /** each colour's goti style: the look of the player who owns it */
+  styleOf: (color: LudoColor) => string;
   /** colours that are mine (or my partner's when I move for them) */
   mine: LudoColor[];
   onPick: (token: number) => void;
@@ -43,9 +44,9 @@ interface Props {
   onHome?: () => void;
 }
 
-const px = (p: Pt, cell: number, dx = 0, dy = 0) => `translate3d(${(p[0] + dx) * cell}px, ${(p[1] + dy) * cell}px, 0)`;
+const px = (p: Pt, cell: number, dx = 0, dy = 0) => `translate3d(${(p[0] + dx + BOARD_PAD) * cell}px, ${(p[1] + dy + BOARD_PAD) * cell}px, 0)`;
 
-export function GotiLayer({ spots, cell, turns, last, legal, ghost, gotiStyle, mine, onPick, onPoint, onKill, onHome }: Props) {
+export function GotiLayer({ spots, cell, turns, last, legal, ghost, styleOf, mine, onPick, onPoint, onKill, onHome }: Props) {
   const els = useRef(new Map<string, Els>());
   // the move already on the board when the table opened is not replayed
   const seen = useRef<number>(last?.seq ?? -1);
@@ -104,14 +105,17 @@ export function GotiLayer({ spots, cell, turns, last, legal, ghost, gotiStyle, m
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, [last?.seq, cell]);
 
-  const ghostAt = ghost ? spotOf(ghost.color, ghost.to, ghost.token, turns) : null;
+  // the ghost going home takes the next free place in its triangle
+  const homeNow = ghost ? spots.filter((s) => s.color === ghost.color && s.progress >= LUDO_HOME).length : 0;
+  const ghostHome = ghost && ghost.to >= LUDO_HOME ? homeSlot(ghost.color, homeNow + 1, homeNow, turns) : null;
+  const ghostAt = ghost ? (ghostHome?.at ?? spotOf(ghost.color, ghost.to, ghost.token, turns)) : null;
   return (
-    <div className={cx('lu-gotis', `gs-${gotiStyle}`)}>
+    <div className="lu-gotis">
       {ghostAt && ghost && (
-        <div className="lu-g ghost" style={{ transform: px(ghostAt, cell) }} aria-hidden>
+        <div className={cx('lu-g ghost', ghostHome && 'home')} style={{ transform: px(ghostAt, cell), ['--k' as string]: ghostHome?.k ?? 1 } as CSSProperties} aria-hidden>
           <i className="lu-g-mark" />
           <span className="lu-g-stand">
-            <Pawn color={ghost.color} style={gotiStyle} />
+            <Pawn color={ghost.color} style={styleOf(ghost.color)} />
           </span>
         </div>
       )}
@@ -146,7 +150,7 @@ export function GotiLayer({ spots, cell, turns, last, legal, ghost, gotiStyle, m
               onBlur={() => onPoint(null)}
               onClick={() => can && onPick(s.token)}
             >
-              <Pawn color={s.color} style={gotiStyle} />
+              <Pawn color={s.color} style={styleOf(s.color)} />
             </button>
           </div>
         );

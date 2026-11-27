@@ -174,4 +174,12 @@ export const sfx = {
     const c = audio();
     if (c) notes(c, [988, 1319, 988], 0.12, 0.18, { type: 'sine', gain: 0.1 });
   },
+  /** the host's get-ready buzz: two quick buzzy pulses and a bright ping */
+  nudge() {
+    const c = audio();
+    if (!c) return;
+    for (const at of [0, 0.2]) tone(c, 220, at, 0.14, { type: 'sawtooth', gain: 0.07, to: 200 });
+    tone(c, 1175, 0.42, 0.16, { type: 'triangle', gain: 0.1 });
+    tone(c, 1568, 0.52, 0.26, { type: 'triangle', gain: 0.1 });
+  },
 };

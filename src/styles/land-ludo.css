@@ -132,6 +132,21 @@
   --lu-frame-3: #4d3304;
 }
 
+.bt-night {
+  --lu-bg: #0a1230;
+  --lu-cell: #13204a;
+  --lu-line: #cfe0ff;
+  --lu-yard-in: #101b40;
+  --lu-star: #fff4c2;
+  --lu-red: #ff5a6e;
+  --lu-green: #3ddc97;
+  --lu-yellow: #ffd65a;
+  --lu-blue: #5aa9ff;
+  --lu-frame-1: #2a3a6e;
+  --lu-frame-2: #141f45;
+  --lu-frame-3: #060b1f;
+}
+
 .lu-bg {
   fill: var(--lu-bg);
 }
@@ -207,11 +222,29 @@
   filter: drop-shadow(0 0 6px rgba(45, 226, 230, 0.35));
 }
 
+/* Raat: starry tracks, light glowing lines */
+.bt-night .lu-sq:not(.lu-lane, [class*='lu-fill-']) {
+  fill: url(#lu-stars);
+}
+
+.bt-night .lu-sq,
+.bt-night .lu-home {
+  stroke-width: 0.05;
+}
+
+.bt-night .lu-yard-in {
+  stroke: rgba(207, 224, 255, 0.5);
+}
+
+.bt-night .lu-svg {
+  filter: drop-shadow(0 0 5px rgba(170, 200, 255, 0.4));
+}
+
 /* whose turn: their yard glows */
 .lu-yard-glow {
   position: absolute;
-  width: 40%;
-  height: 40%;
+  width: calc(100% * 6 / 15.5);
+  height: calc(100% * 6 / 15.5);
   border-radius: 12%;
   box-shadow: 0 0 0 3px #fff, 0 0 26px 8px var(--glow, #fff);
   translate: -50% -50% 1px;

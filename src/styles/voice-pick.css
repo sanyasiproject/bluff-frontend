@@ -1,0 +1,41 @@
+/* ---------- voice picker (components/VoiceSettings.tsx): Profile, lobby drawer, table menus ---------- */
+
+.voice-set {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.voice-set.compact {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.voice-set-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.voice-set-top > b {
+  margin-right: auto;
+}
+
+.voice-set .mini-seg button {
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.voice-set-hint,
+.voice-set-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.voice-set-hint {
+  color: #ffd27a;
+}

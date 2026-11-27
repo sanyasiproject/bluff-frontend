@@ -111,6 +111,19 @@
   background: radial-gradient(circle at 35% 30%, #7a5208, #3d2802 70%);
 }
 
+.lu-dice.skin-jade .lu-face {
+  background:
+    radial-gradient(60% 40% at 70% 80%, rgba(220, 255, 235, 0.18), transparent 70%),
+    radial-gradient(circle at 30% 25%, #9fe3bd 0%, #2e9b62 45%, #0f5a35 100%);
+  box-shadow: inset 0 0 0 1px rgba(5, 50, 28, 0.5), inset 0 -3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.lu-dice.skin-jade .lu-face i.pip,
+.lu-dice.skin-jade .lu-face.f1 i.pip {
+  background: radial-gradient(circle at 35% 30%, #fff, #e3f3ea 70%);
+  box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.25);
+}
+
 /* my turn to roll: the dice glows and bobs, waiting for a tap */
 .lu-dice.live {
   cursor: pointer;

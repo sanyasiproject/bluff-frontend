@@ -6,6 +6,10 @@ const TURNS: Record<LudoColor, number> = { red: 3, green: 2, yellow: 1, blue: 0 
 
 export type Pt = [number, number];
 
+/** the board svg's margin round the 15x15 squares, and the squares it shows across */
+export const BOARD_PAD = 0.25;
+export const BOARD_SPAN = 15 + BOARD_PAD * 2;
+
 /** rotates a point of the 15x15 board (continuous coords) by quarter turns clockwise round its centre */
 export function turnPt([x, y]: Pt, turns: number): Pt {
   let p: Pt = [x, y];
@@ -67,7 +71,7 @@ export function gotiSpots(seats: LudoSeat[], turns: number): GotiSpot[] {
       out.push({ key: `${seat.color}-${token}`, seat, color: seat.color, token, progress, at: spotOf(seat.color, progress, token, turns), k: 1, dx: 0, dy: 0 });
     });
   }
-  // group by square (base spots are each their own)
+  // group by square (base spots are each their own); home gotis share their colour's triangle
   const groups = new Map<string, GotiSpot[]>();
   for (const g of out) {
     if (g.progress <= LUDO_BASE) continue;
@@ -75,15 +79,57 @@ export function gotiSpots(seats: LudoSeat[], turns: number): GotiSpot[] {
     groups.set(id, [...(groups.get(id) ?? []), g]);
   }
   for (const list of groups.values()) {
-    if (list.length < 2) continue;
-    const n = list.length;
+    const n = Math.min(list.length, 4);
+    if (list[0].progress >= LUDO_HOME) {
+      list.forEach((g, i) => placeHome(g, n, i % 4, turns));
+      continue;
+    }
+    if (n < 2) continue;
     list.forEach((g, i) => {
-      g.k = n > 2 ? 0.62 : 0.74;
-      g.dx = (i - (n - 1) / 2) * (n > 2 ? 0.26 : 0.32);
-      g.dy = (i % 2 === 0 ? -1 : 1) * (n > 2 ? 0.08 : 0);
+      const [dx, dy] = SHARE[n][i % 4];
+      g.k = SHARE_K[n];
+      g.dx = dx;
+      g.dy = dy;
     });
   }
   return out;
+}
+
+/** several gotis on one square: a small cluster that stays inside it */
+const SHARE: Record<number, Pt[]> = {
+  2: [[-0.19, 0], [0.19, 0]],
+  3: [[-0.2, -0.16], [0.2, -0.16], [0, 0.2]],
+  4: [[-0.2, -0.18], [0.2, -0.18], [-0.2, 0.18], [0.2, 0.18]],
+};
+const SHARE_K: Record<number, number> = { 2: 0.66, 3: 0.56, 4: 0.52 };
+
+/** the outer edge's middle of each home triangle (its apex is the board centre) */
+const HOME_BASE: Record<LudoColor, Pt> = { red: [6, 7.5], green: [7.5, 6], yellow: [9, 7.5], blue: [7.5, 9] };
+/** home gotis in a triangle: [along the edge, in from the edge] in squares, by how many are home */
+const HOME_FAN: Record<number, Pt[]> = {
+  1: [[0, 0.55]],
+  2: [[-0.32, 0.5], [0.32, 0.5]],
+  3: [[-0.42, 0.34], [0.42, 0.34], [0, 0.86]],
+  4: [[-0.55, 0.3], [0.55, 0.3], [-0.2, 0.82], [0.2, 0.82]],
+};
+const HOME_K: Record<number, number> = { 1: 0.85, 2: 0.7, 3: 0.6, 4: 0.56 };
+
+/** the i-th of n home gotis: its centre inside its colour's triangle and its size */
+export function homeSlot(c: LudoColor, n: number, i: number, turns: number): { at: Pt; k: number } {
+  const m = Math.max(1, Math.min(n, 4));
+  const [bx, by] = HOME_BASE[c];
+  const inX = (7.5 - bx) / 1.5;
+  const inY = (7.5 - by) / 1.5;
+  const [u, v] = HOME_FAN[m][Math.min(i, m - 1)];
+  return { at: turnPt([bx + inX * v - inY * u, by + inY * v + inX * u], turns), k: HOME_K[m] };
+}
+
+/** a home goti neatly inside its colour's triangle, fanned when several are home */
+function placeHome(g: GotiSpot, n: number, i: number, turns: number) {
+  const { at, k } = homeSlot(g.color, n, i, turns);
+  g.k = k;
+  g.dx = at[0] - g.at[0];
+  g.dy = at[1] - g.at[1];
 }
 
 /** turn order colours, for picking the corner each seat sits at */

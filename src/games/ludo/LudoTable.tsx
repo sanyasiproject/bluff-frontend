@@ -18,10 +18,10 @@ import { cx } from '../../lib/cards';
 import { confettiAt } from '../../lib/motion';
 import { sfx } from '../../lib/sounds';
 import { unlockSpeech } from '../../lib/speech';
-import { levelOf, LUDO_COLOR_HEX, type LudoView } from '../../types';
+import { levelOf, LUDO_COLOR_HEX, type LudoColor, type LudoView } from '../../types';
 import type { TableProps } from '../registry';
 import { Dice } from './Dice';
-import { cornerOf, gotiSpots, turnPt, turnsFor, yardOf } from './geometry';
+import { BOARD_PAD, BOARD_SPAN, cornerOf, gotiSpots, turnPt, turnsFor, yardOf } from './geometry';
 import { GotiLayer } from './Gotis';
 import { LudoBoard } from './LudoBoard';
 import { LudoClock, LudoBanner, type Banner } from './LudoHud';
@@ -29,7 +29,7 @@ import { LudoLooksSheet } from './LudoLooks';
 import { LudoMenus, type LudoPanel } from './LudoMenus';
 import { LudoOver } from './LudoOver';
 import { LudoSeatCorner } from './LudoSeat';
-import { useLudoLooks } from './looks';
+import { lookOfPlayer, useLudoLooks } from './looks';
 import { ludoSfx } from './sounds';
 
 const BUBBLE_MS = 4000;
@@ -48,7 +48,7 @@ export function LudoTable(props: TableProps) {
 
 function LudoTableInner({ view, actions, bubbles, auth, notes = [], lv }: TableProps & { lv: LudoView }) {
   const level = auth.user ? levelOf(auth.user.stats) : 1;
-  const looks = useLudoLooks(level);
+  const myLooks = useLudoLooks(level);
   const [panel, setPanel] = useState<LudoPanel>(null);
   const [looksOpen, setLooksOpen] = useState(false);
   const [target, setTarget] = useState<string | null>(null);
@@ -84,11 +84,21 @@ function LudoTableInner({ view, actions, bubbles, auth, notes = [], lv }: TableP
   const fresh = bubbles.filter((b) => Date.now() - b.at < BUBBLE_MS);
   const bubbleOf = (id: string) => [...fresh].reverse().find((b) => b.from === id) ?? null;
 
+  // shared looks: each seat's gotis in its player's style, the dice in the turn player's skin, the host's board
+  const lookOf = (id: string | null | undefined) =>
+    lookOfPlayer([...view.players, ...view.watchers].find((p) => p.id === id) ?? (id === view.meId ? { id } : undefined), view.meId, myLooks);
+  const styleOf = (color: LudoColor) => lookOf(lv.seats.find((s) => s.color === color)?.playerId).goti;
+  const diceBy = useRef<string>(lv.turnId ?? lv.last?.playerId ?? view.meId);
+  if (lv.turnId) diceBy.current = lv.turnId;
+  const boardLook = lookOf(view.hostId).board;
+  const diceLook = lookOf(diceBy.current).dice;
+
   // one board square in px, kept in step with the screen
   useLayoutEffect(() => {
     const el = planeRef.current;
     if (!el) return;
-    const measure = () => setCell(el.offsetWidth / 15);
+    // the board svg shows 15.5 squares (a quarter-square margin each side), so a square is width / 15.5
+    const measure = () => setCell(el.offsetWidth / BOARD_SPAN);
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -211,11 +221,11 @@ function LudoTableInner({ view, actions, bubbles, auth, notes = [], lv }: TableP
     <main className={cx('table lu-table', myTurn && 'lu-my-turn')} style={{ ['--turn-col' as string]: turnSeat ? LUDO_COLOR_HEX[turnSeat.color] : '#fff' } as CSSProperties}>
       <div className="lu-room" aria-hidden />
       <div ref={stageRef} className="lu-stage">
-        <div ref={planeRef} className={cx('lu-plane', `bt-${looks.board}`)} style={{ ['--cell' as string]: `${cell}px` } as CSSProperties}>
+        <div ref={planeRef} className={cx('lu-plane', `bt-${boardLook}`)} style={{ ['--cell' as string]: `${cell}px` } as CSSProperties}>
           <div className="lu-frame" aria-hidden />
           <LudoBoard turns={turns} inPlay={lv.seats.map((s) => s.color)} />
           {yardGlow && turnSeat && (
-            <i className="lu-yard-glow" style={{ left: `${(yardGlow[0] / 15) * 100}%`, top: `${(yardGlow[1] / 15) * 100}%`, ['--glow' as string]: LUDO_COLOR_HEX[turnSeat.color] } as CSSProperties} />
+            <i className="lu-yard-glow" style={{ left: `${((yardGlow[0] + BOARD_PAD) / BOARD_SPAN) * 100}%`, top: `${((yardGlow[1] + BOARD_PAD) / BOARD_SPAN) * 100}%`, ['--glow' as string]: LUDO_COLOR_HEX[turnSeat.color] } as CSSProperties} />
           )}
           {cell > 0 && (
             <GotiLayer
@@ -225,7 +235,7 @@ function LudoTableInner({ view, actions, bubbles, auth, notes = [], lv }: TableP
               last={lv.last}
               legal={legal}
               ghost={ghost}
-              gotiStyle={looks.goti}
+              styleOf={styleOf}
               mine={mover && myTurn ? [mover.color] : mySeat ? [mySeat.color] : []}
               onPick={pick}
               onPoint={setPoint}
@@ -258,7 +268,7 @@ function LudoTableInner({ view, actions, bubbles, auth, notes = [], lv }: TableP
         })}
         {playing && (
           <div className={cx('lu-dice-spot', dieCorner)}>
-            <Dice value={lv.dice} rollSeq={lv.rollSeq} skin={looks.dice} live={canRoll} rolling={rolling} onRoll={roll} label={canRoll ? 'Tap to roll' : undefined} />
+            <Dice value={lv.dice} rollSeq={lv.rollSeq} skin={diceLook} live={canRoll} rolling={rolling} onRoll={roll} label={canRoll ? 'Tap to roll' : undefined} />
           </div>
         )}
         {banner && <LudoBanner banner={banner} />}
@@ -292,12 +302,12 @@ function LudoTableInner({ view, actions, bubbles, auth, notes = [], lv }: TableP
       <LiveVoiceNotice />
       {watching && <p className="lu-watch-note">👀 Watching · you'll play next game</p>}
 
-      {view.phase === 'over' && !overSeen && <LudoOver view={view} lv={lv} gotiStyle={looks.goti} onNext={() => setOverSeen(true)} />}
+      {view.phase === 'over' && !overSeen && <LudoOver view={view} lv={lv} styleOf={styleOf} onNext={() => setOverSeen(true)} />}
       {view.phase === 'over' && overSeen && (
         <GameOver view={view} onLobby={actions.toLobby} onRematch={isHost ? actions.rematch : undefined} startLevel={startLevel.current} />
       )}
       {levelUp !== null && overSeen && <LevelUp level={levelUp} from={startLevel.current} onClose={() => setLevelUp(null)} />}
-      {looksOpen && <LudoLooksSheet level={level} onClose={() => setLooksOpen(false)} />}
+      {looksOpen && <LudoLooksSheet level={level} host={isHost} onClose={() => setLooksOpen(false)} />}
       {target && view.players.find((p) => p.id === target) && (
         <SeatSheet player={view.players.find((p) => p.id === target)!} auth={auth} onThrow={(i) => void actions.throwAt(target, i)} onClose={() => setTarget(null)} />
       )}

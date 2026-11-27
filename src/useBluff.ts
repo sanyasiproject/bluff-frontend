@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { inviteCode } from './lib/invite';
 import { pushPileReaction } from './lib/pileReactions';
 import { request, ServerError, socket } from './lib/socket';
-import { speak, voiceShiftOf } from './lib/speech';
+import { speak, speakLine, voiceShiftOf } from './lib/speech';
 import { clearSession, loadSavedSession, loadTabSession, saveName, saveSession, type Session } from './lib/storage';
 import {
   chatSetOf,
+  LUDO_QUICK_VOICE,
   speaksQuickChat,
   THROWS,
   type Announcement,
@@ -17,6 +18,7 @@ import {
   type GiftEvent,
   type GiftReceived,
   type InviteEvent,
+  type LudoLookChoice,
   type PlayerPlays,
   type PluggedMove,
   type Rank,
@@ -27,6 +29,7 @@ import {
   type ThrowEvent,
 } from './types';
 import { mutedMember } from './lib/mute';
+import { sfx } from './lib/sounds';
 
 export interface Invite extends InviteEvent {
   key: number;
@@ -82,6 +85,12 @@ export interface PendingWatch {
   askedOf?: string;
 }
 
+/** the host's get-ready buzz: who sent it; key changes on every buzz */
+export interface Nudged {
+  from: string;
+  key: number;
+}
+
 let noteSeq = 0;
 
 /** an invite link to a different room wins over this tab's old seat */
@@ -97,6 +106,9 @@ export function useBluff() {
   /** id of the current connection; changes only on a real reconnect, so callers can retry once per connection */
   const [connectionId, setConnectionId] = useState<string | null>(null);
   const [view, setView] = useState<RoomView | null>(null);
+  /** room code + connection of the last view: changes on entering a room and on every rejoin */
+  const [roomKey, setRoomKey] = useState<string | null>(null);
+  const roomKeyRef = useRef<string | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const [bubbles, setBubbles] = useState<ChatBubble[]>([]);
@@ -104,6 +116,8 @@ export function useBluff() {
   const [invites, setInvites] = useState<Invite[]>([]);
   const [replaced, setReplaced] = useState(false);
   const [pendingWatch, setPendingWatch] = useState<PendingWatch | null>(null);
+  /** the host buzzed me to get ready (lobby) */
+  const [nudged, setNudged] = useState<Nudged | null>(null);
   const pendingRef = useRef<PendingWatch | null>(null);
   const setPending = (p: PendingWatch | null) => {
     pendingRef.current = p;
@@ -165,6 +179,11 @@ export function useBluff() {
     const onState = (v: RoomView) => {
       viewRef.current = v;
       setView(v);
+      const key = `${v.code}:${socket.id ?? ''}`;
+      if (key !== roomKeyRef.current) {
+        roomKeyRef.current = key;
+        setRoomKey(key);
+      }
       // a room made from a game tile: the host switches it to that game once (servers that took it at create skip this)
       const want = wantGame.current;
       if (want && v.phase === 'lobby' && v.hostId === v.meId) {
@@ -196,7 +215,12 @@ export function useBluff() {
         return;
       }
       // each player in their own pitch, so you can tell who said it
-      if (speaksQuickChat(v?.config.game)) speak(text, false, voiceShiftOf(c.from));
+      if (speaksQuickChat(v?.config.game)) {
+        // Ludo lines carry their Hindi words and a mood; other tables' lines are read as written
+        const line = v?.config.game === 'ludo' ? LUDO_QUICK_VOICE[c.index] : undefined;
+        if (line) speakLine(line, text, voiceShiftOf(c.from));
+        else speak(text, false, voiceShiftOf(c.from));
+      }
       // one place only: at the table, another player's message is a bubble on their seat; my own, a watcher's and the lobby's float up
       const onSeat = !!v && v.phase !== 'lobby' && c.from !== v.meId && v.players.some((p) => p.id === c.from);
       if (onSeat) setBubbles((prev) => [...prev.slice(-10), { key: ++noteSeq, from: c.from, text, at: Date.now() }]);
@@ -213,6 +237,12 @@ export function useBluff() {
     const onReplaced = () => {
       replacedRef.current = true;
       setReplaced(true);
+    };
+    // host's get-ready buzz: shake the phone (Android; iPhones can't), an attention sound and a banner
+    const onNudged = ({ from }: { from: string }) => {
+      navigator.vibrate?.([200, 100, 200, 100, 300]);
+      sfx.nudge();
+      setNudged({ from, key: ++noteSeq });
     };
     const onKicked = ({ code }: { code: string }) => {
       session.current = null;
@@ -240,6 +270,7 @@ export function useBluff() {
     socket.on('gift:received', onGiftReceived);
     socket.on('session:replaced', onReplaced);
     socket.on('room:kicked', onKicked);
+    socket.on('room:nudged', onNudged);
     socket.on('invite', onInvite);
     socket.on('watch:admitted', onAdmitted);
     socket.on('watch:denied', onDenied);
@@ -253,6 +284,7 @@ export function useBluff() {
       socket.off('chat', onChat);
       socket.off('throw', onThrow);
       socket.off('gift', onGift);
+      socket.off('room:nudged', onNudged);
       socket.off('gift:received', onGiftReceived);
       socket.off('room:kicked', onKicked);
       socket.off('invite', onInvite);
@@ -365,6 +397,17 @@ export function useBluff() {
       start: () => run(() => request('room:start')),
       /** lobby: ready to start, or not yet (the host starts once everyone is ready) */
       setReady: (ready: boolean) => run(() => request('room:ready', { ready })),
+      /** host: buzz everyone not ready yet (server allows one every NUDGE_COOLDOWN_MS); errors come back to the Buzz button */
+      nudge: async (): Promise<{ ok: true; count: number } | { ok: false; error: string }> => {
+        try {
+          const res = await request<{ count: number }>('room:nudge');
+          return { ok: true, count: res.count };
+        } catch (err) {
+          return { ok: false, error: err instanceof Error ? err.message : 'Could not buzz' };
+        }
+      },
+      /** the get-ready banner was seen or answered */
+      clearNudge: () => setNudged(null),
       toLobby: () => run(() => request('room:lobby')),
       rematch: () => run(() => request('room:rematch')),
       endGame: () => run(() => request('room:end')),
@@ -401,6 +444,8 @@ export function useBluff() {
       c7Call: () => run(() => request('c7:call')),
       /** registry games (Ludo, ...): one move for the game on the table */
       gameMove: async (move: PluggedMove) => (await run(() => request('game:move', move))) !== null,
+      /** my Ludo looks for the room (gotis and dice everyone sees, the board when I'm host); quiet on older servers */
+      ludoLook: (look: LudoLookChoice) => request('ludo:look', look).catch(() => undefined),
       shuffleTeams: () => run(() => request('room:teams')),
       moveToSlot: (slot: number) => run(() => request('room:slot', { slot })),
       askSwap: (memberId: string) => run(() => request('room:swap', { memberId })),
@@ -421,7 +466,7 @@ export function useBluff() {
     };
   }, [run, pushNote]);
 
-  return { status, connectionId, view, notes, reactions, bubbles, flyers, invites, replaced, pendingWatch, actions };
+  return { status, connectionId, roomKey, view, notes, reactions, bubbles, flyers, invites, replaced, pendingWatch, nudged, actions };
 }
 
 export type Actions = ReturnType<typeof useBluff>['actions'];

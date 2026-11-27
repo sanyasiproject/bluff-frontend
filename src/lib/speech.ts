@@ -1,4 +1,5 @@
 import { loadPref, savePref } from './storage';
+import type { VoiceMood } from '../types';
 
 /** cute: a soft girl's voice pitched up, for Ludo's quick lines and everything else */
 export type VoiceGender = 'female' | 'male' | 'cute';
@@ -26,6 +27,8 @@ let gender: VoiceGender = saved === 'male' ? 'male' : saved === 'female' ? 'fema
 /** the voice family to match: cute uses a girl's voice */
 const family = (): 'female' | 'male' => (gender === 'male' ? 'male' : 'female');
 let voice: SpeechSynthesisVoice | null = null;
+/** a Hindi voice for lines written in Devanagari; null when the phone has none */
+let hiVoice: SpeechSynthesisVoice | null = null;
 let enabled = loadPref('sound') !== 'off';
 let unlocked = false;
 let queued = 0;
@@ -53,6 +56,10 @@ function pickVoice(): void {
   const voices = (synth?.getVoices() ?? []).filter((v) => langRank(v) < 99 && !NOVELTY.test(v.name));
   voices.sort((a, b) => genderRank(a) - genderRank(b) || natural(a) - natural(b) || langRank(a) - langRank(b));
   voice = voices[0] ?? null;
+  // Hindi lines: a real Hindi voice reads Devanagari naturally (an English voice would spell it out)
+  const hindi = (synth?.getVoices() ?? []).filter((v) => v.lang.replace('_', '-').toLowerCase().startsWith('hi') && !NOVELTY.test(v.name));
+  hindi.sort((a, b) => genderRank(a) - genderRank(b) || natural(a) - natural(b));
+  hiVoice = hindi[0] ?? null;
 }
 
 /** many Android phones have one voice per language, so without a matching voice the pitch alone makes Boy and Girl clearly different */
@@ -135,3 +142,43 @@ export function speak(text: string, force = false, shift = 1): void {
   queued++;
   synth.speak(u);
 }
+
+/** how each mood bends the voice: [pitch, speed] */
+const MOODS: Record<VoiceMood, [number, number]> = {
+  plead: [1.12, 0.9],
+  sad: [0.9, 0.82],
+  happy: [1.08, 1.06],
+  excited: [1.16, 1.16],
+  cheeky: [1.06, 1.02],
+  calm: [1, 0.96],
+};
+
+/** a quick line said with feeling: Hindi lines with a Hindi voice when the phone has one, pitch and speed from its mood, one speaker's own step */
+export function speakLine(line: { say: string; lang: 'hi' | 'en'; mood: VoiceMood }, fallback: string, shift = 1): void {
+  if (!synth || !enabled) return;
+  // no Hindi voice on this phone: the Roman-letter line reads better with the English voice
+  const hindi = line.lang === 'hi' && hiVoice !== null;
+  const text = (hindi || line.lang === 'en' ? line.say : fallback).replace(EMOJI, '').replace(/\s+/g, ' ').trim();
+  if (!text) return;
+  if (queued >= 3) {
+    synth.cancel();
+    queued = 0;
+  }
+  const u = new SpeechSynthesisUtterance(text);
+  const v = hindi ? hiVoice : voice;
+  if (v) u.voice = v;
+  u.lang = v?.lang ?? (hindi ? 'hi-IN' : 'en-IN');
+  const [mp, mr] = MOODS[line.mood];
+  // a Hindi voice is matched by gender only loosely, so lift it a little less for Cute
+  const base = hindi ? (gender === 'cute' ? 1.35 : gender === 'male' ? 0.85 : 1.05) : pitch();
+  u.pitch = Math.min(2, base * mp * shift);
+  u.rate = Math.min(1.6, (gender === 'male' ? 0.98 : 1.04) * mr);
+  u.onend = u.onerror = () => {
+    queued = Math.max(0, queued - 1);
+  };
+  queued++;
+  synth.speak(u);
+}
+
+/** the voices this phone has for the settings note: English and Hindi */
+export const voiceNames = () => ({ en: voice?.name ?? null, hi: hiVoice?.name ?? null });

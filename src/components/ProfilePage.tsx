@@ -21,6 +21,7 @@ import { RivalsList } from './Rivals';
 import { NameCard } from './NameCard';
 import { NotifyRow } from './NotifyRow';
 import { LangRow } from './LangRow';
+import { VoiceSettings } from './VoiceSettings';
 import { OnlineFriends } from './OnlineFriends';
 import { RulesPage } from './RulesPage';
 import { ReplayPage } from './ReplayPage';
@@ -332,6 +333,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
             <NotifyRow auth={auth} />
             <FriendAlertsRow auth={auth} />
             <LangRow />
+            <VoiceSettings />
             {user.role === 'admin' && onOpenAdmin && (
               <div className="quick-actions">
                 <button

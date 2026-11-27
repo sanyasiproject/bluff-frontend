@@ -152,7 +152,7 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             <li>Your colour always sits at the near-left corner. Gotis that can move glow and bob; hold one to see a ghost on its landing square, tap to move. With one move it is made for you; with none the turn passes.</li>
             <li>Turn timer: when time runs out the bot brain rolls or moves for you.</li>
             <li>Game over: a finish-order podium with fireworks and the list of every kill, then the usual coins screen. Leaving mid-game is a loss and your gotis leave the board.</li>
-            <li>Looks (per phone, from 🎨 at the table or Profile › Looks): boards {LUDO_BOARDS.map((l) => `${l.name} (Lv ${l.level})`).join(', ')}; gotis {LUDO_GOTIS.map((l) => `${l.name} (Lv ${l.level})`).join(', ')}; dice {LUDO_DICE.map((l) => `${l.name} (Lv ${l.level})`).join(', ')}.</li>
+            <li>Looks (picked from 🎨 at the table or Profile › Looks, sent to the room): everyone sees each player's gotis in their style, the dice in the skin of whoever's turn it is, and the host's board. Boards {LUDO_BOARDS.map((l) => `${l.name} (Lv ${l.level})`).join(', ')}; gotis {LUDO_GOTIS.map((l) => `${l.name} (Lv ${l.level})`).join(', ')}; dice {LUDO_DICE.map((l) => `${l.name} (Lv ${l.level})`).join(', ')}.</li>
             <li>Profile: a 🎮 Games card per game (played, won), with Ludo kills, gotis home and sixes, and Ludo achievements. Ludo daily and weekly missions count kills, gotis home, sixes, games and wins.</li>
           </ul>
         </Section>
@@ -557,9 +557,14 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
           <ul>
             <li>
               ✅ Ready check: everyone in the lobby except the host gets 👍 I'm ready. Each player shows ✅ Ready or ⏳ Not ready, and the host's
-              Start stays greyed out (⏳ Waiting for 2 players) until all of them are ready. Ready players can tap their button again to ask for a
+              Start stays greyed out (⏳ 2 not ready) until all of them are ready. Ready players can tap their button again to ask for a
               minute. A new stake, a different game, or turning 🏅 Ranked or a twist on or off asks everyone again; bots and players on an older version of the app always count as ready.
               Play again after a game keeps everyone's ready.
+            </li>
+            <li>
+              📳 Buzz: while Start waits only on people not ready, the host gets 📳 Buzz beside it (once every 10 s, the countdown shows on the
+              button). Everyone not ready gets a vibration (Android; iPhones can't vibrate from a web app), a short sound and a banner "Host is
+              waiting — tap I'm ready" with their I'm ready button lit up.
             </li>
             <li>Tap a player in the lobby to open their card. The host also gets: Make host, Move to watching/playing, Remove from room.</li>
             <li>The host can remove people during a game (People in the ⋯ menu); their cards leave the game and they pay or win nothing.</li>
@@ -914,7 +919,11 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             <li>Install from the home screen card (Android: Install; iPhone: Share → Add to Home Screen).</li>
             <li>Invite with the WhatsApp, Share or Copy buttons; the link drops friends straight into the room.</li>
             <li>💬 quick chat: emoji and short messages float up the screen (messages wait a second at the top). 🔊 sound and voice can be muted from the ⋯ menu.</li>
-            <li>Voice: Girl or Boy in the lobby. Phones without a male voice get a deeper version of the same voice.</li>
+            <li>
+              Voice: Girl, Boy or Cute 🎀 with a 🔊 Test line, in Profile › Settings, the lobby's 🗣️ Voice tab and every table's ☰ and ⋯ menus. It
+              notes the phone's Hindi voice, or that lines are read in English letters when there is none. Phones without a male voice get a deeper
+              version of the same voice.
+            </li>
             <li>
               Throw an emoji at someone ({THROWS.length} to pick from: {THROWS.join(' ')}): tap their seat in a game, or their name in the lobby.
               Everyone sees it wind up, arc across and land with its own animated hit and sound: the bomb's fuse burns then blows up the seat,

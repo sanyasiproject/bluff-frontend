@@ -11,7 +11,7 @@ import { useNewCards } from '../lib/newCards';
 import { useOneCardAlert } from '../lib/spotlight';
 import { sfx } from '../lib/sounds';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../lib/speech';
-import { backsClaim, claimsAllowed, DEFAULT_CARD_BACK, SHIELD_MAX_CARDS, type Card, type FriendsResponse, type PublicPlayer, type Rank, type RoomView } from '../types';
+import { backsClaim, claimsAllowed, DEFAULT_CARD_BACK, gameInfo, gameOpt, isPlugged, SHIELD_MAX_CARDS, type Card, type FriendsResponse, type PublicPlayer, type Rank, type RoomView } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions, ChatBubble, Note } from '../useBluff';
 import { ConfirmBox } from './ConfirmBox';
@@ -36,6 +36,7 @@ import { StreakMark, TurnCountdown, useTurnEndsAt } from './TurnTimer';
 import { LiveMark, LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { SecretChip } from './SecretMissions';
 import { MuteButton, MuteMark } from './MuteButton';
+import { VoiceSettings } from './VoiceSettings';
 
 interface SeatProps {
   player: PublicPlayer;
@@ -258,8 +259,10 @@ export function GameMenu({
     <Backdrop onClose={onClose}>
       <h3>Room {view.code}</h3>
       <p className="game-rules-line">
-        {c.game !== 'rang' && `${c.decks === 2 ? '2 decks' : '1 deck'} · `}
-        {c.game === 'rang'
+        {c.game !== 'rang' && !isPlugged(c.game) && `${c.decks === 2 ? '2 decks' : '1 deck'} · `}
+        {isPlugged(c.game)
+          ? `${gameInfo(c.game).name}${c.game === 'ludo' ? ` · ${gameInfo(c.game).options[0]?.choices.find((o) => o.value === gameOpt(c, 'mode'))?.label ?? ''}` : ''}${c.teams ? ' · 2 vs 2' : ''}`
+          : c.game === 'rang'
           ? ['Rang', `up to ${c.rangPicks} pick${c.rangPicks > 1 ? 's' : ''} a turn`, c.rangStack && '+2/+4 stack', c.rangChallenge && 'Challenge +4', c.rangSwap && '7-0 swap'].filter(Boolean).join(' · ')
           : c.game === 'crazy7'
           ? `Crazy 7 · ${c.handSize} cards each · up to ${c.maxPicks} pick${c.maxPicks > 1 ? 's' : ''}${c.stack7 ? ' · 7s stack' : ''}`
@@ -272,6 +275,7 @@ export function GameMenu({
         <button className="btn block" onClick={onToggleSound}>
           {sound ? '🔊 Sound on · tap to mute' : '🔇 Sound off · tap to turn on'}
         </button>
+        <VoiceSettings compact />
         {onPeople && (
           <button className="btn block" onClick={onPeople}>
             👥 People in this room

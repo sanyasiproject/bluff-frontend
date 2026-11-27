@@ -1,7 +1,7 @@
 // The Ludo board, drawn once as SVG on the 15x15 grid and turned so my colour sits near-left
 import { memo } from 'react';
 import { LUDO_COLORS, LUDO_LANE_CELLS, LUDO_RING_CELLS, LUDO_SAFE_RING, type LudoColor } from '../../types';
-import { yardOf } from './geometry';
+import { BOARD_PAD, BOARD_SPAN, yardOf } from './geometry';
 
 /** a 5-point star centred in a cell */
 function star(cx: number, cy: number, r: number): string {
@@ -27,12 +27,21 @@ const TRIANGLES: Record<LudoColor, string> = {
 /** the static board; turns: quarter turns clockwise; colours in play get their yards lit */
 export const LudoBoard = memo(function LudoBoard({ turns, inPlay }: { turns: number; inPlay: LudoColor[] }) {
   return (
-    <svg className="lu-svg" viewBox="-0.25 -0.25 15.5 15.5" aria-hidden>
+    <svg className="lu-svg" viewBox={`${-BOARD_PAD} ${-BOARD_PAD} ${BOARD_SPAN} ${BOARD_SPAN}`} aria-hidden>
       <defs>
         <radialGradient id="lu-sheen" cx="50%" cy="30%" r="75%">
           <stop offset="0" stopColor="#fff" stopOpacity="0.22" />
           <stop offset="1" stopColor="#fff" stopOpacity="0" />
         </radialGradient>
+        {/* Raat board: a night-sky square with a few soft stars */}
+        <pattern id="lu-stars" width="1" height="1" patternUnits="userSpaceOnUse">
+          <rect width="1" height="1" fill="#13204a" />
+          <circle cx="0.22" cy="0.3" r="0.035" fill="#dfe9ff" opacity="0.75" />
+          <circle cx="0.7" cy="0.18" r="0.022" fill="#fff" opacity="0.6" />
+          <circle cx="0.55" cy="0.72" r="0.03" fill="#cfe0ff" opacity="0.55" />
+          <circle cx="0.86" cy="0.62" r="0.018" fill="#fff" opacity="0.5" />
+          <circle cx="0.12" cy="0.82" r="0.02" fill="#fff4c2" opacity="0.6" />
+        </pattern>
       </defs>
       <g transform={`rotate(${turns * 90} 7.5 7.5)`}>
         <rect className="lu-bg" x="0" y="0" width="15" height="15" rx="0.3" />

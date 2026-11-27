@@ -187,6 +187,14 @@
   font-size: 10.5px;
 }
 
+.lu-look-note {
+  margin: -4px 0 2px;
+}
+
+.lu-look-note.warn {
+  color: var(--gold);
+}
+
 .lu-look-art {
   display: grid;
   place-items: center;

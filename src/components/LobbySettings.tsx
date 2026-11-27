@@ -1,11 +1,11 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { GameArt } from '../art/GameArt';
 import { Icon } from '../art/icons';
 import { useBack } from '../lib/back';
 import { cx } from '../lib/cards';
-import { getVoiceGender, onVoicesChanged, setVoiceGender, speak, unlockSpeech, type VoiceGender } from '../lib/speech';
 import { formatCoins, compactCoins, stakeLabel } from '../lib/coins';
 import { PluggedHelp, PluggedSettings, pluggedSummary } from '../games/GameOptions';
+import { VoiceSettings } from './VoiceSettings';
 import {
   BOT_LEVEL_NAMES,
   GAME_CATALOG,
@@ -35,7 +35,7 @@ const GAME_DESC: Partial<Record<GameKind, string>> = {
 };
 
 /** the lobby's settings tabs (landscape drawer); portrait shows them all at once */
-export type LobbyTab = 'game' | 'stakes' | 'extras' | 'help';
+export type LobbyTab = 'game' | 'stakes' | 'extras' | 'help' | 'voice';
 
 /** what a bot level lets the table stake, in a few words */
 const capText = (cap: number) => (cap === 0 ? 'Free only' : `Up to 🪙 ${compactCoins(cap)}`);
@@ -63,43 +63,6 @@ export function BotLevelPicker({ value, onPick }: { value: BotLevel; onPick: (le
         ))}
       </div>
     </div>
-  );
-}
-
-/** per-phone voice choice; Cute is the default */
-function VoicePicker({ sample }: { sample: string }) {
-  const [gender, setGender] = useState<VoiceGender>(getVoiceGender);
-  const [, refresh] = useState(0);
-  useEffect(() => onVoicesChanged(() => refresh((n) => n + 1)), []);
-
-  const test = () => {
-    unlockSpeech();
-    speak(sample, true);
-  };
-  const choose = (next: VoiceGender) => {
-    setVoiceGender(next);
-    setGender(next);
-    test();
-  };
-
-  return (
-    <section className="panel voice-row">
-      <span className="label">Voice</span>
-      <div className="mini-seg" role="group" aria-label="Voice">
-        <button className={cx(gender === 'female' && 'on')} aria-pressed={gender === 'female'} onClick={() => choose('female')}>
-          Girl
-        </button>
-        <button className={cx(gender === 'male' && 'on')} aria-pressed={gender === 'male'} onClick={() => choose('male')}>
-          Boy
-        </button>
-        <button className={cx(gender === 'cute' && 'on')} aria-pressed={gender === 'cute'} onClick={() => choose('cute')}>
-          Cute 🎀
-        </button>
-      </div>
-      <button className="btn ghost small" onClick={test}>
-        🔊 Test
-      </button>
-    </section>
   );
 }
 
@@ -216,7 +179,7 @@ export function SettingsBody({ view, isHost, coinsOn, tab, set, onLesson }: Body
   const land = tab !== null;
   const show = (t: LobbyTab) => tab === null || tab === t;
   // the game's own settings panel has rows on every tab but Help
-  const settingsOpen = !land || tab !== 'help';
+  const settingsOpen = !land || (tab !== 'help' && tab !== 'voice');
   const setLesson = onLesson;
   const crazy7 = view.config.game === 'crazy7';
   const rang = view.config.game === 'rang';
@@ -229,7 +192,6 @@ export function SettingsBody({ view, isHost, coinsOn, tab, set, onLesson }: Body
   const rankedKnown = typeof view.config.ranked === 'boolean';
   const twists = !view.config.kismat && !view.config.seedhi ? 'classic' : view.config.kismat && view.config.seedhi ? 'chaos' : null;
   const ranked = isBluff && view.config.ranked === true;
-  const me = [...view.players, ...view.watchers].find((p) => p.id === view.meId);
   return (
     <>
       {!isHost && show('game') && (
@@ -643,7 +605,7 @@ export function SettingsBody({ view, isHost, coinsOn, tab, set, onLesson }: Body
       </details>
       )}
 
-      {show('help') && <VoicePicker sample={plugged ? 'Please mera goti mat kaato' : rang ? `${me?.name ?? 'Ravi'} played a red seven. Priya is skipped` : crazy7 ? `${me?.name ?? 'Ravi'} played seven of spades. Priya picks 2` : `${me?.name ?? 'Ravi'} played four Queens`} />}
+      {show('voice') && <VoiceSettings />}
     </>
   );
 }
@@ -651,8 +613,8 @@ export function SettingsBody({ view, isHost, coinsOn, tab, set, onLesson }: Body
 /** which settings tabs this player gets: the host can change everything, others read the game and help */
 export function lobbyTabs(isHost: boolean, coinsOn: boolean, hasStakes: boolean): [LobbyTab, string][] {
   return isHost
-    ? [['game', '🎲 Game'], ...(hasStakes ? [['stakes', coinsOn ? '🪙 Stakes' : '🤖 Bots'] as [LobbyTab, string]] : []), ['extras', '✨ Extras'], ['help', '📘 Help']]
-    : [['game', '🎲 Game'], ['help', '📘 Help']];
+    ? [['game', '🎲 Game'], ...(hasStakes ? [['stakes', coinsOn ? '🪙 Stakes' : '🤖 Bots'] as [LobbyTab, string]] : []), ['extras', '✨ Extras'], ['voice', '🗣️ Voice'], ['help', '📘 Help']]
+    : [['game', '🎲 Game'], ['voice', '🗣️ Voice'], ['help', '📘 Help']];
 }
 
 /** the table's settings in a few words, for the sign on the felt */

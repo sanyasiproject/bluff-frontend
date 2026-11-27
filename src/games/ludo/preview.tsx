@@ -26,8 +26,32 @@ const START: number[][] = [
   [-1, 15, 47, -1],
 ];
 
+/** align sets: a = gotis home (4, 3, 2, 1) and in lanes; b = a yard, 4, 3 and 2 on one square */
+const ALIGN_A: number[][] = [
+  [56, 56, 56, 56],
+  [56, 56, 56, -1],
+  [56, 56, 51, -1],
+  [56, 55, -1, -1],
+];
+const ALIGN_B: number[][] = [
+  [-1, -1, 3, 20],
+  [10, 10, 10, 10],
+  [20, 20, 20, -1],
+  [5, 5, 53, -1],
+];
+/** c: two home and one 3 away, for the ghost going home (&dice=3) */
+const ALIGN_C: number[][] = [
+  [56, 56, 53, 50],
+  [56, -1, -1, -1],
+  [56, 56, 56, -1],
+  [20, -1, -1, -1],
+];
+
+/** bots' looks, so every style shows at one table; mine come from my picks */
+const BOT_LOOKS = [undefined, { board: 'night', goti: 'metal', dice: 'jade' }, { board: 'royal', goti: 'crown', dice: 'gold' }, { board: 'wood', goti: 'gem', dice: 'ruby' }];
+
 const player = (i: number): PublicPlayer =>
-  ({ id: IDS[i], name: NAMES[i], avatar: null, back: 'classic', table: 'classic', cardCount: 0, handValue: null, connected: true, place: null, registered: false, coins: null, username: null, level: 4 + i, bot: i > 0, ready: true, saza: null }) as PublicPlayer;
+  ({ ludoLook: BOT_LOOKS[i], id: IDS[i], name: NAMES[i], avatar: null, back: 'classic', table: 'classic', cardCount: 0, handValue: null, connected: true, place: null, registered: false, coins: null, username: null, level: 4 + i, bot: i > 0, ready: true, saza: null }) as PublicPlayer;
 
 function movableOf(seat: LudoSeat, dice: number): number[] {
   return seat.tokens.flatMap((p, t) => ((p < 0 && dice === 6) || (p >= 0 && p + dice <= LUDO_HOME) ? [t] : []));
@@ -38,14 +62,20 @@ export function LudoPreview() {
   const kill = mode === 'kill';
   const auto = mode === 'auto' || kill;
   const over = mode === 'over';
+  // ?ludoPreview=align&set=a|b&me=0..3&dice=N: frozen gotis for checking where they stand, my colour picked by &me
+  const align = mode === 'align';
+  const q = new URLSearchParams(location.search);
+  const rot = align ? Number(q.get('me') ?? 0) % 4 : 0;
+  const ALIGN = { a: ALIGN_A, b: ALIGN_B, c: ALIGN_C }[q.get('set') ?? 'a'] ?? ALIGN_A;
+  const preDice = align ? Number(q.get('dice') ?? 0) : 0;
   const [lv, setLv] = useState<LudoView>(() => ({
     mode: 'master',
-    seats: COLORS.map((color, i) => ({ playerId: IDS[i], color, tokens: kill && i === 3 ? [-1, 15, 22, -1] : [...START[i]], kills: i === 1 ? 2 : 0, home: 0, place: over ? [2, 1, 3, 4][i] : null, score: 0, unlocked: i !== 0 })),
+    seats: COLORS.map((_, i) => ({ playerId: IDS[i], color: COLORS[(i + rot) % 4], tokens: align ? [...ALIGN[i]] : kill && i === 3 ? [-1, 15, 22, -1] : [...START[i]], kills: i === 1 ? 2 : 0, home: 0, place: over ? [2, 1, 3, 4][i] : null, score: 0, unlocked: i !== 0 })),
     turnId: 'me',
-    dice: null,
-    rollSeq: 0,
-    rolled: false,
-    movable: [],
+    dice: preDice || null,
+    rollSeq: preDice ? 1 : 0,
+    rolled: !!preDice,
+    movable: preDice ? ALIGN[0].flatMap((p, t) => ((p < 0 && preDice === 6) || (p >= 0 && p + preDice <= LUDO_HOME) ? [t] : [])) : [],
     sixes: 0,
     movesFor: null,
     last: null,
@@ -94,7 +124,7 @@ export function LudoPreview() {
 
   // bots (and me in auto) roll and move at a human pace; forced passes and single moves happen by themselves
   useEffect(() => {
-    if (over) return;
+    if (over || align) return;
     const s = lv;
     const botTurn = s.turnId !== 'me' || auto;
     let t = 0;
