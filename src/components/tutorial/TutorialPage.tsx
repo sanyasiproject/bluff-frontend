@@ -9,6 +9,7 @@ import { BackButton } from '../BackButton';
 import { Hand } from '../Hand';
 import { BluffBoard, Crazy7Board } from './Boards';
 import { LESSONS, START, type ButtonId, type TableState } from './lessons';
+import { LudoLesson } from '../../games/ludo/LudoLesson';
 
 interface Props {
   game: GameKind;
@@ -18,8 +19,13 @@ interface Props {
   onClose: () => void;
 }
 
+/** the practice lesson for a game: Ludo has its own board lesson, the card games a scripted game */
+export function TutorialPage(props: Props) {
+  return props.game === 'ludo' ? <LudoLesson onDone={props.onDone} onClose={props.onClose} /> : <CardTutorialPage {...props} />;
+}
+
 /** a scripted practice game against Raju 🤖: each step waits for one exact tap */
-export function TutorialPage({ game, onDone, onClose }: Props) {
+function CardTutorialPage({ game, onDone, onClose }: Props) {
   const steps = LESSONS[game];
   const [i, setI] = useState(0);
   const [t, setT] = useState<TableState>(() => ({ ...START, ...steps[0].set }));

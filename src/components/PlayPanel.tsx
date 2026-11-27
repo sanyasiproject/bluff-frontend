@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
+import { gameInfo, type GameKind } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions, PendingWatch } from '../useBluff';
 
@@ -22,12 +23,15 @@ interface Props {
   onAccount: (sheet: 'login' | 'register') => void;
   onHowTo: () => void;
   onClose: () => void;
+  /** the game a new room starts in (picked on the home grid) */
+  game?: GameKind;
 }
 
 /** Home's Play panel: create a room or join one with a code (or the invite / waiting / locked states) */
 export function PlayPanel(p: Props) {
   const { auth, actions, online, busy, go, playName, invite, pendingWatch } = p;
   const [code, setCode] = useState('');
+  const info = gameInfo(p.game ?? 'bluff');
 
   const nameField = auth.user ? (
     <p className="playing-as">
@@ -128,7 +132,17 @@ export function PlayPanel(p: Props) {
         <div className="hp-ways">
           <div className="hp-way">
             <p className="hp-way-title">New game</p>
-            <button className="btn primary block shine" disabled={!playName || !online || busy} onClick={() => go(() => actions.create(playName))}>
+            {/* the game this room starts in; the host can still change it in the lobby */}
+            <div className="hp-game" style={{ '--c1': info.colors[0], '--c2': info.colors[1] } as CSSProperties}>
+              <span aria-hidden>{info.emoji}</span>
+              <span>
+                <b>{info.name}</b>
+                <small>
+                  {info.minPlayers}–{info.maxPlayers} players
+                </small>
+              </span>
+            </div>
+            <button className="btn primary block shine" disabled={!playName || !online || busy} onClick={() => go(() => actions.create(playName, info.kind))}>
               Create a room
             </button>
           </div>
@@ -161,7 +175,7 @@ export function PlayPanel(p: Props) {
   return (
     <div className="hp-panel">
       <header className="hp-head">
-        <h2 className="hp-title">Play</h2>
+        <h2 className="hp-title">Play {info.emoji}</h2>
         <button className="icon-btn hp-close" aria-label="Close" onClick={p.onClose}>
           ✕
         </button>

@@ -5,7 +5,9 @@ import type { Auth } from '../useAuth';
 import type { Actions, ConnStatus, PendingWatch } from '../useBluff';
 import { AccountCorner } from './AccountCorner';
 import { AccountSheet } from './AccountSheet';
-import { HeroFan, ShineTitle, SuitDrift } from './Ambient';
+import { ShineTitle, SuitDrift } from './Ambient';
+import { GameHub } from './GameHub';
+import { lastGame } from '../games/lastPlayed';
 import { FriendsSheet } from './FriendsSheet';
 import { HomeDock } from './HomeDock';
 import { HomeNotice } from './HomeNotice';
@@ -16,7 +18,7 @@ import { PlayPanel } from './PlayPanel';
 import { LessonChooser } from './tutorial/LessonOffer';
 import { TutorialPage } from './tutorial/TutorialPage';
 import { markTutorialSeen } from '../lib/tutorial';
-import type { GameKind } from '../types';
+import { APP_NAME, type GameKind } from '../types';
 
 interface HomeProps {
   status: ConnStatus;
@@ -35,6 +37,12 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
   const [slow, setSlow] = useState(false);
   /** the Play panel; an invite link opens it straight away */
   const [play, setPlay] = useState(() => inviteCode() !== null);
+  /** the game a new room starts in: the tapped tile, else the one played last */
+  const [game, setGame] = useState<GameKind>(() => lastGame() ?? 'bluff');
+  const openGame = (kind: GameKind) => {
+    setGame(kind);
+    setPlay(true);
+  };
   const [friends, setFriends] = useState(false);
   const [accountSheet, setAccountSheet] = useState<'login' | 'register' | null>(null);
   /** How to play: choosing a lesson, then the lesson itself */
@@ -104,30 +112,32 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
       {/* left of the stage: who's online now */}
       <OnlineList auth={auth} onOpen={() => setFriends(true)} />
 
-      {/* centre stage: logo, title and one big Play */}
-      <div className="home-stage">
-        <div className="hero">
-          <HeroFan />
-          <ShineTitle text="Bluff" />
-          <p className="muted hero-tag">Lie with a straight face. Catch your friends.</p>
-        </div>
-        <button className="btn primary shine home-play-btn" onClick={() => setPlay(true)}>
-          <span aria-hidden>▶</span> Play
-        </button>
-        {pendingWatch ? (
-          <button className="home-sub home-chip" onClick={() => setPlay(true)}>
-            <span className="dot" /> Room <b>{pendingWatch.code}</b>
+      {/* centre stage: the title, Play, and a tile for every game */}
+      <div className="home-stage hub-stage">
+        <div className="hub-head">
+          <div className="hero">
+            <ShineTitle text={APP_NAME} />
+            <p className="muted hero-tag">Your games, your friends, one baithak.</p>
+          </div>
+          <button className="btn primary shine home-play-btn" onClick={() => setPlay(true)}>
+            <span aria-hidden>▶</span> Play
           </button>
-        ) : (
-          // offline, the server line takes this place (the rejoin would be disabled anyway)
-          saved &&
-          !invite &&
-          online && (
-            <button className="home-sub home-chip" disabled={!online || busy} onClick={() => go(actions.rejoinSaved)}>
-              ↩ Rejoin room <b>{saved.code}</b>
+          {pendingWatch ? (
+            <button className="home-sub home-chip" onClick={() => setPlay(true)}>
+              <span className="dot" /> Room <b>{pendingWatch.code}</b>
             </button>
-          )
-        )}
+          ) : (
+            // offline, the server line takes this place (the rejoin would be disabled anyway)
+            saved &&
+            !invite &&
+            online && (
+              <button className="home-sub home-chip" disabled={!online || busy} onClick={() => go(actions.rejoinSaved)}>
+                ↩ Rejoin room <b>{saved.code}</b>
+              </button>
+            )
+          )}
+        </div>
+        <GameHub onPick={openGame} />
         {serverStatus && <div className="home-sub">{serverStatus}</div>}
       </div>
 
@@ -158,6 +168,7 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
             onAccount={setAccountSheet}
             onHowTo={() => setChooser(true)}
             onClose={() => setPlay(false)}
+            game={game}
           />
         </Backdrop>
       )}

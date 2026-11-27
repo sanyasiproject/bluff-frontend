@@ -22,6 +22,9 @@ import { loadName } from './lib/storage';
 import { useAuth } from './useAuth';
 import { useBluff } from './useBluff';
 import { useLandscape } from './lib/useLandscape';
+import { PluggedTable } from './games/registry';
+import { markPlayed } from './games/lastPlayed';
+import { isPlugged } from './types';
 
 /** moves the table already shows; in a landscape game they go to the info panel's log, not a pop-up */
 const QUIET_IN_GAME = ['play', 'pass', 'round', 'room', 'chat', 'bluff'];
@@ -60,6 +63,12 @@ export default function App() {
     if (userId && auth.pushInvites === true) void autoPush(auth.token, userId);
   }, [userId, auth.pushInvites, auth.token]);
 
+  // the home grid marks the game this phone played last
+  const playingGame = view?.phase === 'playing' ? view.config.game : null;
+  useEffect(() => {
+    if (playingGame) markPlayed(playingGame);
+  }, [playingGame]);
+
   // coins and stats change when a game is settled; show the new numbers
   useEffect(() => {
     if (settled) void refresh();
@@ -93,6 +102,9 @@ export default function App() {
     );
   } else if (view.phase === 'lobby') {
     screen = <Lobby view={view} actions={actions} auth={auth} />;
+  } else if (isPlugged(view.config.game)) {
+    // registry games (Ludo, ...): one route for all of them
+    screen = <PluggedTable kind={view.config.game} view={view} actions={actions} bubbles={bubbles} auth={auth} notes={notes} />;
   } else if (view.config.game === 'rang') {
     screen = <RangTable view={view} actions={actions} bubbles={bubbles} auth={auth} notes={notes} />;
   } else if (view.config.game === 'crazy7') {

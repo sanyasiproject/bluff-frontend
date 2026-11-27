@@ -1,5 +1,5 @@
 // the app itself: styles, sound and voice unlock, Hindi, React (main.tsx starts it here or inside the sideways shell)
-import { StrictMode } from 'react';
+import { lazy, StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import { unlockAudio } from './lib/sounds';
@@ -19,8 +19,26 @@ autoFullscreen();
 // Hindi, when chosen, is applied over the rendered page
 startI18n();
 
+// dev only: ?ludoPreview / ?homePreview / ?lobbyPreview show screens on fake data (no server); dropped from production builds
+const q = new URLSearchParams(location.search);
+const LudoPreview = !import.meta.env.DEV
+  ? null
+  : q.has('ludoPreview')
+    ? lazy(() => import('./games/ludo/preview').then((m) => ({ default: m.LudoPreview })))
+    : q.has('homePreview')
+      ? lazy(() => import('./games/devPreviews').then((m) => ({ default: m.HomePreview })))
+      : q.has('lobbyPreview')
+        ? lazy(() => import('./games/devPreviews').then((m) => ({ default: m.LobbyPreview })))
+        : null;
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {LudoPreview ? (
+      <Suspense fallback={null}>
+        <LudoPreview />
+      </Suspense>
+    ) : (
+      <App />
+    )}
   </StrictMode>,
 );

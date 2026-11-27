@@ -78,6 +78,7 @@ export function achievementsOf(s: LifetimeStats, coins: number): Achievement[] {
   const clean = Math.max(0, s.bluffs - s.bluffsCaught);
   const level = levelOf(s);
   const crazy7 = s.crazy7Games ?? 0;
+  const ludo = s.perGame?.ludo;
   return [
     // games played
     { emoji: '🎴', title: 'First game', desc: 'Finish a game', value: s.gamesPlayed, goal: 1, group: 'games played' },
@@ -125,6 +126,15 @@ export function achievementsOf(s: LifetimeStats, coins: number): Achievement[] {
     { emoji: '💰', title: 'Rich', desc: 'Hold 10,000 coins', value: coins, goal: 10_000, private: true, group: 'coins' },
     { emoji: '💎', title: 'Lakhpati', desc: 'Hold 1 lakh coins', value: coins, goal: 100_000, private: true, group: 'coins' },
     { emoji: '🏦', title: 'Seth ji', desc: 'Hold 10 lakh coins', value: coins, goal: 1_000_000, private: true, group: 'coins' },
+    // Ludo (counted from Game Baithak on)
+    { emoji: '🎲', title: 'Ludo starter', desc: 'Play 5 Ludo games', value: ludo?.played ?? 0, goal: 5, group: 'Ludo' },
+    { emoji: '🏁', title: 'Ludo regular', desc: 'Play 50 Ludo games', value: ludo?.played ?? 0, goal: 50, group: 'Ludo' },
+    { emoji: '👑', title: 'Ludo king', desc: 'Win 25 Ludo games', value: ludo?.wins ?? 0, goal: 25, group: 'Ludo wins' },
+    { emoji: '⚔️', title: 'Goti hunter', desc: 'Knock off 25 gotis', value: ludo?.kills ?? 0, goal: 25, group: 'Ludo kills' },
+    { emoji: '🗡️', title: 'Goti slayer', desc: 'Knock off 250 gotis', value: ludo?.kills ?? 0, goal: 250, group: 'Ludo kills' },
+    { emoji: '🏠', title: 'Homecoming', desc: 'Bring 40 gotis home', value: ludo?.home ?? 0, goal: 40, group: 'Ludo home' },
+    { emoji: '🏡', title: 'Home builder', desc: 'Bring 400 gotis home', value: ludo?.home ?? 0, goal: 400, group: 'Ludo home' },
+    { emoji: '🎯', title: 'Six machine', desc: 'Roll 100 sixes', value: ludo?.sixes ?? 0, goal: 100, group: 'Ludo sixes' },
   ];
 }
 

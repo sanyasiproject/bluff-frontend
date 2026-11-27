@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Bluff",
-  "short_name": "Bluff",
-  "description": "Bluff card game for friends",
+  "name": "Game Baithak",
+  "short_name": "Baithak",
+  "description": "Ludo, Bluff, Rang and more card and board games for friends",
   "start_url": "/",
   "scope": "/",
   "display": "fullscreen",

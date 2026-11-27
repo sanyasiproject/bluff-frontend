@@ -13,10 +13,12 @@ import {
   type Card,
   type ChatKind,
   type GameConfig,
+  type GameKind,
   type GiftEvent,
   type GiftReceived,
   type InviteEvent,
   type PlayerPlays,
+  type PluggedMove,
   type Rank,
   type RangColor,
   type Suit,
@@ -111,6 +113,8 @@ export function useBluff() {
   const replacedRef = useRef(false);
   // latest view for socket handlers, which are registered once
   const viewRef = useRef<RoomView | null>(null);
+  /** Create a room from a Home game tile: the game the new room should start in */
+  const wantGame = useRef<GameKind | null>(null);
 
   const pushNote = useCallback((kind: Note['kind'], text: string) => {
     setNotes((prev) => [...prev.slice(-5), { key: ++noteSeq, kind, text, at: Date.now() }]);
@@ -161,6 +165,12 @@ export function useBluff() {
     const onState = (v: RoomView) => {
       viewRef.current = v;
       setView(v);
+      // a room made from a game tile: the host switches it to that game once (servers that took it at create skip this)
+      const want = wantGame.current;
+      if (want && v.phase === 'lobby' && v.hostId === v.meId) {
+        wantGame.current = null;
+        if (v.config.game !== want) void request('room:config', { ...v.config, game: want }).catch(() => undefined);
+      }
     };
     const onAnnounce = (n: Announcement) => {
       pushNote(n.kind, n.text);
@@ -268,7 +278,12 @@ export function useBluff() {
       saveName(name);
     };
     return {
-      create: (name: string) => run(async () => enter(await request<Entered>('room:create', { name }), name)),
+      /** game: the game picked on Home (newer servers start the room in it; otherwise it is switched on the first view) */
+      create: (name: string, game?: GameKind) =>
+        run(async () => {
+          wantGame.current = game ?? null;
+          enter(await request<Entered>('room:create', { name, ...(game && { game }) }), name);
+        }),
       join: (code: string, name: string) =>
         run(async () => {
           const res = await request<JoinReply>('room:join', { code, name });
@@ -380,6 +395,8 @@ export function useBluff() {
       c7Pass: () => run(() => request('c7:pass')),
       /** Crazy 7: say "last card" */
       c7Call: () => run(() => request('c7:call')),
+      /** registry games (Ludo, ...): one move for the game on the table */
+      gameMove: async (move: PluggedMove) => (await run(() => request('game:move', move))) !== null,
       shuffleTeams: () => run(() => request('room:teams')),
       moveToSlot: (slot: number) => run(() => request('room:slot', { slot })),
       askSwap: (memberId: string) => run(() => request('room:swap', { memberId })),

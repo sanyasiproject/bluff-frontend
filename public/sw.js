@@ -55,8 +55,8 @@ self.addEventListener('push', (event) => {
   const url = ok && typeof msg.url === 'string' && msg.url.startsWith('/') ? msg.url : '/';
   // every push must show something, or the phone may stop delivering them
   event.waitUntil(
-    self.registration.showNotification(ok ? msg.title : 'Bluff', {
-      body: ok && typeof msg.body === 'string' ? msg.body : 'Open Bluff',
+    self.registration.showNotification(ok ? msg.title : 'Game Baithak', {
+      body: ok && typeof msg.body === 'string' ? msg.body : 'Open Game Baithak',
       icon: '/icons/icon-192.png',
       // the small status-bar icon: Android paints it from the alpha only, so it's white cards on transparent
       badge: '/icons/badge-96.png',

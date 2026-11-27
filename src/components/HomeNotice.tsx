@@ -81,7 +81,7 @@ export function HomeNotice({ auth }: { auth: Auth }) {
           🔔
         </span>
         <p className="home-notice-text">
-          Get friend invites even when Bluff is closed
+          Get friend invites even when Game Baithak is closed
           {notify.error && <span className="form-error">{notify.error}</span>}
         </p>
         <button className="btn small primary" disabled={notify.busy} onClick={() => void notify.turnOn()}>

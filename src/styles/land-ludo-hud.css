@@ -1,0 +1,317 @@
+/* ---------- Ludo: seats at the base corners, the dice spot, status, banners and the clock ---------- */
+
+.lu-seat {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  width: var(--seat-w);
+}
+
+.lu-seat.tl { right: calc(100% + 3%); top: 3%; }
+.lu-seat.bl { right: calc(100% + 1%); bottom: 0; }
+.lu-seat.tr { left: calc(100% + 3%); top: 3%; }
+.lu-seat.br { left: calc(100% + 1%); bottom: 0; }
+
+/* the shared seat, without the card count */
+.lu-seat .seat {
+  width: auto;
+  min-width: 76px;
+  gap: 2px;
+  padding: 0 0 2px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.lu-seat .seat-count {
+  display: none;
+}
+
+.lu-seat .seat.turn {
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.lu-seat .seat.turn::before {
+  display: none;
+}
+
+.lu-seat .seat .avatar {
+  box-shadow:
+    0 0 0 2.5px rgba(255, 255, 255, 0.85),
+    0 0 0 5px var(--lu-col),
+    0 8px 14px rgba(0, 0, 0, 0.6);
+}
+
+.lu-seat.turn .seat .avatar {
+  scale: 1.1;
+  box-shadow:
+    0 0 0 2.5px #fff,
+    0 0 0 5px var(--lu-col),
+    0 0 22px 8px color-mix(in srgb, var(--lu-col) 70%, transparent),
+    0 8px 14px rgba(0, 0, 0, 0.6);
+  transition: scale 0.25s var(--spring);
+}
+
+.lu-seat .seat-name {
+  max-width: var(--seat-w);
+  margin-top: 3px;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), inset 0 -2px 0 var(--lu-col);
+  font-size: 12px;
+}
+
+.lu-seat .seat.gone {
+  opacity: 0.6;
+}
+
+.lu-seat-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.lu-tag {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--ink);
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.lu-tag.good {
+  color: #9ff0b5;
+}
+
+.lu-tag.score {
+  color: var(--gold);
+}
+
+.lu-tag.kill {
+  color: #ff9a8a;
+}
+
+/* the dice sits beside whoever's turn it is */
+.lu-dice-spot {
+  position: absolute;
+  z-index: 4;
+}
+
+.lu-dice-spot.tl { right: calc(100% + 3% + var(--seat-w)); top: 4%; }
+.lu-dice-spot.bl { right: calc(100% + 1% + var(--seat-w)); bottom: 2%; }
+.lu-dice-spot.tr { left: calc(100% + 3% + var(--seat-w)); top: 4%; }
+.lu-dice-spot.br { left: calc(100% + 1% + var(--seat-w)); bottom: 2%; }
+
+/* status pill, top middle */
+.lu-table .topbar .lu-status {
+  position: absolute;
+  left: 50%;
+  top: max(8px, env(safe-area-inset-top));
+  max-width: 44vw;
+  overflow: hidden;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 -2px 0 var(--turn-col);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  translate: -50% 0;
+  animation: lu-pop 0.3s var(--spring) backwards;
+}
+
+.lu-table .topbar .lu-status.mine {
+  background: rgba(60, 44, 0, 0.75);
+  color: var(--gold);
+}
+
+.lu-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.lu-clock.low {
+  background: rgba(229, 72, 77, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 140, 140, 0.6), 0 0 14px rgba(229, 72, 77, 0.5);
+}
+
+/* bonus roll / three sixes: a banner over the board */
+.lu-banner {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  z-index: 6;
+  display: grid;
+  justify-items: center;
+  width: max-content;
+  max-width: 90vw;
+  padding: 8px 24px;
+  white-space: nowrap;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(40, 28, 0, 0.92), rgba(20, 12, 0, 0.92));
+  box-shadow: 0 0 0 2px var(--gold), 0 12px 30px rgba(0, 0, 0, 0.6);
+  color: var(--gold);
+  translate: -50% -50%;
+  pointer-events: none;
+  animation:
+    lu-pop 0.35s var(--spring) backwards,
+    lu-fade 0.4s ease-in 1.3s forwards;
+}
+
+.lu-banner b {
+  font-size: clamp(20px, 6dvh, 30px);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.lu-banner small {
+  color: #fff;
+  font-size: 12px;
+}
+
+.lu-banner-bust {
+  background: linear-gradient(180deg, rgba(90, 10, 10, 0.94), rgba(40, 0, 0, 0.94));
+  box-shadow: 0 0 0 2px #ff6b6b, 0 12px 30px rgba(0, 0, 0, 0.6);
+  color: #ffb3b3;
+}
+
+.lu-banner-info {
+  background: rgba(0, 0, 0, 0.78);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+@keyframes lu-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes lu-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+.lu-watch-note {
+  position: absolute;
+  left: 50%;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  z-index: 5;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  font-size: 12px;
+  translate: -50% 0;
+}
+
+/* short phones: smaller seats */
+@media (max-height: 420px) {
+  .table.lu-table {
+    --seat-w: 84px;
+  }
+
+  .lu-seat .avatar {
+    scale: 0.86;
+  }
+
+  .lu-seat .seat-name {
+    font-size: 11px;
+  }
+}
+
+/* big screens: bigger seats and dice beside the bigger board */
+@media (min-height: 640px) and (min-width: 900px) {
+  .table.lu-table {
+    --seat-w: 150px;
+  }
+
+  .lu-seat > .seat {
+    scale: 1.5;
+    transform-origin: 50% 0;
+  }
+
+  .lu-seat.bl > .seat,
+  .lu-seat.br > .seat {
+    transform-origin: 50% 100%;
+  }
+
+  .lu-dice {
+    --ds: 92px;
+  }
+}
+
+/* an upright window: the board fills the width, seats above and below it */
+@media (orientation: portrait) {
+  .table.lu-table {
+    --bs: min(92vw, calc(100dvh - 300px));
+  }
+
+  .lu-seat.tl,
+  .lu-seat.tr {
+    top: auto;
+    bottom: calc(100% + 8px);
+  }
+
+  .lu-seat.bl,
+  .lu-seat.br {
+    bottom: auto;
+    top: calc(100% + 4px);
+  }
+
+  .lu-seat.tl,
+  .lu-seat.bl {
+    right: auto;
+    left: 0;
+  }
+
+  .lu-seat.tr,
+  .lu-seat.br {
+    left: auto;
+    right: 0;
+  }
+
+  .lu-dice-spot.tl,
+  .lu-dice-spot.bl,
+  .lu-dice-spot.tr,
+  .lu-dice-spot.br {
+    left: 50%;
+    right: auto;
+    top: calc(100% + 8px);
+    bottom: auto;
+    translate: -50% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lu-banner,
+  .lu-table .topbar .lu-status {
+    animation: none;
+  }
+}

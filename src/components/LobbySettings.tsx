@@ -3,8 +3,12 @@ import { useBack } from '../lib/back';
 import { cx } from '../lib/cards';
 import { getVoiceGender, onVoicesChanged, setVoiceGender, speak, unlockSpeech, type VoiceGender } from '../lib/speech';
 import { formatCoins, compactCoins, stakeLabel } from '../lib/coins';
+import { PluggedHelp, PluggedSettings, pluggedSummary } from '../games/GameOptions';
 import {
   BOT_LEVEL_NAMES,
+  GAME_CATALOG,
+  gameInfo,
+  isPlugged,
   BOT_LEVELS,
   BOT_STAKE_CAPS,
   botStakeCap,
@@ -21,6 +25,13 @@ import {
   type TurnSeconds,
 } from '../types';
 
+/** the hand-wired games keep their own picker lines */
+const GAME_DESC: Partial<Record<GameKind, string>> = {
+  bluff: 'Lie about your cards, catch the liars',
+  crazy7: 'Match suit or number; a 7 makes the next player pick 2',
+  rang: 'Match colour or number; Skip, Reverse, +2 and wilds',
+};
+
 /** the lobby's settings tabs (landscape drawer); portrait shows them all at once */
 export type LobbyTab = 'game' | 'stakes' | 'extras' | 'help';
 
@@ -28,7 +39,7 @@ export type LobbyTab = 'game' | 'stakes' | 'extras' | 'help';
 const capText = (cap: number) => (cap === 0 ? 'Free only' : `Up to 🪙 ${compactCoins(cap)}`);
 
 /** host: how well the bots play, three even choices that each show what can be staked against them */
-function BotLevelPicker({ value, onPick }: { value: BotLevel; onPick: (level: BotLevel) => void }) {
+export function BotLevelPicker({ value, onPick }: { value: BotLevel; onPick: (level: BotLevel) => void }) {
   return (
     <div className="setting-row stacked">
       <div className="grow">
@@ -131,7 +142,7 @@ export function Option({ on, disabled, title, desc, onClick }: OptionProps) {
 }
 
 /** host picks how many coins each player puts in; everyone sees what it means. Bots cap it by their level and put in nothing */
-function StakePicker({ stake, players, config, bots, isHost, onPick }: { stake: number; players: number; config: GameConfig; bots: boolean; isHost: boolean; onPick: (n: number) => void }) {
+export function StakePicker({ stake, players, config, bots, isHost, onPick }: { stake: number; players: number; config: GameConfig; bots: boolean; isHost: boolean; onPick: (n: number) => void }) {
   const pot = stake * Math.max(players, 2);
   const cap = botStakeCap(config);
   // Crazy 7 bots always play their best; Bluff's are named by their level
@@ -197,7 +208,9 @@ export function SettingsBody({ view, isHost, coinsOn, tab, set, onLesson }: Body
   const setLesson = onLesson;
   const crazy7 = view.config.game === 'crazy7';
   const rang = view.config.game === 'rang';
-  const isBluff = !crazy7 && !rang;
+  const plugged = isPlugged(view.config.game);
+  const isBluff = !crazy7 && !rang && !plugged;
+  const info = gameInfo(view.config.game);
   const stake = view.config.stake;
   const pot = stake * view.players.length;
   const bots = view.players.filter((p) => p.bot);
@@ -211,10 +224,12 @@ export function SettingsBody({ view, isHost, coinsOn, tab, set, onLesson }: Body
         <section className="panel settings-summary">
           <h2 className="section-title">Game settings</h2>
           <div className="summary-chips">
-            <span className="game-chip">{crazy7 ? '7️⃣ Crazy 7' : rang ? '🌈 Rang' : '🃏 Bluff'}</span>
+            <span className="game-chip">{info.emoji} {info.name}</span>
             <span>{stake > 0 ? `🪙 ${formatCoins(stake)} each` : '🆓 Free game'}</span>
-            {!rang && <span>🎴 {view.config.decks === 2 ? '2 decks' : '1 deck'}</span>}
-            {rang ? (
+            {!rang && !plugged && <span>🎴 {view.config.decks === 2 ? '2 decks' : '1 deck'}</span>}
+            {plugged ? (
+              pluggedSummary(view).map((b) => <span key={b}>{b}</span>)
+            ) : rang ? (
               <>
                 <span>
                   🂠 Up to {view.config.rangPicks ?? 1} pick{(view.config.rangPicks ?? 1) > 1 ? 's' : ''}
@@ -266,28 +281,18 @@ export function SettingsBody({ view, isHost, coinsOn, tab, set, onLesson }: Body
         <section className="panel">
           {!land && <h2 className="section-title">Game</h2>}
           <div className="seg game-seg">
-            <Option
-              on={isBluff}
-              disabled={false}
-              title="🃏 Bluff"
-              desc="Lie about your cards, catch the liars"
-              // ranked kept on from before can't come back while bots sit at the table
-              onClick={() => set({ game: 'bluff', ...(bots.length > 0 && view.config.ranked ? { ranked: false } : {}) })}
-            />
-            <Option
-              on={crazy7}
-              disabled={false}
-              title="7️⃣ Crazy 7"
-              desc="Match suit or number; a 7 makes the next player pick 2"
-              onClick={() => set({ game: 'crazy7' })}
-            />
-            <Option
-              on={rang}
-              disabled={false}
-              title="🌈 Rang"
-              desc="Match colour or number; Skip, Reverse, +2 and wilds"
-              onClick={() => set({ game: 'rang' })}
-            />
+            {/* every game in the catalog; one too big for the seated players can't be picked */}
+            {GAME_CATALOG.map((g) => (
+              <Option
+                key={g.kind}
+                on={view.config.game === g.kind}
+                disabled={view.players.length > Math.min(5, g.maxPlayers)}
+                title={`${g.emoji} ${g.name}${g.isNew ? ' 🆕' : ''}`}
+                desc={view.players.length > Math.min(5, g.maxPlayers) ? `Up to ${g.maxPlayers} players: move someone to watching first` : (GAME_DESC[g.kind] ?? g.tagline)}
+                // ranked kept on from before can't come back while bots sit at the table
+                onClick={() => set({ game: g.kind, ...(g.kind === 'bluff' && bots.length > 0 && view.config.ranked ? { ranked: false } : {}) })}
+              />
+            ))}
           </div>
           {/* Bluff only: casual or ranked, as big as the game choice */}
           {isBluff && coinsOn && rankedKnown && (
@@ -304,6 +309,8 @@ export function SettingsBody({ view, isHost, coinsOn, tab, set, onLesson }: Body
           )}
         </section>
       )}
+
+      {isHost && plugged && settingsOpen && <PluggedSettings view={view} land={land} show={show} coinsOn={coinsOn} set={set} />}
 
       {isHost && crazy7 && settingsOpen && (
         <section className="panel">
@@ -559,8 +566,10 @@ export function SettingsBody({ view, isHost, coinsOn, tab, set, onLesson }: Body
       )}
       {show('help') && (
       <details className="panel rules" open={land || undefined}>
-        <summary>How to play {crazy7 ? 'Crazy 7' : rang ? 'Rang' : 'Bluff'}</summary>
-        {rang ? (
+        <summary>How to play {info.name}</summary>
+        {plugged ? (
+          <PluggedHelp view={view} />
+        ) : rang ? (
           <ul>
             <li>Play one card that matches the colour or the number/symbol on top (on a red 5: any red card or any 5).</li>
             <li>⊘ Skip: the next player misses a turn. ⇄ Reverse: play turns the other way. +2: the next player picks 2 and misses a turn.</li>
@@ -616,7 +625,7 @@ export function SettingsBody({ view, isHost, coinsOn, tab, set, onLesson }: Body
       </details>
       )}
 
-      {show('help') && <VoicePicker sample={rang ? `${me?.name ?? 'Ravi'} played a red seven. Priya is skipped` : crazy7 ? `${me?.name ?? 'Ravi'} played seven of spades. Priya picks 2` : `${me?.name ?? 'Ravi'} played four Queens`} />}
+      {show('help') && <VoicePicker sample={plugged ? `${me?.name ?? 'Ravi'} rolled a six` : rang ? `${me?.name ?? 'Ravi'} played a red seven. Priya is skipped` : crazy7 ? `${me?.name ?? 'Ravi'} played seven of spades. Priya picks 2` : `${me?.name ?? 'Ravi'} played four Queens`} />}
     </>
   );
 }
@@ -632,14 +641,16 @@ export function lobbyTabs(isHost: boolean, coinsOn: boolean, hasStakes: boolean)
 export function summaryBits(view: RoomView): string[] {
   const c = view.config;
   const bits = [c.stake > 0 ? `🪙 ${compactCoins(c.stake)} each` : '🆓 Free game'];
-  if (c.game === 'rang') {
+  if (isPlugged(c.game)) {
+    bits.push(...pluggedSummary(view).slice(0, 2));
+  } else if (c.game === 'rang') {
     bits.push(`🃏 ${c.rangHand ?? 7} cards`, `🂠 ${c.rangPicks ?? 1} pick${(c.rangPicks ?? 1) > 1 ? 's' : ''}`);
   } else if (c.game === 'crazy7') {
     bits.push(`🃏 ${c.handSize} cards`, `🂠 ${c.maxPicks} pick${c.maxPicks > 1 ? 's' : ''}`);
   } else {
     bits.push(c.decks === 2 ? '2 decks' : '1 deck', c.bluffRule === 'one' ? 'Pick one' : 'Show all');
   }
-  if (c.teams && c.game !== 'crazy7') bits.push('👥 2 vs 2');
+  if (c.teams && c.game !== 'crazy7' && gameInfo(c.game).teams) bits.push('👥 2 vs 2');
   return bits;
 }
 

@@ -1,5 +1,6 @@
 import { inviteLink, inviteMessage, inviteText, whatsappUrl } from '../lib/invite';
 import { WhatsAppIcon } from './Icons';
+import { APP_NAME } from '../types';
 
 interface Props {
   code: string;
@@ -20,7 +21,7 @@ export function InvitePanel({ code, onToast, onFriends, requests = 0, online = 0
   const share = async () => {
     try {
       // text + url separately: apps like WhatsApp join them into one message
-      await navigator.share({ title: 'Bluff', text: inviteText(code), url: link });
+      await navigator.share({ title: APP_NAME, text: inviteText(code), url: link });
     } catch {
       // share sheet closed
     }

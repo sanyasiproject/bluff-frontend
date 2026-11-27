@@ -5,10 +5,10 @@ import { disablePush, enablePush, pushState, rememberPushOff, syncPush, type Pus
 import type { Auth } from '../useAuth';
 
 const HELP: Partial<Record<PushState, string>> = {
-  on: 'Friends can invite you even when Bluff is closed',
-  off: 'Get a notification when a friend invites you and Bluff is closed',
-  install: 'On iPhone: add Bluff to your Home Screen, open it from there, then turn this on',
-  denied: "Notifications are blocked for Bluff in your phone's settings",
+  on: 'Friends can invite you even when Game Baithak is closed',
+  off: 'Get a notification when a friend invites you and Game Baithak is closed',
+  install: 'On iPhone: add Game Baithak to your Home Screen, open it from there, then turn this on',
+  denied: "Notifications are blocked for Game Baithak in your phone's settings",
 };
 
 /** Profile: friend invites as phone notifications, on or off for this phone */

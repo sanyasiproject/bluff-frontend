@@ -1,6 +1,6 @@
-# Bluff frontend
+# Game Baithak frontend (bluff-frontend)
 
-Mobile-first React app for the Bluff card game. Connects to `bluff-backend` over Socket.IO and reads every move aloud with the phone's built-in voice.
+Mobile-first React app for **Game Baithak**, a home for 2–4 player online games with friends: Ludo, Bluff, Crazy 7 and Rang (more to come). The repo keeps its old name. Connects to `bluff-backend` over Socket.IO and reads every move aloud with the phone's built-in voice.
 
 ## Run locally
 
@@ -32,7 +32,7 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 
 ## Invite links
 
-- The lobby has **WhatsApp**, **Share…** (phone share sheet) and **Copy**. They send `Join my Bluff game 🃏 Room code: ABCD` plus `https://<site>/?room=ABCD`.
+- The lobby has **WhatsApp**, **Share…** (phone share sheet) and **Copy**. They send `Join my Game Baithak room 🎲 Room code: ABCD` plus `https://<site>/?room=ABCD`.
 - Opening the link joins that room directly: a phone that already had a seat there gets it back, a phone with a saved name joins at once, and a new phone only types a name and taps **Join room ABCD**.
 - The `?room=` part is removed from the address bar once inside, so reloading or leaving never re-joins by itself.
 
@@ -78,6 +78,20 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 - **Phone back button:** closes one step at a time (sheet, page, lobby → home, in a game it opens the menu) and only leaves the app from the home page (`src/lib/back.ts`).
 - **Motion:** cards deal out to every seat at the start, fly to the pile on each play and to whoever picks it up after a reveal; the turn seat gets a running gold ring; reveals land like a stamp; confetti when someone finishes, for a caught liar's caller and for winners; coins and XP count up. Home has a swaying card fan (tap it to peek), a shining title and floating suits. All of it turns off with the phone's reduce-motion setting.
 - **Intro screen** while the app loads and the free server wakes up (`components/Splash.tsx`, with the same markup in `index.html` for the first paint).
+
+## Game Baithak: the game hub and Ludo
+
+- **Home is a game hub** (`components/GameHub.tsx`, `styles/land-hub.css`): a tile per game from `GAME_CATALOG` (emoji, name, tagline, gradient, players, NEW badge), category chips All / Cards / Board (remembered per phone), and ▶ Last played (per phone, `games/lastPlayed.ts`, marked when a game starts). Sideways the tiles scroll across in one row (two on tall screens), so 40 games fit. Tapping a tile opens the Play panel with that game picked; Create a room sends `game` with `room:create` and, for servers that ignore it, the host switches the new room to that game on the first view (`wantGame` in `useBluff.ts`).
+- **🎲 Ludo** (`games/ludo/`): a tilted CSS 3D board drawn as SVG from `LUDO_RING_CELLS` / `LUDO_LANE_CELLS` / `LUDO_BASE_CELLS` and turned so my colour sits at the near-left corner (`geometry.ts`); glossy pawns standing up against the tilt that hop square by square with a little arc and squash on landing (`Gotis.tsx`, driven by `LudoView.last.seq`), shrink and fan out when several share a square, glow and bob when they can move, and show a ghost on the landing square while pointed at; a real CSS 3D dice that tumbles on `rollSeq` (`Dice.tsx`); captures fly back to base with a shake and a KILL! stamp (`TableFx`); bonus-roll and three-sixes banners, gold glow for gotis in their lane, timed clock and scores, master-mode 🔒, "moving for partner" in 2v2; players at their base corners with the shared seat (emoji throws, chat bubbles, voice marks, turn timer); a podium with fireworks and a kill recap before the usual game over; Web Audio sounds (`sounds.ts`). Board themes, goti styles and dice skins unlock by level and are picked per phone (🎨 at the table, Profile › Looks; `looks.ts`).
+- **Dev previews** (dev server only, no backend): `?ludoPreview=1` (play against local bots), `=auto`, `=kill`, `=over`, `&xp=400` unlocks looks; `?homePreview=1`; `?lobbyPreview=ludo`.
+
+### How to add a new game (frontend)
+
+1. Backend first: add the kind to `GameKind`, `PLUGGED_GAMES`, a `GAME_CATALOG` entry (options), its `PluggedView` / `PluggedMove` variants and view types in `bluff-backend/src/types.ts`, then copy the file here (keep line 1).
+2. Make `src/games/<kind>/` with a table component taking `TableProps` (`view`, `actions`, `bubbles`, `auth`, `notes`) that reads `view.plugged` and sends moves with `actions.gameMove({ kind, move })`, and an optional `Rules` component (`{ config }`).
+3. Register both in `PLUGGED` in `src/games/registry.tsx`. That's all the routing: `App` sends every `isPlugged` game to `PluggedTable`, the handshake already sends `PLUGGED_GAMES`, the lobby draws the catalog options (respecting `when`), the home grid and profile read the catalog.
+4. Reuse the shared pieces: `Seat`/`SeatSheet` (throws, bubbles, voice, turn timer), `TableInfo`, `GameOver`, `useTableFx`, `confetti`, `LudoMenus`-style menu. New styles in their own `styles/land-<game>*.css`; animate only transform/opacity and respect `reducedMotion()`.
+5. Add a lesson (or a rules sheet like `LudoLesson`) by branching in `TutorialPage`, a Rules page section, Hindi lines (`lib/i18n/hi.<game>.ts`, listed in `hi.ts`) and a map row in `CLAUDE.md`.
 
 ## Crazy 7 (second game)
 
@@ -167,7 +181,12 @@ Bluff is a Progressive Web App: friends install it from the website, free, with 
 | `src/useBluff.ts` | Connection, auto-rejoin, announcements, all player actions |
 | `src/components/Table.tsx` | Game screen: seats, pile, bluff button, action bar |
 | `src/components/Crazy7Table.tsx` | Crazy 7 game screen: seats, deck, pile, penalty banner, playable glow, Pick / Pass / Last card |
-| `src/components/Lobby.tsx` | Game picker (Bluff / Crazy 7), settings for each game, players, bots, teams |
+| `src/components/Lobby.tsx` | Game picker (every game in the catalog), settings for each game, players, bots, teams |
+| `src/games/registry.tsx` | Registry games (Ludo, ...): kind → lazy table and rules; `PluggedTable` |
+| `src/games/GameOptions.tsx` | Lobby settings for registry games drawn from `GAME_CATALOG` options |
+| `src/games/ludo/` | Ludo: table, board, gotis, dice, looks, sounds, game over, lesson, rules, dev preview |
+| `src/components/GameHub.tsx` | Home game grid (tiles, category chips, NEW, last played) |
+| `src/components/GameStats.tsx` | Profile: a card per game from `stats.perGame` |
 | `src/components/Hand.tsx` | Fits any hand size into overlapping rows |
 | `src/components/Overlays.tsx` | Rank picker, pick-one sheet, bluff reveal, game over |
 | `src/lib/speech.ts` | Voice queue and iPhone unlock |

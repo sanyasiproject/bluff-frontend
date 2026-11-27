@@ -1,5 +1,5 @@
 // The practice lessons: everyone sees each one once (per account, or per phone for guests)
-import type { GameKind } from '../types';
+import { gameInfo, type GameKind } from '../types';
 import type { Auth } from '../useAuth';
 import { loadPref, savePref } from './storage';
 
@@ -17,4 +17,4 @@ export function markTutorialSeen(auth: Auth, game: GameKind): void {
   if (auth.user) void auth.markTutorial(game);
 }
 
-export const gameName = (game: GameKind) => (game === 'crazy7' ? 'Crazy 7' : game === 'rang' ? 'Rang' : 'Bluff');
+export const gameName = (game: GameKind) => gameInfo(game).name;

@@ -1,6 +1,6 @@
 import '../../styles/tutorial.css';
 import { gameName } from '../../lib/tutorial';
-import type { GameKind } from '../../types';
+import { gameInfo, type GameKind } from '../../types';
 import { Backdrop } from '../Overlays';
 
 /** lobby: the first time someone plays this game, the practice lesson is offered once */
@@ -9,10 +9,10 @@ export function LessonOffer({ game, onPractice, onSkip }: { game: GameKind; onPr
     <Backdrop center onClose={onSkip}>
       <div className="confirm-box tut-offer">
         <span className="tut-offer-emoji" aria-hidden>
-          {game === 'crazy7' ? '7️⃣' : '🃏'}
+          {gameInfo(game).emoji}
         </span>
         <h3>First time playing {gameName(game)}?</h3>
-        <p className="muted">Learn it in 1 minute with a practice game against Raju 🤖. You can open it again any time from 📘 How to play.</p>
+        <p className="muted">{game === 'ludo' ? 'Learn it in 1 minute: a short walk round the board.' : 'Learn it in 1 minute with a practice game against Raju 🤖.'}{' '}You can open it again any time from 📘 How to play.</p>
         <div className="confirm-actions">
           <button className="btn ghost" onClick={onSkip}>
             Skip
@@ -40,6 +40,10 @@ export function LessonChooser({ onPick, onClose }: { onPick: (game: GameKind) =>
         <button className="option" onClick={() => onPick('crazy7')}>
           <b>7️⃣ Crazy 7</b>
           <span>Match suit or number; a 7 makes the next player pick 2</span>
+        </button>
+        <button className="option" onClick={() => onPick('ludo')}>
+          <b>🎲 Ludo</b>
+          <span>Roll, race and knock gotis home</span>
         </button>
       </div>
       <button className="btn ghost block" onClick={onClose}>

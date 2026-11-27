@@ -1,0 +1,229 @@
+/* ---------- Ludo: the tilted board, its themes and the standing gotis (LudoTable) ---------- */
+
+.table.lu-table {
+  --lu-tilt: 27deg;
+  --bs: min(calc(100dvh - 78px), 50vw);
+  --seat-w: 96px;
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* a dark room with a warm lamp over the board, like the card tables */
+.lu-room {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(55% 50% at 50% 30%, rgba(255, 228, 170, 0.16), transparent 70%),
+    radial-gradient(120% 110% at 50% 60%, transparent 40%, rgba(0, 0, 0, 0.8) 100%),
+    linear-gradient(180deg, color-mix(in srgb, var(--felt-deep) 55%, #000) 0%, #020604 100%);
+}
+
+.lu-stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: var(--bs);
+  height: var(--bs);
+  translate: -50% -47%;
+  perspective: calc(var(--bs) * 2.8);
+  perspective-origin: 50% 20%;
+}
+
+.lu-plane {
+  position: absolute;
+  inset: 0;
+  transform: rotateX(var(--lu-tilt));
+  transform-origin: 50% 62%;
+  transform-style: preserve-3d;
+}
+
+/* the board's wooden frame and its shadow on the table */
+.lu-frame {
+  position: absolute;
+  inset: -3.2%;
+  border-radius: 3.5%;
+  background:
+    radial-gradient(90% 70% at 50% 8%, rgba(255, 236, 200, 0.28), transparent 60%),
+    linear-gradient(160deg, var(--lu-frame-1) 0%, var(--lu-frame-2) 55%, var(--lu-frame-3) 100%);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 230, 190, 0.22),
+    inset 0 -5px 10px rgba(0, 0, 0, 0.5),
+    0 30px 50px rgba(0, 0, 0, 0.7);
+  translate: 0 0 -3px;
+}
+
+.lu-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ---------- board themes (chosen per phone; new looks are added, none restyled) ---------- */
+
+.lu-plane,
+.bt-classic {
+  --lu-bg: #f7efe0;
+  --lu-cell: #fffdf8;
+  --lu-line: #b9ad98;
+  --lu-yard-in: #fffdf8;
+  --lu-star: #9c8f7a;
+  --lu-red: #e53935;
+  --lu-green: #43a047;
+  --lu-yellow: #f9c623;
+  --lu-blue: #1e88e5;
+  --lu-frame-1: #6b3f1d;
+  --lu-frame-2: #43250f;
+  --lu-frame-3: #1f0f05;
+}
+
+.bt-wood {
+  --lu-bg: #c99a63;
+  --lu-cell: #ecd2a6;
+  --lu-line: #8a5d2f;
+  --lu-yard-in: #f3dfba;
+  --lu-star: #7a4f22;
+  --lu-red: #b8432f;
+  --lu-green: #4f7d39;
+  --lu-yellow: #d6a632;
+  --lu-blue: #3d6a8c;
+  --lu-frame-1: #8b5a2b;
+  --lu-frame-2: #5c3615;
+  --lu-frame-3: #2a1606;
+}
+
+.bt-neon {
+  --lu-bg: #070a18;
+  --lu-cell: #10152d;
+  --lu-line: #2de2e6;
+  --lu-yard-in: #0b1024;
+  --lu-star: #f9f871;
+  --lu-red: #ff2e63;
+  --lu-green: #08f7a1;
+  --lu-yellow: #ffe03a;
+  --lu-blue: #3d7bff;
+  --lu-frame-1: #1a1f45;
+  --lu-frame-2: #0b0e24;
+  --lu-frame-3: #03040c;
+}
+
+.bt-royal {
+  --lu-bg: #4a0e1f;
+  --lu-cell: #fbf3dc;
+  --lu-line: #c9a24a;
+  --lu-yard-in: #fbf3dc;
+  --lu-star: #c9a24a;
+  --lu-red: #b3122e;
+  --lu-green: #1f7a4d;
+  --lu-yellow: #e2a619;
+  --lu-blue: #1f4fa3;
+  --lu-frame-1: #e0b14a;
+  --lu-frame-2: #a8741a;
+  --lu-frame-3: #4d3304;
+}
+
+.lu-bg {
+  fill: var(--lu-bg);
+}
+
+.lu-sq {
+  fill: var(--lu-cell);
+  stroke: var(--lu-line);
+  stroke-width: 0.045;
+}
+
+.lu-fill-red,
+.lu-red .lu-yard-out {
+  fill: var(--lu-red);
+}
+
+.lu-fill-green,
+.lu-green .lu-yard-out {
+  fill: var(--lu-green);
+}
+
+.lu-fill-yellow,
+.lu-yellow .lu-yard-out {
+  fill: var(--lu-yellow);
+}
+
+.lu-fill-blue,
+.lu-blue .lu-yard-out {
+  fill: var(--lu-blue);
+}
+
+.lu-yard.off .lu-yard-out {
+  opacity: 0.4;
+}
+
+.lu-yard-in {
+  fill: var(--lu-yard-in);
+  stroke: rgba(0, 0, 0, 0.18);
+  stroke-width: 0.06;
+}
+
+.lu-spot {
+  fill: rgba(0, 0, 0, 0.06);
+  stroke: rgba(0, 0, 0, 0.2);
+  stroke-width: 0.06;
+}
+
+.lu-red .lu-spot { fill: color-mix(in srgb, var(--lu-red) 22%, transparent); }
+.lu-green .lu-spot { fill: color-mix(in srgb, var(--lu-green) 22%, transparent); }
+.lu-yellow .lu-spot { fill: color-mix(in srgb, var(--lu-yellow) 26%, transparent); }
+.lu-blue .lu-spot { fill: color-mix(in srgb, var(--lu-blue) 22%, transparent); }
+
+.lu-star {
+  fill: var(--lu-star);
+  opacity: 0.85;
+}
+
+.lu-star-start {
+  fill: #fff;
+  opacity: 0.9;
+}
+
+.lu-home {
+  stroke: rgba(0, 0, 0, 0.25);
+  stroke-width: 0.05;
+}
+
+.bt-neon .lu-sq,
+.bt-neon .lu-home {
+  stroke-width: 0.06;
+}
+
+.bt-neon .lu-svg {
+  filter: drop-shadow(0 0 6px rgba(45, 226, 230, 0.35));
+}
+
+/* whose turn: their yard glows */
+.lu-yard-glow {
+  position: absolute;
+  width: 40%;
+  height: 40%;
+  border-radius: 12%;
+  box-shadow: 0 0 0 3px #fff, 0 0 26px 8px var(--glow, #fff);
+  translate: -50% -50% 1px;
+  pointer-events: none;
+  animation: lu-glow 1.1s ease-in-out infinite alternate;
+}
+
+@keyframes lu-glow {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}

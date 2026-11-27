@@ -1,16 +1,20 @@
+import { pluggedSummary } from '../games/GameOptions';
 import { useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useBack } from '../lib/back';
 import { cx, rankPlural } from '../lib/cards';
 import { compactCoins, formatCoins } from '../lib/coins';
-import { secretMissionOf, type RoomView } from '../types';
+import { gameInfo, isPlugged, secretMissionOf, type RoomView } from '../types';
 import type { Note } from '../useBluff';
 
 /** the table's rules in short lines, for all three games */
 export function tableRules(view: RoomView): string[] {
   const c = view.config;
   const lines: string[] = [];
-  if (c.game === 'rang') {
+  if (isPlugged(c.game)) {
+    // registry games: the catalog name and the chosen options
+    lines.push(`${gameInfo(c.game).emoji} ${gameInfo(c.game).name}`, ...pluggedSummary(view));
+  } else if (c.game === 'rang') {
     lines.push('🌈 Rang', `Up to ${c.rangPicks} pick${c.rangPicks > 1 ? 's' : ''} a turn`);
     if (c.rangStack) lines.push('+2 and +4 stack');
     if (c.rangChallenge) lines.push('A single +4 can be challenged');

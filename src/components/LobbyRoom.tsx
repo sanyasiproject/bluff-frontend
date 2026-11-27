@@ -2,7 +2,7 @@ import { useState, type ReactNode, useEffect } from 'react';
 import { cx } from '../lib/cards';
 import { compactCoins } from '../lib/coins';
 import { inviteLink, inviteMessage, inviteText } from '../lib/invite';
-import type { PublicPlayer, RoomView } from '../types';
+import { APP_NAME, gameInfo, type PublicPlayer, type RoomView } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions } from '../useBluff';
 import { AccountCorner } from './AccountCorner';
@@ -54,7 +54,8 @@ interface Props {
 
 type Sheet = { kind: 'invite' } | { kind: 'seat'; slot: number | null } | { kind: 'watchers' };
 
-const GAME_CHIP = { bluff: '🃏 Bluff', crazy7: '7️⃣ Crazy 7', rang: '🌈 Rang' } as const;
+/** the game chip in the top bar, from the catalog */
+const gameChip = (v: RoomView) => `${gameInfo(v.config.game).emoji} ${gameInfo(v.config.game).name}`;
 
 /** landscape lobby: the room is the game's 3D table, players seated round it, settings in a side drawer */
 export function LobbyRoom(props: Props) {
@@ -81,7 +82,7 @@ export function LobbyRoom(props: Props) {
   const shareCode = async () => {
     if (typeof navigator.share === 'function') {
       try {
-        await navigator.share({ title: 'Bluff', text: inviteText(view.code), url: inviteLink(view.code) });
+        await navigator.share({ title: APP_NAME, text: inviteText(view.code), url: inviteLink(view.code) });
       } catch {
         // share sheet closed
       }
@@ -247,7 +248,7 @@ export function LobbyRoom(props: Props) {
           <small>Room</small>
           <b data-no-translate>{view.code}</b>
         </button>
-        <span className="room-chip game">{GAME_CHIP[view.config.game] ?? GAME_CHIP.bluff}</span>
+        <span className="room-chip game">{gameChip(view)}</span>
         {props.banner && (
           <button type="button" className={cx('room-chip mode', ranked && 'ranked')} onClick={() => setDrawer(true)}>
             {ranked ? '🏅 Ranked' : 'Casual'}

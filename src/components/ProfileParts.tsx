@@ -3,7 +3,7 @@ import { cx, placeLabel } from '../lib/cards';
 import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
 import { dateTime } from '../lib/dates';
 import { earnedFromGames, nextGameReward, percent } from '../lib/progress';
-import { DAILY_GAME_REWARDS, MIN_REWARD_GAME_SEC, type GameSummary, type LifetimeStats } from '../types';
+import { DAILY_GAME_REWARDS, gameInfo, isPlugged, MIN_REWARD_GAME_SEC, type GameSummary, type LifetimeStats } from '../types';
 
 function result(g: GameSummary): [string, string] {
   if (g.kicked) return ['🚫', 'Removed by host'];
@@ -21,6 +21,8 @@ function GameCard({ g, onReplay }: { g: GameSummary; onReplay?: (g: GameSummary)
   // older games have no game name: they're Bluff
   const crazy7 = g.game === 'crazy7';
   const rang = g.game === 'rang';
+  // registry games (Ludo, ...): no decks, no bluffs
+  const plugged = isPlugged(g.game);
   return (
     <li>
       <details className="game-card">
@@ -29,7 +31,7 @@ function GameCard({ g, onReplay }: { g: GameSummary; onReplay?: (g: GameSummary)
           <div className="grow">
             <b>{text}</b>
             <p className="muted small">
-              {crazy7 ? '7️⃣ Crazy 7' : rang ? '🌈 Rang' : '🃏 Bluff'} · {dateTime(g.endedAt)} · {minutes(g.durationSec)}
+              {plugged ? `${gameInfo(g.game).emoji} ${gameInfo(g.game).name}` : crazy7 ? '7️⃣ Crazy 7' : rang ? '🌈 Rang' : '🃏 Bluff'} · {dateTime(g.endedAt)} · {minutes(g.durationSec)}
             </p>
           </div>
           {g.stake > 0 && g.status === 'finished' && !g.kicked && (
@@ -64,7 +66,7 @@ function GameCard({ g, onReplay }: { g: GameSummary; onReplay?: (g: GameSummary)
           ))}
         </p>
         <p className="game-meta">
-          {!rang && (
+          {!rang && !plugged && (
             <span>
               🎴 {g.decks} deck{g.decks > 1 ? 's' : ''}
             </span>
@@ -80,7 +82,7 @@ function GameCard({ g, onReplay }: { g: GameSummary; onReplay?: (g: GameSummary)
             </span>
           </div>
         )}
-        {g.my && !crazy7 && !rang && (
+        {g.my && !crazy7 && !rang && !plugged && (
           <div className="mini-stats">
             <span>
               <b>{g.my.bluffs}</b> bluffs

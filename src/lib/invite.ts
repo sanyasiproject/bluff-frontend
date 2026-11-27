@@ -13,7 +13,7 @@ export function clearInvite(): void {
 
 export const inviteLink = (code: string) => `${location.origin}/?room=${code}`;
 
-export const inviteText = (code: string) => `Join my Bluff game 🃏 Room code: ${code}`;
+export const inviteText = (code: string) => `Join my Game Baithak room 🎲 Room code: ${code}`;
 
 export const inviteMessage = (code: string) => `${inviteText(code)}\n${inviteLink(code)}`;
 

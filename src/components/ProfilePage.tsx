@@ -27,6 +27,9 @@ import { ReplayPage } from './ReplayPage';
 import { XpGuide } from './XpGuide';
 import { DailyLadder, FormStrip, GameList, Meter } from './ProfileParts';
 import { LookPicker } from './LookPicker';
+import { GameStats } from './GameStats';
+import '../styles/land-hub.css';
+import { LudoLookRows } from '../games/ludo/LudoLooks';
 import { ProfileTabs, useProfileTab } from './ProfileTabs';
 import { Rolling } from './Rolling';
 
@@ -227,6 +230,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
                   {s.gamesPlayed > 0 && ` · ${Math.round(s.cardsPickedUp / s.gamesPlayed)} per game`}
                 </p>
               </section>
+              <GameStats stats={s} />
               <section className="panel stack-tight">
                 <button type="button" className="fold-head" aria-expanded={badgesOpen} onClick={() => setBadgesOpen((open) => !open)}>
                   <h3 className="section-title">
@@ -304,6 +308,10 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
               🙂 Change avatar
             </button>
             <LookPicker auth={auth} />
+            <section className="panel stack-tight">
+              <h3 className="section-title">🎲 Ludo board, gotis & dice</h3>
+              <LudoLookRows level={lvl.level} />
+            </section>
             <ShopButton auth={auth} />
           </div>
         )}

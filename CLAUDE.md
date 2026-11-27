@@ -1,6 +1,6 @@
 # bluff-frontend — guide for Claude
 
-Landscape-first React app (phones play sideways, like Uno) for **Bluff**, a free real-time card game for a group of friends.
+Landscape-first React app (phones play sideways, like Uno) for **Game Baithak** (`APP_NAME`), a home for free real-time 2–4 player games with friends: Ludo, Bluff, Crazy 7, Rang. The Bluff *game* keeps its name; repo names, storage keys and socket paths stay `bluff`.
 Deployed on Vercel (https://bluff-frontend.vercel.app, auto-deploys `main`). The server is the sibling repo
 `bluff-backend` (Render). If both repos sit side by side, the parent folder's `CLAUDE.md` has the whole-project
 guide, the feature list and the owner's working preferences. Read it first.
@@ -22,6 +22,10 @@ React 18 + Vite 8 + TypeScript, socket.io-client, no UI library. All styles are 
 | `components/Lobby.tsx` | Game picker (🃏 Bluff / 7️⃣ Crazy 7, host), players (bots get a 🤖 row and 🤖 Add a bot), settings per game (Bluff extras: Peek, Bet, Teams, and 🤖 Bot level once a bot is seated; Crazy 7: cards each, picks per turn, Stack 7s; stake capped with bots), 2v2 slots and swap popup, host tools via `PlayerSheet` |
 | `components/LobbyRoom.tsx`, `LobbySettings.tsx`, `styles/land-room.css` | Landscape room: the same 3D table as the game, players seated at the rail, glowing "+" open seats (host: add a bot or invite), you at the near side, a settings summary sign on the felt and the settings in a right drawer (`SettingsDrawer`, the same blocks as portrait), dock with Leave, Invite, Play/Watch and Start / I'm ready. All state and actions stay in `Lobby.tsx` |
 | `components/FriendsSheet.tsx` | Search, requests, friends, invites; Ask to join / 👀 Watch a friend's room (they say yes in `JoinAsks`, top right) (`actions.joinFriend`) |
+| `components/GameHub.tsx`, `games/lastPlayed.ts`, `styles/land-hub.css` | Home game hub: a tile per `GAME_CATALOG` game (category chips, NEW, ▶ Last played per phone), sideways one scrolling row; a tile opens `PlayPanel` with that game picked (`actions.create(name, game)`) |
+| `games/registry.tsx`, `games/GameOptions.tsx` | The game registry: every game after Rang plugs in here (`PLUGGED` kind → lazy `Table` + `Rules`); `App` routes `isPlugged` games to `PluggedTable`; lobby rows from catalog `options` (`when`), stored in `config.opts`; moves go through `actions.gameMove` (`game:move`); the handshake sends `games: [...PLUGGED_GAMES]` |
+| `games/ludo/` (`LudoTable`, `LudoBoard`, `Gotis`, `Dice`, `LudoSeat`, `LudoOver`, `LudoLooks`, `looks.ts`, `geometry.ts`, `sounds.ts`, `LudoLesson`, `LudoRules`, `preview.tsx`), `styles/land-ludo*.css` | Ludo: tilted SVG board turned so my colour is near-left, standing gotis that hop along `ludoPath` from `LudoView.last`, CSS 3D dice on `rollSeq`, kill fly-back + shake, banners, podium + kill recap then `GameOver`, looks per phone by level. Dev only: `?ludoPreview=1|auto|kill|over`, `?homePreview`, `?lobbyPreview=ludo` (`games/devPreviews.tsx`, wired in `boot.tsx`) |
+| `components/GameStats.tsx` | Profile 🎮 Games: a card per game from `stats.perGame` (older totals as fallback), Ludo kills/home/sixes |
 | `components/Home.tsx`, `PlayPanel.tsx`, `HomeDock.tsx`, `HomeNotice.tsx` | Home is a game main menu: logo and one ▶ Play (opens `PlayPanel`: name, Create a room, Join with a code; invite links open it straight away), a dock of round buttons (Missions, League, Shop, Spin, Friends, How to play, Get app; locked for guests), an "Online now" list on the left (`OnlineList`) and the green online count by the profile and at most one small one-time notice (name check, invite notifications). Keep the main stage clean: new home features go in the dock |
 | `components/OnlineFriends.tsx`, `lib/onlineFriends.ts` | 🟢 Home "Online now" strip and the online count (corner pill, lobby Friends button); one shared friends poll (`useOnlineFriends`) |
 | `components/FriendOnline.tsx`, `FriendAlertsRow.tsx`, `lib/friendAlerts.ts` | "👋 came online" card (top right, every screen, mounted in `App`; groups arrivals; Invite in a lobby; chime) and its per-phone Profile switch |
@@ -72,6 +76,14 @@ npm run build
 
 To try several players in one browser, use different addresses for separate storage: `http://localhost:5173`,
 `http://127.0.0.1:5173`, `http://[::1]:5173`.
+
+## How to add a new game (frontend)
+
+1. Backend first (`GameKind`, `PLUGGED_GAMES`, `GAME_CATALOG` entry, `PluggedView`/`PluggedMove` variants), then copy `types.ts` here.
+2. `src/games/<kind>/`: a table taking `TableProps` that reads `view.plugged` and sends `actions.gameMove({ kind, move })`; optional `Rules`.
+3. Add it to `PLUGGED` in `games/registry.tsx`. Routing, handshake, lobby options, home tile and profile card then follow from the catalog.
+4. Reuse `Seat`/`SeatSheet`, `TableInfo`, `GameOver`, `useTableFx`, `confetti`; own `styles/land-<game>*.css`; transform/opacity only, `reducedMotion()`.
+5. Lesson or rules sheet (branch in `TutorialPage`), Rules page section, `lib/i18n/hi.<game>.ts`, a map row here and in the README.
 
 ## Rules of thumb
 

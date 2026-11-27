@@ -1,0 +1,272 @@
+/* ---------- Ludo game over (podium, kill recap) and the looks picker ---------- */
+
+.modal.lu-over {
+  width: min(760px, 94vw);
+  max-width: min(760px, 94vw);
+}
+
+.lu-over-box {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  padding: 12px;
+  text-align: center;
+}
+
+/* sideways: podium on the left, the kill recap beside it */
+@media (orientation: landscape) and (min-width: 600px) {
+  .lu-over-box {
+    grid-template-columns: 1.5fr 1fr;
+    align-items: end;
+  }
+
+  .lu-over-title,
+  .lu-over-box > .btn {
+    grid-column: 1 / -1;
+  }
+}
+
+.lu-over-title {
+  margin: 0;
+  color: var(--gold);
+  font-size: clamp(20px, 6dvh, 28px);
+}
+
+/* finish order as steps: 1st tallest in the middle */
+.lu-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lu-step {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  width: min(104px, 22vw);
+  animation: lu-rise 0.5s var(--spring) backwards;
+  animation-delay: calc(var(--i) * 0.12s);
+}
+
+.lu-step.at-1 { order: 2; }
+.lu-step.at-2 { order: 1; }
+.lu-step.at-3 { order: 3; }
+.lu-step.at-4 { order: 4; }
+
+.lu-step-who {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.lu-step-goti {
+  position: absolute;
+  right: -14px;
+  bottom: -4px;
+  width: 18px;
+  height: 28px;
+}
+
+.lu-step b {
+  max-width: 108px;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lu-step-medal {
+  font-size: 18px;
+}
+
+.lu-step small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.lu-step-block {
+  display: block;
+  width: 100%;
+  height: 26px;
+  margin-top: 4px;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--lu-col) 80%, #fff), color-mix(in srgb, var(--lu-col) 60%, #000));
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35);
+}
+
+.lu-step.at-1 .lu-step-block { height: 64px; }
+.lu-step.at-2 .lu-step-block { height: 44px; }
+.lu-step.at-3 .lu-step-block { height: 32px; }
+
+.lu-step.won .lu-step-who::after {
+  content: '👑';
+  position: absolute;
+  top: -18px;
+  font-size: 18px;
+}
+
+@keyframes lu-rise {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+}
+
+.lu-kills {
+  text-align: left;
+}
+
+.lu-kills ul {
+  display: grid;
+  gap: 3px;
+  max-height: 120px;
+  overflow-y: auto;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.lu-kills li::before {
+  content: '⚔️ ';
+}
+
+@media (max-height: 420px) {
+  .lu-step-block {
+    height: 14px;
+  }
+
+  .lu-step.at-1 .lu-step-block { height: 34px; }
+  .lu-step.at-2 .lu-step-block { height: 24px; }
+  .lu-step.at-3 .lu-step-block { height: 18px; }
+}
+
+/* ---------- the looks picker ---------- */
+
+.lu-looks {
+  display: grid;
+  gap: 10px;
+}
+
+.lu-look-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lu-look {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 82px;
+  padding: 8px 6px 6px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.lu-look.on {
+  box-shadow: inset 0 0 0 2px var(--gold), 0 0 12px rgba(246, 196, 83, 0.35);
+}
+
+.lu-look.locked {
+  opacity: 0.5;
+}
+
+.lu-look small {
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.lu-look-art {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 48px;
+}
+
+/* a tiny board: a cross of squares over the four colours */
+.lu-look-board {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  background:
+    linear-gradient(var(--lu-cell), var(--lu-cell)) 50% 50% / 30% 100% no-repeat,
+    linear-gradient(var(--lu-cell), var(--lu-cell)) 50% 50% / 100% 30% no-repeat,
+    conic-gradient(var(--lu-green) 0 25%, var(--lu-yellow) 0 50%, var(--lu-blue) 0 75%, var(--lu-red) 0);
+  box-shadow: 0 0 0 3px var(--lu-frame-2), 0 4px 8px rgba(0, 0, 0, 0.4);
+  transform: none;
+}
+
+.lu-look-goti {
+  position: relative;
+  display: block;
+  width: 26px;
+  height: 40px;
+}
+
+.lu-look-art .lu-dice {
+  --ds: 30px;
+  pointer-events: none;
+}
+
+/* ---------- the Ludo lesson ---------- */
+
+.lu-lesson {
+  display: grid;
+  gap: 8px;
+  width: min(440px, 90vw);
+  padding: 12px 18px 14px;
+  text-align: center;
+}
+
+.lu-lesson h3,
+.lu-lesson p {
+  margin: 0;
+}
+
+.lu-lesson-art {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  min-height: 92px;
+}
+
+.lu-lesson-goti {
+  position: relative;
+  display: block;
+  width: 30px;
+  height: 46px;
+  animation: lu-rise 0.4s var(--spring) backwards;
+}
+
+.lu-lesson-goti.glow .lu-pawn-head {
+  box-shadow: 0 0 8px 3px rgba(255, 255, 255, 0.8), 0 0 16px 6px var(--c);
+}
+
+.lu-lesson-tag {
+  align-self: center;
+  color: var(--gold);
+  font-size: 20px;
+  animation: lu-pop 0.4s var(--spring) 0.3s backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lu-lesson-goti,
+  .lu-lesson-tag,
+  .lu-step {
+    animation: none;
+  }
+}

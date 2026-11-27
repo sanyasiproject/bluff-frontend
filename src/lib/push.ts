@@ -1,4 +1,4 @@
-// Friend-invite notifications (Web Push): they reach the phone even when Bluff is closed
+// Friend-invite notifications (Web Push): they reach the phone even when Game Baithak is closed
 import { api } from './api';
 import { isInstalled, isIos } from './install';
 import { loadPref, savePref } from './storage';
@@ -65,7 +65,7 @@ export async function enablePush(token: string | null): Promise<void> {
   // first, before anything else is awaited, so the tap still counts
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') {
-    throw new Error(permission === 'denied' ? "Notifications are blocked for Bluff in your phone's settings" : 'Notifications were not allowed');
+    throw new Error(permission === 'denied' ? "Notifications are blocked for Game Baithak in your phone's settings" : 'Notifications were not allowed');
   }
   await subscribeThisPhone(token);
 }

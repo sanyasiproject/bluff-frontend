@@ -1,0 +1,229 @@
+/* ---------- Ludo gotis: glossy pawns standing up against the board's tilt ---------- */
+
+.lu-gotis {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.lu-g {
+  --k: 1;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+
+.lu-g-shadow {
+  position: absolute;
+  left: calc(var(--cell) * -0.36 * var(--k));
+  top: calc(var(--cell) * -0.2 * var(--k));
+  width: calc(var(--cell) * 0.72 * var(--k));
+  height: calc(var(--cell) * 0.42 * var(--k));
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.18) 70%, transparent);
+  translate: 0 0 1px;
+}
+
+/* the pawn stands up facing you; its foot on the square */
+.lu-g-stand {
+  position: absolute;
+  left: calc(var(--cell) * -0.46);
+  bottom: calc(var(--cell) * -0.16);
+  width: calc(var(--cell) * 0.92);
+  height: calc(var(--cell) * 1.22);
+  padding: 0;
+  border: 0;
+  background: none;
+  transform-origin: 50% 100%;
+  transform: translateZ(2px) rotateX(calc(var(--lu-tilt) * -1)) scale(var(--k));
+  transform-style: preserve-3d;
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lu-g-stand:disabled {
+  opacity: 1;
+}
+
+.lu-g.legal .lu-g-stand {
+  cursor: pointer;
+}
+
+.lu-pawn {
+  --c: #e53935;
+  --c2: #7f0f0c;
+  --c3: #ff9a90;
+  position: absolute;
+  inset: 0;
+  display: block;
+  transform-origin: 50% 100%;
+  pointer-events: none;
+}
+
+.lu-c-red { --c: #e53935; --c2: #7f0f0c; --c3: #ff9a90; }
+.lu-c-green { --c: #3fa045; --c2: #164d1a; --c3: #a6e3a8; }
+.lu-c-yellow { --c: #f9c623; --c2: #9a6b00; --c3: #fff3a6; }
+.lu-c-blue { --c: #1e88e5; --c2: #0b3570; --c3: #9ccdfb; }
+
+.lu-pawn > i {
+  position: absolute;
+  display: block;
+}
+
+/* the foot: a wide disc */
+.lu-pawn-base {
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 30%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 70% 60% at 42% 30%, var(--c3) 0%, var(--c) 40%, var(--c2) 100%);
+  box-shadow: inset 0 -2px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* the body: a bell narrowing to the neck, lit down one side */
+.lu-pawn-body {
+  left: 15%;
+  bottom: 13%;
+  width: 70%;
+  height: 54%;
+  border-radius: 50% 50% 40% 40% / 78% 78% 22% 22%;
+  background:
+    linear-gradient(90deg, transparent 22%, rgba(255, 255, 255, 0.55) 30%, transparent 40%),
+    linear-gradient(90deg, var(--c2) 0%, var(--c) 30%, var(--c3) 48%, var(--c) 66%, var(--c2) 100%);
+}
+
+/* the head: a shiny ball with a bright spot */
+.lu-pawn-head {
+  left: 18%;
+  top: 0;
+  width: 64%;
+  height: 44%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #fff 0 9%, var(--c3) 20%, var(--c) 55%, var(--c2) 100%);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35);
+}
+
+/* Marble: cooler, with soft white veins */
+.gs-marble .lu-pawn-body,
+.lu-pawn.gs-marble .lu-pawn-body {
+  background:
+    repeating-linear-gradient(115deg, transparent 0 18%, rgba(255, 255, 255, 0.35) 19% 21%, transparent 22% 34%),
+    linear-gradient(90deg, var(--c2) 0%, color-mix(in srgb, var(--c) 70%, #fff) 40%, var(--c) 70%, var(--c2) 100%);
+}
+
+.gs-marble .lu-pawn-head,
+.lu-pawn.gs-marble .lu-pawn-head {
+  background:
+    repeating-radial-gradient(circle at 70% 70%, transparent 0 22%, rgba(255, 255, 255, 0.3) 23% 26%),
+    radial-gradient(circle at 34% 30%, #fff 0 8%, color-mix(in srgb, var(--c) 60%, #fff) 25%, var(--c) 60%, var(--c2) 100%);
+}
+
+/* Gem: cut facets that catch the light */
+.gs-gem .lu-pawn-body,
+.lu-pawn.gs-gem .lu-pawn-body {
+  border-radius: 30% 30% 12% 12% / 60% 60% 12% 12%;
+  background: conic-gradient(from 200deg at 50% 30%, var(--c2), var(--c3), var(--c), var(--c2), var(--c3), var(--c), var(--c2));
+}
+
+.gs-gem .lu-pawn-head,
+.lu-pawn.gs-gem .lu-pawn-head {
+  border-radius: 30%;
+  rotate: 45deg;
+  scale: 0.85;
+  background: conic-gradient(from 0deg, var(--c3), var(--c), var(--c2), var(--c), var(--c3), var(--c), var(--c2), var(--c), var(--c3));
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+}
+
+/* legal: the goti bobs and a ring pulses under it */
+.lu-g.legal .lu-pawn {
+  animation: lu-bob 0.75s ease-in-out infinite alternate;
+}
+
+.lu-g.legal .lu-pawn-head {
+  box-shadow: 0 0 8px 3px rgba(255, 255, 255, 0.8), 0 0 16px 6px var(--c);
+}
+
+@keyframes lu-bob {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 -14%;
+  }
+}
+
+.lu-g-ring {
+  position: absolute;
+  left: calc(var(--cell) * -0.5);
+  top: calc(var(--cell) * -0.5);
+  width: var(--cell);
+  height: var(--cell);
+  border: 3px solid #ffe066;
+  border-radius: 50%;
+  box-shadow: 0 0 12px 3px rgba(255, 224, 102, 0.85), inset 0 0 10px rgba(255, 224, 102, 0.7);
+  translate: 0 0 1px;
+  animation: lu-ring 1s ease-out infinite;
+}
+
+/* a steady gold disc under a goti that can move */
+.lu-g.legal .lu-g-shadow {
+  background: radial-gradient(closest-side, rgba(255, 236, 140, 0.95), rgba(255, 200, 60, 0.55) 55%, transparent);
+  scale: 1.5;
+}
+
+@keyframes lu-ring {
+  from {
+    opacity: 1;
+    transform: scale(0.55);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
+/* almost home: gotis in their lane glow gold */
+.lu-g.almost .lu-g-shadow {
+  background: radial-gradient(closest-side, rgba(255, 214, 90, 0.95), rgba(255, 190, 40, 0.35) 60%, transparent);
+  animation: lu-glow 0.9s ease-in-out infinite alternate;
+}
+
+.lu-g.home .lu-g-shadow {
+  opacity: 0.4;
+}
+
+/* the ghost: where the pointed goti would land */
+.lu-g.ghost {
+  pointer-events: none;
+}
+
+.lu-g.ghost .lu-pawn {
+  opacity: 0.45;
+}
+
+.lu-g-mark {
+  position: absolute;
+  left: calc(var(--cell) * -0.5);
+  top: calc(var(--cell) * -0.5);
+  width: var(--cell);
+  height: var(--cell);
+  border: 2px dashed #fff;
+  border-radius: 18%;
+  background: rgba(255, 255, 255, 0.28);
+  translate: 0 0 1px;
+  animation: lu-glow 0.6s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lu-g.legal .lu-pawn,
+  .lu-g-ring,
+  .lu-g-mark,
+  .lu-g.almost .lu-g-shadow,
+  .lu-yard-glow {
+    animation: none;
+  }
+}

@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { compactCoins, formatCoins, stakeLabel } from '../lib/coins';
 import { achievementsOf, TITLES } from '../lib/progress';
+import { ludoRuleLines } from '../games/ludo/LudoRules';
+import { LUDO_BOARDS, LUDO_DICE, LUDO_GOTIS } from '../games/ludo/looks';
 import {
   AVATAR_BACKGROUNDS,
   AVATAR_CHARACTERS,
@@ -133,6 +135,28 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             <li>On Android the status bar hides after your first tap, like other games; swipe down from the top to see it for a moment.</li>
           </ul>
         </Section>
+        <Section icon="🏠" title="Game Baithak: the game hub">
+          <ul>
+            <li>The app is now Game Baithak: Home shows a tile for every game (category chips All / Cards / Board, a NEW badge, ▶ Last played on this phone). Tap a tile: the Play panel opens with that game picked, so Create a room starts in it. The host can still switch games in the lobby.</li>
+            <li>Bluff, Crazy 7 and Rang are wired by hand; every new game plugs into the game registry (Ludo first), with its lobby options drawn from the catalog.</li>
+            <li>An app without a game can't start it: the server asks that player to reload the app.</li>
+          </ul>
+        </Section>
+
+        <Section icon="🎲" title="Ludo (board game)">
+          <ul>
+            {ludoRuleLines().map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            <li>2 to 4 players (2: red and yellow opposite; 3: red, green, yellow; 4: all). Bots play Normal, Hard or Expert (the host's bot level) and cap the stake like Bluff bots.</li>
+            <li>Your colour always sits at the near-left corner. Gotis that can move glow and bob; hold one to see a ghost on its landing square, tap to move. With one move it is made for you; with none the turn passes.</li>
+            <li>Turn timer: when time runs out the bot brain rolls or moves for you.</li>
+            <li>Game over: a finish-order podium with fireworks and the list of every kill, then the usual coins screen. Leaving mid-game is a loss and your gotis leave the board.</li>
+            <li>Looks (per phone, from 🎨 at the table or Profile › Looks): boards {LUDO_BOARDS.map((l) => `${l.name} (Lv ${l.level})`).join(', ')}; gotis {LUDO_GOTIS.map((l) => `${l.name} (Lv ${l.level})`).join(', ')}; dice {LUDO_DICE.map((l) => `${l.name} (Lv ${l.level})`).join(', ')}.</li>
+            <li>Profile: a 🎮 Games card per game (played, won), with Ludo kills, gotis home and sixes, and Ludo achievements. Ludo daily and weekly missions count kills, gotis home, sixes, games and wins.</li>
+          </ul>
+        </Section>
+
         <Section icon="🌈" title="Rang (third game)">
           <ul>
             <li>Our own colour-card game: 4 colours (🔴 🔵 🟢 🟡), numbers 0–9 and action cards. Same rooms, seats (2–5), bots, coins and tools.</li>

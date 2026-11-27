@@ -44,7 +44,7 @@ export function startShell() {
   box.style.cssText =
     'position:fixed;z-index:10;top:env(safe-area-inset-top);bottom:env(safe-area-inset-bottom);left:env(safe-area-inset-left);right:env(safe-area-inset-right);overflow:visible;opacity:0;transition:opacity .25s ease';
   const frame = document.createElement('iframe');
-  frame.title = 'Bluff';
+  frame.title = 'Game Baithak';
   frame.allow = 'fullscreen; microphone; autoplay; clipboard-write; web-share';
   frame.style.cssText = 'position:absolute;left:0;top:0;border:0;transform-origin:50% 50%;background:#020604';
 

@@ -7,6 +7,8 @@ import { formatCoins, compactCoins } from '../lib/coins';
 import { markTutorialSeen, tutorialSeen } from '../lib/tutorial';
 import { useLandscape } from '../lib/useLandscape';
 import {
+  gameInfo,
+  isPlugged,
   RANK_DIVISIONS,
   rankName,
   type FriendsResponse,
@@ -170,7 +172,9 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   const isHost = view.hostId === view.meId;
   // anyone can sit out and watch, or take a free seat again
   const meWatching = view.watchers.find((w) => w.id === view.meId);
-  const seatsFull = view.players.length >= 5;
+  // the game's own seat limit (Ludo 4), never above the room's 5
+  const maxSeats = Math.min(5, gameInfo(view.config.game).maxPlayers);
+  const seatsFull = view.players.length >= maxSeats;
   // back from the lobby leaves the room, like the Leave button
   useBack(() => void actions.leave());
   const me = [...view.players, ...view.watchers].find((p) => p.id === view.meId);
@@ -186,9 +190,10 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
   const crazy7 = view.config.game === 'crazy7';
   const rang = view.config.game === 'rang';
   // Bluff's own settings (ranked, teams, twists…) only show for Bluff
-  const isBluff = !crazy7 && !rang;
-  // 2v2 is for Bluff and Rang
-  const teamGame = view.config.teams && !crazy7;
+  const plugged = isPlugged(view.config.game);
+  const isBluff = !crazy7 && !rang && !plugged;
+  // 2v2 is for Bluff, Rang and catalog games with teams
+  const teamGame = view.config.teams && !crazy7 && gameInfo(view.config.game).teams;
   // practice lessons: offered once the first time someone plays a game, open any time from How to play
   const [lesson, setLesson] = useState<GameKind | null>(null);
   const [, setSeenTick] = useState(0);
@@ -217,6 +222,8 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
       ? 'Need at least 2 players'
       : bots.length === view.players.length
         ? 'Someone has to play with the bots'
+      : view.players.length > maxSeats
+        ? `${gameInfo(view.config.game).name} is for up to ${maxSeats} players: move someone to watching`
       : teamGame && view.players.length !== 4
         ? 'Teams need exactly 4 players'
         : rankedGuests.length > 0
@@ -328,12 +335,12 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
 
   // landscape: the room is the 3D table (LobbyRoom); settings sit in a side drawer with tabs
   const land = useLandscape();
-  const hasStakes = coinsOn || (isBluff && bots.length > 0);
+  const hasStakes = coinsOn || ((isBluff || plugged) && bots.length > 0);
   const tabs = lobbyTabs(isHost, coinsOn, hasStakes);
   const [tabPick, setTabPick] = useState<LobbyTab>('game');
   const tab = tabs.some(([t]) => t === tabPick) ? tabPick : 'game';
   // 2v2 seats four
-  const seatCap = teamGame ? 4 : 5;
+  const seatCap = teamGame ? 4 : maxSeats;
   const canInvite = people < ROOM_LIMIT;
   const friendsOnline = friendsNow ? friendsNow.filter((f) => f.online && f.inRoom !== 'here').length : 0;
 
@@ -471,7 +478,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
                   {!viewing.connected && <p className="muted small">They're offline, so they can't be the host right now.</p>}
                   {view.watchers.some((w) => w.id === viewing.id) ? (
                     <button className="btn block" disabled={seatsFull} onClick={() => void actions.setWatching(false, viewing.id)}>
-                      🎮 Move to playing{seatsFull ? ' · all 5 seats taken' : ''}
+                      🎮 Move to playing{seatsFull ? ` · all ${maxSeats} seats taken` : ''}
                     </button>
                   ) : (
                     <button className="btn block" onClick={() => void actions.setWatching(true, viewing.id)}>
@@ -548,7 +555,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         coinsOn={coinsOn}
         watching={!!meWatching}
         watchNote={
-          meWatching ? (!meWatching.byChoice ? 'Seats are full · you get the next free one' : seatsFull ? 'All 5 seats are taken right now' : null) : null
+          meWatching ? (!meWatching.byChoice ? 'Seats are full · you get the next free one' : seatsFull ? `All ${maxSeats} seats are taken right now` : null) : null
         }
         seatsFull={seatsFull}
         canAddBot={isHost && !seatsFull && people < ROOM_LIMIT}
@@ -594,7 +601,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
         <h2 className="section-title">
           Players{' '}
           <span key={view.players.length} className="muted bump">
-            {view.players.length}/5
+            {view.players.length}/{maxSeats}
           </span>
         </h2>
         <ul className="player-list">
@@ -666,7 +673,7 @@ export function Lobby({ view, actions, auth }: { view: RoomView; actions: Action
               {!meWatching?.byChoice
                 ? 'Seats are full · you get the next free one'
                 : seatsFull
-                  ? 'All 5 seats are taken right now'
+                  ? `All ${maxSeats} seats are taken right now`
                   : 'Switch to Play to take a seat'}
             </p>
           )}
