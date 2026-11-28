@@ -33,7 +33,7 @@ export function InstallCard() {
       <div className="install-row">
         <img src="/icons/icon-192.png" alt="" className="install-icon" />
         <div className="grow">
-          <b>Get the Game Baithak app</b>
+          <b>Get the Game Baithak Wide app</b>
           <p className="muted small">Free · no app store</p>
         </div>
         <button className="btn small primary" onClick={install}>
@@ -105,7 +105,8 @@ export function GetAppButton() {
   useEffect(() => onInstallChange(() => refresh((n) => n + 1)), []);
 
   const ios = isIos();
-  if (isInstalled() || (!canPrompt() && !ios && !steps)) return null;
+  // always offered until installed: Chrome's prompt when it has one, else the menu steps
+  if (isInstalled()) return null;
 
   const install = async () => {
     if (canPrompt()) await promptInstall();
@@ -126,7 +127,7 @@ export function GetAppButton() {
             <div className="install-row">
               <img src="/icons/icon-192.png" alt="" className="install-icon" />
               <div className="grow">
-                <b>Get the Game Baithak app</b>
+                <b>Get the Game Baithak Wide app</b>
                 <p className="muted small">Free · no app store</p>
               </div>
             </div>

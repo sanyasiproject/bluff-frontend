@@ -2,6 +2,8 @@
 // so on touch phones the app runs inside a frame that is turned 90° while the phone is upright. The game inside
 // always sees a landscape screen; with the rotation lock on, the player just holds the phone sideways.
 
+import { startShellInstall } from './shellInstall';
+
 const SHORT_SIDE_MAX = 1100;
 /** the night colour behind everything (manifest theme and background colour) */
 const NIGHT = '#120b2e';
@@ -52,6 +54,8 @@ export function startShell() {
   frame.title = 'Game Baithak';
   frame.allow = 'fullscreen; microphone; autoplay; clipboard-write; web-share';
   frame.style.cssText = `position:absolute;left:0;top:0;border:0;transform-origin:50% 50%;background:${NIGHT};color-scheme:dark`;
+  // Chrome's install prompt only reaches this page; pass it through to the game's "Get app" button
+  startShellInstall(frame, installed);
 
   // the game gets the invite link (?room=) and keeps it; the shell's own address drops it so a reload doesn't join again
   const url = new URL(location.href);
