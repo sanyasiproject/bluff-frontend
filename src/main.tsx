@@ -1,3 +1,4 @@
+import { markFxLite } from './lib/fxLite';
 import { insideShell, startShell, wantsShell } from './lib/landscapeShell';
 // styles load with the page so the intro screen is styled from the first paint
 import './styles.css';
@@ -49,6 +50,8 @@ import './styles/land-night-pages.css';
 // voice picker and the host's get-ready buzz
 import './styles/voice-pick.css';
 import './styles/nudge.css';
+// tablets drop backdrop blur (must stay after every other style)
+import './styles/fx-lite.css';
 
 // service worker only in production builds so it never caches the dev server
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
@@ -79,5 +82,6 @@ setTimeout(() => {
 
 // touch phones and tablets: the app runs inside a frame that turns sideways when the phone is upright,
 // so the game opens in landscape even with the rotation lock on (lib/landscapeShell.ts)
+markFxLite();
 if (wantsShell() && !insideShell()) startShell();
 else void import('./boot');

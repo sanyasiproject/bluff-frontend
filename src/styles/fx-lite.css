@@ -1,0 +1,15 @@
+/* tablets (html.fx-lite, set in lib/fxLite.ts): no backdrop blur, it leaves unpainted bands on large high-DPI screens */
+html.fx-lite *,
+html.fx-lite *::before,
+html.fx-lite *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* without blur, glass popups would show the screen behind them: a solid base under their own colours */
+html.fx-lite .backdrop > :is(.modal, .sheet) {
+  background-color: #1b1146 !important;
+}
+html.fx-lite .backdrop {
+  background-color: rgba(8, 4, 26, 0.55) !important;
+}
