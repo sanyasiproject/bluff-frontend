@@ -1,6 +1,8 @@
 // The phone's own chess engine in a Web Worker: game reviews and live best lines, so the screen never stalls
 import { ChessGame, Position, reviewGame, search, type ChessVariant, type PvLine } from './lib';
 import type { EngineLine, EngineRequest, EngineReply } from './engineTypes';
+import { botMove } from '../../chess/engine';
+import { seeded } from '../../offline/engine/games/chess/budget';
 
 const post = (m: EngineReply) => (self as unknown as Worker).postMessage(m);
 
@@ -32,7 +34,13 @@ function gameOf(variant: ChessVariant, initialFen: string, moves: readonly strin
 self.onmessage = (e: MessageEvent<EngineRequest>) => {
   const r = e.data;
   try {
-    if (r.type === 'review') {
+    if (r.type === 'bot') {
+      // same as the server's thinkMove: the level's bot with the job's seed and time
+      const g = gameOf(r.variant, r.initialFen, r.moves);
+      const pos = g.position();
+      const level = Math.min(Math.max(Math.round(r.level), 1), 8) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+      post({ id: r.id, type: 'bot', uci: pos.uci(botMove(pos, g.keys(), level, seeded(r.seed), { maxMs: r.maxMs })) });
+    } else if (r.type === 'review') {
       const g = gameOf(r.variant, r.initialFen, r.moves);
       const result = reviewGame(g, { msPerMove: r.msPerMove, onProgress: (done, total) => post({ id: r.id, type: 'progress', done, total }) });
       post({ id: r.id, type: 'review', result: JSON.parse(JSON.stringify(result)) });

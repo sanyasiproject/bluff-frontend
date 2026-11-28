@@ -1373,6 +1373,12 @@ export interface RoomView {
   secret: SecretView | null;
   /** game over: each person's secret mission card, turned over (not players the host removed), named even after leaving; empty while the game runs */
   secrets: { playerId: string; name: string; id: string; done: boolean }[];
+  /** the room is locked with a PIN (missing from older servers) */
+  locked?: boolean;
+  /** host only: the room's PIN; null for everyone else or when unlocked (missing from older servers) */
+  pin?: string | null;
+  /** the remove vote running now; null when none (missing from older servers) */
+  vote?: RemoveVoteView | null;
 }
 
 export type Role = 'user' | 'admin';
@@ -2100,6 +2106,8 @@ export interface InviteEvent {
   fromId: string;
   fromName: string;
   code: string;
+  /** the host invited to a room locked with a PIN: the PIN, so the friend joins in one tap (missing otherwise) */
+  pin?: string;
 }
 
 export type AnnounceKind ='play' | 'pass' | 'bluff' | 'round' | 'finish' | 'over' | 'room';
@@ -2112,6 +2120,8 @@ export interface Announcement {
   forfeit?: ForfeitNote;
   /** the server stopped this game after an unexpected error; no coins moved (missing from older servers) */
   error?: boolean;
+  /** a remove vote started, passed or failed, so apps can say it in their own words (VOTE_TEXT; missing from older servers) */
+  vote?: VoteNote;
 }
 
 // ---------- fair play and server restarts ----------
@@ -2123,7 +2133,7 @@ export const SEAT_GRACE = { ms: 90_000, strictMs: 60_000 } as const;
 export const STRICT_TURN_SEC = 30;
 
 /** why a player forfeited: left the table, stayed offline past the held seat, or stopped a staked or ranked game */
-export type ForfeitReason = 'left' | 'offline' | 'stopped';
+export type ForfeitReason = 'left' | 'offline' | 'stopped' | 'removed';
 
 export interface ForfeitNote {
   playerId: string;
@@ -2136,7 +2146,80 @@ export const FORFEIT_TEXT: Record<ForfeitReason, { en: (name: string) => string;
   left: { en: (n) => `${n} left the game and forfeits it`, hi: (n) => `${n} game chhod gaye, unki haar` },
   offline: { en: (n) => `${n} was offline too long and forfeits the game`, hi: (n) => `${n} bahut der offline rahe, unki haar` },
   stopped: { en: (n) => `${n} stopped a staked game, which counts as a forfeit`, hi: (n) => `${n} ne staked game roka, isliye unki haar` },
+  removed: { en: (n) => `${n} was voted out and forfeits the game`, hi: (n) => `${n} ko vote se hataya gaya, unki haar` },
 };
+
+// ---------- private rooms: PIN, presets and the remove vote ----------
+
+/** a room PIN is exactly 4 digits */
+export const ROOM_PIN_PATTERN = /^[0-9]{4}$/;
+/** wrong PINs one network may send before it waits lockMs */
+export const PIN_GUESSES = { max: 5, lockMs: 10 * 60_000 } as const;
+/** room:join errors, so apps know to ask for the PIN (needed) or ask again (wrong) */
+export const PIN_TEXT = {
+  needed: 'This room needs a PIN',
+  wrong: 'Wrong PIN',
+  locked: 'Too many wrong PINs. Try again in 10 minutes',
+} as const;
+
+/** remove vote: open for ms, needs minPeople people in the room, the same target waits cooldownMs, a removed player stays out banMs */
+export const REMOVE_VOTE = { ms: 30_000, minPeople: 3, cooldownMs: 2 * 60_000, banMs: 10 * 60_000 } as const;
+
+/** the remove vote running in the room (RoomView.vote) */
+export interface RemoveVoteView {
+  /** member id of the player who may be removed */
+  target: string;
+  /** member id of who started it (their yes is counted) */
+  by: string;
+  yes: number;
+  no: number;
+  /** yes votes needed: more than half of the eligible voters (connected people other than the target), and at least 2 */
+  needed: number;
+  /** server time the vote fails if it hasn't passed */
+  endsAt: number;
+  /** I may vote: a connected person here who isn't the target */
+  canVote: boolean;
+  /** my vote so far; null when I haven't voted */
+  myVote: boolean | null;
+}
+
+export type VoteOutcome = 'started' | 'passed' | 'failed';
+
+export interface VoteNote {
+  outcome: VoteOutcome;
+  /** member id of the target */
+  target: string;
+  targetName: string;
+  byName: string;
+}
+
+/** what the announcer says for each remove vote step, in English and Hindi */
+export const VOTE_TEXT: Record<VoteOutcome, { en: (target: string, by: string) => string; hi: (target: string, by: string) => string }> = {
+  started: { en: (t, b) => `${b} started a vote to remove ${t}`, hi: (t, b) => `${b} ne ${t} ko hatane ke liye vote shuru kiya` },
+  passed: { en: (t) => `The vote passed: ${t} was removed`, hi: (t) => `Vote pass hua: ${t} ko hata diya gaya` },
+  failed: { en: (t) => `The vote to remove ${t} failed`, hi: (t) => `${t} ko hatane ka vote fail hua` },
+};
+
+/** saved room settings per account: at most PRESETS_PER_GAME per game, names up to PRESET_NAME_MAX characters */
+export const PRESETS_PER_GAME = 5;
+export const PRESET_NAME_MAX = 24;
+
+/** one saved set of lobby settings (GET/POST /api/me/presets) */
+export interface RoomPreset {
+  id: string;
+  name: string;
+  game: GameKind;
+  /** the room settings as sent with room:config (game, opts, turn timer, teams, bot level, stake ...) */
+  config: GameConfig;
+  /** bots the host seats with it (0 = none) */
+  bots: number;
+  /** ISO time it was last saved */
+  updatedAt: string;
+}
+
+export interface PresetsResponse {
+  presets: RoomPreset[];
+}
 
 /** said when the server stops a game after an unexpected error */
 export const GAME_ERROR_TEXT = {

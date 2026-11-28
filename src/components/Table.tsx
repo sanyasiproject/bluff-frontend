@@ -1,4 +1,6 @@
+import { VoteRemoveButton } from './RoomVote';
 import { AuraCanvas } from './AuraCanvas';
+import { useOfflinePlay } from '../offline/context';
 import { Fragment, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { api } from '../lib/api';
 import { claimText, cx, placeLabel, rankPlural, SUIT_SYMBOL } from '../lib/cards';
@@ -141,6 +143,8 @@ export function Seat({ player, turn, passed, viewing, action, bubble, onClick, l
 /** tapping someone's seat: throw an emoji, or send coins if they're a friend */
 export function SeatSheet({ player, auth, onThrow, onClose }: { player: PublicPlayer; auth: Auth; onThrow: (index: number) => void; onClose: () => void }) {
   const [friend, setFriend] = useState(false);
+  // offline on one phone: no throws or muting
+  const offline = useOfflinePlay();
   useEffect(() => {
     if (!auth.user || !player.username) return;
     api<FriendsResponse>('/friends', { token: auth.token })
@@ -153,15 +157,18 @@ export function SeatSheet({ player, auth, onThrow, onClose }: { player: PublicPl
         {player.bot && '🤖 '}
         {player.name} <LevelBadge level={player.level} />
       </h3>
-      <ThrowRow
-        onThrow={(i) => {
-          onThrow(i);
-          // close so the flight is visible
-          onClose();
-        }}
-      />
+      {!offline && (
+        <ThrowRow
+          onThrow={(i) => {
+            onThrow(i);
+            // close so the flight is visible
+            onClose();
+          }}
+        />
+      )}
       {friend && <GiftRow auth={auth} name={player.name} target={{ memberId: player.id }} />}
-      {!player.bot && <MuteButton player={player} />}
+      {!player.bot && !offline && <MuteButton player={player} />}
+      {!offline && <VoteRemoveButton targetId={player.id} onDone={onClose} />}
       <button className="btn ghost block" onClick={onClose}>
         Close
       </button>

@@ -11,7 +11,7 @@ export class ApiError extends Error {
 }
 
 interface ApiOptions {
-  method?: 'GET' | 'POST';
+  method?: 'GET' | 'POST' | 'DELETE';
   body?: object;
   token?: string | null;
 }

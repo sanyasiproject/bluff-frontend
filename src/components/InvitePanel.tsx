@@ -4,6 +4,8 @@ import { APP_NAME } from '../types';
 
 interface Props {
   code: string;
+  /** host of a locked room: shared with the invite */
+  pin?: string | null;
   onToast: (text: string) => void;
   /** logged-in players can also invite online friends directly */
   onFriends?: () => void;
@@ -14,14 +16,14 @@ interface Props {
 }
 
 /** one compact row: WhatsApp, share sheet, copy, friends; the link drops people straight into this room */
-export function InvitePanel({ code, onToast, onFriends, requests = 0, online = 0 }: Props) {
-  const link = inviteLink(code);
+export function InvitePanel({ code, pin, onToast, onFriends, requests = 0, online = 0 }: Props) {
+  const link = inviteLink(code, pin);
   const canShare = typeof navigator.share === 'function';
 
   const share = async () => {
     try {
       // text + url separately: apps like WhatsApp join them into one message
-      await navigator.share({ title: APP_NAME, text: inviteText(code), url: link });
+      await navigator.share({ title: APP_NAME, text: inviteText(code, pin), url: link });
     } catch {
       // share sheet closed
     }
@@ -29,11 +31,11 @@ export function InvitePanel({ code, onToast, onFriends, requests = 0, online = 0
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(inviteMessage(code));
+      await navigator.clipboard.writeText(inviteMessage(code, pin));
       onToast('Invite copied, paste it anywhere');
     } catch {
       // clipboard is blocked on plain-http pages, so let the player copy it by hand
-      window.prompt('Copy this invite', inviteMessage(code));
+      window.prompt('Copy this invite', inviteMessage(code, pin));
     }
   };
 
@@ -41,7 +43,7 @@ export function InvitePanel({ code, onToast, onFriends, requests = 0, online = 0
     <section className="invite-bar">
       <p className="invite-caption">Invite friends</p>
       <div className="share-row">
-        <a className="share-btn whatsapp" href={whatsappUrl(code)} target="_blank" rel="noopener noreferrer">
+        <a className="share-btn whatsapp" href={whatsappUrl(code, pin)} target="_blank" rel="noopener noreferrer">
           <span>
             <WhatsAppIcon />
           </span>

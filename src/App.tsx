@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { PinPrompt, RoomCtx, VoteBanner } from './components/RoomVote';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LostGameCard, ReconnectOverlay, SeatHeld } from './components/ConnOverlay';
 import { Flyers } from './components/Flyers';
@@ -18,6 +19,7 @@ import { retryImport } from './lib/lazyRetry';
 import { useLook } from './lib/look';
 import { autoPush } from './lib/push';
 import { loadName, loadTabSession } from './lib/storage';
+import { loadGame } from './offline/store';
 import { useAuth } from './useAuth';
 import { useBluff } from './useBluff';
 import { useLandscape } from './lib/useLandscape';
@@ -34,12 +36,14 @@ const loadBluff = retryImport(() => import('./components/Table'));
 const Crazy7Table = lazy(() => loadCrazy7().then((m) => ({ default: m.Crazy7Table })));
 const RangTable = lazy(() => loadRang().then((m) => ({ default: m.RangTable })));
 const Table = lazy(() => loadBluff().then((m) => ({ default: m.Table })));
+// offline pass-and-play: its own chunk, precached by the service worker
+const OfflineApp = lazy(retryImport(() => import('./offline/OfflineApp').then((m) => ({ default: m.OfflineApp }))));
 
 /** moves the table already shows; in a landscape game they go to the info panel's log, not a pop-up */
 const QUIET_IN_GAME = ['play', 'pass', 'round', 'room', 'chat', 'bluff'];
 
 export default function App() {
-  const { status, connectionId, roomKey, view, notes, reactions, bubbles, flyers, invites, replaced, pendingWatch, nudged, rejoining, lostGame, actions } = useBluff();
+  const { status, connectionId, roomKey, view, notes, reactions, bubbles, flyers, invites, replaced, pendingWatch, nudged, rejoining, lostGame, pinAsk, actions } = useBluff();
   const auth = useAuth();
   const land = useLandscape();
   // the table theme and card back this player picked
@@ -47,6 +51,8 @@ export default function App() {
   // my Ludo gotis, dice and board go to the room so everyone sees them
   useSendLudoLook(view ? roomKey : null, auth.user ? levelOf(auth.user.stats) : 1, actions.ludoLook);
   const [adminOpen, setAdminOpen] = useState(false);
+  // offline on one phone; a saved offline game opens again on start (unless this tab was in an online room)
+  const [offline, setOffline] = useState(() => loadGame() !== null && loadTabSession() === null);
   // the intro stays until the server first answers and a saved login is checked, and at least a moment
   const [booted, setBooted] = useState(false);
   const [introShown, setIntroShown] = useState(false);
@@ -108,8 +114,11 @@ export default function App() {
 
   let screen;
   // a new screen gets a fresh error boundary
-  const screenKey = replaced ? 'replaced' : !view ? (adminOpen ? 'admin' : 'home') : view.phase === 'lobby' ? 'lobby' : `table:${view.config.game}`;
-  if (!booted && !replaced) {
+  const screenKey = replaced ? 'replaced' : !view ? (offline ? 'offline' : adminOpen ? 'admin' : 'home') : view.phase === 'lobby' ? 'lobby' : `table:${view.config.game}`;
+  if (offline && !view && !replaced) {
+    // needs no server, so it doesn't wait for the intro
+    screen = <OfflineApp onExit={() => setOffline(false)} myName={auth.user?.displayName} />;
+  } else if (!booted && !replaced) {
     screen = <Splash status={status} />;
   } else if (replaced) {
     screen = (
@@ -132,6 +141,7 @@ export default function App() {
         auth={auth}
         onOpenAdmin={() => setAdminOpen(true)}
         pendingWatch={pendingWatch}
+        onOffline={() => setOffline(true)}
       />
     );
   } else if (view.phase === 'lobby') {
@@ -148,11 +158,12 @@ export default function App() {
   }
 
   const invite = invites[invites.length - 1];
+  const roomCtx = useMemo(() => ({ view: replaced ? null : view, actions }), [view, actions, replaced]);
   const seatedInGame = view?.phase === 'playing' && view.players.some((p) => p.id === view.meId);
 
   return (
-    <>
-      <ErrorBoundary key={screenKey} where={screenKey} onHome={view ? () => void actions.leaveAnyway() : () => setAdminOpen(false)}>
+    <RoomCtx.Provider value={roomCtx}>
+      <ErrorBoundary key={screenKey} where={screenKey} onHome={view ? () => void actions.leaveAnyway() : () => (setAdminOpen(false), setOffline(false))}>
         <Suspense fallback={null}>{screen}</Suspense>
       </ErrorBoundary>
       {/* shop win bursts and entry flashes, for both games and the lobby */}
@@ -178,8 +189,11 @@ export default function App() {
         />
       )}
       {auth.bonus > 0 && !invite && <BonusPopup amount={auth.bonus} streak={auth.user?.loginStreak} onClose={auth.clearBonus} />}
+      {/* private rooms: the remove vote over any screen, and the PIN a locked room asks for */}
+      <VoteBanner view={replaced ? null : view} actions={actions} />
+      <PinPrompt ask={pinAsk} onJoin={(pin) => pinAsk && void actions.join(pinAsk.code, pinAsk.name, pin)} onClose={actions.clearPinAsk} />
       {/* phones held upright: turn sideways (shown by CSS only in portrait on touch screens) */}
       <RotateGate />
-    </>
+    </RoomCtx.Provider>
   );
 }

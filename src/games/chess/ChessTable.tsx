@@ -1,4 +1,5 @@
 // The chess table: the board at full height, both players' cards and clocks on the left, moves and buttons on the right
+import { useOfflinePlay } from '../../offline/context';
 import '../../styles/land-ludo.css';
 import '../../styles/land-ludo-hud.css';
 import '../../styles/land-ludo-over.css';
@@ -63,7 +64,9 @@ function ChessTableInner({ view, actions, bubbles, auth, notes = [], cv }: Table
   const looks = useChessLooks();
   const myColor: Color | null = cv.players.w === view.meId ? 'w' : cv.players.b === view.meId ? 'b' : null;
   const [flip, setFlip] = useState(false);
-  const bottom = flip ? other(myColor ?? 'w') : (myColor ?? 'w');
+  // offline with the board turning off: white stays at the bottom whoever moves
+  const fixed = useOfflinePlay()?.fixedBoard ?? false;
+  const bottom = flip ? other(fixed ? 'w' : (myColor ?? 'w')) : fixed ? 'w' : (myColor ?? 'w');
   const live = playing && cv.status === 'playing';
   const overReady = useOverReady(view, 1200);
   const boardRef = useRef<HTMLDivElement>(null);

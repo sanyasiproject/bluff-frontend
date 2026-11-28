@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useBack } from '../lib/back';
 import { chatSetOf, type ChatKind, type RoomView } from '../types';
 import { RoomChatInput, RoomChatList, useRoomChat } from './RoomChat';
+import { useOfflinePlay } from '../offline/context';
 
 /** 💬 opens a small tray: the room's chat list and a typing box (with a view), one row of emoji, then short message pills; tap outside to close */
 export function QuickChat({ onSend, view }: { onSend: (kind: ChatKind, index: number) => void; view?: RoomView }) {
@@ -11,6 +12,9 @@ export function QuickChat({ onSend, view }: { onSend: (kind: ChatKind, index: nu
   const { list, unread } = useRoomChat(view, open);
   // the table's own emoji and lines: each game has its own set
   const set = chatSetOf(view?.config.game);
+  // offline on one phone: nobody to chat with
+  const offline = useOfflinePlay();
+  if (offline) return null;
 
   const send = (kind: ChatKind, index: number) => {
     onSend(kind, index);

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { clearInvite, inviteCode } from '../lib/invite';
+import { clearInvite, inviteCode, invitePin } from '../lib/invite';
 import { loadName, loadSavedSession, loadTabSession } from '../lib/storage';
 import type { Auth } from '../useAuth';
 import type { Actions, ConnStatus, PendingWatch } from '../useBluff';
@@ -18,6 +18,8 @@ import { OnlineList } from './OnlineFriends';
 import { LangToggle } from './LangToggle';
 import { Backdrop } from './Overlays';
 import { PlayPanel } from './PlayPanel';
+import { OfflineEntry } from '../offline/OfflineEntry';
+import { SERVER_URL } from '../lib/socket';
 import { LessonChooser } from './tutorial/LessonOffer';
 import { TutorialPage } from './tutorial/TutorialPage';
 import { markTutorialSeen } from '../lib/tutorial';
@@ -31,9 +33,11 @@ interface HomeProps {
   onOpenAdmin: () => void;
   /** asked to watch a game in progress; waiting for the host */
   pendingWatch: PendingWatch | null;
+  /** opens offline pass-and-play */
+  onOffline?: () => void;
 }
 
-export function Home({ status, connectionId, actions, auth, onOpenAdmin, pendingWatch }: HomeProps) {
+export function Home({ status, connectionId, actions, auth, onOpenAdmin, pendingWatch, onOffline }: HomeProps) {
   const [name, setName] = useState(loadName);
   const [invite, setInvite] = useState(inviteCode);
   const [busy, setBusy] = useState(false);
@@ -97,11 +101,41 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
     void go(async () => {
       if (saved?.code === invite && (await actions.rejoinSaved()) !== null) return;
       // guests can't join while guest play is off; the home screen asks them to log in
-      if (playName && !locked) await actions.join(invite, playName);
+      if (playName && !locked) await actions.join(invite, playName, invitePin());
     });
   }, [invite, online, connectionId, auth.checking]);
 
-  const serverStatus = online ? null : (
+  // no connection at all: the offline entry says it, no "waking up" line
+  const [netDown, setNetDown] = useState(() => typeof navigator !== 'undefined' && navigator.onLine === false);
+  useEffect(() => {
+    const on = () => setNetDown(navigator.onLine === false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', on);
+    return () => {
+      window.removeEventListener('online', on);
+      window.removeEventListener('offline', on);
+    };
+  }, []);
+  // a sleeping server answers slowly; no network fails at once (some phones still say onLine)
+  useEffect(() => {
+    if (online) return setNetDown(navigator.onLine === false);
+    let live = true;
+    const probe = () => {
+      const t0 = Date.now();
+      fetch(`${SERVER_URL}/health`, { cache: 'no-store', signal: AbortSignal.timeout?.(4000) }).then(
+        () => live && setNetDown(false),
+        (e: unknown) => live && setNetDown(navigator.onLine === false || (e instanceof TypeError && Date.now() - t0 < 1500)),
+      );
+    };
+    probe();
+    const t = window.setInterval(probe, 5000);
+    return () => {
+      live = false;
+      window.clearInterval(t);
+    };
+  }, [online]);
+
+  const serverStatus = online || netDown ? null : (
     <p className="server-status">
       <span className="dot" />
       {slow ? 'Waking up the server… this can take up to a minute after a break.' : 'Connecting…'}
@@ -149,6 +183,8 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
         <div className="nt-side">
           <GameHub onPick={openGame} />
           {serverStatus && <div className="home-sub">{serverStatus}</div>}
+          {/* pass-and-play on this phone; big when the server can't be reached */}
+          {onOffline && <OfflineEntry big={(!online && slow) || netDown} onOpen={onOffline} />}
           {/* wide screens: who's online now */}
           <OnlineList auth={auth} onOpen={() => setFriends(true)} />
         </div>

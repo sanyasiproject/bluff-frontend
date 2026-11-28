@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useOfflinePlay } from '../offline/context';
 import { useBack } from '../lib/back';
 import { claimText, cx, placeLabel, rankPlural } from '../lib/cards';
 import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
@@ -370,6 +371,8 @@ interface GameOverProps {
 
 export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza, onShowPlays }: GameOverProps) {
   const [busy, setBusy] = useState(false);
+  // offline on one phone: nothing is paid and the way back is to change players
+  const offline = useOfflinePlay();
   const box = useRef<HTMLDivElement>(null);
   // winners (and watchers) get confetti; losers don't need it
   useEffect(() => {
@@ -481,6 +484,7 @@ export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza, onS
             </div>
           )}
           <CoinSummary view={view} nameOf={nameOf} startLevel={startLevel ?? null} />
+          {offline && <p className="off-over-note">📴 Offline game · no coins, XP or ratings</p>}
         </div>
         <div className="go-actions">
           {onRematch ? (
@@ -499,7 +503,7 @@ export function GameOver({ view, onLobby, onRematch, startLevel, onPickSaza, onS
             <p className="muted small">Waiting for the host to play again…</p>
           )}
           <button className="btn ghost block" onClick={onLobby}>
-            Back to lobby
+            {offline ? '👥 Change players' : 'Back to lobby'}
           </button>
         </div>
       </div>

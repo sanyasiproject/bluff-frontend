@@ -11,12 +11,15 @@ export interface ReviewResult {
 
 export type EngineRequest =
   | { id: number; type: 'review'; variant: ChessVariant; initialFen: string; moves: string[]; msPerMove: number }
-  | { id: number; type: 'search'; variant: ChessVariant; initialFen: string; moves: string[]; multiPv: number; maxMs: number; maxDepth?: number };
+  | { id: number; type: 'search'; variant: ChessVariant; initialFen: string; moves: string[]; multiPv: number; maxMs: number; maxDepth?: number }
+  // offline play: a computer seat's move at its level, as the server's bot thinks it
+  | { id: number; type: 'bot'; variant: ChessVariant; initialFen: string; moves: string[]; level: number; maxMs: number; seed: number };
 
 export type EngineReply =
   | { id: number; type: 'progress'; done: number; total: number }
   | { id: number; type: 'review'; result: ReviewResult }
   | { id: number; type: 'lines'; lines: EngineLine[]; final: boolean }
+  | { id: number; type: 'bot'; uci: string }
   | { id: number; type: 'error'; message: string };
 
 /** an engine score for showing: +1.2, -0.4, #3, #-2 (white's view) */

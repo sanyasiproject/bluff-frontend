@@ -1,3 +1,4 @@
+import { invitePin } from '../lib/invite';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { GameArt } from '../art/GameArt';
 import { Icon } from '../art/icons';
@@ -119,7 +120,7 @@ export function PlayPanel(p: Props) {
           Room <b>{invite}</b>
         </p>
         {nameField}
-        <button className="btn primary block shine" disabled={!playName || !online || busy} onClick={() => go(() => actions.join(invite, playName))}>
+        <button className="btn primary block shine" disabled={!playName || !online || busy} onClick={() => go(() => actions.join(invite, playName, invitePin()))}>
           {busy ? `Joining room ${invite}…` : `Join room ${invite}`}
         </button>
         <button className="link-btn" onClick={p.onDropInvite}>

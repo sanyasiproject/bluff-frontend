@@ -1,3 +1,5 @@
+import { LockChip } from './RoomVote';
+import { PresetsButton } from './RoomPresets';
 import { useState, type ReactNode, useEffect } from 'react';
 import { GameArt } from '../art/GameArt';
 import { Icon } from '../art/icons';
@@ -91,17 +93,17 @@ export function LobbyRoom(props: Props) {
   const shareCode = async () => {
     if (typeof navigator.share === 'function') {
       try {
-        await navigator.share({ title: APP_NAME, text: inviteText(view.code), url: inviteLink(view.code) });
+        await navigator.share({ title: APP_NAME, text: inviteText(view.code, view.pin), url: inviteLink(view.code, view.pin) });
       } catch {
         // share sheet closed
       }
       return;
     }
     try {
-      await navigator.clipboard.writeText(inviteMessage(view.code));
+      await navigator.clipboard.writeText(inviteMessage(view.code, view.pin));
       actions.toast('Invite copied, paste it anywhere');
     } catch {
-      window.prompt('Copy this invite', inviteMessage(view.code));
+      window.prompt('Copy this invite', inviteMessage(view.code, view.pin));
     }
   };
 
@@ -243,6 +245,7 @@ export function LobbyRoom(props: Props) {
                 </button>
               )}
             </div>
+            {isHost && <PresetsButton view={view} actions={actions} auth={auth} />}
             {isHost && teamGame && slots.every(Boolean) && (
               <button type="button" className="room-gear ghost" onClick={() => void actions.shuffleTeams()}>
                 🔀 Shuffle teams
@@ -258,6 +261,7 @@ export function LobbyRoom(props: Props) {
           <b data-no-translate>{view.code}</b>
         </button>
         <span className="room-chip game">{gameChip(view)}</span>
+        <LockChip view={view} actions={actions} isHost={isHost} />
         {props.banner && (
           <button type="button" className={cx('room-chip mode', ranked && 'ranked')} onClick={() => setDrawer(true)}>
             {ranked ? '🏅 Ranked' : 'Casual'}

@@ -1,3 +1,4 @@
+import { VoteRemoveButton } from './RoomVote';
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { api, errorText } from '../lib/api';
 import { useBack } from '../lib/back';
@@ -380,6 +381,7 @@ export function Lobby({ view, actions, auth, nudged = null }: { view: RoomView; 
   const invite = canInvite && (
     <InvitePanel
       code={view.code}
+      pin={view.pin}
       onToast={actions.toast}
       onFriends={auth.user ? () => setFriendsOpen(true) : undefined}
       requests={auth.friendRequests}
@@ -467,6 +469,7 @@ export function Lobby({ view, actions, auth, nudged = null }: { view: RoomView; 
           onThrow={viewing.id !== view.meId ? (i) => void actions.throwAt(viewing.id, i) : undefined}
           onClose={() => setViewingId(null)}
         >
+          <VoteRemoveButton targetId={viewing.id} onDone={() => setViewingId(null)} />
           {isHost && viewing.id !== view.meId && (
             <div className="host-tools">
               <p className="label">Host tools</p>

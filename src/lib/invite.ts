@@ -11,10 +11,17 @@ export function clearInvite(): void {
   if (location.search) history.replaceState(null, '', location.pathname + location.hash);
 }
 
-export const inviteLink = (code: string) => `${location.origin}/?room=${code}`;
+/** the PIN from an invite link of a locked room (?pin=1234), if any */
+export function invitePin(): string | null {
+  const pin = new URLSearchParams(location.search).get('pin') ?? '';
+  return /^[0-9]{4}$/.test(pin) ? pin : null;
+}
 
-export const inviteText = (code: string) => `Join my Game Baithak room 🎲 Room code: ${code}`;
+// a locked room's invite (host only) carries its PIN, so friends join in one tap
+export const inviteLink = (code: string, pin?: string | null) => `${location.origin}/?room=${code}${pin ? `&pin=${pin}` : ''}`;
 
-export const inviteMessage = (code: string) => `${inviteText(code)}\n${inviteLink(code)}`;
+export const inviteText = (code: string, pin?: string | null) => `Join my Game Baithak room 🎲 Room code: ${code}${pin ? ` · PIN: ${pin}` : ''}`;
 
-export const whatsappUrl = (code: string) => `https://wa.me/?text=${encodeURIComponent(inviteMessage(code))}`;
+export const inviteMessage = (code: string, pin?: string | null) => `${inviteText(code, pin)}\n${inviteLink(code, pin)}`;
+
+export const whatsappUrl = (code: string, pin?: string | null) => `https://wa.me/?text=${encodeURIComponent(inviteMessage(code, pin))}`;

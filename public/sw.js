@@ -2,14 +2,25 @@
 // the build stamps a new name in (vite.config.ts swVersion), so a deploy drops the old cache on activate
 const CACHE = 'bluff-shell-__BUILD__';
 const MAX_ENTRIES = 40;
+// offline play: the shell, offline screens, the 9 games' tables, the engine and chess worker (vite.config.ts swPrecache); never trimmed
+const PRECACHE_NAME = 'bluff-pre-__BUILD__';
+const PRECACHE = [/*__PRECACHE__*/];
 
-self.addEventListener('install', () => self.skipWaiting());
+// each file on its own, so one failed download doesn't stop the install
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches
+      .open(PRECACHE_NAME)
+      .then((cache) => Promise.allSettled(PRECACHE.map((u) => cache.add(new Request(u, { cache: 'reload' })))))
+      .then(() => self.skipWaiting()),
+  );
+});
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== PRECACHE_NAME).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -31,8 +42,9 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/avatars/')) return;
   // built files have their hash in the name and never change: cache first, so a reopened app starts at once
   if (url.pathname.startsWith('/assets/')) {
+    // ignoreVary: module scripts ask with an Origin header that the precache request didn't send
     event.respondWith(
-      caches.match(request).then(
+      caches.match(request, { ignoreVary: true }).then(
         (hit) =>
           hit ||
           fetch(request).then((response) => {
@@ -51,8 +63,8 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(async () => {
         const navigate = request.mode === 'navigate';
-        const hit = await caches.match(request, { ignoreSearch: navigate });
-        return hit || (navigate ? caches.match('/', { ignoreSearch: true }) : Response.error());
+        const hit = await caches.match(request, { ignoreSearch: navigate, ignoreVary: true });
+        return hit || (navigate ? caches.match('/', { ignoreSearch: true, ignoreVary: true }) : Response.error());
       }),
   );
 });

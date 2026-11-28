@@ -6,6 +6,7 @@ import { speak, speakLine, voiceShiftOf } from './lib/speech';
 import { clearSession, loadSavedSession, loadTabSession, saveName, saveSession, type Session } from './lib/storage';
 import {
   chatSetOf,
+  PIN_TEXT,
   SERVER_RESTART_TEXT,
   speaksQuickChat,
   THROWS,
@@ -38,6 +39,13 @@ export interface Invite extends InviteEvent {
 }
 
 export type ConnStatus = 'connecting' | 'online' | 'offline';
+
+/** a locked room asked for its PIN (wrong: the last one tried was wrong) */
+export interface PinAsk {
+  code: string;
+  name: string;
+  wrong: boolean;
+}
 
 export interface Note {
   key: number;
@@ -124,6 +132,7 @@ export function useBluff() {
   const [invites, setInvites] = useState<Invite[]>([]);
   const [replaced, setReplaced] = useState(false);
   const [pendingWatch, setPendingWatch] = useState<PendingWatch | null>(null);
+  const [pinAsk, setPinAsk] = useState<PinAsk | null>(null);
   /** the host buzzed me to get ready (lobby) */
   const [nudged, setNudged] = useState<Nudged | null>(null);
   const pendingRef = useRef<PendingWatch | null>(null);
@@ -245,7 +254,7 @@ export function useBluff() {
     };
     const onAnnounce = (n: Announcement) => {
       // forfeits and games stopped by an error always pop up
-      pushNote(n.forfeit || n.error ? (n.error ? 'error' : 'info') : n.kind, n.text, !!(n.forfeit || n.error));
+      pushNote(n.forfeit || n.error ? (n.error ? 'error' : 'info') : n.kind, n.text, !!(n.forfeit || n.error || n.vote));
       // tables that speak quick lines (Ludo) have no announcer voice: moves are shown, not read out
       if (n.kind !== 'room' && !speaksQuickChat(viewRef.current?.config.game)) speak(n.text);
     };
@@ -382,12 +391,24 @@ export function useBluff() {
           wantGame.current = game ?? null;
           enter(await request<Entered>('room:create', { name, ...(game && { game }) }), name);
         }),
-      join: (code: string, name: string) =>
+      // pin: a locked room's PIN; when the server asks for it, pinAsk opens the PIN prompt
+      join: (code: string, name: string, pin?: string | null) =>
         run(async () => {
-          const res = await request<JoinReply>('room:join', { code, name });
+          let res: JoinReply;
+          try {
+            res = await request<JoinReply>('room:join', { code, name, ...(pin && { pin }) });
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : '';
+            if (msg !== PIN_TEXT.needed && msg !== PIN_TEXT.wrong) throw err;
+            setPinAsk({ code, name, wrong: msg === PIN_TEXT.wrong || !!pin });
+            return;
+          }
+          setPinAsk(null);
           if (res.pending) setPending({ code: res.code, name });
           else enter({ code: res.code, token: res.token! }, name);
         }),
+      /** the PIN prompt was closed */
+      clearPinAsk: () => setPinAsk(null),
       cancelWatch: () => {
         setPending(null);
         void request('room:cancelRequest').catch(() => undefined);
@@ -459,10 +480,23 @@ export function useBluff() {
             viewRef.current = null;
             setView(null);
           }
-          const res = await request<JoinReply>('room:join', { code: inv.code, name });
+          let res: JoinReply;
+          try {
+            res = await request<JoinReply>('room:join', { code: inv.code, name, ...(inv.pin && { pin: inv.pin }) });
+          } catch (err) {
+            if (!(err instanceof Error) || err.message !== PIN_TEXT.needed) throw err;
+            setPinAsk({ code: inv.code, name, wrong: false });
+            return;
+          }
           if (res.pending) setPending({ code: res.code, name });
           else enter({ code: res.code, token: res.token! }, name);
         }),
+      /** host: lock the room with a 4-digit PIN, change it, or unlock it (null) */
+      setPin: (pin: string | null) => run(() => request('room:pin', { pin })),
+      /** a seated player starts a vote to remove someone (their own yes counts) */
+      voteRemove: (target: string) => run(() => request('room:voteRemove', { target })),
+      /** yes or no on the remove vote running now */
+      vote: (yes: boolean) => run(() => request('room:vote', { yes })),
       setConfig: (config: GameConfig) => run(() => request('room:config', config)),
       start: () => run(() => request('room:start')),
       /** lobby: ready to start, or not yet (the host starts once everyone is ready) */
@@ -540,7 +574,7 @@ export function useBluff() {
     };
   }, [run, pushNote]);
 
-  return { status, connectionId, roomKey, view, notes, reactions, bubbles, flyers, invites, replaced, pendingWatch, nudged, rejoining, lostGame, actions };
+  return { status, connectionId, roomKey, view, notes, reactions, bubbles, flyers, invites, replaced, pendingWatch, nudged, rejoining, lostGame, pinAsk, actions };
 }
 
 export type Actions = ReturnType<typeof useBluff>['actions'];
