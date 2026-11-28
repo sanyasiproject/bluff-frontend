@@ -446,9 +446,16 @@
     background: rgba(8, 4, 26, 0.62);
   }
 
-  main.lobby-room .backdrop :is(.sheet, .modal) {
+  /* a popup's glass goes on its rounded card, not the square .modal wrapper (it showed as a box behind the card) */
+  main.lobby-room .backdrop .sheet,
+  main.lobby-room .backdrop .modal > :is(.confirm-box, .reveal) {
     border-color: rgba(255, 255, 255, 0.18);
     background: linear-gradient(160deg, #34228a 0%, #20145a 55%, #150c3a 100%);
+  }
+
+  main.lobby-room .backdrop .modal {
+    border-color: transparent;
+    background: none;
   }
 
   main.lobby-room .room-sheet .btn:not(.primary) {
