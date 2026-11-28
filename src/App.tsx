@@ -23,7 +23,7 @@ import { useAuth } from './useAuth';
 import { useBluff } from './useBluff';
 import { useLandscape } from './lib/useLandscape';
 import { PluggedTable } from './games/registry';
-import { markPlayed } from './games/lastPlayed';
+import { countPlayed, markPlayed } from './games/lastPlayed';
 import { useSendLudoLook } from './games/ludo/looks';
 import { isPlugged, levelOf } from './types';
 
@@ -69,7 +69,9 @@ export default function App() {
   // the home grid marks the game this phone played last
   const playingGame = view?.phase === 'playing' ? view.config.game : null;
   useEffect(() => {
-    if (playingGame) markPlayed(playingGame);
+    if (!playingGame) return;
+    markPlayed(playingGame);
+    countPlayed(playingGame);
   }, [playingGame]);
 
   // coins and stats change when a game is settled; show the new numbers

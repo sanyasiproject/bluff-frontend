@@ -1,0 +1,296 @@
+/* ---------- Spike Attack, stone temple trap: carved stone floor, thick temple walls with spike slots, red stone-glow, steel spikes, real wooden crates ---------- */
+
+/* the temple hall round the arena: dark stone blocks lit by warm torchlight */
+.sp-room {
+  background:
+    radial-gradient(45% 60% at 50% 55%, rgba(255, 176, 92, 0.22), transparent 70%),
+    radial-gradient(22% 30% at 8% 20%, rgba(255, 150, 60, 0.18), transparent 70%),
+    radial-gradient(22% 30% at 92% 20%, rgba(255, 150, 60, 0.18), transparent 70%),
+    radial-gradient(130% 110% at 50% 60%, transparent 38%, rgba(10, 6, 3, 0.9) 100%),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0 2px, transparent 2px 44px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0 2px, transparent 2px 88px),
+    linear-gradient(180deg, #4a3e32 0%, #2a221b 100%);
+}
+
+/* thick temple walls: stone blocks with mortar, the floor sunk inside them */
+.sp-arena {
+  border-radius: calc(var(--cell) * 0.18);
+  background:
+    radial-gradient(70% 70% at 30% 20%, rgba(255, 236, 200, 0.18), transparent 70%),
+    repeating-linear-gradient(0deg, rgba(40, 30, 20, 0.55) 0 2px, transparent 2px calc(var(--pad) * 0.5)),
+    repeating-linear-gradient(90deg, rgba(40, 30, 20, 0.4) 0 2px, transparent 2px calc(var(--cell) * 0.9)),
+    linear-gradient(160deg, #9c8e78, #7a6c58 55%, #5e5242);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 240, 210, 0.35),
+    inset 0 -3px 0 rgba(30, 20, 10, 0.5),
+    0 0 0 3px #2b231b,
+    0 22px 40px rgba(0, 0, 0, 0.75);
+}
+
+.sp-tiles {
+  opacity: 1;
+  gap: calc(var(--cell) * 0.04);
+  padding: calc(var(--cell) * 0.04);
+  margin: calc(var(--cell) * -0.04);
+  border-radius: calc(var(--cell) * 0.08);
+  background: #3d3328;
+  box-shadow: inset 0 calc(var(--cell) * 0.12) calc(var(--cell) * 0.2) rgba(0, 0, 0, 0.6), 0 0 0 2px rgba(30, 22, 14, 0.8);
+}
+
+/* carved stone tiles: worn bevelled edges, soft light from the top left */
+.sp-tile {
+  position: relative;
+  border-radius: calc(var(--cell) * 0.07);
+  background:
+    radial-gradient(130% 100% at 28% 22%, rgba(255, 246, 228, 0.35), transparent 60%),
+    radial-gradient(circle at 70% 75%, rgba(80, 64, 44, 0.18) 0 18%, transparent 19%),
+    radial-gradient(circle at 22% 68%, rgba(80, 64, 44, 0.14) 0 9%, transparent 10%),
+    linear-gradient(150deg, #cbbfa8, #b3a487 60%, #9a8a6e);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 250, 235, 0.5),
+    inset 2px 0 0 rgba(255, 250, 235, 0.25),
+    inset 0 -3px 0 rgba(70, 55, 38, 0.5),
+    inset -2px 0 0 rgba(70, 55, 38, 0.3);
+}
+
+.sp-tile.alt {
+  background:
+    radial-gradient(130% 100% at 28% 22%, rgba(255, 246, 228, 0.3), transparent 60%),
+    radial-gradient(circle at 30% 30%, rgba(80, 64, 44, 0.16) 0 12%, transparent 13%),
+    linear-gradient(150deg, #bfb299, #a7987c 60%, #8f8064);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 250, 235, 0.45),
+    inset 2px 0 0 rgba(255, 250, 235, 0.2),
+    inset 0 -3px 0 rgba(70, 55, 38, 0.5),
+    inset -2px 0 0 rgba(70, 55, 38, 0.3);
+}
+
+/* a few cracks, different per tile */
+.sp-tile.c2::after,
+.sp-tile.c3::after,
+.sp-tile.c4::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0.7;
+}
+
+.sp-tile.c2::after {
+  background:
+    linear-gradient(118deg, transparent 47%, #4a3a28 48% 50%, transparent 51%) 8% 12% / 46% 40% no-repeat,
+    linear-gradient(64deg, transparent 47%, #4a3a28 48% 50%, transparent 51%) 46% 46% / 36% 34% no-repeat;
+}
+
+.sp-tile.c3::after {
+  background:
+    linear-gradient(28deg, transparent 47%, #4a3a28 48% 50.5%, transparent 51.5%) 60% 70% / 40% 30% no-repeat,
+    linear-gradient(150deg, transparent 47%, #4a3a28 48% 50%, transparent 51%) 88% 96% / 24% 22% no-repeat;
+}
+
+.sp-tile.c4::after {
+  background: linear-gradient(98deg, transparent 47%, #4a3a28 48% 50%, transparent 51%) 18% 82% / 30% 38% no-repeat;
+  opacity: 0.5;
+}
+
+/* the slot line along each wall where the spikes hide */
+.sp-slot {
+  position: absolute;
+  z-index: 2;
+  border-radius: 99px;
+  background: linear-gradient(var(--sl, 90deg), #120c07, #2a1e14 60%, #3a2c1f);
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 240, 210, 0.3);
+}
+
+.sp-slot.from-left,
+.sp-slot.from-right { top: var(--pad); height: calc(var(--n) * var(--cell)); width: calc(var(--pad) * 0.22); }
+.sp-slot.from-top,
+.sp-slot.from-bottom { left: var(--pad); width: calc(var(--n) * var(--cell)); height: calc(var(--pad) * 0.22); }
+.sp-slot.from-left { left: calc(var(--pad) * 0.62); }
+.sp-slot.from-right { right: calc(var(--pad) * 0.62); --sl: 270deg; }
+.sp-slot.from-top { top: calc(var(--pad) * 0.62); --sl: 180deg; }
+.sp-slot.from-bottom { bottom: calc(var(--pad) * 0.62); --sl: 0deg; }
+
+/* a warned wall rumbles: the slot shakes and glows red inside */
+.sp-slot.rumble {
+  background: linear-gradient(var(--sl, 90deg), #2a0500, #a3200d 60%, #ff5a2a);
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.8), 0 0 12px rgba(255, 70, 30, 0.8);
+  animation: sp-rumble 0.11s steps(2) infinite;
+}
+
+.from-left.sp-slot.rumble,
+.from-right.sp-slot.rumble { --rx1: 1.5px; --ry1: 0px; }
+.from-top.sp-slot.rumble,
+.from-bottom.sp-slot.rumble { --rx1: 0px; --ry1: 1.5px; }
+
+@keyframes sp-rumble {
+  0% { transform: translate(calc(var(--rx1) * -1), calc(var(--ry1) * -1)); }
+  100% { transform: translate(var(--rx1), var(--ry1)); }
+}
+
+/* grit and dust trickling out of the rumbling slot */
+.sp-grit {
+  position: absolute;
+  width: calc(var(--cell) * 0.16);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(214, 196, 166, 0.95) 0 30%, rgba(170, 150, 120, 0.5) 50%, transparent 70%);
+  animation: sp-grit 0.9s calc(var(--g) * -0.22s) ease-in infinite;
+}
+
+.from-left .sp-grit,
+.from-right .sp-grit { top: calc(var(--g) * 26% + 8%); left: 0; }
+.from-top .sp-grit,
+.from-bottom .sp-grit { left: calc(var(--g) * 26% + 8%); top: 0; }
+.from-left .sp-grit { --gx: 1; --gy: 0; }
+.from-right .sp-grit { --gx: -1; --gy: 0; }
+.from-top .sp-grit { --gx: 0; --gy: 1; }
+.from-bottom .sp-grit { --gx: 0; --gy: -1; }
+
+@keyframes sp-grit {
+  0% { transform: translate(0, 0) scale(0.5); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(calc(var(--gx) * var(--cell) * 0.35), calc(var(--gy) * var(--cell) * 0.35 + var(--cell) * 0.25)) scale(1.3); opacity: 0; }
+}
+
+/* the danger area: a red glow rising from the stone, up to each line's first crate */
+.sp-danger {
+  background: radial-gradient(120% 140% at var(--dg, 0% 50%), rgba(255, 40, 20, 0.62), rgba(190, 10, 10, 0.46) 70%);
+  box-shadow: inset 0 0 calc(var(--cell) * 0.3) rgba(255, 60, 30, 0.8), inset 0 0 0 1px rgba(255, 120, 90, 0.55);
+}
+
+.from-right .sp-danger { --dg: 100% 50%; }
+.from-top .sp-danger { --dg: 50% 0%; }
+.from-bottom .sp-danger { --dg: 50% 100%; }
+.sp-danger::after { display: none; }
+
+/* the launcher is the slot itself now: a dark recess with the spike tips peeking out, glinting */
+.sp-launcher {
+  background: none;
+  box-shadow: none;
+  animation: none;
+}
+
+.from-left .sp-launcher { left: calc(var(--pad) * 0.62); width: calc(var(--pad) * 0.22); }
+.from-right .sp-launcher { right: calc(var(--pad) * 0.62); width: calc(var(--pad) * 0.22); }
+.from-top .sp-launcher { top: calc(var(--pad) * 0.62); height: calc(var(--pad) * 0.22); }
+.from-bottom .sp-launcher { bottom: calc(var(--pad) * 0.62); height: calc(var(--pad) * 0.22); }
+
+.sp-peek .sp-spike { filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
+.from-left .sp-peek .sp-spike { left: 0; }
+.from-right .sp-peek .sp-spike { right: 0; }
+.from-top .sp-peek .sp-spike { top: 0; }
+.from-bottom .sp-peek .sp-spike { bottom: 0; }
+
+.sp-glint { opacity: 0.35; }
+.sp-peek .sp-glint { animation: sp-glint 0.7s ease-in-out infinite alternate; }
+
+@keyframes sp-glint {
+  to { opacity: 1; }
+}
+
+/* real wooden crates: planks with grain, a frame, a diagonal brace, metal corners with nails, a shadow on the stone */
+.sp-box::before {
+  inset: 14% -8% -12% 12%;
+  border-radius: 10%;
+  background: rgba(20, 12, 4, 0.55);
+}
+
+.sp-box-face {
+  border-radius: 7%;
+  background:
+    linear-gradient(45deg, transparent 43%, #5a3412 43% 45.5%, #b07438 45.5% 54.5%, #5a3412 54.5% 57%, transparent 57%),
+    repeating-linear-gradient(0deg, transparent 0 calc(25% - 2px), rgba(55, 28, 8, 0.75) calc(25% - 2px) 25%),
+    repeating-linear-gradient(90deg, rgba(255, 226, 180, 0.1) 0 2px, rgba(90, 50, 18, 0.14) 2px 4px, transparent 4px 9px, rgba(90, 50, 18, 0.08) 9px 10px, transparent 10px 15px),
+    linear-gradient(180deg, #cf9455, #ad6e34 60%, #8f5626);
+  box-shadow:
+    inset 0 0 0 calc(var(--cell) * 0.085) #9a5f2b,
+    inset 0 0 0 calc(var(--cell) * 0.1) #4a2a10,
+    inset 0 calc(var(--cell) * 0.04) 0 calc(var(--cell) * 0.085) rgba(255, 220, 170, 0.18),
+    0 calc(var(--cell) * 0.06) 0 #3a200b;
+}
+
+/* metal L-brackets on each corner, each with a nail */
+.sp-box-face::after {
+  background:
+    radial-gradient(circle at 9% 9%, #2a2a2a 0 2.6%, #e0e6e9 3.2% 4.4%, transparent 5%),
+    radial-gradient(circle at 91% 9%, #2a2a2a 0 2.6%, #e0e6e9 3.2% 4.4%, transparent 5%),
+    radial-gradient(circle at 9% 91%, #2a2a2a 0 2.6%, #e0e6e9 3.2% 4.4%, transparent 5%),
+    radial-gradient(circle at 91% 91%, #2a2a2a 0 2.6%, #e0e6e9 3.2% 4.4%, transparent 5%),
+    radial-gradient(circle at 50% 12%, #3a2410 0 2.2%, transparent 3%),
+    radial-gradient(circle at 50% 88%, #3a2410 0 2.2%, transparent 3%),
+    linear-gradient(180deg, #cfd8dc, #78909c) 0 0 / 24% 8% no-repeat,
+    linear-gradient(90deg, #cfd8dc, #78909c) 0 0 / 8% 24% no-repeat,
+    linear-gradient(180deg, #cfd8dc, #78909c) 100% 0 / 24% 8% no-repeat,
+    linear-gradient(270deg, #cfd8dc, #78909c) 100% 0 / 8% 24% no-repeat,
+    linear-gradient(0deg, #cfd8dc, #78909c) 0 100% / 24% 8% no-repeat,
+    linear-gradient(90deg, #cfd8dc, #78909c) 0 100% / 8% 24% no-repeat,
+    linear-gradient(0deg, #cfd8dc, #78909c) 100% 100% / 24% 8% no-repeat,
+    linear-gradient(270deg, #cfd8dc, #78909c) 100% 100% / 8% 24% no-repeat;
+}
+
+/* the strike: shiny steel spikes on steel shafts slam out of the slot and stop at the crates */
+.sp-rod {
+  inset: 30% 0;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #263238, #f5f8fa 30%, #b0bec5 50%, #546e7a 72%, #263238);
+  box-shadow: 0 calc(var(--cell) * 0.08) calc(var(--cell) * 0.06) rgba(0, 0, 0, 0.55);
+}
+
+.from-top .sp-rod,
+.from-bottom .sp-rod {
+  inset: 0 30%;
+  background: linear-gradient(90deg, #263238, #f5f8fa 30%, #b0bec5 50%, #546e7a 72%, #263238);
+}
+
+.sp-rod .sp-spike { filter: drop-shadow(0 calc(var(--cell) * 0.06) 3px rgba(0, 0, 0, 0.55)); }
+.sp-rod .sp-glint { opacity: 1; }
+
+/* sparks where steel meets the crate */
+.sp-spark {
+  position: absolute;
+  z-index: 6;
+  left: calc(var(--pad) + var(--rx) * var(--cell) - var(--cell) * 0.35);
+  top: calc(var(--pad) + var(--ry) * var(--cell) - var(--cell) * 0.35);
+  width: calc(var(--cell) * 0.7);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #fff 0 10%, transparent 12%),
+    conic-gradient(from 10deg, transparent 0 6%, #ffe082 6% 8%, transparent 8% 20%, #fff 20% 22%, transparent 22% 37%, #ffca28 37% 39%, transparent 39% 55%, #fff59d 55% 57%, transparent 57% 72%, #ffe082 72% 74%, transparent 74% 88%, #fff 88% 90%, transparent 90%);
+  -webkit-mask: radial-gradient(circle, #000 50%, transparent 70%);
+  mask: radial-gradient(circle, #000 50%, transparent 70%);
+  pointer-events: none;
+  animation: sp-spark 0.28s ease-out both;
+}
+
+@keyframes sp-spark {
+  from { transform: scale(0.3) rotate(0deg); opacity: 1; }
+  to { transform: scale(1.4) rotate(30deg); opacity: 0; }
+}
+
+/* stone dust and splinters at the thud */
+.sp-dust {
+  background: radial-gradient(circle, rgba(230, 214, 186, 0.95), rgba(170, 150, 120, 0.55) 45%, transparent 70%);
+}
+
+/* players sit on the stone: a soft warm shadow under each */
+.sp-player::before {
+  bottom: 6%;
+  width: 64%;
+  height: 16%;
+  background: radial-gradient(closest-side, rgba(25, 15, 5, 0.55), rgba(25, 15, 5, 0.2) 70%, transparent);
+}
+
+.sp-safe {
+  box-shadow: inset 0 0 0 3px rgba(105, 240, 174, 0.95), inset 0 0 calc(var(--cell) * 0.3) rgba(105, 240, 174, 0.45), 0 0 10px rgba(105, 240, 174, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-slot.rumble,
+  .sp-grit,
+  .sp-peek .sp-glint,
+  .sp-spark { animation: none; }
+  .sp-grit,
+  .sp-spark { display: none; }
+}

@@ -55,7 +55,8 @@ export function LookPicker({ auth }: { auth: Auth }) {
             >
               {/* the felt's shades; the newer tables draw it like their seat box (styles/looks.css) */}
               <span
-                className={cx('look-felt', t.id)}
+                // 'rail' would pick up the game table's .rail styles, so it is drawn from data-table only
+                className={cx('look-felt', t.id !== 'rail' && t.id)}
                 data-table={t.id}
                 style={{ '--swatch-1': t.colors[0], '--swatch-2': t.colors[1], '--swatch-3': t.colors[2] } as CSSProperties}
                 aria-hidden

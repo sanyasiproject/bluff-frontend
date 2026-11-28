@@ -63,24 +63,25 @@
 }
 
 /* "You are Red": a pill at the top, off the board, for 2 s */
+/* in the middle of the table, clear of the status line at the top */
 .cm-youare {
   position: fixed;
   left: 50%;
-  top: max(8px, env(safe-area-inset-top));
+  top: 50%;
   z-index: 40;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   max-width: calc(100% - 32px);
-  padding: 8px 18px 8px 12px;
+  padding: 10px 22px 10px 14px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--cm) 35%, rgba(12, 6, 30, 0.94));
-  box-shadow: inset 0 0 0 2.5px var(--cm), 0 10px 26px rgba(0, 0, 0, 0.55);
+  box-shadow: inset 0 0 0 3px var(--cm), 0 14px 34px rgba(0, 0, 0, 0.6);
   color: #fff;
-  font-size: 16px;
+  font-size: 19px;
   font-weight: 900;
   white-space: nowrap;
-  translate: -50% 0;
+  translate: -50% -50%;
   pointer-events: none;
   animation:
     cm-in 0.25s ease-out backwards,
@@ -100,7 +101,7 @@
 @keyframes cm-in {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: scale(0.7);
   }
 }
 

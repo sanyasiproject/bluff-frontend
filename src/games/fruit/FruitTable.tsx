@@ -4,7 +4,8 @@ import '../../styles/land-ludo-over.css';
 import '../../styles/land-arcade.css';
 import '../../styles/land-fruit.css';
 import '../../styles/land-fruit-slash.css';
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from 'react';
+import '../../styles/land-fruit-talwar.css';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from 'react';
 import { LevelUp } from '../../components/LevelUp';
 import { LiveVoiceButtons, LiveVoiceNotice } from '../../components/LiveVoice';
 import { GameOver } from '../../components/Overlays';
@@ -22,7 +23,7 @@ import type { TableProps } from '../registry';
 import { colorName, YouAreBanner } from '../turnkit/ColorMark';
 import { ArcadeSeat, seatOrder } from './ArcadeSeat';
 import { useServerClock } from './clock';
-import { Duel, swordSpots, type Shown } from './Duel';
+import { CONTACT_MS, Duel, swordSize, swordSpots, type Shown, type SwordRoom } from './Duel';
 import { FruitOver, type DuelStats } from './FruitOver';
 import { fruitSfx } from './sounds';
 
@@ -54,6 +55,7 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
   const stageRef = useRef<HTMLDivElement>(null);
   const startLevel = useRef<number | null>(null);
   const painted = useRef<{ round: number; at: number } | null>(null);
+  const struckRound = useRef<number | null>(null);
   const stats = useRef<Record<string, DuelStats>>({});
   const clock = useServerClock();
   useBack(() => setPanel('menu'));
@@ -82,7 +84,24 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
   const round = [...order.slice(at), ...order.slice(0, at)];
   const left = round.filter((_, i) => i % 2 === 0);
   const right = round.filter((_, i) => i % 2 === 1);
-  const spots = swordSpots(left, right);
+  // the stage size and the free room between it and the seat cards, for the swords' size (layout px, so the turned shell reads right)
+  const [room, setRoom] = useState<SwordRoom>({ fs: 0, side: 0 });
+  const leftRef = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const st = stageRef.current;
+      const l = leftRef.current;
+      const r = rightRef.current;
+      if (!st || !l || !r) return;
+      const side = Math.min(st.offsetLeft - (l.offsetLeft + l.offsetWidth), r.offsetLeft - (st.offsetLeft + st.offsetWidth));
+      setRoom((was) => (was.fs === st.offsetWidth && was.side === side ? was : { fs: st.offsetWidth, side }));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [order.length]);
+  const spots = swordSpots(left, right, room);
 
   useEffect(() => {
     if (!playing) return;
@@ -151,7 +170,8 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
     unlockSpeech();
     if (watching || !playing || fv.phase !== 'play') return;
     const p = painted.current;
-    if (item && mine?.round === item.round) return;
+    // one strike per item, even when two taps land before the next render
+    if (item && (mine?.round === item.round || struckRound.current === item.round)) return;
     const reaction = item && p && p.round === item.round ? Math.round(tapAt - p.at) : -1;
     // nothing up yet (or a guess faster than any human): too early, nothing sent
     if (reaction < FRUIT_MIN_REACTION_MS || !item) {
@@ -159,13 +179,14 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
       fruitSfx.early();
       return;
     }
+    struckRound.current = item.round;
     setMine({ round: item.round, reaction });
     fruitSfx.swoosh();
-    // the blade meets the fruit about 110 ms into the swing: a shing and a jolt
+    // the blade meets the fruit at contact (later for a slowed sword): a shing and a jolt
     window.setTimeout(() => {
       fruitSfx.shing();
       jolt();
-    }, 110);
+    }, (fv.slow[view.meId] ?? 0) > 0 ? CONTACT_MS * 2.2 : CONTACT_MS);
     void actions.gameMoveQuiet({ kind: 'fruit', move: { type: 'strike', round: item.round, reaction } });
   };
   const strikeRef = useRef(strike);
@@ -276,6 +297,7 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
         <Duel
           fv={fv}
           spots={spots}
+          swordLen={swordSize(room).len}
           meId={view.meId}
           colorOf={colorOf}
           nameOf={shortName}
@@ -286,8 +308,8 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
           onPainted={(r, t) => (painted.current = { round: r, at: t })}
         />
       </div>
-      <div className="ar-seats ar-left">{left.map(seat)}</div>
-      <div className="ar-seats ar-right fd-right">{right.map(seat)}</div>
+      <div ref={leftRef} className="ar-seats ar-left">{left.map(seat)}</div>
+      <div ref={rightRef} className="ar-seats ar-right fd-right">{right.map(seat)}</div>
 
       <div className="fr-hud" aria-live="off">
         <span className="fr-timer">

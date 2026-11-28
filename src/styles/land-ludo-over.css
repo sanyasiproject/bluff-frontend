@@ -137,6 +137,21 @@
   content: '⚔️ ';
 }
 
+/* grid cells may shrink, so a wide recap (Raja Mantri's round table) scrolls inside its box instead of spilling out */
+.lu-over-box > * {
+  min-width: 0;
+}
+
+/* per-player stat rows (name, then icons and numbers) keep their numbers on one line */
+.lu-kills li:has(> b + span) > span {
+  white-space: nowrap;
+}
+
+/* Saanp Seedhi's recap is not a list of kills */
+.sn-recap li::before {
+  content: none;
+}
+
 @media (max-height: 420px) {
   .lu-step-block {
     height: 14px;

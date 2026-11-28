@@ -210,7 +210,14 @@
   right: -8px;
   bottom: auto;
   top: -14px;
+  z-index: 4;
   transform: none;
+}
+
+/* with a turn clock in the top right corner, the turn pill moves left so both stay readable */
+.pr-seat.turn:has(.seat-clock) .pr-pill {
+  left: 10px;
+  translate: none;
 }
 
 /* someone who left */

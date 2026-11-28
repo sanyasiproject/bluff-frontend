@@ -4,6 +4,7 @@ import '../../styles/land-ludo-over.css';
 import '../../styles/land-arcade.css';
 import '../../styles/land-spikes.css';
 import '../../styles/land-spikes-walls.css';
+import '../../styles/land-spikes-temple.css';
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from 'react';
 import { LevelUp } from '../../components/LevelUp';
 import { LiveVoiceButtons, LiveVoiceNotice } from '../../components/LiveVoice';

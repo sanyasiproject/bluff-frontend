@@ -127,7 +127,11 @@
   animation: stamp 0.45s var(--spring) both;
 }
 
-/* lobby offer and home chooser */
+/* lobby offer and home chooser; the offer sits above the lobby's settings drawer (z-index 60) */
+.backdrop.backdrop.center.tut-offer-modal-bd {
+  z-index: 70;
+}
+
 .tut-offer {
   align-items: center;
   text-align: center;

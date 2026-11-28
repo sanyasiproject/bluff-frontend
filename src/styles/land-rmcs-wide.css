@@ -206,9 +206,9 @@
   color: #9fd4ff;
 }
 
-/* the announcer: a strip at the top, or big in the middle for results */
+/* the announcer: a strip just under the status line (never over it), or big in the middle for results */
 .rm-wide .rm-announce.top {
-  top: max(4px, env(safe-area-inset-top));
+  top: calc(max(4px, env(safe-area-inset-top)) + clamp(34px, 9dvh, 58px));
   z-index: 30;
   padding: 3px 20px 4px;
   border-radius: 999px;

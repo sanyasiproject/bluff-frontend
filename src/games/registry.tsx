@@ -1,5 +1,5 @@
 // The game registry: each registry game's table and rules, looked up by kind (Bluff, Crazy 7 and Rang are wired by hand)
-import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from 'react';
+import { lazy, Suspense, useMemo, type ComponentType, type LazyExoticComponent } from 'react';
 import type { GameConfig, PluggedKind, RoomView } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions, ChatBubble, Note } from '../useBluff';
@@ -11,6 +11,7 @@ import { LudoRules } from './ludo/LudoRules';
 import { RmcsRules } from './rmcs/RmcsRules';
 import { SnakesRules } from './snakes/SnakesRules';
 import { SpikesRules } from './spikes/SpikesRules';
+import { LOADED, loadTable } from './tableLoaders';
 
 export interface TableProps {
   view: RoomView;
@@ -27,20 +28,25 @@ export interface PluggedEntry {
   Rules?: ComponentType<{ config?: GameConfig }>;
 }
 
+const lazyTable = (kind: PluggedKind) => lazy(() => loadTable(kind).then((Table) => ({ default: Table })));
+
 export const PLUGGED: Record<PluggedKind, PluggedEntry> = {
-  ludo: { Table: lazy(() => import('./ludo/LudoTable').then((m) => ({ default: m.LudoTable }))), Rules: LudoRules },
-  snakes: { Table: lazy(() => import('./snakes/SnakesTable').then((m) => ({ default: m.SnakesTable }))), Rules: SnakesRules },
-  rmcs: { Table: lazy(() => import('./rmcs/RmcsTable').then((m) => ({ default: m.RmcsTable }))), Rules: RmcsRules },
-  fruit: { Table: lazy(() => import('./fruit/FruitTable').then((m) => ({ default: m.FruitTable }))), Rules: FruitRules },
-  spikes: { Table: lazy(() => import('./spikes/SpikesTable').then((m) => ({ default: m.SpikesTable }))), Rules: SpikesRules },
-  darts: { Table: lazy(() => import('./darts/DartsTable').then((m) => ({ default: m.DartsTable }))), Rules: DartsRules },
-  colorwar: { Table: lazy(() => import('./colorwar/ColorWarTable').then((m) => ({ default: m.ColorWarTable }))), Rules: ColorWarRules },
-  dots: { Table: lazy(() => import('./dots/DotsTable').then((m) => ({ default: m.DotsTable }))), Rules: DotsRules },
+  ludo: { Table: lazyTable('ludo'), Rules: LudoRules },
+  snakes: { Table: lazyTable('snakes'), Rules: SnakesRules },
+  rmcs: { Table: lazyTable('rmcs'), Rules: RmcsRules },
+  fruit: { Table: lazyTable('fruit'), Rules: FruitRules },
+  spikes: { Table: lazyTable('spikes'), Rules: SpikesRules },
+  darts: { Table: lazyTable('darts'), Rules: DartsRules },
+  colorwar: { Table: lazyTable('colorwar'), Rules: ColorWarRules },
+  dots: { Table: lazyTable('dots'), Rules: DotsRules },
 };
 
 /** App: the table of whichever registry game the room is playing */
 export function PluggedTable(props: TableProps & { kind: PluggedKind }) {
   const { Table } = PLUGGED[props.kind];
+  // fetched ahead (lobby / idle prefetch): no fallback frame; picked once per game so the table never swaps mid-game
+  const Ready = useMemo(() => LOADED[props.kind], [props.kind]);
+  if (Ready) return <Ready {...props} />;
   return (
     <Suspense
       fallback={

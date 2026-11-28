@@ -9,7 +9,7 @@ export function QuickChat({ onSend, view }: { onSend: (kind: ChatKind, index: nu
   const [open, setOpen] = useState(false);
   useBack(open ? () => setOpen(false) : undefined);
   const { list, unread } = useRoomChat(view, open);
-  // the table's own emoji and lines (Ludo has its own)
+  // the table's own emoji and lines: each game has its own set
   const set = chatSetOf(view?.config.game);
 
   const send = (kind: ChatKind, index: number) => {

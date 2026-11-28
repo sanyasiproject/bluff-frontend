@@ -40,6 +40,7 @@ const rect = (r: { x: number; y: number; w: number; h: number }) => ({ '--rx': r
 const dustAt = (n: number, dir: SpikeDir, line: number, r: number) =>
   dir === 'left' ? { x: r, y: line + 0.5, w: 0, h: 0 } : dir === 'right' ? { x: n - r, y: line + 0.5, w: 0, h: 0 } : dir === 'top' ? { x: line + 0.5, y: r, w: 0, h: 0 } : { x: line + 0.5, y: n - r, w: 0, h: 0 };
 const easeOut = (k: number) => 1 - (1 - k) ** 3;
+const DIRS: SpikeDir[] = ['left', 'right', 'top', 'bottom'];
 
 export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf, onStrike, onThud, onHit, onTick }: Props) {
   const [, setFrame] = useState(0);
@@ -127,6 +128,8 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
       struck.add(`${c[0]},${c[1]}`);
     });
   }
+  // the warned walls rumble and drop grit from their slots
+  const warned = new Set(live.filter((w) => w.strikeAt > t).map((w) => w.dir));
   const mine = sv.lives[meId] ? posOf(meId) : null;
   const myDanger = mine ? live.filter((w) => w.strikeAt > t && hitBy(n, reaches[w.dir], w.dir, mine)) : [];
   const myLeft = myDanger.length ? Math.min(...myDanger.map((w) => w.strikeAt - t)) : 0;
@@ -134,6 +137,13 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
   return (
     <div className="sp-arena" style={{ '--n': n } as CSSProperties}>
       <Tiles n={n} />
+      <div className="sp-slots" aria-hidden>
+        {DIRS.map((d) => (
+          <i key={d} className={cx('sp-slot', `from-${d}`, warned.has(d) && 'rumble')}>
+            {warned.has(d) && [0, 1, 2, 3].map((g) => <i key={g} className="sp-grit" style={{ '--g': g } as CSSProperties} />)}
+          </i>
+        ))}
+      </div>
       {pnow - lastHit < 400 && <i key={`h${Math.round(lastHit)}`} className="sp-flash" aria-hidden />}
       {safe.map(([c, r]) => (
         <i key={`s${c},${r}`} className="sp-safe" style={rect({ x: c, y: r, w: 1, h: 1 })} aria-hidden />
@@ -181,7 +191,13 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
             )}
             {age >= SHOOT_MS &&
               age < SHOOT_MS + 320 &&
-              reaches[f.dir].map((r, line) => r < n && <i key={`d${line}`} className="sp-dust" style={rect(dustAt(n, f.dir, line, r))} />)}
+              reaches[f.dir].map(
+                (r, line) =>
+                  r < n && [
+                    <i key={`d${line}`} className="sp-dust" style={rect(dustAt(n, f.dir, line, r))} />,
+                    <i key={`k${line}`} className="sp-spark" style={rect(dustAt(n, f.dir, line, r))} />,
+                  ],
+              )}
           </div>
         );
       })}
@@ -234,25 +250,28 @@ const Tiles = memo(function Tiles({ n }: { n: number }) {
   return (
     <div className="sp-tiles" aria-hidden>
       {Array.from({ length: n * n }, (_, i) => (
-        <i key={i} className={cx('sp-tile', (Math.floor(i / n) + (i % n)) % 2 && 'alt')} />
+        <i key={i} className={cx('sp-tile', (Math.floor(i / n) + (i % n)) % 2 && 'alt', `c${(i * 7 + Math.floor(i / n) * 3) % 5}`)} />
       ))}
     </div>
   );
 });
 
-/** one steel spike pointing along the strike */
+/** one polished steel spike pointing along the strike, with a glint that runs along it */
 export function SpikeIcon() {
   return (
     <svg viewBox="0 0 40 24" className="sp-spike" aria-hidden>
       <defs>
         <linearGradient id="spk" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#eceff1" />
-          <stop offset=".5" stopColor="#90a4ae" />
-          <stop offset="1" stopColor="#455a64" />
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset=".35" stopColor="#cfd8dc" />
+          <stop offset=".55" stopColor="#78909c" />
+          <stop offset=".8" stopColor="#b0bec5" />
+          <stop offset="1" stopColor="#37474f" />
         </linearGradient>
       </defs>
-      <path d="M0 2L40 12 0 22z" fill="url(#spk)" stroke="#263238" strokeWidth="1.5" />
-      <path d="M2 5L30 12" stroke="#fff" strokeWidth="1.5" opacity=".7" />
+      <path d="M0 2L40 12 0 22z" fill="url(#spk)" stroke="#1c262b" strokeWidth="1.2" strokeLinejoin="round" />
+      <path d="M0 12H38" stroke="#455a64" strokeWidth=".8" opacity=".7" />
+      <path className="sp-glint" d="M2 6L32 11.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

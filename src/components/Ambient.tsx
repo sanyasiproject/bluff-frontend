@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { cx } from '../lib/cards';
 import { reducedMotion } from '../lib/motion';
 import { sfx } from '../lib/sounds';
-import { RANKS, SUITS as CARD_SUITS, type Card } from '../types';
+import { RANKS, SUITS as CARD_SUITS, type Card, type GameKind } from '../types';
 import { PlayingCard } from './PlayingCard';
 
 // fixed positions so the background looks the same on every render
@@ -17,19 +17,35 @@ const SUITS = [
   { s: '♣', left: 13, size: 18, dur: 33, delay: -27 },
 ];
 
-/** faint card suits floating up behind the home screen and lobby */
-export function SuitDrift() {
+/** each game's own pieces for the drift (card games keep the suits) */
+const PIECES: Partial<Record<GameKind, string[]>> = {
+  ludo: ['🎲', '🔴', '🟡', '🎲', '🟢', '🔵'],
+  snakes: ['🎲', '🐍', '🪜', '🎲', '🐍', '🪜'],
+  rmcs: ['👑', '📜', '🕵️', '📜', '👮', '👑'],
+  darts: ['🎯', '🎯', '🎯', '🎯'],
+  dots: ['⬛', '✏️', '⬛', '✏️'],
+  colorwar: ['🔴', '🔵', '🟢', '🟡'],
+  fruit: ['🍉', '🍊', '🍎', '🍍', '🍋', '🍇'],
+  spikes: ['🔺', '📦', '🔺', '📦'],
+};
+
+/** faint pieces floating up behind the lobby: card suits for the card games, the game's own pieces for the others */
+export function SuitDrift({ game }: { game?: GameKind }) {
+  const pieces = game ? PIECES[game] : undefined;
   return (
-    <div className="suit-drift" aria-hidden>
-      {SUITS.map((x, i) => (
-        <span
-          key={i}
-          className={cx(x.s === '♥' || x.s === '♦' ? 'red' : 'black')}
-          style={{ left: `${x.left}%`, fontSize: x.size, animationDuration: `${x.dur}s`, animationDelay: `${x.delay}s` } as CSSProperties}
-        >
-          {x.s}
-        </span>
-      ))}
+    <div className={cx('suit-drift', pieces && 'pieces')} aria-hidden>
+      {SUITS.map((x, i) => {
+        const glyph = pieces ? pieces[i % pieces.length] : x.s;
+        return (
+          <span
+            key={i}
+            className={pieces ? 'emo' : cx(x.s === '♥' || x.s === '♦' ? 'red' : 'black')}
+            style={{ left: `${x.left}%`, fontSize: pieces ? Math.round(x.size * 0.8) : x.size, animationDuration: `${x.dur}s`, animationDelay: `${x.delay}s` } as CSSProperties}
+          >
+            {glyph}
+          </span>
+        );
+      })}
     </div>
   );
 }

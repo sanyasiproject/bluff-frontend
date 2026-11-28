@@ -270,3 +270,11 @@
   background: rgba(0, 0, 0, 0.7);
   font-size: 10px;
 }
+
+/* a phone held sideways: the wheel fits the height so the Spin button stays on screen */
+@media (orientation: landscape) and (max-height: 599px) {
+  .spin-wheel-wrap {
+    width: min(72vw, 260px, calc(100dvh - 190px));
+    margin: 2px auto 6px;
+  }
+}

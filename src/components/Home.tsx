@@ -6,9 +6,11 @@ import type { Actions, ConnStatus, PendingWatch } from '../useBluff';
 import { AccountCorner } from './AccountCorner';
 import { AccountSheet } from './AccountSheet';
 import { BaithakLogo, BaithakWordmark } from '../art/BaithakLogo';
+import { APP_FULL_NAME } from '../art/appVariant';
 import { HomeFeatured, featuredGame } from './HomeFeatured';
 import { GameHub } from './GameHub';
 import { lastGame } from '../games/lastPlayed';
+import { prefetchFavourites, prefetchTable, whenIdle } from '../games/tableLoaders';
 import { FriendsSheet } from './FriendsSheet';
 import { HomeDock } from './HomeDock';
 import { HomeNotice } from './HomeNotice';
@@ -60,6 +62,12 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
   const locked = !auth.user && auth.accountsOn === true && !auth.guestsAllowed && !auth.checking;
   const joinFriend = (userId: string, watch: boolean) => actions.joinFriend(userId, watch, auth.user?.displayName ?? name);
 
+  // once home is idle, fetch the tables this phone plays most; a picked game's table as soon as it's picked
+  useEffect(() => whenIdle(prefetchFavourites), []);
+  useEffect(() => {
+    if (play) prefetchTable(game);
+  }, [play, game]);
+
   // a sleeping free server needs up to a minute to wake up
   useEffect(() => {
     if (online) return;
@@ -103,9 +111,9 @@ export function Home({ status, connectionId, actions, auth, onOpenAdmin, pending
   return (
     <main className="screen home nt-night nt-home">
       <header className="home-top">
-        <div className="nt-brand" aria-label="Game Baithak">
+        <div className="nt-brand" aria-label={APP_FULL_NAME}>
           <BaithakLogo size={40} className="nt-brand-logo" />
-          <BaithakWordmark size={26} className="nt-brand-word" />
+          <BaithakWordmark size={26} className="nt-brand-word" showVariant />
         </div>
         <HomeNotice auth={auth} />
         <div className="home-corner">

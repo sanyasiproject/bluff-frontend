@@ -223,7 +223,7 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
                 )}
               </section>
               <section className="panel stack-tight">
-                <h3 className="section-title">Play style</h3>
+                <h3 className="section-title">Bluff play style</h3>
                 <Meter
                   emoji="🤥"
                   label="Bluffs that got away"

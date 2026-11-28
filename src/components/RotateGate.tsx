@@ -14,7 +14,7 @@ export function RotateGate() {
         </span>
       </div>
       <h2>Turn your phone</h2>
-      <p>Bluff plays sideways, like a real card table.</p>
+      <p>Game Baithak Wide plays sideways, like a real game table.</p>
       <p className="rotate-tip">Just hold the phone sideways.</p>
     </div>
   );

@@ -1,4 +1,4 @@
-// Makes Bluff installable and able to open without network; game data always comes live from the server
+// Makes Game Baithak Wide installable and able to open without network; game data always comes live from the server
 const CACHE = 'bluff-shell-v1';
 const MAX_ENTRIES = 40;
 
@@ -42,7 +42,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Friend invites arrive as push messages, even when Bluff is closed
+// Friend invites arrive as push messages, even when the app is closed
 self.addEventListener('push', (event) => {
   let msg = null;
   try {
@@ -55,8 +55,8 @@ self.addEventListener('push', (event) => {
   const url = ok && typeof msg.url === 'string' && msg.url.startsWith('/') ? msg.url : '/';
   // every push must show something, or the phone may stop delivering them
   event.waitUntil(
-    self.registration.showNotification(ok ? msg.title : 'Game Baithak', {
-      body: ok && typeof msg.body === 'string' ? msg.body : 'Open Game Baithak',
+    self.registration.showNotification(ok ? msg.title : 'Game Baithak Wide', {
+      body: ok && typeof msg.body === 'string' ? msg.body : 'Open Game Baithak Wide',
       icon: '/icons/icon-192.png',
       // the small status-bar icon: Android paints it from the alpha only, so it's white cards on transparent
       badge: '/icons/badge-96.png',
@@ -67,7 +67,7 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// Tapping it opens Bluff on the invite; an open Bluff window is reused
+// Tapping it opens the app on the invite; an open app window is reused
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const url = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin).href;

@@ -6,7 +6,6 @@ import { speak, speakLine, voiceShiftOf } from './lib/speech';
 import { clearSession, loadSavedSession, loadTabSession, saveName, saveSession, type Session } from './lib/storage';
 import {
   chatSetOf,
-  LUDO_QUICK_VOICE,
   speaksQuickChat,
   THROWS,
   type Announcement,
@@ -216,8 +215,8 @@ export function useBluff() {
       }
       // each player in their own pitch, so you can tell who said it
       if (speaksQuickChat(v?.config.game)) {
-        // Ludo lines carry their Hindi words and a mood; other tables' lines are read as written
-        const line = set.messages === chatSetOf('ludo').messages ? LUDO_QUICK_VOICE[c.index] : undefined;
+        // each game's spoken lines carry their Hindi words and a mood; lines without one are read as written
+        const line = set.voice?.[c.index];
         if (line) speakLine(line, text, voiceShiftOf(c.from));
         else speak(text, false, voiceShiftOf(c.from));
       }

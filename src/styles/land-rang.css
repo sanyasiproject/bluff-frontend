@@ -310,8 +310,11 @@
   }
 
   /* the right column, bottom up: Pick, Pass, Challenge, Last card */
+  /* a long "Pick a card · N left" wraps into two even lines */
   .table.rg-table .action-bar .rg-pick {
     order: 1;
+    line-height: 1.15;
+    text-wrap: balance;
   }
 
   .table.rg-table .action-bar .rg-pass {
@@ -479,3 +482,4 @@
     text-align: center;
   }
 }
+

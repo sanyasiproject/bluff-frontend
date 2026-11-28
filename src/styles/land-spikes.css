@@ -274,6 +274,7 @@
 
 /* the seat cards: hearts as the big number */
 .ar-num.sp-hearts {
+  margin-left: 6px;
   font-size: clamp(12px, 3.8dvh, 20px);
   letter-spacing: -1px;
 }

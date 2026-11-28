@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BaithakLogo, BaithakWordmark } from '../art/BaithakLogo';
-import { APP_NAME } from '../types';
+import { APP_FULL_NAME } from '../art/appVariant';
 import type { ConnStatus } from '../useBluff';
 
 /** what the intro says while it waits, by seconds waited */
@@ -24,9 +24,9 @@ export function Splash({ status }: { status: ConnStatus }) {
     <main className="splash nt-night">
       <BaithakLogo size={120} className="nt-splash-logo" />
       <h1 className="splash-h1">
-        <BaithakWordmark size={64} className="nt-splash-word" title={APP_NAME} />
+        <BaithakWordmark size={64} className="nt-splash-word" title={APP_FULL_NAME} showVariant />
       </h1>
-      <p className="splash-tag">Ludo, Bluff, Rang and more — with your friends</p>
+      <p className="splash-tag">Ludo, Saanp Seedhi, cards, darts and more — with your friends</p>
       <div className="splash-loader" aria-hidden>
         <i />
         <i />

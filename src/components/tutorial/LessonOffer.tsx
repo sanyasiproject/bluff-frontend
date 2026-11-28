@@ -8,7 +8,7 @@ export function LessonOffer({ game, onPractice, onSkip }: { game: GameKind; onPr
   // registry games other than Ludo have a rules sheet, not a practice game
   const sheetOnly = isPlugged(game) && game !== 'ludo';
   return (
-    <Backdrop center onClose={onSkip}>
+    <Backdrop center onClose={onSkip} panel="tut-offer-modal">
       <div className="confirm-box tut-offer">
         <span className="tut-offer-emoji" aria-hidden>
           {gameInfo(game).emoji}
@@ -33,7 +33,7 @@ export function LessonChooser({ onPick, onClose }: { onPick: (game: GameKind) =>
   return (
     <Backdrop onClose={onClose}>
       <h3>📘 How to play</h3>
-      <p className="muted small">A 1-minute practice game against Raju 🤖, with arrows showing what to tap.</p>
+      <p className="muted small">Pick a game: a 1-minute practice round, or its rules in 30 seconds.</p>
       <div className="tut-choices">
         <button className="option" onClick={() => onPick('bluff')}>
           <b>🃏 Bluff</b>
@@ -66,6 +66,14 @@ export function LessonChooser({ onPick, onClose }: { onPick: (game: GameKind) =>
         <button className="option" onClick={() => onPick('colorwar')}>
           <b>🎨 Colour Wars</b>
           <span>Grow dots, burst and take over the board</span>
+        </button>
+        <button className="option" onClick={() => onPick('fruit')}>
+          <b>🍉 Fruit Slice Duel</b>
+          <span>Fastest sword takes the fruit. Never cut the magnet!</span>
+        </button>
+        <button className="option" onClick={() => onPick('spikes')}>
+          <b>🔺 Spike Attack</b>
+          <span>Dodge the spikes, keep your 3 lives</span>
         </button>
       </div>
       <button className="btn ghost block" onClick={onClose}>

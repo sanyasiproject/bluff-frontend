@@ -14,10 +14,10 @@ export const TITLES: Title[] = [
   { level: 6, title: 'Sly fox', emoji: '🦊' },
   { level: 10, title: 'Card shark', emoji: '🦈' },
   { level: 15, title: 'Trickster', emoji: '🎭' },
-  { level: 20, title: 'Bluff master', emoji: '🤥' },
+  { level: 20, title: 'Baithak master', emoji: '🎲' },
   { level: 25, title: 'Grandmaster', emoji: '♟️' },
   { level: 30, title: 'Mastermind', emoji: '🧠' },
-  { level: 40, title: 'Bluff king', emoji: '👑' },
+  { level: 40, title: 'Baithak king', emoji: '👑' },
   { level: 50, title: 'Legend', emoji: '🏆' },
 ];
 
@@ -92,7 +92,7 @@ export function achievementsOf(s: LifetimeStats, coins: number): Achievement[] {
     { emoji: '👑', title: 'Champion', desc: 'Win 10 games', value: s.wins, goal: 10, group: 'wins' },
     { emoji: '🏆', title: "Winner's circle", desc: 'Win 50 games', value: s.wins, goal: 50, group: 'wins' },
     { emoji: '⚡', title: 'Unstoppable', desc: 'Win 150 games', value: s.wins, goal: 150, group: 'wins' },
-    { emoji: '🦁', title: 'Bluff royalty', desc: 'Win 400 games', value: s.wins, goal: 400, group: 'wins' },
+    { emoji: '🦁', title: 'Baithak royalty', desc: 'Win 400 games', value: s.wins, goal: 400, group: 'wins' },
     { emoji: '🌟', title: 'Hall of fame', desc: 'Win 1,000 games', value: s.wins, goal: 1_000, group: 'wins' },
     // bluffs
     { emoji: '🤥', title: 'Smooth liar', desc: 'Bluff 25 times', value: s.bluffs, goal: 25, group: 'bluffs' },

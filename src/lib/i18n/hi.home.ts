@@ -44,7 +44,6 @@ export const D: Dict = {
   'Still trying… check your internet connection.': 'अब भी कोशिश जारी है… अपना इंटरनेट चेक करें।',
   'Almost there…': 'बस हो गया…',
   // install card
-  'Get the Bluff app': 'Bluff ऐप पाएँ',
   'Free · no app store': 'फ़्री · ऐप स्टोर की ज़रूरत नहीं',
   Install: 'इंस्टॉल करें',
   'In Safari, tap': 'Safari में टैप करें',
@@ -54,19 +53,14 @@ export const D: Dict = {
   'Add to Home Screen': 'होम स्क्रीन पर जोड़ें',
   ', then': ', फिर',
   Add: 'जोड़ें',
-  'Open Bluff from your home screen': 'होम स्क्रीन से Bluff खोलें',
   'Open the browser menu': 'ब्राउज़र मेन्यू खोलें',
   Tap: 'टैप करें',
   'Install app': 'ऐप इंस्टॉल करें',
   'Add to Home screen': 'होम स्क्रीन पर जोड़ें',
   // notifications
   Notification: 'नोटिफ़िकेशन',
-  'Get friend invites even when Bluff is closed': 'Bluff बंद होने पर भी दोस्तों के बुलावे पाएँ',
   "A friend taps Invite, your phone shows it, one tap and you're in their room.": 'दोस्त बुलाएँ दबाएगा, आपके फ़ोन पर दिखेगा, एक टैप और आप उनके कमरे में।',
   'Turn on': 'चालू करें',
-  'Friends can invite you even when Bluff is closed': 'Bluff बंद होने पर भी दोस्त आपको बुला सकते हैं',
-  'Get a notification when a friend invites you and Bluff is closed': 'Bluff बंद हो और कोई दोस्त बुलाए, तो नोटिफ़िकेशन पाएँ',
-  'On iPhone: add Bluff to your Home Screen, open it from there, then turn this on': 'iPhone पर: Bluff को होम स्क्रीन पर जोड़ें, वहीं से खोलें, फिर इसे चालू करें',
   'Invite notifications': 'बुलावे के नोटिफ़िकेशन',
   'Turned off by the admin for now': 'अभी एडमिन ने बंद किया है',
   'Friend alerts': 'दोस्त ऑनलाइन अलर्ट',
@@ -119,5 +113,4 @@ export const P: Pattern[] = [
   [/^Day (\d+) of 7$/, 'दिन $1 / 7'],
   [/^\+([\d,]+) coins$/, '+$1 सिक्के'],
   [/^(.+) invited you$/, '$1 ने आपको बुलाया'],
-  [/^Join my Bluff game 🃏 Room code: ([A-Z]{4})$/, 'मेरे Bluff गेम में आओ 🃏 कमरा कोड: $1'],
 ];

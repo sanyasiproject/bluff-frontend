@@ -744,6 +744,11 @@
     width: min(24vw, 300px);
     transform: none;
   }
+
+  /* game over and podium: the last move notes hide instead of covering the winner (errors still show) */
+  body:has(:is(.modal.lo-over, .modal.lu-over)) .toasts .toast:not(.error) {
+    display: none;
+  }
 }
 
 /* phones: seats are compact name tags (avatar left, name and cards right), so they leave the felt to the pile */

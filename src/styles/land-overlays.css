@@ -1033,7 +1033,7 @@
   }
 }
 
-/* phones: smaller emoji and the quick messages in one row you swipe sideways */
+/* phones: smaller emoji and the game's quick messages in two rows you swipe sideways */
 @media (orientation: landscape) and (max-height: 599px) {
   .chat-tray.with-list {
     gap: 6px;
@@ -1045,7 +1045,10 @@
   }
 
   .chat-tray.with-list .message-pills {
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-rows: repeat(2, auto);
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
     max-height: none;
     overflow-x: auto;
     overflow-y: hidden;

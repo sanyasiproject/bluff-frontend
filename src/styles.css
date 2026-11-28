@@ -4027,6 +4027,30 @@ body::after {
   color: rgba(255, 128, 146, 0.11);
 }
 
+/* a game's own pieces (emoji): faded and slightly grey so they stay in the background */
+.suit-drift .emo {
+  filter: grayscale(0.35);
+}
+
+.suit-drift.pieces span {
+  animation-name: piece-rise;
+}
+
+@keyframes piece-rise {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 0.16;
+  }
+  100% {
+    transform: translateY(-115vh) rotate(160deg);
+    opacity: 0;
+  }
+}
+
 /* title letters bounce in, then a shine runs through them */
 .shine-title {
   display: flex;

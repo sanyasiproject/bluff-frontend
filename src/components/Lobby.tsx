@@ -6,6 +6,7 @@ import { socket } from '../lib/socket';
 import { formatCoins, compactCoins } from '../lib/coins';
 import { markTutorialSeen, tutorialSeen } from '../lib/tutorial';
 import { useLandscape } from '../lib/useLandscape';
+import { prefetchTable } from '../games/tableLoaders';
 import {
   gameInfo,
   isPlugged,
@@ -192,6 +193,8 @@ export function Lobby({ view, actions, auth, nudged = null }: { view: RoomView; 
   const rang = view.config.game === 'rang';
   // Bluff's own settings (ranked, teams, twists…) only show for Bluff
   const plugged = isPlugged(view.config.game);
+  // the chosen game's table starts downloading now, so Start opens it at once
+  useEffect(() => prefetchTable(view.config.game), [view.config.game]);
   const isBluff = !crazy7 && !rang && !plugged;
   // 2v2 is for Bluff, Rang and catalog games with teams
   const teamGame = view.config.teams && !crazy7 && gameInfo(view.config.game).teams;
@@ -590,7 +593,7 @@ export function Lobby({ view, actions, auth, nudged = null }: { view: RoomView; 
 
   return (
     <main className="screen lobby">
-      <SuitDrift />
+      <SuitDrift game={view.config.game} />
       <header className="lobby-head">
         <div className="grow">
           <p className="label">Room code</p>
