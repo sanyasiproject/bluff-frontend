@@ -59,6 +59,11 @@ export function GameStats({ stats }: { stats: LifetimeStats }) {
                 ⬛ {t.boxes ?? 0} boxes closed
               </span>
             )}
+            {g.kind === 'chess' && t && (
+              <span className="gs-extra">
+                {`♟️ ${t.moves ?? 0} moves · 🏁 ${t.mates ?? 0} checkmates`}
+              </span>
+            )}
             {g.kind === 'colorwar' && t && (
               <span className="gs-extra">
                 🎨 {t.captures ?? 0} cells taken · 💥 {t.bursts ?? 0} bursts

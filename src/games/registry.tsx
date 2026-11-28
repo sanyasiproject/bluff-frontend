@@ -3,6 +3,7 @@ import { lazy, Suspense, useMemo, type ComponentType, type LazyExoticComponent }
 import type { GameConfig, PluggedKind, RoomView } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions, ChatBubble, Note } from '../useBluff';
+import { ChessRulesLazy } from './chess/lazy';
 import { ColorWarRules } from './colorwar/ColorWarRules';
 import { DartsRules } from './darts/DartsRules';
 import { DotsRules } from './dots/DotsRules';
@@ -39,6 +40,7 @@ export const PLUGGED: Record<PluggedKind, PluggedEntry> = {
   darts: { Table: lazyTable('darts'), Rules: DartsRules },
   colorwar: { Table: lazyTable('colorwar'), Rules: ColorWarRules },
   dots: { Table: lazyTable('dots'), Rules: DotsRules },
+  chess: { Table: lazyTable('chess'), Rules: ChessRulesLazy },
 };
 
 /** App: the table of whichever registry game the room is playing */

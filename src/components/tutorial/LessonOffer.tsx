@@ -71,6 +71,10 @@ export function LessonChooser({ onPick, onClose }: { onPick: (game: GameKind) =>
           <b>🍉 Fruit Slice Duel</b>
           <span>Fastest sword takes the fruit. Never cut the magnet!</span>
         </button>
+        <button className="option" onClick={() => onPick('chess')}>
+          <b>♟️ Chess</b>
+          <span>Nine variants, real clocks, ratings from 800</span>
+        </button>
         <button className="option" onClick={() => onPick('spikes')}>
           <b>🔺 Spike Attack</b>
           <span>Dodge the spikes, keep your 3 lives</span>

@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { cx } from '../lib/cards';
 import { Icon, type IconName } from '../art/icons';
 
-export type ProfileTab = 'stats' | 'social' | 'looks' | 'settings';
+export type ProfileTab = 'stats' | 'chess' | 'social' | 'looks' | 'settings';
 
-const TABS: { id: ProfileTab; icon: IconName; label: string }[] = [
+const TABS: { id: ProfileTab; icon: IconName; label: string; emoji?: string }[] = [
   { id: 'stats', icon: 'league', label: 'Stats' },
+  { id: 'chess', icon: 'play', label: 'Chess', emoji: '♟️' },
   { id: 'social', icon: 'friends', label: 'Social' },
   { id: 'looks', icon: 'gem', label: 'Looks' },
   { id: 'settings', icon: 'settings', label: 'Settings' },
@@ -50,7 +51,7 @@ interface Props {
   requests?: number;
 }
 
-/** Stats · Social · Looks · Settings, sticky under the profile header */
+/** Stats · Chess · Social · Looks · Settings, sticky under the profile header */
 export function ProfileTabs({ tab, onPick, requests = 0 }: Props) {
   return (
     <nav className="profile-tabs" role="tablist" aria-label="Profile sections">
@@ -64,7 +65,7 @@ export function ProfileTabs({ tab, onPick, requests = 0 }: Props) {
           onClick={() => onPick(t.id)}
         >
           <span aria-hidden>
-            <Icon name={t.icon} size={20} />
+            {t.emoji ?? <Icon name={t.icon} size={20} />}
           </span>
           {t.label}
           {t.id === 'social' && requests > 0 && <i className="req-dot">{requests}</i>}

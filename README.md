@@ -195,6 +195,7 @@ Bluff is a Progressive Web App: friends install it from the website, free, with 
 | `src/games/darts/` | Darts: table, dartboard, aiming, darts, chalkboard, rules, sounds, dev preview |
 | `src/games/dots/` | Dots and Boxes: table, board, rules, sounds, dev preview |
 | `src/games/colorwar/` | Colour Wars: table, board, burst replay, rules, sounds, dev preview |
+| `src/games/chess/` | Chess: table, board and piece art, looks, clocks, pockets, game end, analysis and watcher hints (engine in a Web Worker), Profile → Chess, lobby settings, rules with diagrams, sounds, dev preview (`src/chess/` is the shared library, synced from the backend) |
 | `src/components/GameHub.tsx` | Home game grid (tiles, category chips, NEW, last played) |
 | `src/components/GameStats.tsx` | Profile: a card per game from `stats.perGame` |
 | `src/components/Hand.tsx` | Fits any hand size into overlapping rows |

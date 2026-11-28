@@ -1,0 +1,78 @@
+/* ---------- Profile → Chess: perf cards, the picked perf's record and graph, recent games and the leaderboard ---------- */
+
+.ch-prof { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; align-items: start; }
+.ch-prof-col { display: grid; gap: 10px; min-width: 0; }
+.ch-prof-note { padding: 10px; }
+
+.ch-perfs { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 5px; }
+
+.ch-perf {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  padding: 6px 4px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  color: inherit;
+  cursor: pointer;
+}
+
+.ch-perf > span { font-size: 18px; }
+.ch-perf small { overflow: hidden; max-width: 100%; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.ch-perf b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.ch-perf.unplayed { opacity: 0.6; }
+.ch-perf.on { opacity: 1; background: rgba(196, 154, 90, 0.25); box-shadow: inset 0 0 0 2px #c49a5a; }
+
+.ch-perf-card .section-title { display: flex; align-items: center; gap: 6px; }
+.ch-perf-now { margin-left: auto; font-size: 22px; }
+.ch-perf-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 4px; margin: 6px 0; }
+.ch-perf-stats span { display: grid; justify-items: center; padding: 4px; border-radius: 10px; background: rgba(0, 0, 0, 0.2); }
+.ch-perf-stats b { font-size: 16px; }
+.ch-perf-stats small { color: var(--muted); font-size: 10px; }
+.ch-w { color: #69f0ae; }
+.ch-l { color: #ff8a80; }
+
+.ch-rgraph { margin: 0; }
+.ch-rgraph svg { display: block; width: 100%; height: 90px; border-radius: 10px; background: rgba(0, 0, 0, 0.25); }
+.ch-rgraph figcaption { margin-top: 2px; text-align: center; }
+.ch-graph-empty { padding: 18px 8px; border-radius: 10px; background: rgba(0, 0, 0, 0.2); text-align: center; }
+
+.ch-prof-tabs button { flex: 1; }
+
+.ch-games { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ch-game { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 0; border-radius: 12px; background: rgba(255, 255, 255, 0.07); color: inherit; text-align: left; cursor: pointer; }
+.ch-game-res { display: grid; flex: none; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: rgba(255, 255, 255, 0.12); font-style: normal; font-weight: 900; }
+.res-win .ch-game-res { background: #2e9d4f; }
+.res-loss .ch-game-res { background: #c0392b; }
+.ch-game-who { display: grid; flex: 1; min-width: 0; }
+.ch-game-who b,
+.ch-game-who small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-game-who small { color: var(--muted); font-size: 11px; }
+.ch-game .ch-diff { font-size: 14px; }
+
+.ch-lb-me { margin: 0 0 6px; padding: 8px 10px; border-radius: 12px; background: rgba(196, 154, 90, 0.2); font-weight: 700; }
+.ch-lb ol { display: grid; gap: 3px; max-height: 60dvh; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.ch-lb li { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); }
+.ch-lb li.mine { box-shadow: inset 0 0 0 2px #c49a5a; }
+.ch-lb li > i { width: 2em; color: var(--muted); font-style: normal; font-weight: 800; text-align: right; }
+.ch-lb li > b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-lb li > span { font-weight: 800; font-variant-numeric: tabular-nums; }
+.ch-diff { margin-left: 6px; font-style: normal; font-weight: 900; }
+.ch-diff.up { color: #69f0ae; }
+.ch-diff.down { color: #ff8a80; }
+
+/* Looks: board swatch (2x2 squares) and two pieces of each set */
+.ch-look-board {
+  display: block;
+  width: 46px;
+  height: 46px;
+  border-radius: 6px;
+  background: repeating-conic-gradient(var(--ch-dark) 0 25%, var(--ch-light) 0 50%) 0 0 / 50% 50%;
+}
+
+.ch-look-set { display: flex; width: 56px; height: 46px; }
+.ch-look-set svg { width: 50%; height: 100%; }
+
+/* the chess pane spans the profile's two columns and lays out its own */
+.profile-pane.lp-chess > .ch-prof { grid-column: 1 / -1; }

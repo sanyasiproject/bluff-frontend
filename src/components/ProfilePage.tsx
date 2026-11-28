@@ -31,6 +31,9 @@ import { LookPicker } from './LookPicker';
 import { GameStats } from './GameStats';
 import '../styles/land-hub.css';
 import { LudoLookRows } from '../games/ludo/LudoLooks';
+import { ChessLookRows } from '../games/chess/ChessLookRows';
+import { ChessProfileLazy } from '../games/chess/lazy';
+import '../styles/land-chess-profile.css';
 import { ProfileTabs, useProfileTab } from './ProfileTabs';
 import { Rolling } from './Rolling';
 import { Icon } from '../art/icons';
@@ -295,6 +298,12 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
           </div>
         )}
 
+        {tab === 'chess' && (
+          <div className="profile-pane lp-chess" role="tabpanel">
+            <ChessProfileLazy auth={auth} />
+          </div>
+        )}
+
         {tab === 'social' && (
           <div className="profile-pane lp-social" role="tabpanel">
             <div className="lp-col">
@@ -322,6 +331,10 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
             <section className="panel stack-tight">
               <h3 className="section-title">🎲 Ludo board, gotis & dice</h3>
               <LudoLookRows level={lvl.level} />
+            </section>
+            <section className="panel stack-tight">
+              <h3 className="section-title">♟️ Chess board & pieces</h3>
+              <ChessLookRows />
             </section>
             <ShopButton auth={auth} />
           </div>

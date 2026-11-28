@@ -33,9 +33,11 @@ interface Props {
   over: ReactNode;
   /** my piece for the "You are Red" banner (a colour dot by default) */
   myIcon?: ReactNode;
+  /** the "You are …" banner's colour and name (default: my seat colour) */
+  youAre?: { color: string; name: string };
 }
 
-export function PartyChrome({ view, actions, auth, notes, base, status, mine, infoMine, tips, leaveWhat, kickWhat, watchNote, over, myIcon }: Props) {
+export function PartyChrome({ view, actions, auth, notes, base, status, mine, infoMine, tips, leaveWhat, kickWhat, watchNote, over, myIcon, youAre }: Props) {
   const { banner, panel, setPanel, target, setTarget, overSeen, levelUp, setLevelUp, startLevel, isHost, me } = base;
   const targetPlayer = target ? view.players.find((p) => p.id === target) : undefined;
   return (
@@ -68,7 +70,7 @@ export function PartyChrome({ view, actions, auth, notes, base, status, mine, in
         </div>
       </header>
       <LiveVoiceNotice />
-      {me && <YouAreBanner on={view.phase === 'playing'} color={base.colorOf(view.meId)} name={colorName(base.colorOf(view.meId))} icon={myIcon} />}
+      {me && <YouAreBanner on={view.phase === 'playing'} color={youAre?.color ?? base.colorOf(view.meId)} name={youAre?.name ?? colorName(base.colorOf(view.meId))} icon={myIcon} />}
       {!me && <p className="lu-watch-note">{watchNote}</p>}
 
       {view.phase === 'over' && !overSeen && over}

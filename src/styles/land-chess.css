@@ -1,0 +1,356 @@
+/* ---------- Chess table: the board at full height, player cards and clocks on the left, moves and buttons on the right ---------- */
+
+.table.ch-table {
+  --ch-gap: clamp(5px, 1vw, 14px);
+  --ch-safe: max(8px, env(safe-area-inset-left), env(safe-area-inset-right));
+  --ch-left: clamp(124px, 19vw, 300px);
+  --ch-right: clamp(172px, 25vw, 340px);
+  --ch-bar: 0px;
+  --ch-b: min(calc(100dvh - 12px), calc(100vw - var(--ch-left) - var(--ch-right) - 2 * var(--ch-safe) - 4 * var(--ch-gap) - var(--ch-bar)));
+}
+
+.table.ch-table.ch-watch { --ch-bar: 18px; }
+
+.ch-table .ch-room {
+  background:
+    radial-gradient(45% 60% at 50% 50%, rgba(255, 228, 170, 0.16), transparent 72%),
+    radial-gradient(120% 110% at 50% 55%, transparent 45%, rgba(0, 0, 0, 0.75) 100%),
+    linear-gradient(180deg, #2b2119 0%, #110c08 100%);
+}
+
+/* the board, centred between the side columns */
+.ch-stage {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--ch-safe) + var(--ch-left) + 2 * var(--ch-gap) + (100vw - 2 * var(--ch-safe) - var(--ch-left) - var(--ch-right) - 4 * var(--ch-gap) - var(--ch-b) - var(--ch-bar)) / 2);
+  z-index: 3;
+  display: flex;
+  gap: 4px;
+  width: calc(var(--ch-b) + var(--ch-bar));
+  translate: 0 -50%;
+}
+
+.ch-stage > .ch-board { flex: none; width: var(--ch-b); }
+
+/* left: the far player on top, me at the bottom; pockets next to each */
+.ch-left,
+.ch-right {
+  position: absolute;
+  top: max(6px, env(safe-area-inset-top));
+  bottom: max(6px, env(safe-area-inset-bottom));
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ch-left { left: var(--ch-safe); width: var(--ch-left); }
+.ch-right { right: var(--ch-safe); width: var(--ch-right); padding-top: 46px; }
+
+.ch-seat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #2c241d 0%, #19130e 100%);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 236, 200, 0.12), 0 8px 18px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  container-type: inline-size;
+}
+
+.ch-seat.active { box-shadow: inset 0 0 0 2px #ffd54f, 0 0 18px rgba(255, 213, 79, 0.35), 0 8px 18px rgba(0, 0, 0, 0.5); }
+
+.ch-seat-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+}
+
+button.ch-seat-head { cursor: pointer; }
+.ch-av { position: relative; flex: none; }
+.ch-av .avatar { width: 40px; height: 40px; font-size: 18px; }
+
+.ch-side-dot {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #19130e;
+}
+
+.ch-side-dot.w { background: #f4efe3; }
+.ch-side-dot.b { background: #2a2623; box-shadow: 0 0 0 2px #19130e, inset 0 0 0 1.5px #7a6f66; }
+
+.ch-who { display: grid; min-width: 0; gap: 1px; }
+.ch-name { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.ch-rating { color: #e8d9be; font-size: 12px; font-weight: 700; }
+
+.ch-diff { margin-left: 6px; font-style: normal; font-weight: 900; }
+.ch-diff.up { color: #69f0ae; }
+.ch-diff.down { color: #ff8a80; }
+
+.ch-lead { display: flex; align-items: center; min-height: 16px; }
+.ch-cap { display: block; width: 15px; height: 15px; margin-right: -4px; }
+.ch-cap.p + .ch-cap:not(.p),
+.ch-cap.n + .ch-cap.b,
+.ch-cap.b + .ch-cap.n { margin-left: 4px; }
+.ch-lead small { margin-left: 7px; color: #cfc2ab; font-size: 11px; font-weight: 800; }
+
+.ch-clock {
+  align-self: stretch;
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #bfb5a6;
+  font: 800 clamp(22px, 17cqi, 40px) / 1.1 ui-monospace, 'SF Mono', Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ch-clock.run { background: #f4efe3; color: #1a1410; }
+.ch-clock.low { color: #ff5252; }
+.ch-clock.run.low { background: #ffebee; color: #d50000; }
+.ch-clock.tick { animation: ch-tick 1s steps(1) infinite; }
+
+@keyframes ch-tick {
+  50% { opacity: 0.75; }
+}
+
+.ch-checks { display: flex; gap: 4px; }
+.ch-checks i { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.3); font-style: normal; font-weight: 900; }
+.ch-checks i.on { background: #ff5252; color: #fff; }
+
+.ch-bubble { top: -8px; left: 56px; }
+
+/* crazyhouse pockets */
+.ch-pocket {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.ch-pk {
+  position: relative;
+  width: 19%;
+  aspect-ratio: 1;
+  padding: 2px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  touch-action: none;
+}
+
+.ch-pocket.live .ch-pk:not(.none) { cursor: grab; }
+.ch-pk.none { opacity: 0.22; }
+.ch-pk.on { background: rgba(40, 200, 120, 0.5); }
+.ch-pk b { position: absolute; right: -2px; bottom: -2px; min-width: 16px; padding: 0 3px; border-radius: 99px; background: #ff7043; color: #fff; font-size: 10px; line-height: 16px; }
+.ch-pk-ghost { width: 56px; height: 56px; }
+
+/* right: moves, engine lines, buttons */
+.ch-moves {
+  flex: 1 1 auto;
+  min-height: 60px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #eee;
+  font-size: 13px;
+  list-style: none;
+}
+
+.ch-moves li { display: grid; grid-template-columns: 2.4em 1fr 1fr; align-items: center; }
+.ch-moves li:nth-child(2n) { background: rgba(255, 255, 255, 0.04); }
+.ch-moves li > i { color: #8d8378; font-style: normal; font-size: 11px; text-align: right; padding-right: 6px; }
+.ch-moves-empty { display: block !important; padding: 8px; font-size: 12px; }
+
+.ch-mv { padding: 3px 6px; border: 0; border-radius: 6px; background: none; color: inherit; font: 600 13px / 1.3 system-ui, sans-serif; text-align: left; }
+button.ch-mv { cursor: pointer; }
+.ch-mv.on { background: #c49a5a; color: #1a1410; }
+.ch-mv.empty { color: #777; }
+.ch-mv sup { margin-left: 2px; font-weight: 900; }
+.mk-inaccuracy sup, .j-inaccuracy { color: #56b4e9; }
+.mk-mistake sup, .j-mistake { color: #e69f00; }
+.mk-blunder sup, .j-blunder { color: #ff5a5a; }
+
+.ch-controls { display: grid; gap: 6px; }
+.ch-btns { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 6px; }
+
+.ch-btn {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  min-height: 44px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font: 700 11px / 1.1 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.ch-btn > span { font-size: 17px; }
+.ch-btn.danger { background: rgba(229, 57, 53, 0.3); }
+.ch-btn.on { background: rgba(255, 213, 79, 0.3); }
+.ch-btn.off { opacity: 0.6; }
+.ch-btn:disabled { opacity: 0.4; cursor: default; }
+
+.ch-offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  background: rgba(255, 213, 79, 0.18);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ch-offer span { flex: 1 1 100%; }
+.ch-meta { margin: 0; text-align: center; }
+
+/* watchers: the eval bar beside the board and the engine lines */
+.ch-evalbar {
+  position: relative;
+  flex: none;
+  width: 14px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #2b2724;
+}
+
+.ch-evalbar i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  background: #f4efe3;
+  transform: scaleY(var(--w));
+  transform-origin: bottom;
+  transition: transform 0.4s ease;
+}
+
+.ch-evalbar.flipped i { transform-origin: top; top: 0; bottom: auto; }
+.ch-evalbar b { position: absolute; left: -4px; right: -4px; bottom: 3px; color: #2b2724; font: 800 8px / 1 system-ui, sans-serif; letter-spacing: -0.04em; text-align: center; white-space: nowrap; }
+.ch-evalbar b.b { top: 3px; bottom: auto; color: #f4efe3; }
+.ch-evalbar.flipped b { top: 3px; bottom: auto; }
+.ch-evalbar.flipped b.b { top: auto; bottom: 3px; }
+
+.ch-lines { display: grid; gap: 3px; padding: 6px; border-radius: 12px; background: rgba(0, 0, 0, 0.35); }
+.ch-lines-head { display: flex; justify-content: space-between; margin: 0; color: #fff; font-size: 12px; font-weight: 800; }
+.ch-lines-head small { color: #a69c90; font-weight: 600; }
+.ch-line { display: flex; gap: 6px; align-items: baseline; overflow: hidden; padding: 2px 4px; border: 0; border-radius: 6px; background: none; color: #ddd; font: 500 12px / 1.3 system-ui, sans-serif; text-align: left; white-space: nowrap; text-overflow: ellipsis; }
+.ch-line.best { background: rgba(46, 204, 113, 0.15); }
+.ch-score { flex: none; min-width: 42px; padding: 0 4px; border-radius: 4px; font-size: 11px; text-align: center; }
+.ch-score.w { background: #f4efe3; color: #1a1410; }
+.ch-score.b { background: #111; color: #fff; }
+
+.ch-you-piece { display: inline-block; width: 26px; height: 26px; }
+
+/* game end: one column, the result, both players' rating changes, then the buttons */
+.modal.lu-over.ch-over { width: min(460px, 94vw); max-width: min(460px, 94vw); }
+.ch-over .lu-over-box { display: flex; flex-direction: column; align-items: stretch; }
+.ch-over-btns .btn { white-space: nowrap; }
+.ch-over-why { margin: -4px 0 10px; color: var(--muted); font-size: 13px; text-align: center; }
+.ch-over-rows { display: grid; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
+.ch-over-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgba(255, 255, 255, 0.06); }
+.ch-over-row.won { box-shadow: inset 0 0 0 2px #ffd54f; }
+.ch-over-who { display: grid; flex: 1; min-width: 0; text-align: left; }
+.ch-over-who small { color: var(--muted); }
+.ch-over-rating { font-weight: 800; font-variant-numeric: tabular-nums; }
+.ch-over-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.ch-over-btns .btn { flex: 1 1 auto; }
+
+/* tall narrow windows: board on top, columns below */
+@media (orientation: portrait) {
+  .table.ch-table { --ch-b: min(96vw, calc(100dvh - 300px)); }
+  .ch-stage { top: 150px; left: 50%; translate: -50% 0; }
+  .ch-left { bottom: auto; right: var(--ch-safe); width: auto; flex-direction: row; }
+  .ch-left > .ch-seat { flex: 1; }
+  .ch-right { top: calc(160px + var(--ch-b)); left: var(--ch-safe); width: auto; padding-top: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ch-clock.tick { animation: none; }
+  .ch-evalbar i { transition: none; }
+}
+
+/* the top bar lives over the right column so the board keeps the full height; the turn shows on the clocks and the status line */
+.table.ch-table .topbar {
+  left: auto;
+  right: var(--ch-safe);
+  width: var(--ch-right);
+  gap: 6px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.table.ch-table .topbar .lu-status,
+.table.ch-table .lu-watch-note { display: none; }
+
+.ch-status {
+  margin: 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.ch-status.mine { background: rgba(60, 44, 0, 0.75); color: var(--gold, #ffd54f); }
+
+/* live voice buttons sit in the free middle of the left column, so the top bar fits the right column */
+.table.ch-table .topbar .live-voice {
+  /* the top bar (right column) is the containing block: step back to the left column */
+  position: absolute;
+  top: 50dvh;
+  left: calc(2 * var(--ch-safe) + var(--ch-right) - 100vw + 4px);
+  z-index: 5;
+  translate: 0 -50%;
+  pointer-events: auto;
+}
+
+/* big screens (tablets, laptops): bigger cards, clocks, moves and buttons */
+@media (min-height: 640px) and (min-width: 900px) {
+  .ch-seat { gap: 10px; padding: 14px; border-radius: 20px; }
+  .ch-av .avatar { width: 60px; height: 60px; font-size: 26px; }
+  .ch-name { font-size: 19px; }
+  .ch-rating { font-size: 16px; }
+  .ch-cap { width: 22px; height: 22px; }
+  .ch-lead small { font-size: 14px; }
+  .ch-clock { padding: 8px 14px; font-size: clamp(36px, 20cqi, 64px); }
+  .ch-right { padding-top: 64px; gap: 12px; }
+  .ch-status { padding: 8px 14px; font-size: 17px; }
+  .ch-moves { font-size: 16px; }
+  .ch-mv { font-size: 16px; padding: 5px 8px; }
+  .ch-btns { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+  .ch-btn { min-height: 64px; font-size: 14px; border-radius: 16px; }
+  .ch-btn > span { font-size: 24px; }
+  .ch-lines-head, .ch-line { font-size: 15px; }
+  .ch-score { min-width: 54px; font-size: 13px; }
+  .ch-pocket { padding: 6px; }
+  .ch-pk b { min-width: 20px; font-size: 12px; line-height: 20px; }
+  .table.ch-table.ch-watch { --ch-bar: 26px; }
+  .ch-evalbar b { font-size: 11px; }
+  .ch-meta { font-size: 14px; }
+}

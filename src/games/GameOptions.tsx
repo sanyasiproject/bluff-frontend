@@ -1,6 +1,7 @@
 // Lobby settings for registry games, drawn from the game's catalog options
 import { BotLevelPicker, Choice, SettingRow, StakePicker, type LobbyTab } from '../components/LobbySettings';
 import { gameInfo, gameOpt, type GameConfig, type GameOptionSpec, type RoomView } from '../types';
+import { ChessSettingsLazy } from './chess/lazy';
 import { PLUGGED } from './registry';
 
 type Val = string | number | boolean;
@@ -15,6 +16,7 @@ export function pluggedSummary(view: RoomView): string[] {
   const out: string[] = [];
   for (const o of info.options) {
     if (!visible(c, o)) continue;
+    if (c.game === 'chess' && o.id === 'level' && !view.players.some((p) => p.bot)) continue;
     const v = gameOpt<Val>(c, o.id);
     const choice = o.choices.find((ch) => ch.value === v);
     if (choice) out.push(o.id === 'mode' ? `🎮 ${choice.label}` : o.id === 'time' ? `⏱ ${choice.label}` : o.id === 'rounds' ? `🔁 ${choice.label}` : /^(On|Off)$/.test(choice.label) ? `${o.label} ${choice.label.toLowerCase()}` : choice.label);
@@ -41,11 +43,13 @@ export function PluggedSettings({ view, land, show, coinsOn, set }: Props) {
   return (
     <section className="panel">
       {!land && <h2 className="section-title">Game settings</h2>}
-      {bots.length > 0 && show('stakes') && <BotLevelPicker value={c.botLevel ?? 'expert'} onPick={(level) => set({ botLevel: level })} />}
+      {bots.length > 0 && show('stakes') && c.game !== 'chess' && <BotLevelPicker value={c.botLevel ?? 'expert'} onPick={(level) => set({ botLevel: level })} />}
       {coinsOn && show('stakes') && (
         <StakePicker stake={c.stake} players={view.players.length} config={c} bots={bots.length > 0} isHost onPick={(n) => set({ stake: n })} />
       )}
+      {show('game') && c.game === 'chess' && <ChessSettingsLazy view={view} pick={pick} />}
       {show('game') &&
+        c.game !== 'chess' &&
         info.options
           .filter((o) => visible(c, o))
           .map((o) => {

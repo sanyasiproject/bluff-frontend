@@ -1,0 +1,101 @@
+/* ---------- Chess analysis: eval bar + board at full height, the review beside it (summary, graph, moves, engine line) ---------- */
+
+.page.ch-analysis-page {
+  --an-side: clamp(220px, 38vw, 460px);
+  --an-b: min(calc(100dvh - 12px), calc(100vw - var(--an-side) - 44px));
+  overflow: hidden;
+  background: radial-gradient(60% 70% at 35% 50%, #3a2c20 0%, #140e0a 100%);
+}
+
+/* the back button and title sit at the top of the side column */
+.ch-analysis-page .page-head {
+  position: absolute;
+  top: 0;
+  right: max(8px, env(safe-area-inset-right));
+  width: var(--an-side);
+  padding: max(6px, env(safe-area-inset-top)) 0 0;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.ch-analysis-page .page-head h2 { font-size: 16px; }
+
+.ch-analysis-page .page-body {
+  max-width: none;
+  height: 100%;
+  padding: 6px max(8px, env(safe-area-inset-right)) 6px max(8px, env(safe-area-inset-left));
+}
+
+.ch-analysis {
+  display: flex;
+  gap: 12px;
+  height: 100%;
+}
+
+.ch-an-stage {
+  display: flex;
+  flex: none;
+  align-self: center;
+  gap: 4px;
+  height: var(--an-b);
+}
+
+.ch-an-stage .ch-evalbar { width: 20px; }
+.ch-an-stage .ch-board { width: var(--an-b); }
+
+.ch-an-side {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding-top: 48px;
+}
+
+.ch-an-progress {
+  position: relative;
+  overflow: hidden;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ch-an-progress i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  background: #c49a5a;
+  transition: width 0.3s;
+}
+
+.ch-an-sum { padding: 6px 8px; border-radius: 12px; background: rgba(0, 0, 0, 0.35); color: #fff; }
+.ch-an-opening { margin: 0 0 4px; overflow: hidden; color: #e8d9be; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.ch-an-sum table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.ch-an-sum th { overflow: hidden; max-width: 9em; font-weight: 700; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+.ch-an-sum td { padding: 1px 4px; text-align: center; font-weight: 800; }
+.ch-an-sum td small { display: block; color: #a69c90; font-size: 9px; font-weight: 600; }
+
+.ch-graph { flex: none; width: 100%; height: 56px; border-radius: 8px; cursor: pointer; touch-action: none; }
+
+.ch-an-note { margin: 0; padding: 5px 8px; border-radius: 10px; background: rgba(0, 0, 0, 0.35); font-size: 12px; }
+.ch-an-moves { flex: 1 1 0; }
+
+.ch-an-nav { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.ch-an-nav .ch-btn { min-height: 38px; font-size: 13px; }
+
+@media (min-height: 600px) {
+  .ch-graph { height: 80px; }
+}
+
+@media (orientation: portrait) {
+  .page.ch-analysis-page { --an-side: auto; --an-b: min(calc(100vw - 40px), 60dvh); overflow-y: auto; }
+  .ch-analysis-page .page-head { position: sticky; width: auto; right: auto; background: rgba(20, 14, 10, 0.86); }
+  .ch-analysis { flex-direction: column; height: auto; }
+  .ch-an-side { padding-top: 0; }
+  .ch-an-moves { max-height: 30dvh; }
+}

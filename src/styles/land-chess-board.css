@@ -1,0 +1,198 @@
+/* ---------- Chess board: themed squares, coordinates, gliding pieces, move marks, arrows, promotion, atomic blasts ---------- */
+
+.ch-board {
+  --ch-light: #ecd3a8;
+  --ch-dark: #b07a4b;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 6px;
+  background: repeating-conic-gradient(var(--ch-dark) 0 25%, var(--ch-light) 0 50%) 0 0 / 25% 25%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 14px 34px rgba(0, 0, 0, 0.55);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  container-type: inline-size;
+}
+
+/* wood: a faint grain over the squares */
+.ch-board.cb-wood::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(97deg, rgba(90, 50, 20, 0.07) 0 2px, transparent 2px 7px),
+    repeating-linear-gradient(88deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 11px);
+  pointer-events: none;
+}
+
+.ch-board.live { cursor: pointer; }
+
+.ch-board > .ch-sq,
+.ch-board > .ch-piece {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 12.5%;
+  height: 12.5%;
+  pointer-events: none;
+}
+
+.ch-sq { display: block; }
+.ch-last { background: rgba(255, 214, 64, 0.42); }
+.ch-sel { background: rgba(40, 200, 120, 0.45); }
+.ch-pre { background: rgba(120, 90, 255, 0.4); }
+.ch-pending { background: rgba(64, 196, 255, 0.45); }
+.ch-check { background: radial-gradient(circle, #ff2a2a 0%, rgba(230, 0, 0, 0.75) 30%, rgba(170, 0, 0, 0) 72%); }
+.ch-hill { box-shadow: inset 0 0 0 3px rgba(255, 196, 0, 0.75); background: rgba(255, 196, 0, 0.14); }
+.ch-goal { background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.28) 0 6%, rgba(0, 0, 0, 0.12) 6% 12%); }
+
+/* move targets: a dot on an empty square, a ring round a capture */
+.ch-dot::after {
+  content: '';
+  position: absolute;
+  inset: 36%;
+  border-radius: 50%;
+  background: rgba(20, 30, 20, 0.32);
+}
+
+.ch-ring {
+  background: radial-gradient(transparent 0 70%, rgba(20, 30, 20, 0.32) 71% 100%);
+}
+
+.ch-dot.pre::after { background: rgba(80, 50, 200, 0.4); }
+.ch-ring.pre { background: radial-gradient(transparent 0 70%, rgba(80, 50, 200, 0.4) 71% 100%); }
+
+.ch-piece { z-index: 2; }
+.ch-piece > svg { display: block; filter: drop-shadow(0 1.5px 1px rgba(0, 0, 0, 0.35)); }
+.ch-piece.glide { transition: transform 0.2s cubic-bezier(0.3, 0.7, 0.4, 1); }
+.ch-piece.lifted { opacity: 0.3; }
+
+.ch-ghost {
+  position: fixed;
+  z-index: 60;
+  translate: -50% -58%;
+  pointer-events: none;
+}
+
+.ch-ghost > svg { filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.45)); }
+
+/* coordinates in the corner of the edge squares, in the other square colour */
+.ch-coord {
+  position: absolute;
+  z-index: 1;
+  font: 800 max(8px, 2.6cqi) / 1 system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.ch-coord.file { bottom: 0.6%; margin-left: calc(12.5% - 2.2cqi); }
+.ch-coord.rank { left: 0.7%; margin-top: 0.6%; }
+.ch-coord.on-light { color: var(--ch-dark); }
+.ch-coord.on-dark { color: var(--ch-light); }
+
+.ch-arrows {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.ch-glyph {
+  position: absolute;
+  z-index: 4;
+  min-width: 4.2%;
+  padding: 0.4% 0.8%;
+  translate: -60% -35%;
+  border-radius: 999px;
+  color: #fff;
+  font: 900 max(9px, 2.6cqi) / 1.1 system-ui, sans-serif;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+/* promotion: a column of pieces over the target file */
+.ch-promo-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.ch-promo {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: 12.5%;
+}
+
+.ch-promo-btn {
+  aspect-ratio: 1;
+  padding: 4%;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(#fff 0 55%, #d9d9d9 100%);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: scale 0.12s;
+}
+
+.ch-promo-btn:hover,
+.ch-promo-btn:focus-visible { scale: 1.08; background: radial-gradient(#fff 0 55%, #ffd54f 100%); }
+
+.ch-confirm {
+  position: absolute;
+  left: 50%;
+  bottom: 3%;
+  z-index: 8;
+  display: flex;
+  gap: 10px;
+  translate: -50% 0;
+}
+
+.ch-confirm button {
+  width: 54px;
+  height: 44px;
+  border: 0;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), 0 8px 16px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.ch-confirm-yes { background: #2e9d4f; }
+.ch-confirm-no { background: #c0392b; }
+
+/* atomic: a flash and a ring over the 3x3 blast */
+.ch-blast {
+  position: absolute;
+  z-index: 5;
+  width: 37.5%;
+  height: 37.5%;
+  pointer-events: none;
+}
+
+.ch-blast i { position: absolute; inset: 0; border-radius: 50%; }
+.ch-blast-flash { background: radial-gradient(#fff6c0 0%, #ffb300 35%, rgba(255, 60, 0, 0.6) 60%, transparent 72%); animation: ch-flash 0.6s ease-out both; }
+.ch-blast-ring { box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.8); animation: ch-ring 0.6s ease-out both; }
+
+@keyframes ch-flash {
+  0% { opacity: 1; transform: scale(0.2); }
+  100% { opacity: 0; transform: scale(1.15); }
+}
+
+@keyframes ch-ring {
+  0% { opacity: 0.9; transform: scale(0.3); }
+  100% { opacity: 0; transform: scale(1.4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ch-piece.glide { transition: none; }
+  .ch-blast i { animation-duration: 0.01s; }
+}

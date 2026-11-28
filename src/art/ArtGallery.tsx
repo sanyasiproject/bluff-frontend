@@ -5,7 +5,7 @@ import { BaithakLogo, BaithakWordmark } from './BaithakLogo';
 import { GameArt } from './GameArt';
 import { Icon, ICON_NAMES } from './icons';
 
-const KINDS = ['ludo', 'bluff', 'crazy7', 'rang', 'snakes', 'rmcs', 'darts', 'dots', 'colorwar', 'fruit', 'spikes', 'carrom'] as const;
+const KINDS = ['ludo', 'bluff', 'crazy7', 'rang', 'snakes', 'rmcs', 'darts', 'dots', 'colorwar', 'fruit', 'spikes', 'chess', 'carrom'] as const;
 const row: CSSProperties = { display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 20 };
 
 function Section({ title, children }: { title: string; children: ReactNode }) {

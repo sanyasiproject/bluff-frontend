@@ -15,6 +15,7 @@ export const TABLE_LOADS: Record<PluggedKind, Load> = {
   darts: () => import('./darts/DartsTable').then((m) => m.DartsTable),
   colorwar: () => import('./colorwar/ColorWarTable').then((m) => m.ColorWarTable),
   dots: () => import('./dots/DotsTable').then((m) => m.DotsTable),
+  chess: () => import('./chess/ChessTable').then((m) => m.ChessTable),
 };
 
 const started = new Set<PluggedKind>();

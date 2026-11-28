@@ -19,7 +19,7 @@ autoFullscreen();
 // Hindi, when chosen, is applied over the rendered page
 startI18n();
 
-// dev only: ?art=1 / ?ludoPreview / ?snakesPreview / ?rmcsPreview / ?homePreview / ?lobbyPreview show screens on fake data (no server); dropped from production builds
+// dev only: ?art=1 / ?ludoPreview / ?chessPreview / ?snakesPreview / ?rmcsPreview / ?homePreview / ?lobbyPreview show screens on fake data (no server); dropped from production builds
 const q = new URLSearchParams(location.search);
 const LudoPreview = !import.meta.env.DEV
   ? null
@@ -39,6 +39,8 @@ const LudoPreview = !import.meta.env.DEV
     ? lazy(() => import('./games/fruit/preview').then((m) => ({ default: m.FruitPreview })))
     : q.has('spikesPreview')
     ? lazy(() => import('./games/spikes/preview').then((m) => ({ default: m.SpikesPreview })))
+    : q.has('chessPreview')
+    ? lazy(() => import('./games/chess/preview').then((m) => ({ default: m.ChessPreview })))
     : q.has('rmcsPreview')
     ? lazy(() => import('./games/rmcs/preview').then((m) => ({ default: m.RmcsPreview })))
     : q.has('homePreview')

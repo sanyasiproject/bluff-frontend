@@ -8,6 +8,7 @@ import { fruitRuleLines } from '../games/fruit/FruitRules';
 import { spikesRuleLines } from '../games/spikes/SpikesRules';
 import { dartsRuleLines } from '../games/darts/DartsRules';
 import { dotsRuleLines } from '../games/dots/DotsRules';
+import { BASIC_RULES, VARIANT_RULES } from '../games/chess/rulesText';
 import { colorwarRuleLines } from '../games/colorwar/ColorWarRules';
 import { LUDO_BOARDS, LUDO_DICE, LUDO_GOTIS } from '../games/ludo/looks';
 import {
@@ -57,7 +58,7 @@ import {
   type MissionDef,
   type SecretMissionDef,
 } from '../types';
-import { DM_MAX_LENGTH } from '../types';
+import { CHESS_CATALOG, DM_MAX_LENGTH } from '../types';
 import { MAX_SHIELDS, PASS_SHIELD_COINS, PASS_TIER_XP, PASS_TIERS, PASS_XP } from '../types';
 import { FullPage } from './FullPage';
 
@@ -233,6 +234,24 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             <li>2 to 4 players in turn. Host option: Board (4 × 4, 5 × 5, 6 × 6 boxes). Bots take any box they can, avoid drawing a third side, and on Expert give away the shortest chain.</li>
             <li>At the table: a sheet of graph paper lying on the table. Tap the gap between two dots or drag from dot to dot; a faint line in your colour shows where it will go. Lines grow like a pen stroke; a closed box fills with the owner's colour and initial with a pop and confetti, and "Go again!" shows.</li>
             <li>Box counts sit on each seat. Game over: a podium by boxes (ties share), then the coins screen. Profile 🎮 Games counts boxes closed.</li>
+          </ul>
+        </Section>
+
+        <Section icon="♟️" title="Chess (board game)">
+          <ul>
+            {BASIC_RULES.map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            {Object.entries(VARIANT_RULES).map(([v, lines]) => (
+              <li key={v}>
+                <b>{CHESS_CATALOG.options[0].choices.find((c) => c.value === v)?.label ?? v}:</b> {lines.join(' ')}
+              </li>
+            ))}
+            <li>2 players; more people can join the room as watchers. Host options: Variant (all nine Lichess variants, with a diagram each), Time (Bullet 1+0 2+1, Blitz 3+0 3+2 5+0 5+3, Rapid 10+0 10+5 15+10, Classical 30+0 30+20, Untimed), Rated (only for two logged-in players on a clock; the reason shows when it can't be on), Host plays (Random, White, Black) and Bot level 1–8 (≈ 800 to 2200+) once a bot is seated.</li>
+            <li>At the table: the board fills the height (wood, meadow or ocean board; Staunton or modern pieces, picked in Profile → Looks). Tap–tap or drag; dots and rings show legal moves; last move, check glow, gliding pieces, promotion picker, one premove (tap to cancel) and an optional confirm-move tick. Crazyhouse pockets (tap or drag to drop), three-check counters, the King of the Hill centre and the Racing Kings finish line are marked; atomic captures explode.</li>
+            <li>Player cards: avatar, rating ("?" while provisional), material lead and a big clock (red under 10 s, ticking in bullet and blitz). Moves list, resign (confirm), draw offer, takeback (casual), abort (before both have moved), flip and sound. Watchers see a live eval bar, the engine's best move as an arrow and the top 3 lines, worked out on their own phone.</li>
+            <li>Game end: result and reason, each side's rating change, Rematch (colours swap) and Analyse: the phone's own engine reviews the game in a Web Worker (eval bar and graph, ?! ? ?? marks with the better move as an arrow, accuracy, average loss, the opening, the engine line, PGN copy). Reviews are kept on the phone per game.</li>
+            <li>Ratings: Glicko-2 per perf (Bullet, Blitz, Rapid, Classical for Standard; one each for the other variants), everyone starts at 800. Profile → ♟️ Chess shows each perf's rating, peak, W/L/D, streaks, a rating graph, recent games (tap to analyse) and the top 50 per perf.</li>
           </ul>
         </Section>
 
