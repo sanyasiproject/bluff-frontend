@@ -6,6 +6,7 @@ import { useBack } from '../lib/back';
 import { timeAgo } from '../lib/dates';
 import { levelOf, RANK_SEASON_DROP, SEASON_REMIND_DAY, SEASON_START_DELAY_DAYS, type AdminUser, type AppSettings } from '../types';
 import type { Auth } from '../useAuth';
+import { AdminStats } from './AdminStats';
 import { AdminUserPage } from './AdminUserPage';
 import { BackButton } from './BackButton';
 import { ConfirmBox } from './ConfirmBox';
@@ -217,6 +218,10 @@ export function AdminPanel({ auth, onBack }: { auth: Auth; onBack: () => void })
   const [total, setTotal] = useState(0);
   const [error, setError] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
+  /** Stats first; Users is the search */
+  const [tab, setTab] = useState<'stats' | 'users'>('stats');
+  /** where Stats puts its Refresh button, in the header */
+  const [slot, setSlot] = useState<HTMLSpanElement | null>(null);
   useBack(onBack);
 
   const load = useCallback(
@@ -245,12 +250,28 @@ export function AdminPanel({ auth, onBack }: { auth: Auth; onBack: () => void })
     <main className="screen admin">
       <header className="admin-head">
         <BackButton onClick={onBack} />
-        <h2 className="grow">Admin</h2>
-        <span className="muted small">{total} users</span>
+        <h2>Admin</h2>
+        <div className="mini-seg admin-tabs" role="tablist" aria-label="Admin">
+          <button role="tab" className={cx(tab === 'stats' && 'on')} aria-selected={tab === 'stats'} onClick={() => setTab('stats')}>
+            📊 Stats
+          </button>
+          <button role="tab" className={cx(tab === 'users' && 'on')} aria-selected={tab === 'users'} onClick={() => setTab('users')}>
+            👥 Users
+          </button>
+        </div>
+        <span className="grow" />
+        <span className="admin-head-slot" ref={setSlot} />
+        {tab === 'users' && (
+          <span className="muted small">
+            <span data-no-translate>{total}</span> <span>users</span>
+          </span>
+        )}
       </header>
 
+      {tab === 'stats' && <AdminStats auth={auth} slot={slot} />}
+
       {/* landscape: app switches on the left, the user list on the right */}
-      <div className="lp2-admin">
+      <div className="lp2-admin" hidden={tab !== 'users'}>
         <div className="lp2-admin-side">
           <AppSwitches auth={auth} />
         </div>

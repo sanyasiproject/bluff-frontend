@@ -1931,6 +1931,100 @@ export interface AdminUserDetail {
   activeSessions: number;
 }
 
+/** admin Stats: rooms open now for one game */
+export interface AdminRoomsOfGame {
+  kind: GameKind;
+  playing: number;
+  /** in the lobby or back after a game */
+  lobby: number;
+}
+
+/** admin Stats: what is happening right now, from the server's memory */
+export interface AdminNowStats {
+  /** open connections, people and guests */
+  sockets: number;
+  /** distinct logged-in accounts with the app open */
+  users: number;
+  /** guest connections */
+  guests: number;
+  rooms: { total: number; playing: number; lobby: number; byGame: AdminRoomsOfGame[] };
+  /** people seated at tables (not bots, not watchers) */
+  players: number;
+  watchers: number;
+  bots: number;
+  /** rooms saved in live_rooms and not open here (nobody has rejoined yet) */
+  savedRoomsWaiting: number;
+}
+
+/** admin Stats: one IST day */
+export interface AdminDayStats {
+  /** IST day, YYYY-MM-DD */
+  day: string;
+  /** finished games, all games */
+  games: number;
+  /** finished games of the 14 days' top 5 games (AdminStats.topKinds) */
+  byGame: Partial<Record<GameKind, number>>;
+  newAccounts: number;
+  /** accounts that played that day (today: played or opened the app) */
+  active: number;
+}
+
+/** admin Stats: counts only, never names, emails or addresses (GET /api/admin/stats) */
+export interface AdminStats {
+  /** when this answer was made (ISO) */
+  at: string;
+  /** when the database part was read (ISO); it is kept for ADMIN_STATS_CACHE_SEC */
+  dbAt: string;
+  now: AdminNowStats;
+  today: {
+    /** IST day, YYYY-MM-DD */
+    day: string;
+    finished: number;
+    finishedByGame: Partial<Record<GameKind, number>>;
+    /** games stopped before the end */
+    stopped: number;
+    newAccounts: number;
+    /** distinct accounts that played or opened the app today */
+    active: number;
+    /** coins taken and paid in finished staked games */
+    coinsWon: number;
+    coinsLost: number;
+  };
+  /** the last 14 IST days, oldest first; the last one is today */
+  days: AdminDayStats[];
+  /** the 5 most played games over the 14 days, most first (the keys of AdminDayStats.byGame) */
+  topKinds: GameKind[];
+  totals: {
+    accounts: number;
+    /** saved games (old ones are cleared after GAME_KEEP_DAYS) */
+    games: number;
+    /** finished games over the last 7 IST days, top 5 */
+    topGames7d: { kind: GameKind; games: number }[];
+    chessRated7d: number;
+  };
+  server: {
+    startedAt: string;
+    uptimeSec: number;
+    rssMb: number;
+    heapUsedMb: number;
+    heapTotalMb: number;
+    node: string;
+    /** RENDER_GIT_COMMIT, short; null when not set */
+    commit: string | null;
+    /** rooms brought back from live_rooms since start */
+    roomsRestored: number;
+    /** unexpected errors caught by safe() since start */
+    caughtErrors: number;
+    /** the most open connections from one network right now */
+    maxSocketsPerIp: number;
+  };
+}
+
+/** seconds the database part of admin Stats is kept */
+export const ADMIN_STATS_CACHE_SEC = 60;
+/** days in the admin Stats chart */
+export const ADMIN_STATS_DAYS = 14;
+
 export interface FriendView {
   id: string;
   username: string;
