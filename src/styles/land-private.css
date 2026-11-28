@@ -199,3 +199,15 @@
   max-width: min(460px, calc(100vw - 24px));
   text-align: left;
 }
+
+/* upright-window lobby: the lock chip and presets sit in one row under the header */
+.lobby-private-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 12px;
+}
+.lobby-private-row:empty {
+  display: none;
+}

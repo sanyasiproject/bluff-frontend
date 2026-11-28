@@ -43,6 +43,8 @@ import { Avatar } from './Avatar';
 import { LiveMark, LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { useOnlineFriends } from '../lib/onlineFriends';
 import { MuteMark } from './MuteButton';
+import { LockChip } from './RoomVote';
+import { PresetsButton } from './RoomPresets';
 
 /** a player's division and tier, small, for lobby rows at a ranked table */
 function RankMini({ rank }: { rank: NonNullable<PublicPlayer['rank']> }) {
@@ -614,6 +616,11 @@ export function Lobby({ view, actions, auth, nudged = null }: { view: RoomView; 
 
       {/* everyone sees at a glance whether this table is ranked or just for fun (older servers: nothing) */}
       {modeBanner}
+      {/* PIN lock for everyone to see, presets for the host (same pieces as the landscape lobby) */}
+      <div className="lobby-private-row">
+        <LockChip view={view} actions={actions} isHost={isHost} />
+        {isHost && <PresetsButton view={view} actions={actions} auth={auth} />}
+      </div>
       {liveVoice}
       {invite}
       {modeRow}
