@@ -37,10 +37,11 @@ import * as fairplay from './hi.fairplay';
 import * as adminStats from './hi.adminStats';
 import * as offline from './hi.offline';
 import * as privateRooms from './hi.private';
+import * as splitLines from './hi.splitLines';
 import type { Dict, Pattern } from './types';
 
 // later files win on the same exact line
-const dicts: Dict[] = [privateRooms.D, offline.D, adminStats.D, gridGames.D, newGames.D, chess.D, chessRules.D, common.D, fruitSpikes.D, dartsDots.D, cards.D, titles.D, home.D, lobby1.D, lobby2.D, table.D, over.D, crazy7.D, rang.D, profile.D, social.D, missions.D, shop.D, league.D, extra.D, land.D, landHome.D, landLobby.D, landPages.D, landPages2.D, landOverlays.D, landTable.D, landC7.D, landRang.D, games2.D, ludo.D, errors.D, fairplay.D];
+const dicts: Dict[] = [privateRooms.D, offline.D, adminStats.D, gridGames.D, newGames.D, chess.D, chessRules.D, common.D, fruitSpikes.D, dartsDots.D, cards.D, titles.D, home.D, lobby1.D, lobby2.D, table.D, over.D, crazy7.D, rang.D, profile.D, social.D, missions.D, shop.D, league.D, extra.D, land.D, landHome.D, landLobby.D, landPages.D, landPages2.D, landOverlays.D, landTable.D, landC7.D, landRang.D, games2.D, ludo.D, errors.D, fairplay.D, splitLines.D];
 
 export const HI_DICT = new Map<string, string>(dicts.flatMap((d) => Object.entries(d)));
 
@@ -61,6 +62,8 @@ export const HI_PATTERNS: Pattern[] = [
   ...dartsDots.P,
   ...gridGames.P,
   ...newGames.P,
+  // after the chess and grid lines, whose "You are White" / "You are X" win
+  ...splitLines.P,
   ...crazy7.P,
   ...over.P,
   ...lobby2.P,

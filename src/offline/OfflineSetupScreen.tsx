@@ -206,7 +206,7 @@ function SeatRow({ kind, seat, color, index, canRemove, onChange, onSwap, onRemo
         <select className="off-select grow" aria-label="Computer level" value={String(seat.bot)} onChange={(e) => onChange({ ...seat, bot: (levels.find((l) => String(l.value) === e.target.value)?.value ?? levels[0].value) as SeatLevel })}>
           {levels.map((l) => (
             <option key={String(l.value)} value={String(l.value)}>
-              🤖 {l.label}
+              {`🤖 ${l.label}`}
             </option>
           ))}
         </select>

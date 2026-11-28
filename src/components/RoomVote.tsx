@@ -103,7 +103,7 @@ export function VoteBanner({ view, actions }: { view: RoomView | null; actions: 
             </button>
           </span>
         ) : (
-          v.myVote !== null && <span className="muted small">You voted {v.myVote ? 'yes' : 'no'}</span>
+          v.myVote !== null && <span className="muted small">{`You voted ${v.myVote ? 'yes' : 'no'}`}</span>
         )}
       </div>
     </div>

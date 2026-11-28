@@ -14,7 +14,7 @@ export function LessonOffer({ game, onPractice, onSkip }: { game: GameKind; onPr
           {gameInfo(game).emoji}
         </span>
         <h3>First time playing {gameName(game)}?</h3>
-        <p className="muted">{game === 'ludo' ? 'Learn it in 1 minute: a short walk round the board.' : sheetOnly ? 'The rules in 30 seconds.' : 'Learn it in 1 minute with a practice game against Raju 🤖.'}{' '}You can open it again any time from 📘 How to play.</p>
+        <p className="muted">{`${game === 'ludo' ? 'Learn it in 1 minute: a short walk round the board.' : sheetOnly ? 'The rules in 30 seconds.' : 'Learn it in 1 minute with a practice game against Raju 🤖.'} You can open it again any time from 📘 How to play.`}</p>
         <div className="confirm-actions">
           <button className="btn ghost" onClick={onSkip}>
             Skip

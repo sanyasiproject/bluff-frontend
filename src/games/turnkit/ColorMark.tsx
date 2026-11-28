@@ -54,7 +54,7 @@ export function YouAreBanner({ color, name, icon, on }: { color: string; name: s
   return (
     <div className="cm-youare" style={{ '--cm': color } as CSSProperties} role="status">
       {icon ?? <i className="cm-dot" aria-hidden />}
-      <b>You are {name}</b>
+      <b>{`You are ${name}`}</b>
     </div>
   );
 }

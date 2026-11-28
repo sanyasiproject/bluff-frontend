@@ -131,7 +131,7 @@ function DotsTableInner({ view, actions, bubbles, auth, notes = [], dv }: TableP
                 onTap={p && p.id !== view.meId ? () => base.setTarget(p.id) : undefined}
                 big={score(id)}
                 bigKey={score(id)}
-                label={<>{iconOf(id)} box{score(id) === 1 ? '' : 'es'}</>}
+                label={`${iconOf(id)} box${score(id) === 1 ? '' : 'es'}`}
                 turnText="Drawing"
                 chip
                 icon={<span className="cm-emoji">{iconOf(id)}</span>}

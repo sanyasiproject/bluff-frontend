@@ -12,7 +12,7 @@ export function RulesSheet({ game, onDone, onClose }: { game: PluggedKind; onDon
         <span className="tut-offer-emoji" aria-hidden>
           {info.emoji}
         </span>
-        <h3>How to play {info.name}</h3>
+        <h3>{`How to play ${info.name}`}</h3>
         <div className="muted small rules-sheet-body">{Rules ? <Rules /> : <p>{info.tagline}</p>}</div>
         <button className="btn primary block" onClick={onDone}>
           Got it

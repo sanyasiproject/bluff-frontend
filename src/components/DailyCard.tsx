@@ -157,7 +157,7 @@ function SpinSheet({ auth, onClose }: { auth: Auth; onClose: () => void }) {
             <button className="btn primary block shine" disabled={state === 'spinning'} onClick={() => void spin()}>
               {state === 'spinning' ? 'Spinning…' : '🎡 Spin'}
             </button>
-            <p className="muted small">One free spin every day · up to 🪙 {formatCoins(TOP_PRIZE)}</p>
+            <p className="muted small">{`One free spin every day · up to 🪙 ${formatCoins(TOP_PRIZE)}`}</p>
           </>
         )}
       </div>

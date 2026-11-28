@@ -9,7 +9,7 @@ export function OfflineEntry({ big, onOpen }: { big: boolean; onOpen: () => void
   return (
     <button className={cx('off-entry', noNet && 'big')} onClick={onOpen}>
       {noNet && <span className="off-entry-lead">No internet? Play on this phone</span>}
-      <span className="off-entry-main">📴 {resume ? 'Resume offline game' : 'Play offline (one phone)'}</span>
+      <span className="off-entry-main">{`📴 ${resume ? 'Resume offline game' : 'Play offline (one phone)'}`}</span>
     </button>
   );
 }

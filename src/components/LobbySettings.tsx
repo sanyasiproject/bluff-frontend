@@ -549,7 +549,7 @@ export function SettingsBody({ view, isHost, coinsOn, tab, set, onLesson }: Body
       )}
       {show('help') && (
       <details className="panel rules" open={land || undefined}>
-        <summary>How to play {info.name}</summary>
+        <summary>{`How to play ${info.name}`}</summary>
         {plugged ? (
           <PluggedHelp view={view} />
         ) : rang ? (
