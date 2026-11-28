@@ -54,6 +54,16 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
   const boxKey = JSON.stringify(boxes);
   const reaches = useMemo(() => reachesOf(n, boxes), [n, boxKey]);
   const free = useMemo(() => freeCells(n, boxes), [n, boxKey]);
+  // a crate shift that just landed: each crate slides from its old square (same index order)
+  const landing = useRef<{ key: string; from: Cell[]; seq: number }>({ key: boxKey, from: boxes, seq: 0 });
+  const nextWas = useRef<string>('');
+  if (landing.current.key !== boxKey) {
+    const old = JSON.parse(landing.current.key) as Cell[];
+    // only a shift we warned about slides; anything else snaps
+    const slid = nextWas.current === boxKey && old.length === boxes.length;
+    landing.current = { key: boxKey, from: slid ? old : boxes, seq: landing.current.seq + 1 };
+  }
+  nextWas.current = sv.boxesNext ? JSON.stringify(sv.boxesNext) : '';
   const cbs = useRef({ onStrike, onThud, onHit, onTick, sv, posOf, reaches });
   cbs.current = { onStrike, onThud, onHit, onTick, sv, posOf, reaches };
 
@@ -132,10 +142,15 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
   const warned = new Set(live.filter((w) => w.strikeAt > t).map((w) => w.dir));
   const mine = sv.lives[meId] ? posOf(meId) : null;
   const myDanger = mine ? live.filter((w) => w.strikeAt > t && hitBy(n, reaches[w.dir], w.dir, mine)) : [];
+  // a crate shift on the way: ghost outlines fill up until the crates land
+  const ghosts = sv.boxesNext && (sv.boxesAt ?? 0) > t - 200 ? sv.boxesNext : [];
+  const shiftLeft = Math.max(0, (sv.boxesAt ?? 0) - t);
+  const shiftK = Math.min(1, 1 - shiftLeft / 2000);
+  const shiftSec = Math.max(1, Math.ceil(shiftLeft / 1000));
   const myLeft = myDanger.length ? Math.min(...myDanger.map((w) => w.strikeAt - t)) : 0;
 
   return (
-    <div className="sp-arena" style={{ '--n': n } as CSSProperties}>
+    <div className={cx('sp-arena', n >= 10 && 'small')} style={{ '--n': n } as CSSProperties}>
       <Tiles n={n} />
       <div className="sp-slots" aria-hidden>
         {DIRS.map((d) => (
@@ -169,11 +184,26 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
           </div>
         );
       })}
-      {boxes.map(([c, r]) => (
-        <i key={`b${c},${r}`} className={cx('sp-box', struck.has(`${c},${r}`) && 'thud')} style={rect({ x: c, y: r, w: 1, h: 1 })} aria-hidden>
-          <i className="sp-box-face" />
+      {boxes.map(([c, r], i) => {
+        const [fc, fr] = landing.current.from[i] ?? [c, r];
+        const moved = fc !== c || fr !== r;
+        const st = { ...rect({ x: c, y: r, w: 1, h: 1 }), '--fx': fc - c, '--fy': fr - r } as CSSProperties;
+        return (
+          <i key={moved ? `b${i}-${landing.current.seq}` : `b${i}`} className={cx('sp-box', struck.has(`${c},${r}`) && 'thud', moved && 'slid', ghosts.length > 0 && 'leaving')} style={st} aria-hidden>
+            <i className="sp-box-face" />
+          </i>
+        );
+      })}
+      {ghosts.map(([c, r], i) => (
+        <i key={`g${c},${r}`} className="sp-ghost" style={{ ...rect({ x: c, y: r, w: 1, h: 1 }), '--gk': shiftK, '--gd': i * 0.05 } as CSSProperties} aria-hidden>
+          <i className="sp-ghost-fill" />
         </i>
       ))}
+      {ghosts.length > 0 && (
+        <b key={shiftSec} className="sp-shift-note" aria-live="polite">
+          {`📦 Crates move · ${shiftSec}`}
+        </b>
+      )}
       {flying.current.map((f) => {
         const age = pnow - f.born;
         const p = age < SHOOT_MS ? easeOut(age / SHOOT_MS) : age < SHOOT_MS + HOLD_MS ? 1 : Math.max(0, 1 - (age - SHOOT_MS - HOLD_MS) / BACK_MS);

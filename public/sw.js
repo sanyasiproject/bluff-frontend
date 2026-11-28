@@ -1,5 +1,6 @@
 // Makes Game Baithak Wide installable and able to open without network; game data always comes live from the server
-const CACHE = 'bluff-shell-v1';
+// the build stamps a new name in (vite.config.ts swVersion), so a deploy drops the old cache on activate
+const CACHE = 'bluff-shell-__BUILD__';
 const MAX_ENTRIES = 40;
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -28,6 +29,20 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
   // avatar pictures use the browser's own cache, so they never push the app's files out of this one
   if (url.pathname.startsWith('/avatars/')) return;
+  // built files have their hash in the name and never change: cache first, so a reopened app starts at once
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(
+      caches.match(request).then(
+        (hit) =>
+          hit ||
+          fetch(request).then((response) => {
+            if (response.ok) event.waitUntil(remember(request, response.clone()));
+            return response;
+          }),
+      ),
+    );
+    return;
+  }
   event.respondWith(
     fetch(request)
       .then((response) => {

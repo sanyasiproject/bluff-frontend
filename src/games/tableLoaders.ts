@@ -16,6 +16,12 @@ export const TABLE_LOADS: Record<PluggedKind, Load> = {
   colorwar: () => import('./colorwar/ColorWarTable').then((m) => m.ColorWarTable),
   dots: () => import('./dots/DotsTable').then((m) => m.DotsTable),
   chess: () => import('./chess/ChessTable').then((m) => m.ChessTable),
+  carrom: () => import('./carrom/CarromTable').then((m) => m.CarromTable),
+  bomb: () => import('./bomb/BombTable').then((m) => m.BombTable),
+  seabattle: () => import('./seabattle/SeaTable').then((m) => m.SeaTable),
+  gomoku: () => import('./gomoku/GomokuTable').then((m) => m.GomokuTable),
+  uttt: () => import('./uttt/UtttTable').then((m) => m.UtttTable),
+  wordhunt: () => import('./wordhunt/WordHuntTable').then((m) => m.WordHuntTable),
 };
 
 const started = new Set<PluggedKind>();

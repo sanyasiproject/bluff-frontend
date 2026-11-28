@@ -5,6 +5,7 @@ import '../../styles/land-arcade.css';
 import '../../styles/land-spikes.css';
 import '../../styles/land-spikes-walls.css';
 import '../../styles/land-spikes-temple.css';
+import '../../styles/land-spikes-shift.css';
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from 'react';
 import { LevelUp } from '../../components/LevelUp';
 import { LiveVoiceButtons, LiveVoiceNotice } from '../../components/LiveVoice';
@@ -257,14 +258,14 @@ function SpikesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
     const n = Math.max(0, sv.lives[id] ?? 0);
     return '❤️'.repeat(n) + '🖤'.repeat(Math.max(0, SPIKES_LIVES - n));
   };
-  const status = !playing ? '' : sv.phase === 'countdown' ? 'Get ready…' : !me ? '👀 Watching' : myLives <= 0 ? '👻 You are out · watching' : ranOnce ? 'Hide behind a crate!' : '🕹️ Drag anywhere to run';
+  const status = !playing ? '' : sv.phase === 'countdown' ? 'Get ready…' : !me ? '👀 Watching' : myLives <= 0 ? '👻 You are out · watching' : sv.boxesNext ? '📦 Crates are moving: get off the ghosts!' : ranOnce ? 'Hide behind a crate!' : '🕹️ Drag anywhere to run';
   const infoMine = me && (
     <p className="tinfo-counts">
       <span>{`❤️ ${myLives} of ${SPIKES_LIVES} lives`}</span>
       <span>{`🟥 Arena ${sv.size} × ${sv.size}`}</span>
     </p>
   );
-  const tips = ['A whole side fires at 0: the spikes stop at the crates, so stand behind one on the far side', 'Crates are solid: run round them', 'Drag anywhere: a joystick appears under your thumb (arrow keys / WASD on a keyboard)', 'After a hit you are safe for a second'];
+  const tips = ['A whole side fires at 0: the spikes stop at the crates, so stand behind one on the far side', 'Crates are solid: run round them', 'Drag anywhere: a joystick appears under your thumb (arrow keys / WASD on a keyboard)', 'After a hit you are safe for a second', 'On 8 × 8 and bigger the crates move now and then: keep off the dashed squares'];
   const alive = order.filter((id) => (sv.lives[id] ?? 0) > 0);
   const seatOf = (id: string) => {
     const p = view.players.find((x) => x.id === id);
@@ -290,7 +291,7 @@ function SpikesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
   };
 
   return (
-    <main ref={tableRef} className={cx('table lu-table ar-table sp-table', live && 'sp-live')} style={{ '--my-col': colorOf(view.meId) } as CSSProperties} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
+    <main ref={tableRef} className={cx('table lu-table ar-table sp-table', live && 'sp-live', joy && 'sp-held')} style={{ '--my-col': colorOf(view.meId) } as CSSProperties} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
       <div className="sp-room" aria-hidden />
       <div className="ar-seats ar-left sp-seats">{leftSeats.map((id) => seatOf(id))}</div>
       <div className="ar-seats ar-right sp-seats sp-right">{rightSeats.map((id) => seatOf(id))}</div>

@@ -1,0 +1,259 @@
+/* ---------- Sea Battle: a navy room, the target sea big in the middle, mini seas on the seat cards, ships, shots and powers ---------- */
+
+.table.pr-wide.sb-table {
+  --pr-below: 44px;
+}
+
+.sb-table .sb-room {
+  background:
+    radial-gradient(40% 70% at 50% 50%, rgba(80, 180, 255, 0.22), transparent 72%),
+    radial-gradient(120% 110% at 50% 55%, transparent 45%, rgba(0, 0, 0, 0.75) 100%),
+    linear-gradient(180deg, #0b2440 0%, #081a30 60%, #050f1e 100%);
+}
+
+.sb-stage {
+  perspective: none;
+}
+
+.sb-sea {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overflow: visible;
+}
+
+.sb-stage > .sb-sea {
+  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.6));
+}
+
+.sb-water {
+  fill: #0e5a8f;
+  stroke: #072b45;
+  stroke-width: 0.12;
+}
+
+.sb-sea.small .sb-water {
+  stroke-width: 0.3;
+}
+
+.sb-waves path {
+  fill: none;
+  stroke: #cdeeff;
+  stroke-opacity: 0.16;
+  stroke-width: 0.06;
+  animation: sb-wave 6s ease-in-out infinite alternate;
+}
+
+.sb-waves path:nth-child(2n) {
+  animation-duration: 7.5s;
+  animation-delay: -2s;
+}
+
+@keyframes sb-wave {
+  to { transform: translateX(0.5px) translateY(0.12px); }
+}
+
+.sb-lines path {
+  stroke: #bfe9ff;
+  stroke-opacity: 0.28;
+  stroke-width: 0.025;
+}
+
+.sb-sea.small .sb-lines path {
+  stroke-opacity: 0.16;
+  stroke-width: 0.06;
+}
+
+.sb-labels text {
+  fill: #d6f0ff;
+  font: 800 0.42px system-ui, sans-serif;
+}
+
+/* ships */
+.sb-hull { fill: #90a4ae; stroke: #263238; stroke-width: 0.04; }
+.sb-hull-shadow { fill: #000; opacity: 0.3; }
+.sb-deckline { stroke: #cfd8dc; stroke-width: 0.03; stroke-opacity: 0.6; }
+.sb-house { fill: #607d8b; stroke: #37474f; stroke-width: 0.02; }
+.sb-gun { fill: #455a64; }
+.sb-barrel { stroke: #37474f; stroke-width: 0.06; stroke-linecap: round; }
+.sb-mast { fill: #eceff1; }
+.sb-crack { fill: none; stroke: #111; stroke-width: 0.05; }
+.sb-ship.sunk .sb-hull { fill: #3e4b52; }
+.sb-ship.sunk { opacity: 0.85; }
+.sb-ship.bad .sb-hull { fill: #ef5350; stroke: #b71c1c; }
+.sb-ship.lifted { opacity: 0.85; filter: drop-shadow(0 0.15px 0.2px rgba(0, 0, 0, 0.6)); }
+
+.sb-ship.sinking {
+  animation: sb-sink 1.4s ease-in both;
+}
+
+@keyframes sb-sink {
+  0% { opacity: 1; }
+  30% { transform: translateY(0.05px) rotate(0.6deg); }
+  100% { opacity: 0.85; }
+}
+
+/* shots */
+.sb-miss { fill: none; stroke: #fff; stroke-width: 0.06; opacity: 0.85; }
+.sb-sea.small .sb-miss { stroke-width: 0.12; }
+.sb-fireglow { fill: #ff6d00; opacity: 0.35; }
+.sb-flame { fill: #ff7043; stroke: #ffd54a; stroke-width: 0.03; }
+.sb-hit.sunk .sb-fireglow { fill: #212121; opacity: 0.5; }
+.sb-hit.sunk .sb-flame { fill: #6d4c41; stroke: none; }
+.sb-smoke { fill: #455a64; opacity: 0.6; animation: sb-smoke 2.2s ease-out infinite; }
+
+.sb-hit:not(.sunk) .sb-flame {
+  animation: sb-flicker 0.4s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+@keyframes sb-flicker {
+  to { transform: scaleY(1.15) scaleX(0.92); }
+}
+
+@keyframes sb-smoke {
+  0% { transform: translate(0, 0.1px); opacity: 0; }
+  30% { opacity: 0.6; }
+  100% { transform: translate(0.15px, -0.4px); opacity: 0; }
+}
+
+.sb-fx { pointer-events: none; }
+.sb-ring { fill: none; stroke: #fff; stroke-width: 0.08; animation: sb-splash 0.9s ease-out both; transform-box: fill-box; transform-origin: center; }
+.sb-flash { fill: #ffd54a; animation: sb-flash 0.7s ease-out both; transform-box: fill-box; transform-origin: center; }
+.sb-fx.splash, .sb-fx.boom { animation: none; }
+
+@keyframes sb-splash {
+  from { transform: scale(0.2); opacity: 1; }
+  to { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes sb-flash {
+  from { transform: scale(0.3); opacity: 1; }
+  to { transform: scale(2); opacity: 0; }
+}
+
+/* radar counts */
+.sb-radar rect { fill: rgba(105, 240, 174, 0.14); stroke: #69f0ae; stroke-width: 0.06; stroke-dasharray: 0.2 0.12; }
+.sb-radar text { fill: #b9f6ca; font: 900 0.9px system-ui, sans-serif; text-anchor: middle; }
+.sb-sea.small .sb-radar text { font-size: 1.6px; }
+
+/* aiming */
+.sb-sea.live .sb-hit-area { cursor: crosshair; }
+.sb-cross circle, .sb-mark circle { fill: none; stroke: #ff5252; stroke-width: 0.07; }
+.sb-cross path, .sb-mark path { stroke: #ff5252; stroke-width: 0.07; stroke-linecap: round; }
+.sb-mark circle { fill: rgba(255, 82, 82, 0.25); }
+.sb-aim-radar { fill: rgba(105, 240, 174, 0.2); stroke: #69f0ae; stroke-width: 0.07; }
+.sb-aim-row rect { fill: rgba(255, 213, 74, 0.2); stroke: #ffd54a; stroke-width: 0.05; }
+.sb-aim-row path { fill: none; stroke: #ffd54a; stroke-width: 0.08; stroke-linecap: round; }
+
+/* whose sea the big one is */
+.sb-whose {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(5, 15, 30, 0.75);
+  box-shadow: inset 0 0 0 1.5px var(--pc, #fff);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* the bar under the board: Shuffle / Ready, or the powers */
+.sb-below {
+  position: absolute;
+  left: 50%;
+  bottom: max(4px, env(safe-area-inset-bottom));
+  translate: -50% 0;
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  height: 38px;
+}
+
+.sb-table.placing .sb-below {
+  bottom: max(6px, env(safe-area-inset-bottom));
+}
+
+.sb-btn, .sb-power {
+  height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #37516b, #1d3247);
+  color: #fff;
+  font-weight: 900;
+  font-size: 13px;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.18), 0 4px 10px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+.sb-btn.go { background: linear-gradient(180deg, #00c853, #00873a); }
+.sb-btn.go.bad { background: linear-gradient(180deg, #8d6e63, #5d4037); }
+.sb-btn:disabled { opacity: 0.7; }
+.sb-place-hint { color: #cfe8ff; font-size: 12px; font-weight: 700; white-space: nowrap; }
+
+.sb-powers { display: flex; gap: 6px; align-items: center; }
+.sb-power i { font-style: normal; margin-right: 4px; }
+.sb-power.on { background: linear-gradient(180deg, #ffd54a, #ff9100); color: #3b1f00; }
+.sb-power:disabled { opacity: 0.55; }
+.sb-power-hint { color: #ffe082; font-size: 11px; font-weight: 700; max-width: 220px; line-height: 1.15; }
+
+/* mini seas on the seat cards */
+.sb-mini {
+  position: relative;
+  display: block;
+  width: clamp(54px, 19dvh, 120px);
+  aspect-ratio: 1;
+  margin: 2px auto 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+
+.sb-seat.targeted .sb-mini {
+  outline: 2px solid #ff5252;
+  outline-offset: 1px;
+}
+
+.sb-arrow {
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  font-style: normal;
+  font-size: 16px;
+  animation: sb-pop 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes sb-pop {
+  to { transform: scale(1.25); }
+}
+
+.sb-seat.shot-at .pr-seat-inner {
+  box-shadow: 0 0 0 2px #ff5252, 0 0 14px rgba(255, 82, 82, 0.6);
+}
+
+.sb-held {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sb-waves path,
+  .sb-smoke,
+  .sb-hit:not(.sunk) .sb-flame,
+  .sb-ship.sinking,
+  .sb-ring,
+  .sb-flash,
+  .sb-arrow {
+    animation: none;
+  }
+}

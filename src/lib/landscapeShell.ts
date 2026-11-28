@@ -3,6 +3,8 @@
 // always sees a landscape screen; with the rotation lock on, the player just holds the phone sideways.
 
 const SHORT_SIDE_MAX = 1100;
+/** the night colour behind everything (manifest theme and background colour) */
+const NIGHT = '#120b2e';
 /** messages between the game (inside) and the shell */
 export const SHELL_FULLSCREEN = 'bluff:fullscreen';
 export const SHELL_FS_STATE = 'bluff:fs';
@@ -36,17 +38,20 @@ export function wantsShell() {
 export function startShell() {
   // the first intro (index.html, drawn sideways by CSS) stays until the game inside has loaded, so there's no blank moment
   const root = document.getElementById('root');
-  Object.assign(document.documentElement.style, { height: '100%', background: '#020604' });
-  Object.assign(document.body.style, { margin: '0', height: '100%', overflow: 'hidden', background: '#020604' });
+  Object.assign(document.documentElement.style, { height: '100%', background: NIGHT });
+  Object.assign(document.body.style, { margin: '0', height: '100%', overflow: 'hidden', background: NIGHT });
 
-  // the notch and home bar stay outside the game; the game may hang over the box's edges while the phone's bars peek in
+  // the box covers the whole screen; the game is placed in it by hand (fit), so the phone's bars only ever lie over it
   const box = document.createElement('div');
-  box.style.cssText =
-    'position:fixed;z-index:10;top:env(safe-area-inset-top);bottom:env(safe-area-inset-bottom);left:env(safe-area-inset-left);right:env(safe-area-inset-right);overflow:visible;opacity:0;transition:opacity .25s ease';
+  box.style.cssText = `position:fixed;z-index:10;inset:0;overflow:hidden;background:${NIGHT};opacity:0;transition:opacity .25s ease`;
+  // reads the safe-area insets (notch, status bar, home bar) in px
+  const probe = document.createElement('div');
+  probe.style.cssText =
+    'position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
   const frame = document.createElement('iframe');
   frame.title = 'Game Baithak';
   frame.allow = 'fullscreen; microphone; autoplay; clipboard-write; web-share';
-  frame.style.cssText = 'position:absolute;left:0;top:0;border:0;transform-origin:50% 50%;background:#020604';
+  frame.style.cssText = `position:absolute;left:0;top:0;border:0;transform-origin:50% 50%;background:${NIGHT};color-scheme:dark`;
 
   // the game gets the invite link (?room=) and keeps it; the shell's own address drops it so a reload doesn't join again
   const url = new URL(location.href);
@@ -55,10 +60,10 @@ export function startShell() {
   if (new URLSearchParams(location.search).has('room')) history.replaceState(null, '', location.pathname + location.hash);
 
   box.appendChild(frame);
+  document.body.appendChild(probe);
   document.body.appendChild(box);
   frame.addEventListener('load', () => {
     // the game's own intro is up: show it and drop the first one
-    box.style.background = '#020604';
     box.style.opacity = '1';
     setTimeout(() => root?.replaceChildren(), 300);
   }, { once: true });
@@ -66,66 +71,104 @@ export function startShell() {
   // which way the phone is held: 90 = left side down (the usual), -90 = right side down
   let side = 90;
   /**
-   * the size the game is laid out at. When the phone's bars peek in (pulling down the time and notifications,
-   * the back-gesture bar) the space shrinks for a moment: the game keeps its size and the bars just lie over it,
-   * like a native game. Only a smaller space that is still there a few seconds later (full screen really ended) counts.
+   * The phone's bars (status bar, back-gesture bar) come and go over the game like in a native game: the game never
+   * shrinks or moves for them. Insets only grow while bars show, so the smallest seen since the last turn is the
+   * notch alone. A shorter screen counts only in a browser tab that stays shorter (full screen really ended).
    */
+  let pad = { t: 0, r: 0, b: 0, l: 0 };
   let held = { w: 0, h: 0, upright: false };
   let shrinkTimer: number | null = null;
   const SHRINK_WAIT = 2600;
+  /** the bars stayed out in the installed app: the next tap asks for full screen again */
+  let stuck = false;
+  const insets = () => {
+    const s = getComputedStyle(probe);
+    return { t: parseFloat(s.paddingTop) || 0, r: parseFloat(s.paddingRight) || 0, b: parseFloat(s.paddingBottom) || 0, l: parseFloat(s.paddingLeft) || 0 };
+  };
   const place = () => {
-    const { w, h, upright } = held;
-    const fw = upright ? h : w;
-    const fh = upright ? w : h;
+    const w = held.w - pad.l - pad.r;
+    const h = held.h - pad.t - pad.b;
+    const fw = held.upright ? h : w;
+    const fh = held.upright ? w : h;
     frame.style.width = `${fw}px`;
     frame.style.height = `${fh}px`;
-    // centred on the held space, from the box's top left, so a shrinking box doesn't move or resize the game
-    frame.style.transform = `translate(${w / 2 - fw / 2}px, ${h / 2 - fh / 2}px) rotate(${upright ? side : 0}deg)`;
+    // centred on the space inside the notch, from the screen's top left
+    frame.style.transform = `translate(${pad.l + w / 2 - fw / 2}px, ${pad.t + h / 2 - fh / 2}px) rotate(${held.upright ? side : 0}deg)`;
   };
+  /** just turned round (maybe 180°): insets are read fresh for a moment */
+  let freshUntil = 0;
+  let queued = 0;
   const fit = () => {
-    const r = box.getBoundingClientRect();
-    // a box with no size yet (mid-rotation on some tablets): try again next frame
-    if (r.width < 2 || r.height < 2) {
-      requestAnimationFrame(fit);
+    queued = 0;
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    // no size yet (mid-rotation on some tablets): try again next frame
+    if (W < 2 || H < 2) {
+      queued = requestAnimationFrame(fit);
       return;
     }
-    const upright = r.height > r.width;
-    const grew = r.width >= held.w - 0.5 && r.height >= held.h - 0.5;
-    if (upright !== held.upright || held.w === 0 || grew) {
-      // turned, first fit, or more room (full screen came on): take it at once
-      if (shrinkTimer !== null) {
-        clearTimeout(shrinkTimer);
-        shrinkTimer = null;
-      }
-      held = { w: r.width, h: r.height, upright };
+    const upright = H > W;
+    const now = insets();
+    const turned = upright !== held.upright || held.w === 0 || performance.now() < freshUntil;
+    // a new way round starts fresh: the notch may be on the other side now
+    pad = turned
+      ? now
+      : { t: Math.min(pad.t, now.t), r: Math.min(pad.r, now.r), b: Math.min(pad.b, now.b), l: Math.min(pad.l, now.l) };
+    stuck = installed() && (now.t > pad.t || now.b > pad.b || now.r > pad.r || now.l > pad.l);
+    if (turned || (W >= held.w - 0.5 && H >= held.h - 0.5)) {
+      // turned, first fit, or as much room as before or more: take it at once
+      if (shrinkTimer !== null) clearTimeout(shrinkTimer);
+      shrinkTimer = null;
+      held = { w: W, h: H, upright };
       place();
       return;
     }
-    // less room: wait and see whether the bars go away again
+    // less room: keep the game's size (the bars lie over it)
+    place();
+    if (installed()) {
+      stuck = true;
+      return;
+    }
+    // in a browser tab, a screen that stays shorter (the address bar is back) is the new size
     if (shrinkTimer === null) {
       shrinkTimer = window.setTimeout(() => {
         shrinkTimer = null;
-        const now = box.getBoundingClientRect();
-        held = { w: now.width, h: now.height, upright: now.height > now.width };
-        place();
+        if (window.innerWidth < held.w - 0.5 || window.innerHeight < held.h - 0.5) {
+          held = { w: window.innerWidth, h: window.innerHeight, upright: window.innerHeight > window.innerWidth };
+          place();
+        }
       }, SHRINK_WAIT);
     }
+  };
+  // one measure per frame, however many resize-type events arrive
+  const refit = () => {
+    if (!queued) queued = requestAnimationFrame(fit);
   };
   // tablets report the new size at different moments while turning, so watch the box itself and check again for a while
   const settle = () => {
     const end = performance.now() + 800;
     const tick = () => {
-      fit();
+      refit();
       if (performance.now() < end) requestAnimationFrame(tick);
     };
     tick();
   };
   fit();
-  new ResizeObserver(fit).observe(box);
+  new ResizeObserver(refit).observe(box);
   window.addEventListener('resize', settle);
-  window.addEventListener('orientationchange', settle);
+  const angle = () => screen.orientation?.angle ?? Number((window as Window & { orientation?: number }).orientation ?? 0);
+  let lastAngle = angle();
+  const turnedRound = () => {
+    // only a real turn of the phone, not a size change reported as one
+    if (angle() !== lastAngle) freshUntil = performance.now() + 800;
+    lastAngle = angle();
+    settle();
+  };
+  window.addEventListener('orientationchange', turnedRound);
   window.visualViewport?.addEventListener('resize', settle);
-  (screen.orientation as ScreenOrientation | undefined)?.addEventListener?.('change', settle);
+  (screen.orientation as ScreenOrientation | undefined)?.addEventListener?.('change', turnedRound);
+  // the insets change on their own when the bars come and go
+  new ResizeObserver(refit).observe(probe, { box: 'border-box' });
 
   // No screen.orientation.lock anywhere: it only holds while in full screen, so leaving full screen (the back gesture,
   // switching apps) let an app installed with the old portrait setting snap upright, and the next tap locked it again:
@@ -168,8 +211,9 @@ export function startShell() {
   // the game asks the shell to hide the phone's bars (full screen; never an orientation lock)
   window.addEventListener('message', (e) => {
     if (e.origin !== location.origin || (e.data !== SHELL_FULLSCREEN && e.data !== SHELL_FS_ON)) return;
-    // the installed app already runs full screen (manifest display: fullscreen); asking again only costs a back press
-    if (e.data === SHELL_FS_ON && installed()) return;
+    // the installed app already runs full screen (manifest display: fullscreen); asking again only costs a back press,
+    // unless the phone's bars stayed out: then a tap hides them again
+    if (e.data === SHELL_FS_ON && installed() && !stuck) return;
     const done = () => frame.contentWindow?.postMessage({ type: SHELL_FS_STATE, on: !!document.fullscreenElement }, location.origin);
     if (document.fullscreenElement) {
       if (e.data === SHELL_FULLSCREEN) void document.exitFullscreen().catch(() => {});

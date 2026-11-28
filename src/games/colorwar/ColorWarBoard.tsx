@@ -20,6 +20,8 @@ interface Props {
   /** cells I may tap now */
   legal: Set<number>;
   onTap: (cell: number) => void;
+  /** small cells: a tap first zooms in round this cell */
+  onZoom?: (cell: number) => void;
 }
 
 /** blob spots inside a cell for 1, 2 and 3 dots (share of the cell) */
@@ -29,10 +31,10 @@ const SPOTS: Record<number, [number, number][]> = {
   3: [[32, 62], [68, 62], [50, 30]],
 };
 
-export function ColorWarBoard({ size, cells, fly, flyColor, step, flipped, tapped, colorOf, legal, onTap }: Props) {
+export function ColorWarBoard({ size, cells, fly, flyColor, step, flipped, tapped, colorOf, legal, onTap, onZoom }: Props) {
   const pos = (i: number) => ({ left: `${((i % size) / size) * 100}%`, top: `${(Math.floor(i / size) / size) * 100}%` });
   return (
-    <div className="cw-grid" style={{ ['--cw-n' as string]: size } as CSSProperties}>
+    <div className={cx('cw-grid', size >= 8 && 'big')} style={{ ['--cw-n' as string]: size } as CSSProperties}>
       {cells.map((c, i) => {
         const col = c.owner ? colorOf(c.owner) : undefined;
         const dots = Math.min(c.dots, COLORWAR_BURST - 1);
@@ -62,6 +64,8 @@ export function ColorWarBoard({ size, cells, fly, flyColor, step, flipped, tappe
           </span>
         );
       })}
+      {onZoom &&
+        cells.map((_, i) => <span key={`z${i}`} className="cw-zoomer" style={pos(i)} onClick={() => onZoom(i)} aria-label="Zoom in here" role="button" />)}
       {fly.length > 0 &&
         [...new Set(fly.map(([f]) => f))].map((f) => <span key={`x${step}-${f}`} className="cw-boom" style={pos(f)} aria-hidden />)}
     </div>

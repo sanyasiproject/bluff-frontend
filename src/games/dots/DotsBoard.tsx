@@ -28,10 +28,30 @@ function middle(size: number, line: number) {
   return dir === 'h' ? at(c + 0.5, r, size + 1) : at(c, r + 0.5, size + 1);
 }
 
-const lineUnder = (x: number, y: number): number | null => {
+const lineAt = (x: number, y: number): number | null => {
   const el = document.elementFromPoint(x, y);
   const v = el instanceof HTMLElement ? el.dataset.line : undefined;
   return v === undefined ? null : Number(v);
+};
+
+/** probe rings round the touch (px): a finger within 22 px of a free line still gets it, so every line has a 44 px target */
+const RINGS = [6, 11, 16, 22];
+const AROUND = Array.from({ length: 8 }, (_, k) => [Math.cos((k * Math.PI) / 4), Math.sin((k * Math.PI) / 4)]);
+
+/** the free line under the finger, else the nearest one within the rings (tilt-proof: it asks the page what is drawn there) */
+const lineUnder = (x: number, y: number): number | null => {
+  const hit = lineAt(x, y);
+  if (hit !== null) return hit;
+  for (const r of RINGS) {
+    const near = new Map<number, number>();
+    for (const [dx, dy] of AROUND) {
+      const l = lineAt(x + dx * r, y + dy * r);
+      if (l !== null) near.set(l, (near.get(l) ?? 0) + 1);
+    }
+    // the line seen from most directions at the smallest ring is the closest
+    if (near.size) return [...near.entries()].reduce((a, b) => (b[1] > a[1] ? b : a))[0];
+  }
+  return null;
 };
 
 export function DotsBoard({ dv, colorOf, initialOf, live, myColor, onLine }: Props) {
@@ -73,7 +93,7 @@ export function DotsBoard({ dv, colorOf, initialOf, live, myColor, onLine }: Pro
 
   return (
     <div
-      className={cx('dt-area', live && 'live')}
+      className={cx('dt-area', live && 'live', size >= 8 && 'big')}
       style={{ ['--dt-n' as string]: n }}
       onPointerDown={(e) => {
         if (!live) return;

@@ -1,0 +1,119 @@
+/* ---------- Carrom: a warm lamp-lit room, the square board filling the height, the striker aim, pocketed coins on the seats ---------- */
+
+.cr-table .cr-room {
+  background:
+    radial-gradient(42% 70% at 50% 52%, rgba(255, 214, 150, 0.34), transparent 74%),
+    radial-gradient(120% 110% at 50% 55%, transparent 45%, rgba(0, 0, 0, 0.78) 100%),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 22px),
+    linear-gradient(180deg, #3a2414 0%, #24150a 60%, #160c05 100%);
+}
+
+.cr-stage {
+  perspective: none;
+}
+
+.cr-mount {
+  position: absolute;
+  inset: 0;
+  filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.7));
+}
+
+.cr-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cr-aim.live .cr-hit {
+  cursor: grab;
+}
+
+.cr-aim.live .cr-hit:active {
+  cursor: grabbing;
+}
+
+.cr-aim.live .cr-striker {
+  animation: cr-breathe 1.6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes cr-breathe {
+  50% { transform: scale(1.06); }
+}
+
+.cr-queen-pill {
+  position: absolute;
+  left: 50%;
+  top: 16%;
+  translate: -50% 0;
+  z-index: 3;
+  padding: 3px 12px;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #e53935, #8e0f16);
+  color: #fff;
+  font-weight: 900;
+  font-size: clamp(11px, 3.2dvh, 15px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), inset 0 0 0 1.5px rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  animation: cr-pill 1.2s ease-in-out infinite;
+}
+
+@keyframes cr-pill {
+  50% { transform: scale(1.06); }
+}
+
+/* pocketed coins under each seat */
+.cr-potted {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  justify-content: center;
+  min-height: 12px;
+}
+
+.cr-potted em {
+  font-size: 10px;
+  font-style: normal;
+  opacity: 0.6;
+}
+
+.cr-mini {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), inset 0 0 0 1.5px rgba(0, 0, 0, 0.15);
+}
+
+.cr-mini.c-w { background: radial-gradient(circle at 35% 30%, #fffdf5, #f0dfbd 50%, #bf9e6b); }
+.cr-mini.c-b { background: radial-gradient(circle at 35% 30%, #6b5a4c, #2a211b 50%, #0b0806); }
+.cr-mini.c-q { background: radial-gradient(circle at 35% 30%, #ffa0a0, #d8202b 50%, #7c0b12); }
+
+.cr-partner {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cr-aim.live .cr-striker,
+  .cr-queen-pill {
+    animation: none;
+  }
+}
+
+/* the coin in a Classic seat chip */
+.cr-chip-coin {
+  display: inline-block;
+  flex: none;
+  width: 12px;
+  height: 12px;
+  vertical-align: middle;
+}

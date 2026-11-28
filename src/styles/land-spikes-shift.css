@@ -1,0 +1,108 @@
+/* ---------- Spike Attack on bigger arenas: crate-shift ghosts and slides, players that stay readable on small squares ---------- */
+
+/* players never drawn smaller than this, centred on their [x, y] */
+.sp-arena {
+  --pw: max(var(--cell), 28px);
+}
+
+.sp-arena .sp-player {
+  width: var(--pw);
+  height: var(--pw);
+  transform: translate(calc(var(--pad) + var(--x) * var(--cell) - var(--pw) / 2), calc(var(--pad) + var(--y) * var(--cell) - var(--pw) / 2));
+}
+
+.sp-arena.small .sp-hp {
+  font-size: 10px;
+}
+
+/* 10 × 10: other players' name tags show only while I hold the stick */
+.sp-arena.small .sp-player:not(.me) .sp-tag {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.sp-held .sp-arena.small .sp-player:not(.me) .sp-tag {
+  opacity: 1;
+}
+
+/* the next layout: dashed ghost crates that pulse and fill up until the crates land */
+.sp-ghost {
+  position: absolute;
+  z-index: 3;
+  left: calc(var(--pad) + var(--rx) * var(--cell));
+  top: calc(var(--pad) + var(--ry) * var(--cell));
+  width: calc(var(--rw) * var(--cell));
+  height: calc(var(--rh) * var(--cell));
+  border: max(2px, calc(var(--cell) * 0.08)) dashed #ff7a00;
+  border-radius: 9%;
+  background: rgba(255, 140, 0, 0.2);
+  box-shadow: 0 0 0 1px rgba(70, 30, 0, 0.55), inset 0 0 0 1px rgba(70, 30, 0, 0.4), 0 0 calc(var(--cell) * 0.35) rgba(255, 122, 0, 0.75);
+  pointer-events: none;
+  animation: sp-ghost-pulse 0.5s ease-in-out infinite alternate;
+  animation-delay: calc(var(--gd) * 1s);
+}
+
+@keyframes sp-ghost-pulse {
+  from { opacity: 0.55; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* the fill grows from the bottom as the landing nears */
+.sp-ghost-fill {
+  position: absolute;
+  inset: 8%;
+  border-radius: 6%;
+  background: linear-gradient(180deg, rgba(207, 130, 60, 0.8), rgba(130, 70, 25, 0.85));
+  transform: scaleY(var(--gk));
+  transform-origin: 50% 100%;
+}
+
+.sp-shift-note {
+  position: absolute;
+  z-index: 8;
+  top: calc(var(--pad) * 0.1);
+  left: 50%;
+  padding: 1px 10px;
+  border-radius: 99px;
+  background: rgba(40, 22, 6, 0.85);
+  box-shadow: 0 0 0 1.5px rgba(255, 214, 140, 0.9);
+  color: #ffe0a8;
+  font-size: max(11px, calc(var(--pad) * 0.5));
+  font-weight: 900;
+  line-height: 1.4;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: sp-note-in 0.3s ease-out both;
+}
+
+@keyframes sp-note-in {
+  from { opacity: 0; transform: translateX(-50%) scale(1.3); }
+}
+
+/* old crates rattle while the ghosts show */
+.sp-box.leaving .sp-box-face {
+  animation: sp-rattle 0.18s steps(2) infinite;
+}
+
+@keyframes sp-rattle {
+  50% { transform: rotate(-3deg) translateY(-2%); }
+}
+
+/* the landing: each crate slides from its old square to the new one */
+.sp-box.slid {
+  animation: sp-slide 0.45s cubic-bezier(0.3, 0.9, 0.35, 1.05) both;
+}
+
+@keyframes sp-slide {
+  from { transform: translate(calc(var(--fx) * var(--cell)), calc(var(--fy) * var(--cell))); }
+  to { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-ghost,
+  .sp-shift-note,
+  .sp-box.leaving .sp-box-face,
+  .sp-box.slid { animation: none; }
+  .sp-ghost { opacity: 0.85; }
+}

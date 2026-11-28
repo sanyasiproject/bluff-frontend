@@ -39,6 +39,11 @@ body,
   min-height: 100%;
 }
 
+/* the night colour behind everything, so nothing light shows when the phone's bars come and go */
+html {
+  background: #120b2e;
+}
+
 body {
   color: var(--ink);
   background: var(--felt-deep);

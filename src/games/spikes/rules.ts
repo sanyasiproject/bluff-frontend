@@ -1,5 +1,8 @@
 // Spike Attack arena rules on this phone, the same as the server's (bluff-backend src/games/spikes/arena.ts): walls stop at boxes, boxes are solid
 import { SPIKES_RADIUS, spikeReach, type SpikeDir } from '../../types';
+import { boxCount, shieldedSpot } from './shield';
+
+export { boxCount, pairUp, shieldedSpot } from './shield';
 
 export type Point = [number, number];
 export type Cell = [number, number];
@@ -112,38 +115,66 @@ export const freeCells = (size: number, boxes: readonly Cell[]): Cell[] => {
 };
 
 /** cells that may hold a box: not a start corner and not touching one */
-function boxSpots(size: number): Cell[] {
+export function boxSpots(size: number): Cell[] {
   const out: Cell[] = [];
   const nearCorner = (v: number) => v <= 1 || v >= size - 2;
   for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) if (!(nearCorner(c) && nearCorner(r))) out.push([c, r]);
   return out;
 }
 
-/** a fair layout: no two boxes side by side, every free cell reachable, every side shields at least one free cell */
-function fairBoxes(size: number, boxes: readonly Cell[]): boolean {
+/** a fair layout: no two boxes side by side, every free cell reachable, every side shields a free cell, no spot hidden from all four */
+export function fairBoxes(size: number, boxes: readonly Cell[]): boolean {
   const has = new Set(boxes.map(key));
   if (boxes.some(([c, r]) => has.has(key([c + 1, r])) || has.has(key([c, r + 1])))) return false;
   if (walk(size, boxes, [0, 0]).size !== size * size - boxes.length) return false;
   const reaches = reachesOf(size, boxes);
   const free = freeCells(size, boxes);
-  return SPIKE_DIRS.every((dir) => free.some((cell) => cellSafe(size, reaches, dir, cell)));
+  if (!SPIKE_DIRS.every((dir) => free.some((cell) => cellSafe(size, reaches, dir, cell)))) return false;
+  return shieldedSpot(size, boxes, SPIKES_RADIUS * SPIKES_HIT_SHARE) === null;
 }
 
-/** boxes for one game (dev preview): 4 on size 5, 6 on size 6, drawn until fair */
+/** boxes for one game (boxCount by size), drawn until fair */
 export function makeBoxes(size: number, rand: (n: number) => number): Cell[] {
-  const count = size >= 6 ? 6 : 4;
-  const spots = boxSpots(size);
-  for (let tries = 0; tries < 500; tries++) {
+  return drawBoxes(size, rand) ?? fallbackBoxes(size);
+}
+
+/** a fair layout of boxCount(size) boxes clear of `avoid`, or null after `tries`; up to 6 a random pick, bigger ones greedy with no neighbours */
+export function drawBoxes(size: number, rand: (n: number) => number, avoid: (cell: Cell) => boolean = () => false, tries = 500): Cell[] | null {
+  const count = boxCount(size);
+  const spots = boxSpots(size).filter((c) => !avoid(c));
+  for (let t = 0; t < tries; t++) {
     const pool = [...spots];
     for (let i = pool.length - 1; i > 0; i--) {
       const j = rand(i + 1);
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
-    const pick = pool.slice(0, count).sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    let pick: Cell[];
+    if (size <= 6) pick = pool.slice(0, count);
+    else {
+      pick = [];
+      const has = new Set<string>();
+      for (const [c, r] of pool) {
+        if (pick.length >= count) break;
+        if (has.has(key([c + 1, r])) || has.has(key([c - 1, r])) || has.has(key([c, r + 1])) || has.has(key([c, r - 1]))) continue;
+        pick.push([c, r]);
+        has.add(key([c, r]));
+      }
+      if (pick.length < count) continue;
+    }
+    pick.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
     if (fairBoxes(size, pick)) return pick;
   }
-  const m = Math.floor(size / 2);
-  return size >= 6 ? [[2, 0], [m, 2], [0, 3], [5, 2], [2, 4], [3, 5]] : [[m, 0], [0, m], [size - 1, m], [m, size - 1]];
+  return null;
+}
+
+/** never needed in practice: a fair layout found with a fixed seed */
+function fallbackBoxes(size: number): Cell[] {
+  let a = 12345;
+  const lcg = (n: number) => {
+    a = (Math.imul(a, 1103515245) + 12345) >>> 0;
+    return Math.floor((a / 4294967296) * n);
+  };
+  return drawBoxes(size, lcg, () => false, 5_000) ?? [];
 }
 
 /** pairs of sides that may fire together: some free cell is safe from both */

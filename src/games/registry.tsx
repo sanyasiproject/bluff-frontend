@@ -3,15 +3,21 @@ import { lazy, Suspense, useMemo, type ComponentType, type LazyExoticComponent }
 import type { GameConfig, PluggedKind, RoomView } from '../types';
 import type { Auth } from '../useAuth';
 import type { Actions, ChatBubble, Note } from '../useBluff';
+import { BombRules } from './bomb/BombRules';
+import { CarromRules } from './carrom/CarromRules';
 import { ChessRulesLazy } from './chess/lazy';
 import { ColorWarRules } from './colorwar/ColorWarRules';
 import { DartsRules } from './darts/DartsRules';
 import { DotsRules } from './dots/DotsRules';
 import { FruitRules } from './fruit/FruitRules';
+import { GomokuRules } from './gomoku/GomokuRules';
 import { LudoRules } from './ludo/LudoRules';
 import { RmcsRules } from './rmcs/RmcsRules';
+import { SeaRules } from './seabattle/SeaRules';
 import { SnakesRules } from './snakes/SnakesRules';
 import { SpikesRules } from './spikes/SpikesRules';
+import { UtttRules } from './uttt/UtttRules';
+import { WordHuntRules } from './wordhunt/WordHuntRules';
 import { LOADED, loadTable } from './tableLoaders';
 
 export interface TableProps {
@@ -41,6 +47,12 @@ export const PLUGGED: Record<PluggedKind, PluggedEntry> = {
   colorwar: { Table: lazyTable('colorwar'), Rules: ColorWarRules },
   dots: { Table: lazyTable('dots'), Rules: DotsRules },
   chess: { Table: lazyTable('chess'), Rules: ChessRulesLazy },
+  carrom: { Table: lazyTable('carrom'), Rules: CarromRules },
+  bomb: { Table: lazyTable('bomb'), Rules: BombRules },
+  seabattle: { Table: lazyTable('seabattle'), Rules: SeaRules },
+  gomoku: { Table: lazyTable('gomoku'), Rules: GomokuRules },
+  uttt: { Table: lazyTable('uttt'), Rules: UtttRules },
+  wordhunt: { Table: lazyTable('wordhunt'), Rules: WordHuntRules },
 };
 
 /** App: the table of whichever registry game the room is playing */

@@ -196,6 +196,12 @@ Bluff is a Progressive Web App: friends install it from the website, free, with 
 | `src/games/dots/` | Dots and Boxes: table, board, rules, sounds, dev preview |
 | `src/games/colorwar/` | Colour Wars: table, board, burst replay, rules, sounds, dev preview |
 | `src/games/chess/` | Chess: table, board and piece art, looks, clocks, pockets, game end, analysis and watcher hints (engine in a Web Worker), Profile → Chess, lobby settings, rules with diagrams, sounds, dev preview (`src/chess/` is the shared library, synced from the backend) |
+| `src/games/carrom/` | Carrom: board art, slide-and-pull striker aim, 60 fps shot replay from the shared physics (`src/carrom/`, synced from the backend), seats with pocketed coins, rules, sounds, dev preview |
+| `src/games/bomb/` | Bomb Pass: table with hearts, cartoon bomb, toss arcs and BOOM, task card, rules, sounds, dev preview |
+| `src/games/seabattle/` | Sea Battle: placement, target sea, mini seas on seats, powers, shot effects, rules, sounds, dev preview |
+| `src/games/gomoku/` | Five in a Row: wooden board (15 × 15, 19 × 19 for 3–4), ghost stone then place, pan and zoom, last-move ring, winning strike, rules, sounds, dev preview |
+| `src/games/uttt/` | Ultimate Tic-Tac-Toe: chalk slate of nine boards, glowing open boards, send preview, stamps and the big line, rules, sounds, dev preview |
+| `src/games/wordhunt/` | Word Grid Hunt: maple letter tiles, drag path with a 70% pick circle, server verdicts, timer ring, my word strip, round reveal, rules, sounds, dev preview |
 | `src/components/GameHub.tsx` | Home game grid (tiles, category chips, NEW, last played) |
 | `src/components/GameStats.tsx` | Profile: a card per game from `stats.perGame` |
 | `src/components/Hand.tsx` | Fits any hand size into overlapping rows |

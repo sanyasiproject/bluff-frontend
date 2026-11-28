@@ -1,11 +1,12 @@
 {
-  "id": "/",
+  "id": "/wide",
   "name": "Game Baithak Wide",
   "short_name": "Baithak Wide",
   "description": "Ludo, Saanp Seedhi, Raja Mantri Chor Sipahi, Bluff, Crazy 7, Rang, Darts, Dots and Boxes, Colour Wars, Fruit Slice Duel and Spike Attack: free live games with friends",
   "start_url": "/",
   "scope": "/",
   "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
   "orientation": "landscape",
   "background_color": "#120b2e",
   "theme_color": "#120b2e",

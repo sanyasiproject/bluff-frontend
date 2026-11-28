@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { lazy, Suspense, useEffect, useState, type CSSProperties } from 'react';
 import { cx } from '../lib/cards';
 import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
 import { monthYear } from '../lib/dates';
@@ -23,7 +23,6 @@ import { NotifyRow } from './NotifyRow';
 import { LangRow } from './LangRow';
 import { VoiceSettings } from './VoiceSettings';
 import { OnlineFriends } from './OnlineFriends';
-import { RulesPage } from './RulesPage';
 import { ReplayPage } from './ReplayPage';
 import { XpGuide } from './XpGuide';
 import { DailyLadder, FormStrip, GameList, Meter } from './ProfileParts';
@@ -33,6 +32,9 @@ import '../styles/land-hub.css';
 import { LudoLookRows } from '../games/ludo/LudoLooks';
 import { ChessLookRows } from '../games/chess/ChessLookRows';
 import { ChessProfileLazy } from '../games/chess/lazy';
+
+// admin-only and long: downloaded when opened
+const RulesPage = lazy(() => import('./RulesPage').then((m) => ({ default: m.RulesPage })));
 import '../styles/land-chess-profile.css';
 import { ProfileTabs, useProfileTab } from './ProfileTabs';
 import { Rolling } from './Rolling';
@@ -379,7 +381,11 @@ export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, on
       </div>
 
       {guideOpen && <XpGuide level={lvl.level} xp={lvl.xp} onClose={() => setGuideOpen(false)} />}
-      {rulesOpen && <RulesPage onClose={() => setRulesOpen(false)} />}
+      {rulesOpen && (
+        <Suspense fallback={null}>
+          <RulesPage onClose={() => setRulesOpen(false)} />
+        </Suspense>
+      )}
       {replayOf && <ReplayPage game={replayOf} load={auth.replay} onClose={() => setReplayOf(null)} />}
       {avatarOpen && <AvatarPicker auth={auth} onClose={() => setAvatarOpen(false)} />}
       {friendsOpen && <FriendsSheet auth={auth} roomCode={roomCode} onInvite={onInvite} onJoin={onJoin} onClose={() => setFriendsOpen(false)} />}

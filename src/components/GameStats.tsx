@@ -79,6 +79,36 @@ export function GameStats({ stats }: { stats: LifetimeStats }) {
                 🏃 {t.dodges ?? 0} dodges · 💥 {t.hits ?? 0} hits
               </span>
             )}
+            {g.kind === 'carrom' && t && (
+              <span className="gs-extra">
+                ⚪ {t.pocketed ?? 0} coins pocketed · 👑 {t.queens ?? 0} queens · 🚫 {t.fouls ?? 0} fouls
+              </span>
+            )}
+            {g.kind === 'bomb' && t && (
+              <span className="gs-extra">
+                💣 {t.passes ?? 0} passes · 💥 {t.booms ?? 0} booms · ⚡ {t.fastest ?? 0} lightning passes
+              </span>
+            )}
+            {g.kind === 'seabattle' && t && (
+              <span className="gs-extra">
+                🎯 {t.hits ?? 0} hits of {t.shots ?? 0} shots · 🚢 {t.sunk ?? 0} ships sunk
+              </span>
+            )}
+            {g.kind === 'gomoku' && t && (
+              <span className="gs-extra">
+                ⚫ {t.fives ?? 0} fives · 🛡️ {t.blocks ?? 0} blocks
+              </span>
+            )}
+            {g.kind === 'uttt' && t && (
+              <span className="gs-extra">
+                ❌ {t.boardsWon ?? 0} small boards won
+              </span>
+            )}
+            {g.kind === 'wordhunt' && t && (
+              <span className="gs-extra">
+                🔤 {t.words ?? 0} words · ⭐ {t.uniqueWords ?? 0} only-you · 📏 {t.longWords ?? 0} long (7+)
+              </span>
+            )}
             {g.kind === 'ludo' && t && (
               <span className="gs-extra">
                 ⚔️ {t.kills ?? 0} kills · 🏠 {t.home ?? 0} home · 🎲 {t.sixes ?? 0} sixes

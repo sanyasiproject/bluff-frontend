@@ -10,6 +10,12 @@ import { dartsRuleLines } from '../games/darts/DartsRules';
 import { dotsRuleLines } from '../games/dots/DotsRules';
 import { BASIC_RULES, VARIANT_RULES } from '../games/chess/rulesText';
 import { colorwarRuleLines } from '../games/colorwar/ColorWarRules';
+import { carromRuleLines } from '../games/carrom/CarromRules';
+import { bombRuleLines } from '../games/bomb/BombRules';
+import { seaRuleLines } from '../games/seabattle/SeaRules';
+import { gomokuRuleLines } from '../games/gomoku/GomokuRules';
+import { utttRuleLines } from '../games/uttt/UtttRules';
+import { wordHuntRuleLines } from '../games/wordhunt/WordHuntRules';
 import { LUDO_BOARDS, LUDO_DICE, LUDO_GOTIS } from '../games/ludo/looks';
 import {
   AVATAR_BACKGROUNDS,
@@ -252,6 +258,72 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
             <li>Player cards: avatar, rating ("?" while provisional), material lead and a big clock (red under 10 s, ticking in bullet and blitz). Moves list, resign (confirm), draw offer, takeback (casual), abort (before both have moved), flip and sound. Watchers see a live eval bar, the engine's best move as an arrow and the top 3 lines, worked out on their own phone.</li>
             <li>Game end: result and reason, each side's rating change, Rematch (colours swap) and Analyse: the phone's own engine reviews the game in a Web Worker (eval bar and graph, ?! ? ?? marks with the better move as an arrow, accuracy, average loss, the opening, the engine line, PGN copy). Reviews are kept on the phone per game.</li>
             <li>Ratings: Glicko-2 per perf (Bullet, Blitz, Rapid, Classical for Standard; one each for the other variants), everyone starts at 800. Profile → ♟️ Chess shows each perf's rating, peak, W/L/D, streaks, a rating graph, recent games (tap to analyse) and the top 50 per perf.</li>
+          </ul>
+        </Section>
+
+        <Section icon="⚪" title="Carrom (board game)">
+          <ul>
+            {carromRuleLines().map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            <li>Host options: Mode (Classic / Freestyle) and Length (Quick: one board; Full: first to 25 in Classic, 3 boards in Freestyle). 2 to 4 players; Classic with 4 is 2v2 with partners opposite, Classic with 3 isn't allowed.</li>
+            <li>Physics: one deterministic simulation (src/carrom, synced byte-identical from the server) with a fixed step and only + − × ÷, square root, min and max, so every phone replays the exact shot the server played. Elastic coin hits (striker 1.5× heavier), wall bounces, rolling friction, pocket capture.</li>
+            <li>At the table: a birch board in a dark wooden frame (our own drawing: baselines with red circles, corner arrows, the centre ring and star, net pockets), turned so your baseline is at the bottom. Drag the striker along your baseline (red when it sits on a coin), pull back from it: a dotted line to the first coin, a short line for where that coin goes, and a power ring that grows and turns red. Let go to shoot. The shot replays at 60 fps with clacks scaled by speed, pocket thuds and wall knocks, then the board snaps to the server's final state.</li>
+            <li>Seats show points, the coins each player pocketed (mini coins), 🤝 partners and 👑 cover the queen. Banners: Foul (with the reason), Queen!, Queen covered, Queen goes back, Shoot again. Bots try direct and bank shots with the same simulation, with level noise on angle and power. Profile 🎮 Games counts coins pocketed, queens and fouls.</li>
+          </ul>
+        </Section>
+
+        <Section icon="💣" title="Bomb Pass (arcade)">
+          <ul>
+            {bombRuleLines().map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            <li>Host options: Hearts (2 / 3) and Fuse (Normal 12–30 s, Fast 8–20 s). The fuse is picked by the server and never sent to phones; the view carries a heat stage 0–3 for the last 30%.</li>
+            <li>At the table: players round a table with their hearts, a cartoon bomb with a sparking fuse wobbling by the holder (faster and hotter with heat, the tick speeds up), a big flight arc to the next player on a right answer. BOOM: screen shake, a comic blast, soot on the loser's face, a heart pops and the phone vibrates. The task card sits on the right; everyone else sees it greyed. Arrow tasks also take a swipe.</li>
+            <li>Bots answer after Normal 1.6–3.2 s, Hard 1.1–2.2 s, Expert 0.7–1.4 s with a small chance of a wrong tap. Profile 🎮 Games counts passes, booms and lightning passes (under 1.5 s).</li>
+          </ul>
+        </Section>
+
+        <Section icon="🚢" title="Sea Battle (board game)">
+          <ul>
+            {seaRuleLines().map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            <li>Host option: Powers (On / Off). Each phone gets only its own fleet; other fleets are hidden until sunk (watchers see no hidden ships).</li>
+            <li>At the table: placement on your sea (drag with snapping, tap to turn, red when it clashes, Shuffle, Ready; legal layouts are saved as you go). In battle the target sea is big in the middle with A–J / 1–10, waves, grey drawn warships; each seat card shows that player's mini sea (tap it to aim there) and a 🎯 on the sea being shot at. Misses splash with a white ring, hits burn and smoke, sunk ships darken and crack. Power buttons sit under the sea with a hint while aiming.</li>
+            <li>Bots hunt on a checkerboard, then follow hits along a line (Expert uses a probability map), pick the weakest or a random foe by level and use powers. Profile 🎮 Games counts hits, ships sunk and shots.</li>
+          </ul>
+        </Section>
+
+        <Section icon="⚫" title="Five in a Row (board game)">
+          <ul>
+            {gomokuRuleLines().map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            <li>At the table: a wooden board with ink lines and star points, glossy stones in each player's colour with a soft shadow. Tap a point to see a ghost stone, tap it again (or ✓ Place) to put it down; "Tap twice to place" is a per-phone switch in the ☰ panel, on by default. The first stone's spot (the centre) pulses. The last stone has a white ring; a four shows a warning; the winning line glows with a strike-through.</li>
+            <li>19 × 19 on a phone: double-tap to zoom in (or out), pinch to zoom, one finger drags the board while zoomed. Turn clock about 30 s.</li>
+            <li>Bots score open fours, fours, open threes and broken threes for themselves and everyone else: they always win when they can and block a four or open three; Expert adds a short look-ahead. With 3–4 players they block whoever is closest to five. Profile 🎮 Games counts fives and blocks.</li>
+          </ul>
+        </Section>
+
+        <Section icon="❌" title="Ultimate Tic-Tac-Toe (board game)">
+          <ul>
+            {utttRuleLines().map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            <li>At the table: a slate chalkboard, thick chalk lines for the big grid and thin ones for the small boards, marker X and O in the players' colours. The board(s) you may play in glow; pressing a cell outlines the board it sends your opponent to (red when it gives them a free move). Won boards get a big stamped X or O; the winning big line is drawn across. Turn clock about 25 s.</li>
+            <li>Bots search the whole game with alpha-beta (Expert deeper, about 0.3 s); they value boards won, two-in-a-rows and where a move sends the opponent. Profile 🎮 Games counts small boards won.</li>
+          </ul>
+        </Section>
+
+        <Section icon="🔤" title="Word Grid Hunt (party game)">
+          <ul>
+            {wordHuntRuleLines().map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+            <li>Host options: Grid (4 × 4 / 5 × 5) and Round (1.5, 2 or 3 min). The server checks each word at once against a public-domain English word list (offensive words removed); the apps never download it.</li>
+            <li>At the table: wooden letter tiles in a felt tray. Drag through the tiles; a tile is picked when the finger enters its middle, so diagonals are easy. The word shows big above the grid; on release a green pop and +points, grey for a word you already have, a red shake for anything else. A timer ring ticks in the last 10 seconds; my words scroll down the right; seats show everyone's word counts (their words stay hidden).</li>
+            <li>After each round: a column of words per player, unique words starred, the best word with a burst and up to 5 long words nobody found. Bots trace words from the grid's solver at their level's pace. Profile 🎮 Games counts words, only-you words and long words (7+).</li>
           </ul>
         </Section>
 

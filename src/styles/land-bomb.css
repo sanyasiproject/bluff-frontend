@@ -1,0 +1,407 @@
+/* ---------- Bomb Pass: a round table in a dim room, seats with hearts, the wobbling bomb, toss arcs, BOOM; the task card on the right ---------- */
+
+.bp-table {
+  --bp-side: clamp(220px, 34vw, 440px);
+  --bp-top: 48px;
+}
+
+.bp-table .bp-room {
+  background:
+    radial-gradient(40% 60% at 36% 52%, rgba(255, 170, 90, 0.3), transparent 72%),
+    radial-gradient(120% 110% at 40% 55%, transparent 45%, rgba(0, 0, 0, 0.8) 100%),
+    linear-gradient(180deg, #2a1838 0%, #1a0f26 60%, #0e0716 100%);
+}
+
+.bp-table.bp-shake {
+  animation: bp-shake 0.6s ease-out;
+}
+
+@keyframes bp-shake {
+  10% { transform: translate(-10px, 4px) rotate(-1deg); }
+  25% { transform: translate(9px, -5px) rotate(1deg); }
+  40% { transform: translate(-7px, 3px); }
+  60% { transform: translate(5px, -2px); }
+  80% { transform: translate(-2px, 1px); }
+}
+
+.bp-arena {
+  position: absolute;
+  top: var(--bp-top);
+  bottom: max(6px, env(safe-area-inset-bottom));
+  left: max(8px, env(safe-area-inset-left));
+  right: calc(var(--bp-side) + 16px);
+  z-index: 2;
+}
+
+.bp-felt {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 18%;
+  bottom: 18%;
+  border-radius: 50%;
+  background:
+    radial-gradient(60% 60% at 45% 40%, rgba(255, 255, 255, 0.12), transparent 70%),
+    radial-gradient(circle at 50% 50%, #8e3b2a 0%, #5d2318 70%, #3b140d 100%);
+  box-shadow:
+    0 0 0 10px #4a2a14,
+    0 0 0 13px #2a170b,
+    0 24px 40px rgba(0, 0, 0, 0.6),
+    inset 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+.bp-spot {
+  position: absolute;
+  z-index: 3;
+  translate: -50% -50%;
+  width: clamp(120px, 18vw, 200px);
+}
+
+.bp-spot .pr-seat {
+  width: 100%;
+}
+
+.bp-spot.holding .pr-seat {
+  animation: bp-hold 0.5s ease-in-out infinite;
+}
+
+@keyframes bp-hold {
+  50% { transform: translateY(-2px) rotate(-1deg); }
+}
+
+.bp-spot.wrong .pr-seat {
+  animation: bp-nope 0.4s ease-in-out 2;
+}
+
+@keyframes bp-nope {
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+/* soot on the loser's face */
+.bp-spot.soot .avatar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(30% 22% at 35% 40%, rgba(0, 0, 0, 0.75), transparent 70%),
+    radial-gradient(28% 20% at 66% 62%, rgba(0, 0, 0, 0.7), transparent 70%),
+    radial-gradient(60% 60% at 50% 50%, rgba(30, 20, 10, 0.55), transparent 80%);
+  animation: bp-soot 3.2s ease-out forwards;
+}
+
+@keyframes bp-soot {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.bp-hearts {
+  display: inline-flex;
+  gap: 1px;
+  font-size: 0.62em;
+  line-height: 1;
+}
+
+.bp-hearts i {
+  font-style: normal;
+}
+
+.bp-hearts i.off {
+  opacity: 0.45;
+}
+
+.bp-hearts i.pop {
+  animation: bp-heart 0.7s ease-out;
+}
+
+@keyframes bp-heart {
+  0% { transform: scale(1.8); opacity: 1; }
+  40% { transform: scale(0.6) rotate(-20deg); }
+  100% { transform: scale(1); }
+}
+
+.bp-blast {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 6;
+  width: 150%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  pointer-events: none;
+  animation: bp-blast 1.3s ease-out forwards;
+}
+
+.bp-blast-svg {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes bp-blast {
+  0% { transform: scale(0.2); opacity: 0; }
+  15% { transform: scale(1.15); opacity: 1; }
+  70% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+
+/* the bomb by its holder */
+.bp-bomb-at {
+  position: absolute;
+  z-index: 5;
+  width: clamp(70px, 21dvh, 140px);
+  aspect-ratio: 120 / 146;
+  translate: -50% -50%;
+  transition: left 0s, top 0s;
+  pointer-events: none;
+}
+
+.bp-bomb {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.6));
+}
+
+.bp-bomb-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: bp-wobble 0.9s ease-in-out infinite;
+  transform-origin: 50% 70%;
+}
+
+.bp-bomb.heat-1 .bp-bomb-svg { animation-duration: 0.6s; }
+.bp-bomb.heat-2 .bp-bomb-svg { animation-duration: 0.38s; }
+.bp-bomb.heat-3 .bp-bomb-svg { animation-duration: 0.22s; }
+.bp-bomb.heat-3 { filter: drop-shadow(0 0 18px rgba(255, 80, 0, 0.9)) drop-shadow(0 10px 14px rgba(0, 0, 0, 0.6)); }
+.bp-bomb.heat-2 { filter: drop-shadow(0 0 10px rgba(255, 120, 0, 0.7)) drop-shadow(0 10px 14px rgba(0, 0, 0, 0.6)); }
+
+@keyframes bp-wobble {
+  25% { transform: rotate(-6deg) scale(1.02); }
+  75% { transform: rotate(6deg) scale(0.98); }
+}
+
+.bp-spark {
+  animation: bp-spark 0.18s steps(2) infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes bp-spark {
+  50% { transform: scale(1.3) rotate(22deg); opacity: 0.8; }
+}
+
+.bp-smoke {
+  animation: bp-smoke 1.4s ease-out infinite;
+}
+
+@keyframes bp-smoke {
+  0% { transform: translate(0, 6px); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translate(8px, -14px); opacity: 0; }
+}
+
+/* the side: task card or waiting note */
+.bp-side {
+  position: absolute;
+  z-index: 6;
+  top: var(--bp-top);
+  bottom: max(8px, env(safe-area-inset-bottom));
+  right: max(10px, env(safe-area-inset-right));
+  width: var(--bp-side);
+  display: grid;
+  align-items: center;
+}
+
+.bp-wait {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(20, 10, 30, 0.6);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.12);
+  color: #fff;
+  text-align: center;
+}
+
+.bp-wait b {
+  font-size: clamp(15px, 4.6dvh, 22px);
+}
+
+.bp-wait small {
+  color: #ffd54a;
+  font-weight: 800;
+  font-size: clamp(12px, 3.6dvh, 16px);
+  animation: bp-pulse 1s ease-in-out infinite;
+}
+
+@keyframes bp-pulse {
+  50% { transform: scale(1.06); }
+}
+
+.bp-card {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(6px, 2dvh, 14px);
+  height: min(100%, 520px);
+  padding: clamp(10px, 3dvh, 20px);
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff, #ece6ff);
+  color: #2a1a6e;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55), inset 0 0 0 2px rgba(255, 255, 255, 0.8);
+  touch-action: none;
+  animation: bp-card-in 0.25s ease-out backwards;
+}
+
+@keyframes bp-card-in {
+  from { transform: translateY(14px) scale(0.96); opacity: 0; }
+}
+
+.bp-card.wrong {
+  animation: bp-nope 0.2s ease-in-out 4;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55), inset 0 0 0 3px #ff5252;
+}
+
+.bp-title {
+  font-size: clamp(11px, 3.2dvh, 14px);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #6a5acd;
+}
+
+.bp-prompt {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+
+.bp-q {
+  font-size: clamp(30px, 11dvh, 56px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.bp-word {
+  padding: 4px 14px;
+  border-radius: 12px;
+  background: #1b1535;
+  letter-spacing: 0.06em;
+}
+
+.bp-arrow {
+  font-size: clamp(44px, 16dvh, 84px);
+}
+
+.bp-dots {
+  position: relative;
+  width: min(100%, 26dvh);
+  aspect-ratio: 1;
+  border-radius: 14px;
+  background: #1b1535;
+}
+
+.bp-dots i {
+  position: absolute;
+  width: 13%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: radial-gradient(circle at 35% 30%, #fff59d, #ffb300);
+}
+
+.bp-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(6px, 1.8dvh, 10px);
+}
+
+.bp-choice {
+  min-height: clamp(40px, 13dvh, 64px);
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #7c4dff, #5e35b1);
+  color: #fff;
+  font-size: clamp(18px, 6.4dvh, 30px);
+  font-weight: 900;
+  box-shadow: 0 5px 0 #3b1f80, 0 8px 14px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.08s;
+}
+
+.bp-choice:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #3b1f80;
+}
+
+.bp-choice:disabled {
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bp-table.bp-shake,
+  .bp-spot.holding .pr-seat,
+  .bp-bomb-svg,
+  .bp-spark,
+  .bp-smoke,
+  .bp-card,
+  .bp-wait small {
+    animation: none;
+  }
+}
+
+/* the 3-2-1 before the first fuse, a watcher's copy of the task, "comes to you next" */
+.bp-count {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  z-index: 7;
+  translate: -50% -50%;
+  color: #fff;
+  font-size: clamp(48px, 22dvh, 120px);
+  font-weight: 900;
+  text-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  animation: bp-count 1s ease-out both;
+}
+
+@keyframes bp-count {
+  from { transform: scale(1.8); opacity: 0; }
+  30% { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.9); opacity: 0.2; }
+}
+
+.bp-card.theirs {
+  opacity: 0.88;
+  transform: scale(0.94);
+}
+
+.bp-choice.emoji {
+  font-size: clamp(22px, 8dvh, 38px);
+}
+
+.bp-next {
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  translate: -50% 0;
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: #ffd54a;
+  color: #3b1f00;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.bp-bomb.shaking .bp-bomb-svg {
+  animation: bp-nope 0.16s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bp-count,
+  .bp-bomb.shaking .bp-bomb-svg {
+    animation: none;
+  }
+}

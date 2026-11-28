@@ -1,4 +1,4 @@
-// Dev only (?colorwarPreview=1, =mid, =over; &n=2..4, &size=5|7): Colour Wars on a fake room with the real rule and simple bots
+// Dev only (?colorwarPreview=1, =mid, =over; &n=2..4, &size=5|7|8|10): Colour Wars on a fake room with the real rule and simple bots
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ColorWarView } from '../../types';
 import { FAKE_IDS, fakeActions, fakeAuth, fakeCount, fakeView } from '../turnkit/fakeRoom';
@@ -44,7 +44,7 @@ export function ColorWarPreview() {
   const mode = q.get('colorwarPreview') ?? '1';
   const n = fakeCount();
   const ids = FAKE_IDS.slice(0, n);
-  const size = Number(q.get('size')) === 7 ? 7 : 5;
+  const size = [5, 7, 8, 10].includes(Number(q.get('size'))) ? Number(q.get('size')) : 5;
   const [v, setV] = useState<ColorWarView>(() => {
     let s: ColorWarView = { size, cells: Array.from({ length: size * size }, () => ({ owner: null, dots: 0 })), turnId: 'me', firstMove: [...ids], alive: [...ids], last: null, places: {} };
     const steps = mode === 'over' ? 400 : mode === 'mid' ? n * 4 : 0;

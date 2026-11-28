@@ -36,7 +36,7 @@ export function HomeFeatured({ kind, onPlay, onCode, chip }: Props) {
           <h2 className="nt-title nt-feature-name">{g.name}</h2>
           <p className="nt-feature-tag">{g.tagline}</p>
           <span className="nt-feature-meta">
-            <Icon name="friends" size={16} /> {g.minPlayers}–{g.maxPlayers} players
+            <Icon name="friends" size={16} /> {g.minPlayers === g.maxPlayers ? g.maxPlayers : `${g.minPlayers}–${g.maxPlayers}`} players
             {g.teams && ' · 2v2'}
           </span>
         </div>

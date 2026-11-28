@@ -5,7 +5,7 @@ import '../../styles/land-ludo-over.css';
 import '../../styles/land-party.css';
 import '../../styles/land-party-rails.css';
 import '../../styles/land-colorwar.css';
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from 'react';
 import { useTableFx } from '../../components/TableFx';
 import { useTurnEndsAt } from '../../components/TurnTimer';
 import { cx } from '../../lib/cards';
@@ -137,8 +137,55 @@ function ColorWarTableInner({ view, actions, bubbles, auth, notes = [], cw }: Ta
     if (myTurn) sfx.turn();
   }, [myTurn]);
 
+  // tap-to-zoom on boards whose cells come out under ~30 px (10 × 10 on a phone): the first tap zooms in round that cell
+  const [zoom, setZoom] = useState<number | null>(null);
+  const [smallCells, setSmallCells] = useState(false);
+  useEffect(() => {
+    const check = () => setSmallCells(!!boardRef.current && boardRef.current.getBoundingClientRect().width / cw.size < 31);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, [cw.size]);
+  useEffect(() => {
+    if (!myTurn) setZoom(null);
+  }, [myTurn]);
+  // zoomed: the board stays clipped to its own square; drag to pan (a drag never taps a cell)
+  const ZOOM = 1.6;
+  const [pan, setPan] = useState<[number, number]>([0, 0]);
+  const drag = useRef<{ x: number; y: number; px: number; py: number; moved: boolean } | null>(null);
+  const dragged = useRef(false);
+  const [panning, setPanning] = useState(false);
+  const clampPan = (v: number) => Math.max(1 - ZOOM, Math.min(0, v));
+  const zoomAt = (cell: number) => {
+    const fx = 0.024 + (((cell % cw.size) + 0.5) / cw.size) * 0.952;
+    const fy = 0.024 + ((Math.floor(cell / cw.size) + 0.5) / cw.size) * 0.952;
+    setPan([clampPan(0.5 - fx * ZOOM), clampPan(0.5 - fy * ZOOM)]);
+    setZoom(cell);
+  };
+  const panDown = (e: RPointerEvent<HTMLDivElement>) => {
+    if (zoom === null) return;
+    drag.current = { x: e.clientX, y: e.clientY, px: pan[0], py: pan[1], moved: false };
+  };
+  const panMove = (e: RPointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    const box = boardRef.current?.parentElement?.getBoundingClientRect();
+    if (!d || !box) return;
+    const dx = e.clientX - d.x;
+    const dy = e.clientY - d.y;
+    if (!d.moved && Math.hypot(dx, dy) < 8) return;
+    d.moved = true;
+    setPanning(true);
+    setPan([clampPan(d.px + dx / box.width), clampPan(d.py + dy / box.height)]);
+  };
+  const panUp = () => {
+    dragged.current = !!drag.current?.moved;
+    drag.current = null;
+    setPanning(false);
+  };
+
   const tap = async (cell: number) => {
     if (!myTurn || busy || anim) return;
+    setZoom(null);
     unlockSpeech();
     setBusy(true);
     await actions.gameMove({ kind: 'colorwar', move: { type: 'tap', cell } });
@@ -163,8 +210,23 @@ function ColorWarTableInner({ view, actions, bubbles, auth, notes = [], cw }: Ta
     <main className={cx('table lu-table pt-table pr-wide cw-table', myTurn && 'pt-my-turn')} style={{ ['--turn-col' as string]: cw.turnId ? colorOf(cw.turnId) : '#fff' } as CSSProperties}>
       <div className="lu-room cw-room" aria-hidden />
       <div className="lu-stage pt-stage">
-        <div className="lu-plane pt-plane">
-          <div ref={boardRef} className="cw-tray">
+        <div
+          className={cx('lu-plane pt-plane', zoom !== null && 'cw-clip')}
+          onPointerDown={panDown}
+          onPointerMove={panMove}
+          onPointerUp={panUp}
+          onPointerCancel={panUp}
+          onClickCapture={(e) => {
+            if (!dragged.current) return;
+            dragged.current = false;
+            e.stopPropagation();
+          }}
+        >
+          <div
+            ref={boardRef}
+            className={cx('cw-tray', zoom !== null && 'zoomed', panning && 'panning')}
+            style={zoom === null ? undefined : ({ transform: `translate(${pan[0] * 100}%, ${pan[1] * 100}%) scale(${ZOOM})` } as CSSProperties)}
+          >
             <ColorWarBoard
               size={cw.size}
               cells={anim?.cells ?? cw.cells}
@@ -176,11 +238,17 @@ function ColorWarTableInner({ view, actions, bubbles, auth, notes = [], cw }: Ta
               colorOf={colorOf}
               legal={legal}
               onTap={(c) => void tap(c)}
+              onZoom={smallCells && myTurn && zoom === null ? zoomAt : undefined}
             />
           </div>
         </div>
-        <div className="cw-share">
+        <div className={cx('cw-share', zoom !== null && 'with-unzoom')}>
           <ShareBar parts={order.map((id) => ({ id, n: countOf(id), color: colorOf(id) }))} total={total} label="Territory" />
+          {zoom !== null && (
+            <button className="cw-unzoom" onClick={() => setZoom(null)}>
+              🔍 Zoom out
+            </button>
+          )}
         </div>
       </div>
       <Rails

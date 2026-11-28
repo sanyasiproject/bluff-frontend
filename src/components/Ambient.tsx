@@ -27,6 +27,12 @@ const PIECES: Partial<Record<GameKind, string[]>> = {
   colorwar: ['🔴', '🔵', '🟢', '🟡'],
   fruit: ['🍉', '🍊', '🍎', '🍍', '🍋', '🍇'],
   spikes: ['🔺', '📦', '🔺', '📦'],
+  carrom: ['⚪', '⚫', '🔴', '⚪', '⚫'],
+  bomb: ['💣', '❤️', '💥', '💣'],
+  seabattle: ['🚢', '🌊', '🎯', '⚓'],
+  gomoku: ['⚫', '⚪', '🔴', '🔵'],
+  uttt: ['❌', '⭕', '❌', '⭕'],
+  wordhunt: ['🔤', '📝', '🔠', '⏱️'],
 };
 
 /** faint pieces floating up behind the lobby: card suits for the card games, the game's own pieces for the others */

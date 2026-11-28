@@ -142,7 +142,7 @@ export function PlayPanel(p: Props) {
               <span>
                 <b>{info.name}</b>
                 <small>
-                  {info.minPlayers}–{info.maxPlayers} players
+                  {info.minPlayers === info.maxPlayers ? info.maxPlayers : `${info.minPlayers}–${info.maxPlayers}`} players
                 </small>
               </span>
             </div>

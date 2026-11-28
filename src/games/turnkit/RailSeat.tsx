@@ -39,9 +39,11 @@ interface Props {
   /** show the colour chip ("You · Red" on mine); icon is the player's piece, a colour dot by default */
   chip?: boolean;
   icon?: ReactNode;
+  /** the chip's name instead of the colour's (e.g. a coin colour) */
+  chipName?: string;
 }
 
-export function RailSeat({ player, goneName, color, turn, mine, out, bubble, turnEndsAt, turnSec, big, bigKey, label, turnText, myTurnText, children, skin, numRef, onTap, chip, icon }: Props) {
+export function RailSeat({ player, goneName, color, turn, mine, out, bubble, turnEndsAt, turnSec, big, bigKey, label, turnText, myTurnText, children, skin, numRef, onTap, chip, icon, chipName }: Props) {
   const style = { '--pc': color, '--seat-ring': color, '--lu-col': color } as CSSProperties;
   const stat = (
     <span className="pr-stat">
@@ -54,7 +56,7 @@ export function RailSeat({ player, goneName, color, turn, mine, out, bubble, tur
   const tag = chip ? (
     <>
       {stat}
-      <ColorMark color={color} name={colorName(color)} icon={icon} mine={mine} />
+      <ColorMark color={color} name={chipName ?? colorName(color)} icon={icon} mine={mine} />
     </>
   ) : (
     stat

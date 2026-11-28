@@ -1,7 +1,4 @@
-import { useEffect, useState } from 'react';
-import { AdminPanel } from './components/AdminPanel';
-import { Crazy7Table } from './components/Crazy7Table';
-import { RangTable } from './components/RangTable';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Flyers } from './components/Flyers';
 import { FriendOnline } from './components/FriendOnline';
 import { Home } from './components/Home';
@@ -13,12 +10,11 @@ import { RotateGate } from './components/RotateGate';
 import { LiveVoiceSync } from './components/LiveVoice';
 import { JoinAsks } from './components/JoinAsks';
 import { Splash } from './components/Splash';
-import { Table } from './components/Table';
 import { Toasts } from './components/Toasts';
 import { clearInvite } from './lib/invite';
 import { useLook } from './lib/look';
 import { autoPush } from './lib/push';
-import { loadName } from './lib/storage';
+import { loadName, loadTabSession } from './lib/storage';
 import { useAuth } from './useAuth';
 import { useBluff } from './useBluff';
 import { useLandscape } from './lib/useLandscape';
@@ -26,6 +22,15 @@ import { PluggedTable } from './games/registry';
 import { countPlayed, markPlayed } from './games/lastPlayed';
 import { useSendLudoLook } from './games/ludo/looks';
 import { isPlugged, levelOf } from './types';
+
+// screens Home doesn't need are downloaded when first opened (Home prefetches the likely ones when idle)
+const AdminPanel = lazy(() => import('./components/AdminPanel').then((m) => ({ default: m.AdminPanel })));
+const loadCrazy7 = () => import('./components/Crazy7Table');
+const loadRang = () => import('./components/RangTable');
+const loadBluff = () => import('./components/Table');
+const Crazy7Table = lazy(() => loadCrazy7().then((m) => ({ default: m.Crazy7Table })));
+const RangTable = lazy(() => loadRang().then((m) => ({ default: m.RangTable })));
+const Table = lazy(() => loadBluff().then((m) => ({ default: m.Table })));
 
 /** moves the table already shows; in a landscape game they go to the info panel's log, not a pop-up */
 const QUIET_IN_GAME = ['play', 'pass', 'round', 'room', 'chat', 'bluff'];
@@ -51,9 +56,20 @@ export default function App() {
     return () => clearTimeout(t);
   }, []);
 
+  // Home doesn't wait for a sleeping server: it shows at once (from the cached account) with a Connecting… line.
+  // Only a tab that was in a room waits, so the room comes back without Home flashing first.
+  const [waited, setWaited] = useState(false);
+  const [resuming] = useState(() => loadTabSession() !== null);
   useEffect(() => {
-    if (status === 'online' && !auth.checking && introShown) setBooted(true);
-  }, [status, auth.checking, introShown]);
+    const t = setTimeout(() => setWaited(true), 4000);
+    return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    if (!introShown) return;
+    const ready = status === 'online' && !auth.checking;
+    const known = !auth.checking || auth.user !== null || waited;
+    if (ready || (!resuming && known) || (resuming && waited && status !== 'online' && known)) setBooted(true);
+  }, [status, auth.checking, auth.user, introShown, waited, resuming]);
 
   // once inside a room the invite link has done its job
   useEffect(() => {
@@ -73,6 +89,14 @@ export default function App() {
     markPlayed(playingGame);
     countPlayed(playingGame);
   }, [playingGame]);
+
+  // in the room, the card tables start downloading before the game starts
+  const roomGame = view?.phase === 'lobby' ? view.config.game : null;
+  useEffect(() => {
+    if (roomGame === 'crazy7') void loadCrazy7().catch(() => {});
+    else if (roomGame === 'rang') void loadRang().catch(() => {});
+    else if (roomGame === 'bluff') void loadBluff().catch(() => {});
+  }, [roomGame]);
 
   // coins and stats change when a game is settled; show the new numbers
   useEffect(() => {
@@ -123,7 +147,7 @@ export default function App() {
 
   return (
     <>
-      {screen}
+      <Suspense fallback={null}>{screen}</Suspense>
       {/* shop win bursts and entry flashes, for both games and the lobby */}
       <ShopFx view={replaced ? null : view} />
       {view && !replaced && status !== 'online' && <div className="conn-pill">Reconnecting…</div>}

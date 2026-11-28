@@ -1,4 +1,4 @@
-// Dev only (?dotsPreview=1, =late, =over; &n=2..4, &size=4..6): Dots and Boxes on a fake room with a tiny rule engine and bots
+// Dev only (?dotsPreview=1, =late, =over; &n=2..4, &size=4|5|6|8|10): Dots and Boxes on a fake room with a tiny rule engine and bots
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { dotsBoxesOf, dotsBoxLines, dotsLineCount, type DotsView } from '../../types';
 import { FAKE_IDS, fakeActions, fakeAuth, fakeCount, fakeView } from '../turnkit/fakeRoom';
@@ -34,7 +34,7 @@ export function DotsPreview() {
   const mode = q.get('dotsPreview') ?? '1';
   const n = fakeCount();
   const ids = FAKE_IDS.slice(0, n);
-  const size = Math.min(6, Math.max(4, Number(q.get('size')) || 5));
+  const size = [4, 5, 6, 8, 10].includes(Number(q.get('size'))) ? Number(q.get('size')) : 5;
   const [v, setV] = useState<DotsView>(() => {
     let s: DotsView = { size, lines: {}, boxes: {}, scores: Object.fromEntries(ids.map((id) => [id, 0])), turnId: 'me', last: null };
     const fill = mode === 'over' ? Infinity : mode === 'late' ? Math.floor(dotsLineCount(size) * 0.7) : 0;

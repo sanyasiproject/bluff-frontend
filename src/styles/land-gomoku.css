@@ -1,0 +1,228 @@
+/* ---------- Five in a Row: a kaya-wood board with ink lines, glossy stones in player colours, the winning strike ---------- */
+
+.table.gm-table {
+  --pr-below: 0px;
+}
+
+/* a tatami room under a paper lamp */
+.gm-table .gm-room {
+  background:
+    radial-gradient(48% 60% at 50% 48%, rgba(255, 220, 160, 0.22), transparent 72%),
+    radial-gradient(120% 110% at 50% 55%, transparent 45%, rgba(0, 0, 0, 0.78) 100%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg, #3a2a1a 0%, #15100a 100%);
+}
+
+/* the board: warm wood grain, a thick edge */
+.gm-wood {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 30% 20%, rgba(255, 240, 200, 0.35), transparent 60%),
+    repeating-linear-gradient(97deg, rgba(120, 70, 20, 0.12) 0 3px, transparent 3px 11px, rgba(120, 70, 20, 0.07) 11px 13px, transparent 13px 23px),
+    linear-gradient(160deg, #f1c27a 0%, #dca35a 55%, #c98b45 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 235, 190, 0.4),
+    0 5px 0 #a8692c,
+    0 10px 0 #7d4a1c,
+    0 26px 44px rgba(0, 0, 0, 0.65);
+}
+
+.pt-my-turn .gm-wood {
+  box-shadow:
+    0 0 0 3px var(--turn-col),
+    0 0 26px 6px color-mix(in srgb, var(--turn-col) 45%, transparent),
+    0 5px 0 #a8692c,
+    0 26px 44px rgba(0, 0, 0, 0.65);
+}
+
+.gm-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.gm-viewport.live {
+  cursor: pointer;
+}
+
+.gm-viewport.zoomed {
+  cursor: grab;
+}
+
+.gm-zoom {
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  transition: transform 0.28s ease;
+}
+
+.gm-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.gm-grid path {
+  stroke: #3b2410;
+  stroke-opacity: 0.78;
+  stroke-width: 0.035;
+}
+
+.gm-edge {
+  fill: none;
+  stroke: #3b2410;
+  stroke-width: 0.07;
+}
+
+.gm-star {
+  fill: #3b2410;
+}
+
+/* the first stone's spot: the centre pulses in my colour */
+.gm-only {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 0.08;
+  stroke-dasharray: 0.2 0.12;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: gm-pulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes gm-pulse {
+  from { opacity: 0.4; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1.1); }
+}
+
+/* a stone drops in */
+.gm-stone.fresh > * {
+  transform-box: view-box;
+  animation: gm-drop 0.32s var(--spring) backwards;
+}
+
+.gm-stone.fresh {
+  animation: gm-fade 0.2s ease-out backwards;
+}
+
+@keyframes gm-drop {
+  from { transform: translateY(-0.5px) scale(1.25); }
+}
+
+@keyframes gm-fade {
+  from { opacity: 0; }
+}
+
+/* the last stone gets a white ring */
+.gm-last {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 0.07;
+  filter: drop-shadow(0 0 0.06px #000);
+  pointer-events: none;
+}
+
+/* the winning stones glow and the strike draws through them */
+.gm-stone.won {
+  filter: drop-shadow(0 0 0.18px #fff7c0) drop-shadow(0 0 0.3px #ffd54f);
+}
+
+.gm-strike {
+  fill: none;
+  stroke: #fff8d0;
+  stroke-width: 0.16;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  filter: drop-shadow(0 0 0.15px #ffd54f) drop-shadow(0 0 0.35px #ff9800);
+  animation: gm-strike 0.6s ease-out 0.35s backwards;
+  pointer-events: none;
+}
+
+@keyframes gm-strike {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+.gm-ghost {
+  pointer-events: none;
+}
+
+.gm-ghost > :last-child {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: gm-pulse 0.6s ease-in-out infinite alternate;
+}
+
+/* the ✓ Place button rides the board edge away from the ghost */
+.gm-place {
+  position: absolute;
+  left: 50%;
+  z-index: 6;
+  translate: -50% 0;
+  min-width: 120px;
+  min-height: 44px;
+  border-radius: 99px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+  animation: gm-in 0.25s var(--spring) backwards;
+}
+
+.gm-place.at-bottom {
+  bottom: 10px;
+}
+
+.gm-place.at-top {
+  top: 10px;
+}
+
+@keyframes gm-in {
+  from { opacity: 0; transform: scale(0.6); }
+}
+
+.gm-zoom-tip {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(40, 20, 0, 0.55);
+  color: #ffe9c4;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+/* a stone for the colour chip */
+.gm-chip-stone {
+  display: inline-block;
+  flex: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0 8%, var(--c) 22% 80%, #000 130%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.gm-info {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gm-only,
+  .gm-stone.fresh,
+  .gm-stone.fresh > *,
+  .gm-strike,
+  .gm-ghost > :last-child,
+  .gm-place {
+    animation: none;
+  }
+
+  .gm-zoom {
+    transition: none;
+  }
+}

@@ -45,7 +45,7 @@ export function GameHub({ onPick }: { onPick: (kind: GameKind) => void }) {
             role="listitem"
             className={cx('hub-tile', g.kind === last && 'last')}
             style={{ '--c1': g.colors[0], '--c2': g.colors[1], '--i': i } as CSSProperties}
-            aria-label={`${g.name}: ${g.tagline}. ${g.minPlayers} to ${g.maxPlayers} players`}
+            aria-label={`${g.name}: ${g.tagline}. ${g.minPlayers === g.maxPlayers ? g.maxPlayers : `${g.minPlayers} to ${g.maxPlayers}`} players`}
             onClick={() => onPick(g.kind)}
           >
             <span className="hub-art" aria-hidden>
@@ -57,7 +57,7 @@ export function GameHub({ onPick }: { onPick: (kind: GameKind) => void }) {
               <b className="hub-name">{g.name}</b>
               <span className="hub-tag">{g.tagline}</span>
               <span className="hub-meta">
-                <Icon name="friends" size={14} /> {g.minPlayers}–{g.maxPlayers}
+                <Icon name="friends" size={14} /> {g.minPlayers === g.maxPlayers ? g.maxPlayers : `${g.minPlayers}–${g.maxPlayers}`}
                 {g.teams && ' · 2v2'}
               </span>
             </span>

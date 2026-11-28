@@ -3,6 +3,7 @@ import { api, ApiError, serverStatus } from './lib/api';
 import { disablePush } from './lib/push';
 import { reconnectSocket, socket } from './lib/socket';
 import { loadAuthToken, saveAuthToken } from './lib/storage';
+import { loadCachedUser, saveCachedUser } from './lib/userCache';
 import type {
   AuthResponse,
   GameKind,
@@ -25,7 +26,8 @@ import type {
 /** the logged-in account (null = guest) and account actions */
 export function useAuth() {
   const [token, setToken] = useState<string | null>(loadAuthToken);
-  const [user, setUser] = useState<PublicUser | null>(null);
+  // the last account seen here, so Home shows it before the server answers
+  const [user, setUser] = useState<PublicUser | null>(loadCachedUser);
   /** true while a saved token is being checked at startup */
   const [checking, setChecking] = useState(() => loadAuthToken() !== null);
   /** null until known; false when the server runs guest-only */
@@ -38,6 +40,8 @@ export function useAuth() {
   const [bonus, setBonus] = useState(0);
   /** friend requests waiting for me, shown as a red count */
   const [friendRequests, setFriendRequests] = useState(0);
+
+  useEffect(() => saveCachedUser(user), [user]);
 
   const refresh = useCallback(async () => {
     const saved = loadAuthToken();

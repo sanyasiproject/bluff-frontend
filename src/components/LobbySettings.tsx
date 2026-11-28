@@ -27,11 +27,14 @@ import {
   type TurnSeconds,
 } from '../types';
 
-/** the hand-wired games keep their own picker lines */
+/** picker lines for the hand-wired games and a few registry games */
 const GAME_DESC: Partial<Record<GameKind, string>> = {
   bluff: 'Lie about your cards, catch the liars',
   crazy7: 'Match suit or number; a 7 makes the next player pick 2',
   rang: 'Match colour or number; Skip, Reverse, +2 and wilds',
+  gomoku: 'Take turns placing stones; five in a row wins',
+  uttt: 'Nine tic-tac-toe boards; your move picks their board',
+  wordhunt: 'Same letters for all; trace words, unique ones score double',
 };
 
 /** the lobby's settings tabs (landscape drawer); portrait shows them all at once */

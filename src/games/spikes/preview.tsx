@@ -1,9 +1,9 @@
-// Dev only (?spikesPreview=1, =over, &n=2..4, &size=5|6, &speed=fast, &lag=ms): Spike Attack on a fake room with a tiny local server and bots
+// Dev only (?spikesPreview=1, =over, &n=2..4, &size=5|6|8|10, &speed=fast, &lag=ms, &shift=ms between crate shifts): Spike Attack on a fake room with a tiny local server and bots
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GameConfig, PluggedMove, PublicPlayer, RoomView, SpikesView } from '../../types';
 import type { Auth } from '../../useAuth';
 import type { Actions } from '../../useBluff';
-import { botGoal, moveIn, newSpikes, stepToward, tick, wanderSpot } from './sim';
+import { botGoal, moveIn, newSpikes, SHIFT, stepToward, tick, wanderSpot } from './sim';
 import { SpikesTable } from './SpikesTable';
 
 const IDS = ['me', 'b1', 'b2', 'b3'];
@@ -17,7 +17,8 @@ export function SpikesPreview() {
   const q = new URLSearchParams(location.search);
   const over = q.get('spikesPreview') === 'over';
   const n = Math.min(4, Math.max(2, Number(q.get('n') ?? 4)));
-  const size = Number(q.get('size') ?? 5) === 6 ? 6 : 5;
+  const size = [5, 6, 8, 10].includes(Number(q.get('size'))) ? Number(q.get('size')) : 5;
+  SHIFT.every = Math.max(3000, Number(q.get('shift') ?? 40_000));
   const fast = q.get('speed') === 'fast';
   const lag = Math.max(0, Number(q.get('lag') ?? 60));
   const ids = IDS.slice(0, n);
@@ -47,7 +48,7 @@ export function SpikesPreview() {
           const p = stepToward(s.pos[id], goal, dt * 0.85);
           s = moveIn(s, id, p[0], p[1], now);
         });
-      const pushNow = s.strikes !== server.current.strikes || s.warnings.length > server.current.warnings.length || s.phase !== server.current.phase;
+      const pushNow = s.strikes !== server.current.strikes || s.boxes !== server.current.boxes || s.boxesNext !== server.current.boxesNext || s.warnings.length > server.current.warnings.length || s.phase !== server.current.phase;
       server.current = s;
       if (pushNow) setSv(s);
     }, 33);
