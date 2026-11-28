@@ -10,7 +10,7 @@ import { LevelUp } from '../../components/LevelUp';
 import { LiveVoiceButtons, LiveVoiceNotice } from '../../components/LiveVoice';
 import { GameOver } from '../../components/Overlays';
 import { QuickChat } from '../../components/QuickChat';
-import { SeatSheet } from '../../components/Table';
+import { SeatSheet } from '../../components/tableParts';
 import { useTableFx } from '../../components/TableFx';
 import { TableInfo } from '../../components/TableInfo';
 import { useTurnEndsAt } from '../../components/TurnTimer';
@@ -36,8 +36,7 @@ import { SnakesSeatCorner } from './SnakesSeat';
 import { moveMs, TokenLayer } from './Tokens';
 import { snakesSfx } from './sounds';
 import { useTimeouts } from '../../lib/useTimeouts';
-
-const BUBBLE_MS = 4000;
+import { BUBBLE_MS } from '../../lib/common';
 
 export function SnakesTable(props: TableProps) {
   const sv = props.view.plugged?.kind === 'snakes' ? props.view.plugged.snakes : null;

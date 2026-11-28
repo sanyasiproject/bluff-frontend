@@ -1,4 +1,4 @@
-import { secureRandom, type RandomInt } from '../../rand.js';
+import { gauss, secureRandom, type RandomInt } from '../../rand.js';
 import { GameError } from '../../errors.js';
 import type { BetResult, DartsEvent, GameEvent, PlayerStats, TableGame } from '../../tableTypes.js';
 import { standingsOf } from '../../standings.js';
@@ -26,12 +26,6 @@ const emptyStats = (): PlayerStats & { tallies: DartsTally } => ({
 });
 
 const ev = (e: DartsEvent): GameEvent => ({ kind: 'darts', ev: e });
-
-/** a normal random number (Box-Muller) */
-export function gauss(rand: () => number): number {
-  const u = Math.max(rand(), 1e-12);
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand());
-}
 
 /** Darts 301 / 501: three darts a turn, count down to exactly 0; below 0 is a bust; no cards */
 export class DartsGame implements TableGame<Card> {

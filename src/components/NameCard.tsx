@@ -86,35 +86,3 @@ export function NameCard({ auth, onSaved, title = '✏️ Your name' }: { auth: 
     </section>
   );
 }
-
-const seenKey = (userId: string) => `bluff.nameCard.${userId}`;
-
-/** Home, once per player on this phone: is your name right? Fix it here, or say it looks good. Never for admins */
-export function HomeNameCard({ auth }: { auth: Auth }) {
-  const user = auth.user;
-  const [hidden, setHidden] = useState(() => {
-    try {
-      return !!user && localStorage.getItem(seenKey(user.id)) === '1';
-    } catch {
-      return false;
-    }
-  });
-  // only while a change is open (older servers don't say: no card)
-  if (!user || hidden || user.role === 'admin' || user.nameChangeAt !== null) return null;
-  const done = () => {
-    try {
-      localStorage.setItem(seenKey(user.id), '1');
-    } catch {
-      // private mode: the card just comes back next time
-    }
-    setHidden(true);
-  };
-  return (
-    <div className="home-name-card">
-      <NameCard auth={auth} title={`✏️ Is “${user.displayName}” the right name?`} onSaved={() => window.setTimeout(done, 1500)} />
-      <button className="link-btn" onClick={done}>
-        Looks good ✓
-      </button>
-    </div>
-  );
-}

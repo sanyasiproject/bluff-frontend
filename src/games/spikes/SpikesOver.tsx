@@ -5,8 +5,7 @@ import { Backdrop } from '../../components/Overlays';
 import { cx } from '../../lib/cards';
 import { confetti, reducedMotion } from '../../lib/motion';
 import { SPIKES_LIVES, type RoomView, type SpikesView } from '../../types';
-
-const MEDALS = ['🥇', '🥈', '🥉', '4th'];
+import { MEDALS } from '../../lib/common';
 
 interface Props {
   view: RoomView;

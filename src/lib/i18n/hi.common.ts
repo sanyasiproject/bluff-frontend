@@ -112,7 +112,6 @@ export const D: Dict = {
   POST: 'POST',
   Admin: 'एडमिन',
   'Nobody else is here': 'यहाँ और कोई नहीं है',
-  'In this room': 'इस कमरे में',
   'In a room': 'किसी कमरे में',
   Requested: 'भेजा',
   Asked: 'पूछा',
@@ -120,5 +119,4 @@ export const D: Dict = {
   'Asked…': 'पूछा…',
   'Got it': 'समझ गए',
   'Tap to continue': 'आगे बढ़ने के लिए टैप करें',
-  'Notifications are blocked for Bluff in your phone\'s settings': 'फ़ोन की सेटिंग्स में Bluff के नोटिफ़िकेशन बंद हैं',
 };

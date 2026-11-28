@@ -5,8 +5,7 @@ import { Backdrop } from '../../components/Overlays';
 import { cx } from '../../lib/cards';
 import { confetti, reducedMotion } from '../../lib/motion';
 import type { FruitView, RoomView } from '../../types';
-
-const MEDALS = ['🥇', '🥈', '🥉', '4th'];
+import { MEDALS } from '../../lib/common';
 
 /** what this phone saw of each player this game */
 export interface DuelStats {

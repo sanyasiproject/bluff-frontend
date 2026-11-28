@@ -2,7 +2,7 @@
   "name": "bluff-frontend",
   "private": true,
   "version": "1.0.0",
-  "description": "Mobile-first Bluff card game client",
+  "description": "Game Baithak Wide: landscape client for Game Baithak",
   "type": "module",
   "scripts": {
     "dev": "vite --host",

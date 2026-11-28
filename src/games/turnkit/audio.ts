@@ -4,7 +4,8 @@ import { isSoundOn } from '../../lib/speech';
 
 export const audio = () => (isSoundOn() ? liveAudio() : null);
 
-export function tone(c: AudioContext, freq: number, at: number, dur: number, type: OscillatorType = 'sine', gain = 0.1, to?: number) {
+/** one note; attack is the fade-in time in seconds */
+export function tone(c: AudioContext, freq: number, at: number, dur: number, type: OscillatorType = 'sine', gain = 0.1, to?: number, attack = 0.015) {
   const t = c.currentTime + at;
   const osc = c.createOscillator();
   const g = c.createGain();
@@ -12,12 +13,18 @@ export function tone(c: AudioContext, freq: number, at: number, dur: number, typ
   osc.frequency.setValueAtTime(freq, t);
   if (to) osc.frequency.exponentialRampToValueAtTime(to, t + dur);
   g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(gain, t + 0.015);
+  g.gain.exponentialRampToValueAtTime(gain, t + attack);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   osc.connect(g).connect(c.destination);
   osc.start(t);
   osc.stop(t + dur + 0.02);
 }
+
+/** tone with a game's own fade-in and default loudness */
+export const toneWith =
+  (attack: number, defaultGain = 0.1) =>
+  (c: AudioContext, freq: number, at: number, dur: number, type: OscillatorType = 'sine', gain = defaultGain, to?: number) =>
+    tone(c, freq, at, dur, type, gain, to, attack);
 
 /** a burst of filtered noise: thuds (lowpass), scratches and whooshes (bandpass / highpass) */
 export function noise(c: AudioContext, at: number, dur: number, gain: number, type: BiquadFilterType, freq: number, toFreq?: number) {

@@ -1,5 +1,5 @@
 // The games playable offline on one phone, their seat limits and seat colours
-import { BOT_LEVELS, CHESS_BOT_LEVELS, gameInfo, LUDO_COLOR_HEX, LUDO_SEAT_COLORS, PARTY_COLORS, SNAKES_COLORS, type BotLevel, type GameInfo, type PluggedKind } from '../types';
+import { BOT_LEVELS, CHESS_BOT_LEVELS, gameInfo, LUDO_COLOR_HEX, LUDO_SEAT_COLORS, PARTY_COLORS, SNAKES_COLORS, type BotLevel, type GameInfo } from '../types';
 
 export const OFFLINE_GAMES = ['ludo', 'snakes', 'chess', 'gomoku', 'uttt', 'dots', 'colorwar', 'carrom', 'darts'] as const;
 export type OfflineKind = (typeof OFFLINE_GAMES)[number];
@@ -79,5 +79,3 @@ export function roomBotLevel(s: OfflineSetup): BotLevel {
   const lv = s.seats.map((x) => x.bot).filter((b): b is BotLevel => typeof b === 'string');
   return lv.includes('expert') ? 'expert' : lv.includes('hard') ? 'hard' : 'normal';
 }
-
-export const isPluggedOffline = (k: PluggedKind): k is OfflineKind => isOfflineKind(k);

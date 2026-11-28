@@ -17,8 +17,7 @@ import {
 import type { Auth } from '../useAuth';
 import { FullPage } from './FullPage';
 import { Icon } from '../art/icons';
-
-const DAY_MS = 86_400_000;
+import { DAY_MS } from '../lib/common';
 
 /** a reward in a few words */
 export function rewardText(r: PassReward): { emoji: string; text: string } {

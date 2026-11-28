@@ -9,7 +9,7 @@ import { LevelUp } from '../../components/LevelUp';
 import { LiveVoiceButtons, LiveVoiceNotice } from '../../components/LiveVoice';
 import { GameOver } from '../../components/Overlays';
 import { QuickChat } from '../../components/QuickChat';
-import { SeatSheet } from '../../components/Table';
+import { SeatSheet } from '../../components/tableParts';
 import { useTableFx } from '../../components/TableFx';
 import { TableInfo } from '../../components/TableInfo';
 import { useTurnEndsAt } from '../../components/TurnTimer';
@@ -34,8 +34,7 @@ import { LudoSeatCorner } from './LudoSeat';
 import { lookOfPlayer, useLudoLooks } from './looks';
 import { ludoSfx } from './sounds';
 import { useTimeouts } from '../../lib/useTimeouts';
-
-const BUBBLE_MS = 4000;
+import { BUBBLE_MS } from '../../lib/common';
 
 export function LudoTable(props: TableProps) {
   const lv = props.view.plugged?.kind === 'ludo' ? props.view.plugged.ludo : null;

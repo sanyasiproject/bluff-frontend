@@ -1,6 +1,6 @@
 // A player card on the side rails (landscape): avatar, name, the game's key number big, a turn glow and "Your turn!" pill
 import type { CSSProperties, ReactNode, Ref } from 'react';
-import { Seat } from '../../components/Table';
+import { Seat } from '../../components/tableParts';
 import { cx } from '../../lib/cards';
 import type { PublicPlayer } from '../../types';
 import type { ChatBubble } from '../../useBluff';

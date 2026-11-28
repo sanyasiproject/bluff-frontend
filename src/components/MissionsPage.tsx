@@ -8,6 +8,7 @@ import { ConfirmBox } from './ConfirmBox';
 import { FullPage } from './FullPage';
 import { Icon } from '../art/icons';
 import { DailyLadder } from './ProfileParts';
+import { DAY_MS } from '../lib/common';
 
 /** one of my missions with its catalogue entry */
 interface Known {
@@ -27,8 +28,6 @@ export function todayCount(m: MissionsResponse): { done: number; total: number }
   const daily = known(m.daily);
   return { done: daily.filter((k) => k.view.done).length, total: daily.length };
 }
-
-const DAY_MS = 86_400_000;
 
 /** time left in hours and minutes */
 function timeLeft(ms: number): string {

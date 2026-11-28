@@ -4,7 +4,7 @@ import { LevelUp } from '../../components/LevelUp';
 import { LiveVoiceButtons, LiveVoiceNotice } from '../../components/LiveVoice';
 import { GameOver } from '../../components/Overlays';
 import { QuickChat } from '../../components/QuickChat';
-import { SeatSheet } from '../../components/Table';
+import { SeatSheet } from '../../components/tableParts';
 import { TableInfo } from '../../components/TableInfo';
 import { cx } from '../../lib/cards';
 import type { RoomView } from '../../types';

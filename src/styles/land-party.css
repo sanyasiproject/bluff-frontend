@@ -22,30 +22,6 @@
   transform-origin: 50% 70%;
 }
 
-.pt-seat .pt-count {
-  min-width: 34px;
-  color: #fff;
-  font-size: 12px;
-  box-shadow: inset 0 0 0 1.5px var(--lu-col);
-}
-
-/* a little square in the player's colour, before a count */
-.pt-sw {
-  display: inline-block;
-  width: 0.8em;
-  height: 0.8em;
-  margin-right: 2px;
-  border-radius: 3px;
-  background: var(--lu-col);
-  vertical-align: -0.05em;
-}
-
-/* out of the game: faded, a little smaller */
-.pt-seat.pt-out {
-  opacity: 0.5;
-  filter: grayscale(0.8);
-}
-
 /* the announcer over the board */
 .pt-banner {
   position: absolute;

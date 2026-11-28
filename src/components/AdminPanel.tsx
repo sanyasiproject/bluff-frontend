@@ -13,10 +13,9 @@ import { ConfirmBox } from './ConfirmBox';
 import { LevelBadge } from './LevelBadge';
 import { Backdrop } from './Overlays';
 import { Avatar } from './Avatar';
+import { DAY_MS } from '../lib/common';
 
 type SwitchKey = 'guestsAllowed' | 'pushInvites';
-
-const DAY_MS = 86_400_000;
 
 /** which day of the season it is (day 1 is the day it started); null when the server doesn't know */
 const seasonDay = (startedAt: string | null | undefined, now = Date.now()) =>

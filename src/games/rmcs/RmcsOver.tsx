@@ -5,8 +5,8 @@ import { Backdrop } from '../../components/Overlays';
 import { cx } from '../../lib/cards';
 import { confetti, reducedMotion } from '../../lib/motion';
 import { RMCS_EMOJI, type RmcsView, type RoomView } from '../../types';
+import { MEDALS } from '../../lib/common';
 
-const MEDALS = ['🥇', '🥈', '🥉', '4th'];
 const COLS = ['#ffb300', '#8e24aa', '#26a69a', '#ef5350'];
 
 interface Props {

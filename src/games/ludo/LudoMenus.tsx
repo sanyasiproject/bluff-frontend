@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { LevelBadge } from '../../components/LevelBadge';
 import { Avatar } from '../../components/Avatar';
 import { Backdrop, PlayersSheet } from '../../components/Overlays';
-import { GameMenu } from '../../components/Table';
+import { GameMenu } from '../../components/tableParts';
 import { formatCoins } from '../../lib/coins';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../../lib/speech';
 import type { RoomView } from '../../types';

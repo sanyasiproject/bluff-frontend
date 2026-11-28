@@ -224,12 +224,6 @@
   grid-column: 2;
 }
 
-.home-bottom > .home-online {
-  grid-column: 1;
-  grid-row: 1;
-  justify-self: start;
-}
-
 /* no transform, filter or z-index on the dock itself: the pages its buttons open are fixed children */
 .home-dock {
   --ic: 48px;
@@ -366,45 +360,6 @@
 
 .home-dock :is(.missions-pill.done, .shop-entry-pill:not(.on)) {
   display: none;
-}
-
-/* ---------- online friends' faces beside the dock ---------- */
-.home-online {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 4px 14px 4px 6px;
-  border: 1px solid rgba(60, 207, 145, 0.35);
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.3);
-  color: var(--ink);
-  font-size: 12.5px;
-  font-weight: 700;
-  animation: hm-rise 0.4s ease-out 0.55s backwards;
-}
-
-.home-online-faces {
-  display: flex;
-}
-
-.home-online-faces > .avatar {
-  box-shadow: 0 0 0 2px var(--felt-deep);
-}
-
-.home-online-faces > .avatar + .avatar {
-  margin-left: -10px;
-}
-
-.home-online-faces .presence {
-  border-color: var(--felt-deep);
-}
-
-.home-online-text {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
 }
 
 /* ---------- the Play panel (a centred modal) ---------- */
@@ -583,14 +538,10 @@
     justify-items: center;
   }
 
-  .home-bottom > :is(.home-dock, .home-online) {
+  .home-bottom > .home-dock {
     grid-column: 1;
     grid-row: auto;
     justify-self: center;
-  }
-
-  .home-bottom > .home-online {
-    order: -1;
   }
 }
 
@@ -618,13 +569,6 @@
 
   .home-stage::before {
     width: min(80vw, calc(var(--u) * 150));
-  }
-
-  /* the fan keeps its own animations; only its size changes (margins give back the space it doesn't use) */
-  .home .hero-cards {
-    flex: none;
-    margin-block: calc(60px * (var(--fan) - 1));
-    scale: var(--fan);
   }
 
   .home .hero h1 {
@@ -667,16 +611,6 @@
 
   .home-dock :is(.dock-label, .missions-entry > .grow, .league-entry > .grow, .shop-entry > .grow) {
     font-size: clamp(11px, calc(var(--u) * 1.75), 14px);
-  }
-
-  .home-online-faces > .avatar {
-    width: 30px;
-    height: 30px;
-    font-size: 13px;
-  }
-
-  .home-online-faces > .avatar + .avatar {
-    margin-left: -9px;
   }
 
   /* the Play panel: create and join side by side */
@@ -759,13 +693,6 @@
 
     .home-stage:has(> .home-sub) {
       gap: 8px;
-    }
-  }
-
-  /* narrow phones: the dock's Friends count is enough */
-  @media (max-width: 799px) {
-    .home-bottom > .home-online {
-      display: none;
     }
   }
 }
@@ -860,11 +787,6 @@
     border-radius: 24%;
   }
 
-  .splash-title {
-    font-size: clamp(38px, calc(var(--u) * 11), 90px);
-    line-height: 1;
-  }
-
   .splash-tag {
     font-size: clamp(13px, calc(var(--u) * 2.4), 20px);
   }
@@ -906,7 +828,6 @@
   .home-stage::before,
   .home-notice,
   .home-play-btn.btn,
-  .home-online,
   .home-dock > * {
     animation: none;
   }

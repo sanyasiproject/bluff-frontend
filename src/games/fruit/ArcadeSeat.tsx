@@ -1,6 +1,6 @@
 // A player at an arcade table (Fruit Slice Duel, Spike Attack): the shared seat (avatar, name, chat, voice) in their party colour plus the game's tags
 import type { CSSProperties, ReactNode } from 'react';
-import { Seat } from '../../components/Table';
+import { Seat } from '../../components/tableParts';
 import { cx } from '../../lib/cards';
 import type { PublicPlayer } from '../../types';
 import type { ChatBubble } from '../../useBluff';

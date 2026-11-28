@@ -4,6 +4,7 @@ import { formatCoins, signedCoins } from '../lib/coins';
 import { divisionOf, nextRankStep, RANK_DIVISIONS, RANK_PROTECTION, rankName, rankTier, tierStarts, type CoinResult, type PublicProfile, type RankDivisionId, type RankView, type SeasonResult } from '../types';
 import { RankGuide } from './RankGuide';
 import { Rolling } from './Rolling';
+import { DAY_MS, pluralCoins } from '../lib/common';
 
 type Division = (typeof RANK_DIVISIONS)[number];
 
@@ -13,11 +14,6 @@ const divisionFor = (id: RankDivisionId | undefined, points: number): Division =
 
 /** the division before this one; null at the bottom */
 const prevDivision = (d: Division): Division | null => RANK_DIVISIONS[RANK_DIVISIONS.findIndex((x) => x.id === d.id) - 1] ?? null;
-
-
-const plural = (n: number, word: string) => `${formatCoins(n)} ${word}${n === 1 ? '' : 's'}`;
-
-const DAY_MS = 86_400_000;
 
 /** "ends in 5 days" once the next season is booked, else how long this one has run */
 function seasonTiming(rank: RankView, now = Date.now()): string | null {
@@ -71,7 +67,7 @@ export function PastSeasons({ seasons }: { seasons: SeasonResult[] | undefined }
           {seasons.slice(0, RECENT_SEASONS).map((h) => {
             const d = divisionFor(h.division, h.points);
             return (
-              <li key={h.season} className={cx('rank-pill', `rank-${d.id}`)} title={`${plural(h.games, 'game')} · ${plural(h.wins, 'win')}`}>
+              <li key={h.season} className={cx('rank-pill', `rank-${d.id}`)} title={`${pluralCoins(h.games, 'game')} · ${pluralCoins(h.wins, 'win')}`}>
                 S{h.season} {d.emoji} {formatCoins(h.points)}
               </li>
             );
@@ -141,7 +137,7 @@ export function RankCard({ rank: given }: { rank: RankView | null }) {
           📅 Today <b className={cx('rank-change', rank.today > 0 && 'up', rank.today < 0 && 'down')}>{signedCoins(rank.today)}</b>
         </li>
         <li>
-          🎮 {plural(rank.games, 'game')} · {plural(rank.wins, 'win')}
+          🎮 {pluralCoins(rank.games, 'game')} · {pluralCoins(rank.wins, 'win')}
         </li>
       </ul>
       <button type="button" className="link-btn rank-guide-link" onClick={() => setGuide(true)}>

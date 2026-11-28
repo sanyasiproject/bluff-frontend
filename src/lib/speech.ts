@@ -98,8 +98,6 @@ export function setVoiceGender(next: VoiceGender): void {
   pickVoice();
 }
 
-export const currentVoiceName = () => voice?.name ?? null;
-
 /** returns an unsubscribe function; voices load late on some browsers */
 export function onVoicesChanged(fn: () => void): () => void {
   listeners.add(fn);

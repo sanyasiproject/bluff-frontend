@@ -11,7 +11,7 @@ import { LevelUp } from '../../components/LevelUp';
 import { LiveVoiceButtons, LiveVoiceNotice } from '../../components/LiveVoice';
 import { GameOver } from '../../components/Overlays';
 import { QuickChat } from '../../components/QuickChat';
-import { SeatSheet } from '../../components/Table';
+import { SeatSheet } from '../../components/tableParts';
 import { TableInfo } from '../../components/TableInfo';
 import { useBack } from '../../lib/back';
 import { cx } from '../../lib/cards';
@@ -32,8 +32,8 @@ import { useMotion } from './motion';
 import { SpikesOver } from './SpikesOver';
 import { spikesSfx } from './sounds';
 import { useTimeouts } from '../../lib/useTimeouts';
+import { BUBBLE_MS } from '../../lib/common';
 
-const BUBBLE_MS = 4000;
 const STEP_SOUND_MS = 260;
 const KEYS: Record<string, [number, number]> = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
 

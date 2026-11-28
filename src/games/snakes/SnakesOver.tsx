@@ -6,8 +6,7 @@ import { cx } from '../../lib/cards';
 import { confetti, reducedMotion } from '../../lib/motion';
 import { LUDO_COLOR_HEX, type LudoColor, type RoomView, type SnakesView } from '../../types';
 import { Pawn } from '../ludo/Gotis';
-
-const MEDALS = ['🥇', '🥈', '🥉', '4th'];
+import { MEDALS } from '../../lib/common';
 
 interface Props {
   view: RoomView;

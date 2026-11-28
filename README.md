@@ -1,6 +1,6 @@
 # Game Baithak frontend (bluff-frontend)
 
-Mobile-first React app for **Game Baithak**, a home for 2–4 player online games with friends: Ludo, Bluff, Crazy 7 and Rang (more to come). The repo keeps its old name. Connects to `bluff-backend` over Socket.IO and reads every move aloud with the phone's built-in voice.
+Mobile-first React app for **Game Baithak**, a home for 2–4 player online games with friends: Ludo, Saanp Seedhi, Raja Mantri Chor Sipahi, Bluff, Crazy 7, Rang, Chess, Carrom, Darts, Dots and Boxes, Colour Wars, Five in a Row, Ultimate Tic-Tac-Toe, Word Grid Hunt, Sea Battle, Bomb Pass, Fruit Slice Duel and Spike Attack (18 games). The repo keeps its old name. Connects to `bluff-backend` over Socket.IO and reads every move aloud with the phone's built-in voice.
 
 ## Run locally
 
@@ -45,7 +45,7 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 
 ## Coins, friends and hosting
 
-- **Top-right corner:** coins + avatar (with level and a red count of friend requests) opens the full **Profile** page: level, XP and this season's ranked division (everyone starts at 🥉 Bronze) on top; tap the avatar to change it; then four tabs (`components/ProfileTabs.tsx`; the last one used is remembered per phone as `bluff.profileTab`): **📊 Stats** (rank, coins and daily rewards, missions, record, play style, achievements folded with a **Show ▾** pill, recent games), **👥 Social** (Online now, Friends, rivals, league), **🎨 Looks** (avatar, table and cards, coin shop) and **⚙️ Settings** (✏️ your name, invite notifications, friend alerts, Admin and Rules for admins, Log out). ✏️ Your name (`NameCard.tsx`): the first change any time, then once every 2 months (locked card with the date); admins any time. Home shows a one-time "Is your name right?" card after login (`HomeNameCard`, once per player per phone, never for admins). A red count on Social shows friend requests. Guests see **Log in**.
+- **Top-right corner:** coins + avatar (with level and a red count of friend requests) opens the full **Profile** page: level, XP and this season's ranked division (everyone starts at 🥉 Bronze) on top; tap the avatar to change it; then four tabs (`components/ProfileTabs.tsx`; the last one used is remembered per phone as `bluff.profileTab`): **📊 Stats** (rank, coins and daily rewards, missions, record, play style, achievements folded with a **Show ▾** pill, recent games), **👥 Social** (Online now, Friends, rivals, league), **🎨 Looks** (avatar, table and cards, coin shop) and **⚙️ Settings** (✏️ your name, invite notifications, friend alerts, Admin and Rules for admins, Log out). ✏️ Your name (`NameCard.tsx`): the first change any time, then once every 2 months (locked card with the date); admins any time. Home shows a one-time "Is your name right?" notice after login (`HomeNotice.tsx`, once per player per phone, never for admins). A red count on Social shows friend requests. Guests see **Log in**.
 - **Daily rewards:** a popup shows the +200 login bonus; the Game over screen shows each player's stake result, the daily games reward they reached, and how many more games until the next one.
 - **🎯 Missions** (`components/MissionsPage.tsx`, from the home screen and the profile): 4 daily and 4 weekly goals from a bigger pool (Bluff wins, lies, ranked games, 2v2 wins, Crazy 7 stacks and more), each set with one to play with a friend; progress bars, rewards paid the moment a goal is reached (coins and XP), one free 🎲 swap a day, when the next set comes, and the daily games ladder on the same screen. The Game over screen lists missions a game finished.
 - **🏆 Friends league** (`components/LeaguePage.tsx`, from the home screen and the profile): a weekly board of you and your friends that starts again on Monday, with 👑 Champion, 🕵️ CID of the week and 🤥 Jhootha No. 1 crowns, last week's winners, how points work and a "Hide me" switch.
@@ -150,7 +150,7 @@ Open it in several browser tabs (or a normal + private window) to play as differ
 
 ## Chat, watching and awards
 
-- **🎧 Live voice** (`components/LiveVoice.tsx`, `lib/liveVoice.ts`): 🔊 hear and 🎙️ talk switches that say ON / OFF (game top bar; "Hear · On" / "Mic · Off" in the lobby row); every player's box shows their mic (green 🎙️ on, crossed out off, ⚠️ can't hear them yet, from `PublicPlayer.mic`). The old 7-second voice notes are gone. for logged-in seated players while the host's voice switch is on; watchers and guests never. Phones connect directly (WebRTC mesh, one offer and one answer per pair through `rtc:signal`, all routes in one message); the mic switches on and off without reconnecting. No popups: a seat shows 🎧 (in voice) or 🔇 (can't hear them yet), dropped connections retry quietly (2 s doubling to 30 s), and at most one line per room says this network can't connect.
+- **🎧 Live voice** (`components/LiveVoice.tsx`, `lib/liveVoice.ts`): 🔊 hear and 🎙️ talk switches that say ON / OFF (game top bar; "Hear · On" / "Mic · Off" in the lobby row); every player's box shows their mic (green 🎙️ on, crossed out off, ⚠️ can't hear them yet, from `PublicPlayer.mic`). The old 7-second voice notes are gone. Live voice is for logged-in seated players while the host's voice switch is on; watchers and guests never. Phones connect directly (WebRTC mesh, one offer and one answer per pair through `rtc:signal`, all routes in one message); the mic switches on and off without reconnecting. No popups: a seat shows 🎧 (in voice) or 🔇 (can't hear them yet), dropped connections retry quietly (2 s doubling to 30 s), and at most one line per room says this network can't connect.
 - **💬 Quick chat** (lobby and table): 8 emoji reactions and 26 quick messages float up on every screen with the sender's name (never the top banner). Edit the lists in `src/types.ts` (and the same file in the backend).
 - **Watch mode:** joining when 5 are seated, or mid-game once the host lets you in, makes you a watcher: you see the table, hear the voice and can chat; you get a seat in the next game. In the lobby anyone can switch **🎮 Playing / 👀 Watching**; a chosen watcher keeps watching until they switch back. The host can also move anyone from their player card (Move to watching / playing).
   - Watchers see the real cards of each play face up (green = matches the claim, red = bluff).
@@ -181,7 +181,9 @@ Bluff is a Progressive Web App: friends install it from the website, free, with 
 | File | What it does |
 |---|---|
 | `src/useBluff.ts` | Connection, auto-rejoin, announcements, all player actions |
-| `src/components/Table.tsx` | Game screen: seats, pile, bluff button, action bar |
+| `src/components/Table.tsx` | Bluff game screen: pile, bluff button, action bar (loaded lazily) |
+| `src/components/tableParts.tsx` | Shared table pieces: `Seat`, `SeatSheet`, `GameMenu`, `useOnChange` |
+| `src/lib/common.ts` | Shared constants and helpers: `BUBBLE_MS`, `DAY_MS`, `MEDALS`, `plural` |
 | `src/components/Crazy7Table.tsx` | Crazy 7 game screen: seats, deck, pile, penalty banner, playable glow, Pick / Pass / Last card |
 | `src/components/Lobby.tsx` | Game picker (every game in the catalog), settings for each game, players, bots, teams |
 | `src/games/registry.tsx` | Registry games (Ludo, ...): kind → lazy table and rules; `PluggedTable` |

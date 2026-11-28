@@ -128,8 +128,6 @@ export const CRAZY7_MAX_PICKS = 7;
 export const SEVEN_PENALTY = 2;
 /** Crazy 7 with power cards: cards the next player must pick for each 2 (answered by a 2 or a 7 with Stack 7s on) */
 export const TWO_PENALTY = 2;
-/** Crazy 7 with power cards: J changes the suit (wild), 8 skips the next player, A reverses the direction, 2 makes the next player pick 2 */
-export const C7_POWER_RANKS = ['J', '8', 'A', '2'] as const;
 
 /** Rang: our own colour-card game. Four colours, numbers 0–9 and action cards */
 export const RANG_COLORS = ['red', 'blue', 'green', 'yellow'] as const;
@@ -1738,9 +1736,6 @@ export type RankDivisionId = (typeof RANK_DIVISIONS)[number]['id'];
 /** the division for some rank points */
 export const divisionOf = (points: number) => [...RANK_DIVISIONS].reverse().find((d) => points >= d.min) ?? RANK_DIVISIONS[0];
 
-/** a ranked loss costs this share of the points the same win would give, so wins count for more */
-export const RANK_LOSS_SHARE = 0.7;
-
 /** a new season starts everyone this many divisions below where they ended the last one (never below 0) */
 export const RANK_SEASON_DROP = 1.5;
 
@@ -2681,8 +2676,6 @@ export const CHESS_CATALOG: GameInfo = {
 
 export const LUDO_MODES = ['classic', 'quick', 'timed', 'master'] as const;
 export type LudoMode = (typeof LUDO_MODES)[number];
-/** Ludo timed mode: minutes, the choices (opts.time) */
-export const LUDO_TIMES = [5, 10] as const;
 
 export const GAME_CATALOG: readonly GameInfo[] = [
   { kind: 'ludo', name: 'Ludo', emoji: '🎲', tagline: 'Roll, race and knock gotis home', category: 'board', minPlayers: 2, maxPlayers: 4, teams: true, bots: true, isNew: true, colors: ['#ff8a3d', '#c2185b'],
@@ -3252,64 +3245,6 @@ export type ColorWarMoveInput = { type: 'tap'; cell: number };
 
 export const FRUIT_KINDS = ['apple', 'orange', 'melon', 'banana', 'mango', 'grapes', 'bomb'] as const;
 export type FruitKind = (typeof FRUIT_KINDS)[number];
-export const FRUIT_POINTS: Record<FruitKind, number> = { apple: 1, orange: 1, banana: 1, grapes: 2, mango: 2, melon: 3, bomb: -10 };
-/** the play area: x 0..1 left to right, y 0..1 bottom to top; fruit fly up from below and fall back */
-export const FRUIT_GRAVITY = -1.6;
-/** a slice counts within this much of where the fruit really was (ms), for network lag */
-export const FRUIT_SLICE_SLACK_MS = 450;
-
-export interface FruitSpawn {
-  id: number;
-  kind: FruitKind;
-  /** ms after the start when it's thrown in */
-  t: number;
-  x0: number;
-  vx: number;
-  vy: number;
-}
-
-/** a small seeded random (mulberry32), so every phone and the server throw exactly the same fruit */
-export function seededRandom(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/** the whole wave for a game: same seed, same fruit for everyone; it gets busier as time goes on */
-export function fruitWave(seed: number, seconds: number): FruitSpawn[] {
-  const rnd = seededRandom(seed);
-  const out: FruitSpawn[] = [];
-  let t = 800;
-  let id = 1;
-  const end = seconds * 1000 - 1500;
-  while (t < end) {
-    const busy = t / end;
-    const burst = 1 + Math.floor(rnd() * (1 + busy * 3));
-    for (let i = 0; i < burst; i++) {
-      const bomb = rnd() < 0.08 + busy * 0.07;
-      const kind: FruitKind = bomb ? 'bomb' : FRUIT_KINDS[Math.floor(rnd() * (FRUIT_KINDS.length - 1))];
-      const x0 = 0.15 + rnd() * 0.7;
-      out.push({ id: id++, kind, t: t + i * 120, x0, vx: (0.5 - x0) * (0.3 + rnd() * 0.4), vy: 1.45 + rnd() * 0.3 });
-    }
-    t += 900 - busy * 450 + rnd() * 400;
-  }
-  return out;
-}
-
-/** where a fruit is ms after the start; null before it's thrown or once it falls off the bottom */
-export function fruitAt(f: FruitSpawn, ms: number): { x: number; y: number } | null {
-  const s = (ms - f.t) / 1000;
-  if (s < 0) return null;
-  const y = -0.1 + f.vy * s + (FRUIT_GRAVITY * s * s) / 2;
-  if (y < -0.15 && s > 0.2) return null;
-  return { x: f.x0 + f.vx * s, y };
-}
-
 /** Fruit Slice Duel (reaction duel): one item at a time pops up in the middle; everyone has a sword and one Strike button */
 export type FruitItemKind = Exclude<FruitKind, 'bomb'> | 'magnet';
 /** striking a magnet slows your sword for this many next items */
@@ -3577,8 +3512,6 @@ export type CarromLength = 'quick' | 'full';
 export const CARROM_TURN_MS = 20_000;
 /** Classic full: first to 25 points or the leader after 8 boards. Freestyle full: 3 boards. Freestyle points per coin, foul −10 */
 export const CARROM_RULES = { target: 25, maxBoards: 8, freeBoards: 3, queenBonus: 3, points: { w: 20, b: 10, q: 50 }, foul: 10 } as const;
-/** Carrom stats counters kept per account in stats.perGame.carrom */
-export const CARROM_TALLIES = ['pocketed', 'queens', 'fouls'] as const;
 /** striker: the striker dropped; miss: it touched no coin; lastCoin: own last coin pocketed before the queen was covered */
 export type CarromFoul = 'striker' | 'miss' | 'lastCoin';
 export const CARROM_FOUL_TEXT: Record<CarromFoul, string> = {
@@ -3671,8 +3604,7 @@ export const BOMB_ARROWS: readonly BombArrow[] = ['up', 'right', 'down', 'left']
 export const BOMB_SHAKE_MS = 800;
 /** the break after a BOOM (ms) */
 export const BOMB_BREAK_MS = 3_000;
-/** Bomb Pass stats counters (fastest: passes answered within BOMB_FAST_MS) */
-export const BOMB_TALLIES = ['passes', 'booms', 'fastest'] as const;
+/** Bomb Pass: a pass answered within this many ms counts as fastest */
 export const BOMB_FAST_MS = 1_500;
 
 /**
@@ -3732,8 +3664,6 @@ export const SEA_PLACE_MS = 60_000;
 export const SEA_TURN_MS = 20_000;
 export const SEA_MAX_POWERS = 2;
 export const SEA_COLS = 'ABCDEFGHIJ';
-/** Sea Battle stats counters */
-export const SEA_TALLIES = ['hits', 'sunk', 'shots'] as const;
 export type SeaPower = 'radar' | 'salvo' | 'torpedo';
 export const SEA_POWERS: readonly SeaPower[] = ['radar', 'salvo', 'torpedo'];
 
@@ -3894,8 +3824,6 @@ export const gomokuSizeOf = (players: number): number => (players <= 2 ? 15 : 19
 export const GOMOKU_WIN = 5;
 /** the centre point, where the first stone must go */
 export const gomokuCentre = (size: number): number => Math.floor(size / 2) * size + Math.floor(size / 2);
-/** Five in a Row stats counters (blocks: an opponent's four or open three cut off) */
-export const GOMOKU_TALLIES = ['fives', 'blocks'] as const;
 
 export interface GomokuView {
   size: number;
@@ -3930,8 +3858,6 @@ export type UtttBoardState = UtttMark | 'draw' | null;
 export const UTTT_LINES: readonly (readonly [number, number, number])[] = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6],
 ];
-/** Ultimate Tic-Tac-Toe stats counters */
-export const UTTT_TALLIES = ['boardsWon'] as const;
 
 /** the line three of one mark make in nine cells (a small board, or the big board's states), or null */
 export function utttLineOf(marks: readonly (string | null)[]): { mark: UtttMark; line: number[] } | null {
@@ -3992,8 +3918,6 @@ export const WORDHUNT_REVEAL_MS = 12_000;
 export const WORDHUNT_RATE = 4;
 /** words this long or longer count as long words (stats) */
 export const WORDHUNT_LONG = 7;
-/** Word Grid Hunt stats counters */
-export const WORDHUNT_TALLIES = ['words', 'uniqueWords', 'longWords'] as const;
 
 /** a word's points by its length in letters (Qu is two): 3 and 4: 1, 5: 2, 6: 3, 7: 5, 8+: 11; a word only you found scores double */
 export function wordHuntPoints(len: number): number {

@@ -1,23 +1,10 @@
 // Arcade sounds made with Web Audio (no files): Fruit Slice Duel's swoosh, squish, magnet, pop and countdown (Spike Attack reuses the helpers)
-import { liveAudio } from '../../lib/sounds';
-import { isSoundOn } from '../../lib/speech';
+import { audio, toneWith } from '../turnkit/audio';
 
-export const audio = () => (isSoundOn() ? liveAudio() : null);
+export { audio };
 
-export function tone(c: AudioContext, freq: number, at: number, dur: number, type: OscillatorType = 'sine', gain = 0.1, to?: number) {
-  const t = c.currentTime + at;
-  const osc = c.createOscillator();
-  const g = c.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, t);
-  if (to) osc.frequency.exponentialRampToValueAtTime(to, t + dur);
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(gain, t + 0.01);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  osc.connect(g).connect(c.destination);
-  osc.start(t);
-  osc.stop(t + dur + 0.02);
-}
+/** Fruit's notes fade in over 10 ms */
+export const tone = toneWith(0.01);
 
 /** filtered noise: a swoosh (sweeping band) or a thump (low) */
 export function noise(c: AudioContext, at: number, dur: number, gain: number, type: BiquadFilterType, from: number, to?: number) {

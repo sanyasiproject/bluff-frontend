@@ -40,6 +40,7 @@ import '../styles/land-chess-profile.css';
 import { ProfileTabs, useProfileTab } from './ProfileTabs';
 import { Rolling } from './Rolling';
 import { Icon } from '../art/icons';
+import { plural } from '../lib/common';
 
 interface Props {
   auth: Auth;
@@ -51,8 +52,6 @@ interface Props {
   onInvite?: (userId: string) => Promise<InviteAck | null>;
   onJoin?: (userId: string, watch: boolean) => Promise<boolean>;
 }
-
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 /** the player's own page: level, coins, record, play style, achievements and recent games */
 export function ProfilePage({ auth, onClose, onOpenAdmin, roomCode, onInvite, onJoin }: Props) {

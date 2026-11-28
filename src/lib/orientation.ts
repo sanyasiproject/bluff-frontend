@@ -1,46 +1,12 @@
 // landscape play: full screen and the sideways lock where the phone allows it
 import { stepBack } from './back';
-import { insideShell, SHELL_FS_ON, SHELL_FS_STATE, SHELL_FULLSCREEN } from './landscapeShell';
+import { insideShell, SHELL_FS_ON, SHELL_FS_STATE } from './landscapeShell';
 
 /** the installed app (home screen icon) already runs full screen */
 export const isStandalone = () =>
   window.matchMedia?.('(display-mode: standalone)').matches ||
   window.matchMedia?.('(display-mode: fullscreen)').matches ||
   (navigator as Navigator & { standalone?: boolean }).standalone === true;
-
-/** element full screen exists (Android, tablets, laptops; not iPhone) */
-export const canFullscreen = () => {
-  // inside the sideways shell, the shell page goes full screen (not iPhone, which has none)
-  if (insideShell()) {
-    try {
-      return !!window.parent.document.fullscreenEnabled;
-    } catch {
-      return false;
-    }
-  }
-  return !!document.documentElement.requestFullscreen && !isStandalone();
-};
-
-/** no orientation locks: they only hold in full screen and made the app flip upright and back (see landscapeShell.ts) */
-export function lockLandscape() {
-  // kept as a no-op so older callers still compile
-}
-
-/** full screen on, or off when it already is */
-export async function toggleFullscreen() {
-  if (insideShell()) {
-    window.parent.postMessage(SHELL_FULLSCREEN, location.origin);
-    return;
-  }
-  try {
-    if (document.fullscreenElement) await document.exitFullscreen();
-    else {
-      await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
-    }
-  } catch {
-    // refused (no tap, or the browser said no): stay as we are
-  }
-}
 
 /**
  * like a phone game: the status bar and browser bar stay hidden. Browsers only allow full screen after a tap,

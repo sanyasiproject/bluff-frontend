@@ -16,7 +16,7 @@ import { LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { SettingsDrawer, summaryBits, type LobbyTab } from './LobbySettings';
 import { Backdrop } from './Overlays';
 import { QuickChat } from './QuickChat';
-import { Seat } from './Table';
+import { Seat } from './tableParts';
 import { OnTable, seatSpots, TableScene } from './TableScene';
 
 interface Props {

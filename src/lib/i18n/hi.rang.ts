@@ -33,8 +33,6 @@ export const D: Dict = {
   'Play any card': 'कोई भी पत्ता चलें',
   'Challenge the +4: if they had the colour, they take it back and pick 4; if not, you pick 6':
     '+4 को चुनौती दें: अगर उनके पास वो रंग था तो वो उसे वापस लेंगे और 4 उठाएँगे; नहीं तो आप 6 उठाएँगे',
-  'Challenge the +4: if they had the colour, they pick 4; if not, you pick 6':
-    '+4 को चुनौती दें: उनके पास वह रंग था तो वे 4 उठाएँगे; नहीं था तो आप 6 उठाएँगे',
   Challenge: 'चुनौती',
   'Play goes clockwise': 'खेल घड़ी की दिशा में चल रहा है',
   'Play goes anticlockwise': 'खेल घड़ी की उल्टी दिशा में चल रहा है',
@@ -57,7 +55,6 @@ export const D: Dict = {
   'Force play': 'उठाओ और चलो',
   'picked & played': 'उठाकर चला',
   'Only this card': 'सिर्फ़ यही पत्ता',
-  "Tap a card to add it or leave it out. The last one's colour is next.": 'पत्ता जोड़ने या हटाने के लिए उस पर टैप करें। आख़िरी पत्ते का रंग आगे चलेगा।',
   'Tap a card to add it or leave it out.': 'पत्ता जोड़ने या हटाने के लिए उस पर टैप करें।',
   'Colour next': 'अगला रंग',
   ', added': ', जोड़ा गया',

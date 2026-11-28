@@ -1,6 +1,6 @@
 // A Saanp Seedhi player beside the board: the shared seat (avatar, name, chat, voice, turn clock) plus their square and counts
 import type { CSSProperties } from 'react';
-import { Seat } from '../../components/Table';
+import { Seat } from '../../components/tableParts';
 import { cx } from '../../lib/cards';
 import { LUDO_COLOR_HEX, type LudoColor, type PublicPlayer, type SnakesSeat as SeatData } from '../../types';
 import type { ChatBubble } from '../../useBluff';

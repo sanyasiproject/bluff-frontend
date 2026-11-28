@@ -11,7 +11,7 @@ import { cx } from '../../lib/cards';
 import { confetti, confettiAt } from '../../lib/motion';
 import { sfx } from '../../lib/sounds';
 import { unlockSpeech } from '../../lib/speech';
-import { DARTS_PER_TURN, type DartThrow, type DartsView } from '../../types';
+import { DARTS_PER_TURN, type DartsView } from '../../types';
 import type { TableProps } from '../registry';
 import { useOverReady, useSeatOrder, usePartyBase } from '../turnkit/base';
 import { PartyChrome } from '../turnkit/PartyChrome';
@@ -36,16 +36,6 @@ export function DartsTable(props: TableProps) {
     );
   }
   return <DartsTableInner {...props} dv={dv} />;
-}
-
-/** what a dart scored, as the caller would shout it */
-export function dartCall(d: Pick<DartThrow, 'ring' | 'number' | 'score'>): string {
-  if (d.ring === 'bull') return 'BULL!';
-  if (d.ring === 'outerBull') return '25!';
-  if (d.ring === 'miss') return 'Miss!';
-  if (d.ring === 'treble') return `Treble ${d.number}!`;
-  if (d.ring === 'double') return `Double ${d.number}`;
-  return `${d.score}`;
 }
 
 interface Pop {

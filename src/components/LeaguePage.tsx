@@ -8,11 +8,9 @@ import { Avatar } from './Avatar';
 import { FullPage } from './FullPage';
 import { Icon } from '../art/icons';
 import { LevelBadge } from './LevelBadge';
+import { pluralCoins } from '../lib/common';
 
 type Crown = (typeof LEAGUE_CROWNS)[number];
-
-/** "1 game", "3 games" */
-const plural = (n: number, one: string, many = `${one}s`) => `${formatCoins(n)} ${n === 1 ? one : many}`;
 
 /** time left as "2d 5h", "5h 20m" or "20m" */
 function timeLeft(ms: number): string {
@@ -26,9 +24,9 @@ function timeLeft(ms: number): string {
 
 /** a crown's number in words: "32 pts", "4 liars caught", "3 lies got away" */
 function crownValue(c: Crown, value: number): string {
-  if (c.stat === 'points') return plural(value, 'pt');
-  if (c.stat === 'goodCalls') return `${plural(value, 'liar')} caught`;
-  return `${plural(value, 'lie')} got away`;
+  if (c.stat === 'points') return pluralCoins(value, 'pt');
+  if (c.stat === 'goodCalls') return `${pluralCoins(value, 'liar')} caught`;
+  return `${pluralCoins(value, 'lie')} got away`;
 }
 
 /** who holds a crown, by name ("You" for me); more than two are cut short */
@@ -71,7 +69,7 @@ function BoardRow({ row, board, index }: { row: LeagueRow; board: LeagueBoard; i
         </p>
         <p className="league-stats">
           <span>
-            {plural(row.games, 'game')} · {plural(row.wins, 'win')}
+            {pluralCoins(row.games, 'game')} · {pluralCoins(row.wins, 'win')}
           </span>
           <span>
             <span title="Liars caught">🕵️ {formatCoins(row.goodCalls)}</span>
@@ -262,7 +260,7 @@ export function LeaguePage({ auth, onClose, initial = null, onChange }: Props) {
               <CrownList board={last} over />
               {lastMe && (
                 <p className="muted small">
-                  You finished #{lastMe.place} of {last.rows.length} with {plural(lastMe.points, 'pt')}.
+                  You finished #{lastMe.place} of {last.rows.length} with {pluralCoins(lastMe.points, 'pt')}.
                 </p>
               )}
             </section>

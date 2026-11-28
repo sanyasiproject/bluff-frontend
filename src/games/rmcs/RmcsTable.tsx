@@ -11,7 +11,7 @@ import { LevelUp } from '../../components/LevelUp';
 import { LiveVoiceButtons, LiveVoiceNotice } from '../../components/LiveVoice';
 import { GameOver } from '../../components/Overlays';
 import { QuickChat } from '../../components/QuickChat';
-import { SeatSheet } from '../../components/Table';
+import { SeatSheet } from '../../components/tableParts';
 import { useTableFx } from '../../components/TableFx';
 import { TableInfo } from '../../components/TableInfo';
 import { useBack } from '../../lib/back';
@@ -29,8 +29,8 @@ import { Rails, RailSeat } from '../turnkit/RailSeat';
 import { rmcsSfx } from './sounds';
 import { useTimeouts } from '../../lib/useTimeouts';
 import { serverNow } from '../../lib/serverClock';
+import { BUBBLE_MS } from '../../lib/common';
 
-const BUBBLE_MS = 4000;
 /** me at the near side, then round the table */
 const SPOTS = ['b', 'l', 't', 'r'];
 /** each spot's rail corner, and its colour */

@@ -10,7 +10,7 @@ import { LevelUp } from '../../components/LevelUp';
 import { LiveVoiceButtons, LiveVoiceNotice } from '../../components/LiveVoice';
 import { GameOver } from '../../components/Overlays';
 import { QuickChat } from '../../components/QuickChat';
-import { SeatSheet } from '../../components/Table';
+import { SeatSheet } from '../../components/tableParts';
 import { TableInfo } from '../../components/TableInfo';
 import { useBack } from '../../lib/back';
 import { cx } from '../../lib/cards';
@@ -27,8 +27,8 @@ import { CONTACT_MS, Duel, swordSize, swordSpots, type Shown, type SwordRoom } f
 import { FruitOver, type DuelStats } from './FruitOver';
 import { fruitSfx } from './sounds';
 import { useTimeouts } from '../../lib/useTimeouts';
+import { BUBBLE_MS } from '../../lib/common';
 
-const BUBBLE_MS = 4000;
 const RESULT_MS = 1300;
 
 export function FruitTable(props: TableProps) {

@@ -43,27 +43,6 @@
   translate: -50% -50%;
 }
 
-.rm-wood-mark {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  font-size: clamp(26px, 8dvh, 54px);
-  opacity: 0.16;
-  filter: grayscale(1);
-  translate: -50% -50%;
-}
-
-/* seats round the table: me at the near side, a little left, so my chit has the middle */
-.rm-seat {
-  z-index: 3;
-  translate: -50% -50%;
-}
-
-.rm-seat.at-b { left: 30%; top: 84%; --lu-col: #ffb300; }
-.rm-seat.at-l { left: 8%; top: 52%; --lu-col: #26a69a; }
-.rm-seat.at-t { left: 50%; top: 21%; --lu-col: #8e24aa; }
-.rm-seat.at-r { left: 92%; top: 52%; --lu-col: #ef5350; }
-
 .rm-role-tag {
   color: #ffe08a;
 }

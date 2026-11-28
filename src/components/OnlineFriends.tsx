@@ -90,28 +90,6 @@ export function FriendsDockButton({ auth, onOpen }: { auth: Auth; onOpen: () => 
   );
 }
 
-/** Home, beside the dock: up to 3 online friends' faces; one tap opens Friends */
-export function OnlineAvatars({ auth, onOpen }: { auth: Auth; onOpen: () => void }) {
-  const all = useOnlineFriends(auth.user ? auth.token : null);
-  if (!auth.user || !all) return null;
-  const online = onlineFirst(all);
-  if (online.length === 0) return null;
-  return (
-    <button type="button" className="home-online" aria-label={`${online.length} friends online`} onClick={onOpen}>
-      <span className="home-online-faces">
-        {online.slice(0, 3).map((f) => (
-          <Avatar key={f.id} name={f.displayName} avatar={f.avatar} size="sm">
-            <i className="presence on" />
-          </Avatar>
-        ))}
-      </span>
-      <span className="home-online-text">
-        <i className="live-dot on" aria-hidden /> {online.length} online
-      </span>
-    </button>
-  );
-}
-
 /** Home, beside Play: who's online right now (up to 4, face, name and where they are); a tap opens Friends */
 export function OnlineList({ auth, onOpen }: { auth: Auth; onOpen: () => void }) {
   const all = useOnlineFriends(auth.user ? auth.token : null);

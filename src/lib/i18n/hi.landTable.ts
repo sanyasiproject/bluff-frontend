@@ -28,6 +28,4 @@ export const D: Dict = {
   'Group cards by rank': 'पत्ते रैंक के हिसाब से जमाएँ',
   '🂠 Fan': '🂠 पंखा',
   '▦ Stacks': '▦ ढेर',
-  'Full screen': 'फ़ुल स्क्रीन',
-  'Leave full screen': 'फ़ुल स्क्रीन बंद',
 };

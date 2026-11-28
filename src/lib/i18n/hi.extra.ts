@@ -83,7 +83,6 @@ export const D: Dict = {
   'Learn it in 1 minute with a practice game against Raju 🤖. You can open it again any time from 📘 How to play.': 'Raju 🤖 के साथ अभ्यास गेम से 1 मिनट में सीखें। 📘 कैसे खेलें से कभी भी फिर खोल सकते हैं।',
   'Practice now': 'अभी अभ्यास करें',
   'Pick a game: a 1-minute practice round, or its rules in 30 seconds.': 'एक गेम चुनें: 1 मिनट का अभ्यास, या 30 सेकंड में उसके नियम।',
-  'A 1-minute practice game against Raju 🤖, with arrows showing what to tap.': 'Raju 🤖 के साथ 1 मिनट का अभ्यास गेम, तीर बताएँगे कहाँ टैप करना है।',
   'Wait for Raju…': 'Raju का इंतज़ार करें…',
   'Tap the one that glows': 'चमकते वाले पर टैप करें',
   'Practice ·': 'अभ्यास ·',

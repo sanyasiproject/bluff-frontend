@@ -1,6 +1,7 @@
 import { CARROM, PHYS, POCKETS, launchOf, nearestFit, simulate, strikerFits, toLocal, type CarromCoin, type CarromSide } from '../../carrom/index.js';
 import type { BotLevel, CarromMoveInput, CarromMode } from '../../types.js';
 import { resolveShot, type QueenState } from './rules.js';
+import { gauss } from '../../rand.js'; // bots may use trig, the physics may not
 
 /** what a bot knows: the public table */
 export interface CarromSeat {
@@ -18,12 +19,6 @@ const LEVEL = {
   hard: { sims: 60, aim: 0.008, power: 0.06, banks: true, pickTop: 2 },
   expert: { sims: 110, aim: 0.0025, power: 0.025, banks: true, pickTop: 1 },
 } as const;
-
-/** a normal random number (Box-Muller); bots may use trig, the physics may not */
-function gauss(rand: () => number): number {
-  const u = Math.max(rand(), 1e-12);
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand());
-}
 
 // distance a piece slides from speed v under the friction model (closed form of dv/dt = -(A + K v))
 const slide = (v: number) => v / PHYS.drag - (PHYS.friction / (PHYS.drag * PHYS.drag)) * Math.log(1 + (PHYS.drag * v) / PHYS.friction);

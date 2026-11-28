@@ -18,7 +18,6 @@ export const D: Dict = {
   Record: 'रिकॉर्ड',
   'win streak': 'लगातार जीत',
   'Recent form': 'हाल का खेल',
-  'Play style': 'खेलने का अंदाज़',
   'Bluff play style': 'Bluff में खेलने का अंदाज़',
   'Bluffs that got away': 'बच निकले झूठ',
   'Right bluff calls': 'सही Bluff कॉल',

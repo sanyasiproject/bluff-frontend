@@ -4,8 +4,8 @@ import { useBack } from '../../lib/back';
 import { PARTY_COLORS, type RoomView } from '../../types';
 import type { ChatBubble } from '../../useBluff';
 import type { LudoPanel } from '../ludo/LudoMenus';
+import { BUBBLE_MS } from '../../lib/common';
 
-const BUBBLE_MS = 4000;
 /** seat corners round the board, me first (near left), then clockwise */
 export const PARTY_CORNERS: Record<number, string[]> = { 1: ['bl'], 2: ['bl', 'tr'], 3: ['bl', 'tl', 'tr'], 4: ['bl', 'tl', 'tr', 'br'] };
 

@@ -2,7 +2,7 @@ import { AuraCanvas } from './AuraCanvas';
 import { Backdrop } from './Overlays';
 import { PlayingCard } from './PlayingCard';
 import { previewShopFx } from './ShopFx';
-import { Seat } from './Table';
+import { Seat } from './tableParts';
 import type { PublicPlayer } from '../types';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ApiError, errorText } from '../lib/api';

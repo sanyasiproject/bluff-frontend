@@ -1,9 +1,6 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 import { cx } from '../lib/cards';
-import { reducedMotion } from '../lib/motion';
-import { sfx } from '../lib/sounds';
-import { RANKS, SUITS as CARD_SUITS, type Card, type GameKind } from '../types';
-import { PlayingCard } from './PlayingCard';
+import type { GameKind } from '../types';
 
 // fixed positions so the background looks the same on every render
 const SUITS = [
@@ -53,82 +50,5 @@ export function SuitDrift({ game }: { game?: GameKind }) {
         );
       })}
     </div>
-  );
-}
-
-const FLIP_EVERY_MS = 3200;
-
-/** three different random cards for the fan */
-function freshCards(round: number): Card[] {
-  const picked: Card[] = [];
-  while (picked.length < 3) {
-    const rank = RANKS[Math.floor(Math.random() * RANKS.length)];
-    const suit = CARD_SUITS[Math.floor(Math.random() * CARD_SUITS.length)];
-    if (!picked.some((c) => c.rank === rank && c.suit === suit)) picked.push({ id: `${rank}${suit}-${round}`, rank, suit });
-  }
-  return picked;
-}
-
-/** the home screen's card fan: deals in, sways, and all three cards flip to new ones every few seconds (or on a tap) */
-export function HeroFan() {
-  const [round, setRound] = useState(0);
-  const [cards, setCards] = useState<Card[]>(() => [
-    { id: 'h1', rank: 'A', suit: 'S' },
-    { id: 'h2', rank: 'K', suit: 'C' },
-    { id: 'h3', rank: 'Q', suit: 'H' },
-  ]);
-  const flip = () => {
-    setRound((r) => r + 1);
-    setCards(freshCards(Date.now()));
-  };
-
-  // each flip restarts the timer, so a tap never gets a second flip right after it
-  useEffect(() => {
-    if (reducedMotion()) return;
-    const t = setTimeout(flip, round === 0 ? FLIP_EVERY_MS + 800 : FLIP_EVERY_MS);
-    return () => clearTimeout(t);
-  }, [round]);
-
-  // the middle card and the two side cards take turns: one side of the fan is always hidden, like in Bluff
-  const middleDown = round % 2 === 0;
-  const isDown = (i: number) => (i === 1 ? middleDown : !middleDown);
-  return (
-    <button
-      type="button"
-      className="hero-cards"
-      aria-label="Flip the cards"
-      onClick={() => {
-        sfx.play(1);
-        flip();
-      }}
-    >
-      {cards.map((card, i) => (
-        <span key={i} className={`hero-slot c${i + 1}`}>
-          {/* re-keyed so every round flips the card, one after another */}
-          <PlayingCard
-            key={isDown(i) ? `back-${round}-${i}` : card.id}
-            card={card}
-            faceDown={isDown(i)}
-            size="lg"
-            className="hero-flip"
-            style={{ animationDelay: `${i * 130}ms` }}
-          />
-        </span>
-      ))}
-    </button>
-  );
-}
-
-/** a title whose letters bounce in, then shine now and then */
-export function ShineTitle({ text }: { text: string }) {
-  return (
-    <h1 className="shine-title" aria-label={text}>
-      {[...text].map((ch, i) => (
-        <span key={i} aria-hidden style={{ '--i': i } as CSSProperties}>
-          {/* a space would collapse inside its own span */}
-          {ch === ' ' ? '\u00a0' : ch}
-        </span>
-      ))}
-    </h1>
   );
 }

@@ -45,7 +45,6 @@ export const D: Dict = {
   'Free move!': 'खुली चाल!',
   'Play in any glowing board': 'किसी भी चमकते बोर्ड में खेलो',
   'Free move for them': 'उन्हें खुली चाल मिलेगी',
-  '→ them': '→ उन्हें',
   'Three boards in a row!': 'तीन बोर्ड एक लाइन में!',
   'No big line left: a draw': 'बड़ी लाइन नहीं बची: बराबरी',
   'board won': 'बोर्ड जीता',

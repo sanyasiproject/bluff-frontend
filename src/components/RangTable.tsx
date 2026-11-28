@@ -19,7 +19,7 @@ import { LevelBadge } from './LevelBadge';
 import { Backdrop, GameOver, PlayersSheet } from './Overlays';
 import { QuickChat } from './QuickChat';
 import { LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
-import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
+import { GameMenu, Seat, SeatSheet, useOnChange } from './tableParts';
 import { useTableFx } from './TableFx';
 import { useCardRects } from '../lib/cardRects';
 import { arrivingCss, useArrivals } from '../lib/arrivals';
@@ -35,8 +35,8 @@ import { useLandscape } from '../lib/useLandscape';
 import { isRangWild, RangSwapContext, RANG_COLOR_NAME, RANG_HEX, RangCard, RangCardBack, rangCardName, RangChip, rangSymbol } from './RangCard';
 import { useTimeouts } from '../lib/useTimeouts';
 import { stopText } from '../lib/stopRule';
+import { BUBBLE_MS } from '../lib/common';
 
-const BUBBLE_MS = 4000;
 const MIN_SLICE = 28;
 const RATIO = 1.4;
 // big hands (stacked +4s): smaller cards, narrower slices and rows that show only the top corner

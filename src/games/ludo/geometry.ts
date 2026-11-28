@@ -1,5 +1,5 @@
 // Board geometry: turns the 15x15 board so my colour sits at the near-left corner
-import { LUDO_BASE, LUDO_BASE_CELLS, LUDO_COLORS, LUDO_HOME, ludoCellOf, type LudoColor, type LudoSeat } from '../../types';
+import { LUDO_BASE, LUDO_BASE_CELLS, LUDO_HOME, ludoCellOf, type LudoColor, type LudoSeat } from '../../types';
 
 /** quarter turns clockwise that bring each colour's base to the near-left (bottom-left) corner */
 const TURNS: Record<LudoColor, number> = { red: 3, green: 2, yellow: 1, blue: 0 };
@@ -131,6 +131,3 @@ function placeHome(g: GotiSpot, n: number, i: number, turns: number) {
   g.dx = at[0] - g.at[0];
   g.dy = at[1] - g.at[1];
 }
-
-/** turn order colours, for picking the corner each seat sits at */
-export const colorOrder = (c: LudoColor) => LUDO_COLORS.indexOf(c);

@@ -3,9 +3,6 @@ import type { Dict, Pattern } from './types';
 // Game Baithak (the app's new name), the home game grid, the registry lobby rows and Ludo
 export const D: Dict = {
   'Game Baithak': 'गेम बैठक',
-  'Ludo, Bluff, Rang and more with your friends, live.': 'लूडो, Bluff, रंग और भी बहुत कुछ, दोस्तों के साथ लाइव।',
-  'Your games, your friends, one baithak.': 'आपके गेम, आपके दोस्त, एक बैठक।',
-  'Get the Game Baithak app': 'गेम बैठक ऐप पाएँ',
   'Get the Game Baithak Wide app': 'गेम बैठक वाइड ऐप पाएँ',
   'Open Game Baithak from your home screen': 'होम स्क्रीन से गेम बैठक खोलें',
   'Get friend invites even when Game Baithak is closed': 'गेम बैठक बंद होने पर भी दोस्तों के बुलावे पाएँ',
@@ -52,7 +49,6 @@ export const D: Dict = {
   '🎲 Board': '🎲 बोर्ड',
   '♟️ Gotis': '♟️ गोटियाँ',
   '🎯 Dice': '🎯 पासा',
-  'Saved on this phone. Only you see your board and dice.': 'इसी फ़ोन पर सेव। अपना बोर्ड और पासा सिर्फ़ आपको दिखता है।',
   'Saved on this phone and shown to everyone at your table.': 'इसी फ़ोन पर सेव, और टेबल पर सबको दिखता है।',
   'Your gotis and dice: everyone sees them': 'आपकी गोटियाँ और पासा: सबको दिखते हैं',
   "Board: the host's board is used at the table": 'बोर्ड: टेबल पर होस्ट का बोर्ड चलता है',
@@ -90,7 +86,6 @@ export const D: Dict = {
   '🎮 Games': '🎮 गेम',
   'Ludo kills': 'लूडो में काटीं',
   'Gotis home': 'घर पहुँचीं गोटियाँ',
-  'Sixes rolled': 'छक्के',
   'Wins per game count from your next game.': 'हर गेम की जीत अगले गेम से गिनी जाएगी।',
   '🎲 Ludo board, gotis & dice': '🎲 लूडो बोर्ड, गोटियाँ और पासा',
   'Ludo starter': 'लूडो शुरुआत',

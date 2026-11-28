@@ -60,7 +60,6 @@ export const D: Dict = {
   'They leave the room.': 'ये कमरे से चले जाएँगे।',
   'Hold the pile to react': 'रिएक्ट करने के लिए ढेर दबाए रखें',
   'React to the last play': 'आख़िरी चाल पर रिएक्ट करें',
-  'Quick chat': 'झटपट चैट',
   'No cards left': 'कोई पत्ता नहीं बचा',
   ', playable': ', चल सकते हैं',
   'Face-down card': 'उल्टा पत्ता',

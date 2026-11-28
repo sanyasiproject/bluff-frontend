@@ -1,6 +1,6 @@
 // A Ludo player at their base corner: the shared seat (avatar, name, chat, voice, turn clock) plus Ludo counts
 import type { CSSProperties } from 'react';
-import { Seat } from '../../components/Table';
+import { Seat } from '../../components/tableParts';
 import { cx } from '../../lib/cards';
 import { LUDO_COLOR_HEX, LUDO_TOKENS, type LudoSeat as SeatData, type LudoView, type PublicPlayer } from '../../types';
 import type { ChatBubble } from '../../useBluff';

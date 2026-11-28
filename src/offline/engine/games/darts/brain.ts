@@ -1,5 +1,6 @@
 import { DART_NUMBERS, DART_RINGS, type BotLevel } from '../../types.js';
-import { gauss, type DartsGame } from './game.js';
+import { gauss } from '../../rand.js';
+import type { DartsGame } from './game.js';
 
 /** how far a bot's dart lands from its aim (board units, Normal spread) */
 export const DART_AIM_NOISE: Record<BotLevel, number> = { normal: 0.22, hard: 0.14, expert: 0.08 };

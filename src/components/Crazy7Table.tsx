@@ -31,14 +31,13 @@ import { useTableFx } from './TableFx';
 import { RangArrows } from './RangTable3D';
 import { useCardRects } from '../lib/cardRects';
 import { arrivingCss, useArrivals } from '../lib/arrivals';
-import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
+import { GameMenu, Seat, SeatSheet, useOnChange } from './tableParts';
 import { StreakMark, TurnCountdown, useTurnEndsAt } from './TurnTimer';
 import { Avatar } from './Avatar';
 import { SecretChip } from './SecretMissions';
 import { useTimeouts } from '../lib/useTimeouts';
 import { stopText } from '../lib/stopRule';
-
-const BUBBLE_MS = 4000;
+import { BUBBLE_MS } from '../lib/common';
 
 /** "7♠", "10♥" */
 const short = (c: Card) => `${c.rank}${SUIT_SYMBOL[c.suit]}`;

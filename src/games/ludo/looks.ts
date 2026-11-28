@@ -9,12 +9,10 @@ import {
   LUDO_LOOKS,
   ludoLookOk,
   type LudoLookChoice,
-  type LudoLookDef,
   type LudoLookKind,
   type PublicPlayer,
 } from '../../types';
 
-export type LudoLook = LudoLookDef;
 export type LudoLooks = LudoLookChoice;
 export type { LudoLookKind };
 
