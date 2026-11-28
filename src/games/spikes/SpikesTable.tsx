@@ -3,6 +3,7 @@ import '../../styles/land-ludo-hud.css';
 import '../../styles/land-ludo-over.css';
 import '../../styles/land-arcade.css';
 import '../../styles/land-spikes.css';
+import '../../styles/land-spikes-walls.css';
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from 'react';
 import { LevelUp } from '../../components/LevelUp';
 import { LiveVoiceButtons, LiveVoiceNotice } from '../../components/LiveVoice';
@@ -255,14 +256,14 @@ function SpikesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
     const n = Math.max(0, sv.lives[id] ?? 0);
     return '❤️'.repeat(n) + '🖤'.repeat(Math.max(0, SPIKES_LIVES - n));
   };
-  const status = !playing ? '' : sv.phase === 'countdown' ? 'Get ready…' : !me ? '👀 Watching' : myLives <= 0 ? '👻 You are out · watching' : ranOnce ? 'Dodge the red lines!' : '🕹️ Drag anywhere to run';
+  const status = !playing ? '' : sv.phase === 'countdown' ? 'Get ready…' : !me ? '👀 Watching' : myLives <= 0 ? '👻 You are out · watching' : ranOnce ? 'Hide behind a crate!' : '🕹️ Drag anywhere to run';
   const infoMine = me && (
     <p className="tinfo-counts">
       <span>{`❤️ ${myLives} of ${SPIKES_LIVES} lives`}</span>
       <span>{`🟥 Arena ${sv.size} × ${sv.size}`}</span>
     </p>
   );
-  const tips = ['Get your whole body off the red row or column before it counts down to 0', 'Drag anywhere: a joystick appears under your thumb (arrow keys / WASD on a keyboard)', 'After a hit you are safe for a second'];
+  const tips = ['A whole side fires at 0: the spikes stop at the crates, so stand behind one on the far side', 'Crates are solid: run round them', 'Drag anywhere: a joystick appears under your thumb (arrow keys / WASD on a keyboard)', 'After a hit you are safe for a second'];
   const alive = order.filter((id) => (sv.lives[id] ?? 0) > 0);
   const seatOf = (id: string) => {
     const p = view.players.find((x) => x.id === id);
@@ -293,7 +294,7 @@ function SpikesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
       <div className="ar-seats ar-left sp-seats">{leftSeats.map((id) => seatOf(id))}</div>
       <div className="ar-seats ar-right sp-seats sp-right">{rightSeats.map((id) => seatOf(id))}</div>
       <div ref={arenaRef} className="sp-stage" onAnimationEnd={(e) => e.currentTarget.classList.remove('sp-shake')}>
-        <Arena sv={sv} now={clock.now} order={order} colorOf={colorOf} initialOf={initialOf} nameOf={shortName} meId={view.meId} posOf={posOf} onStrike={() => spikesSfx.strike()} onHit={onHit} onTick={onTick} />
+        <Arena sv={sv} now={clock.now} order={order} colorOf={colorOf} initialOf={initialOf} nameOf={shortName} meId={view.meId} posOf={posOf} onStrike={() => spikesSfx.strike()} onThud={() => spikesSfx.thud()} onHit={onHit} onTick={onTick} />
       </div>
       {me && view.phase !== 'over' && myLives > 0 && <Joystick joy={joy} />}
       {count !== null && playing && (

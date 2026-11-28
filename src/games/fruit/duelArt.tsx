@@ -70,14 +70,28 @@ export function PlateItem({ kind, cut, angle = 0 }: { kind: FruitItemKind; cut?:
   const juice = FLESH[kind].juice;
   return (
     <div className="fd-item fd-cut" style={{ '--juice': juice, '--face': FLESH[kind].face, '--cut': `${angle}deg` } as CSSProperties}>
+      <i className="fd-splat" />
       <i className="fd-splash" />
       <span className="fd-halves">
         <span className="fd-half a" dangerouslySetInnerHTML={svgHtml(kind)} />
         <span className="fd-half b" dangerouslySetInnerHTML={svgHtml(kind)} />
+        <i className="fd-cutline" />
       </span>
-      {Array.from({ length: 8 }, (_, i) => (
+      {Array.from({ length: 12 }, (_, i) => (
         <i key={i} className="fd-drop" style={{ '--i': i } as CSSProperties} />
       ))}
     </div>
+  );
+}
+
+/** a slash across the plate: a curved streak with a white core and a glow in the striker's colour, sweeping from their side */
+export function Slash({ color, angle, delay, flip }: { color: string; angle: number; delay: number; flip: boolean }) {
+  return (
+    <i className={cx('fd-slash', flip && 'flip')} style={{ '--c': color, '--sa': `${angle}deg`, '--sd': `${delay}ms` } as CSSProperties}>
+      <svg viewBox="0 0 200 80" aria-hidden>
+        <path d="M4 58 Q100 -6 196 50 Q100 18 4 58 Z" fill={color} opacity=".55" />
+        <path d="M14 54 Q100 4 188 48 Q100 22 14 54 Z" fill="#fff" />
+      </svg>
+    </i>
   );
 }

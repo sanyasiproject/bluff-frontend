@@ -1,6 +1,7 @@
 // Spike Attack movement on this phone: my character predicted every frame and sent ~12 times a second, the others smoothed between server updates
 import { useEffect, useRef } from 'react';
-import { SPIKES_RADIUS, SPIKES_SPEED, type SpikesView } from '../../types';
+import { SPIKES_SPEED, type SpikesView } from '../../types';
+import { pushOut, slide } from './rules';
 
 const SEND_MS = 83;
 const INTERP_MS = 100;
@@ -70,8 +71,8 @@ export function useMotion(sv: SpikesView, meId: string, live: boolean, serverNow
       const { sv: v, live: on, send: post } = st.current;
       const p = mine.current;
       if (!p) return;
-      const r = SPIKES_RADIUS;
-      const clampP = (q: P): P => [Math.min(v.size - r, Math.max(r, q[0])), Math.min(v.size - r, Math.max(r, q[1]))];
+      // the same edge and box rule as the server, so I never walk through a crate
+      const clampP = (q: P): P => pushOut(v.size, v.boxes ?? [], q);
       // ease out any correction over ~150 ms
       const f = fix.current;
       if (Math.abs(f[0]) + Math.abs(f[1]) > 1e-4) {
@@ -83,7 +84,7 @@ export function useMotion(sv: SpikesView, meId: string, live: boolean, serverNow
       const go = on && Math.hypot(x, y) > 0.05;
       if (go) {
         const q = mine.current!;
-        mine.current = clampP([q[0] + x * SPIKES_SPEED * dt, q[1] + y * SPIKES_SPEED * dt]);
+        mine.current = slide(v.size, v.boxes ?? [], q, [q[0] + x * SPIKES_SPEED * dt, q[1] + y * SPIKES_SPEED * dt]);
       }
       // send while moving (and once when I stop)
       if (on && (go || moving.current) && t - lastSend.current >= SEND_MS) {

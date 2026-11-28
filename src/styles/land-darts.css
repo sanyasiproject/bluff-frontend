@@ -475,6 +475,11 @@
   white-space: nowrap;
 }
 
+/* taller screens (tablets): the board fills the height, so the step pill sits on its lower rim instead of below the screen */
+@media (min-height: 480px) {
+  .da-step { bottom: 0.5%; }
+}
+
 @media (min-height: 640px) and (min-width: 900px) {
   .da-slate-darts { font-size: 17px; }
   .da-slate-darts i { min-width: 32px; }

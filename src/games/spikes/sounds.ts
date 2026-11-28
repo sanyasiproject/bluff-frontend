@@ -29,6 +29,13 @@ export const spikesSfx = {
     noise(c, 0, 0.28, 0.45, 'bandpass', 5000, 900);
     tone(c, 1800, 0.05, 0.25, 'square', 0.03, 600);
   },
+  /** the wall slams into the crates: a low wooden thud */
+  thud() {
+    const c = audio();
+    if (!c) return;
+    noise(c, 0, 0.18, 0.5, 'lowpass', 420, 80);
+    tone(c, 120, 0, 0.16, 'sine', 0.09, 55);
+  },
   /** someone is hit: a thud; louder when it's me */
   hit(me: boolean) {
     const c = audio();

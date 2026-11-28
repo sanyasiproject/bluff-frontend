@@ -12,8 +12,9 @@ const turnDone = (v: DartsView) => !!v.turnId && v.thrown.length > 0 && (v.throw
 function throwAt(v: DartsView, ax: number, ay: number): DartsView {
   const who = v.turnId;
   if (!who || turnDone(v)) return v;
-  const x = ax + gauss() * 0.03;
-  const y = ay + gauss() * 0.03;
+  // no hand shake (DART_SHAKE 0 on the server): a dart lands where the sweep locked; bots add their own aim noise
+  const x = ax;
+  const y = ay;
   const s = dartScore(x, y);
   const before = v.left[who];
   const after = before - s.score;

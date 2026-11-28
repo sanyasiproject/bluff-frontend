@@ -2,7 +2,7 @@
 import { useLayoutEffect, type CSSProperties } from 'react';
 import { cx } from '../../lib/cards';
 import { FRUIT_ITEM_POINTS, type FruitItemKind, type FruitView } from '../../types';
-import { PlateItem, Talwar } from './duelArt';
+import { PlateItem, Slash, Talwar } from './duelArt';
 
 export interface Spot {
   id: string;
@@ -62,6 +62,9 @@ export function Duel({ fv, spots, meId, colorOf, nameOf, live, shown, mine, earl
   const fastest = struck[0]?.[0];
   const fruitWon = shown && shown.kind !== 'magnet' && shown.winner;
   const winnerSpot = fruitWon ? spots.find((s) => s.id === shown.winner) : undefined;
+  // slash trails: the strikers' (fastest first, the rest later) on a fruit, or mine the moment I tap
+  const swingingNow = !shown && mine && live && mine.round === live.round;
+  const slashes = shown ? (shown.kind === 'magnet' ? [] : struck.map(([id], i) => ({ id, d: 90 + i * 140 }))) : swingingNow ? [{ id: meId, d: 60 }] : [];
 
   return (
     <div className="fd-stage-in">
@@ -80,22 +83,33 @@ export function Duel({ fv, spots, meId, colorOf, nameOf, live, shown, mine, earl
         const rank = struck.findIndex(([id]) => id === s.id);
         const winner = !!fruitWon && shown.winner === s.id;
         const mySwing = s.id === meId && mine && live && mine.round === live.round;
-        const anim = winner ? 'slice' : mySwing || rank >= 0 ? 'swing' : '';
+        // the winner slices; the others arrive late and hit the empty plate; a magnet yanks the sword and holds it
+        const anim = winner ? 'slice' : shown?.kind === 'magnet' && rank >= 0 ? 'yank' : rank >= 0 ? 'late' : mySwing ? 'strike' : '';
         const tag = shown ? `r${shown.round}` : mySwing ? `m${mine.round}` : 'idle';
         return (
           <div
             key={`${s.id}-${anim}-${tag}`}
             className={cx('fd-sword', s.x > 50 && 'flip', s.id === meId && 'me', slow && 'slow', anim, s.id === meId && early && 'early')}
-            style={{ '--c': colorOf(s.id), left: `${s.x}%`, top: `${s.y}%`, '--a': `${s.a}deg`, '--d': `${Math.max(0, rank) * 90}ms` } as CSSProperties}
+            style={{ '--c': colorOf(s.id), left: `${s.x}%`, top: `${s.y}%`, '--a': `${s.a}deg`, '--d': `${Math.max(0, rank) * 140}ms` } as CSSProperties}
           >
             <span className="fd-blade">
               <Talwar color={colorOf(s.id)} />
               {slow && <i className="fd-trail" />}
+              {anim === 'yank' && <i className="fd-sparks" />}
             </span>
             {slow && <em className="fd-slowmark">🧲</em>}
           </div>
         );
       })}
+
+      {/* every slash in its player's colour, from their side: mine at once, everyone's with the result */}
+      <div className="fd-slashes" aria-hidden>
+        {slashes.map(({ id, d }) => {
+          const s = spots.find((x) => x.id === id);
+          if (!s) return null;
+          return <Slash key={`${id}-${shown?.round ?? `m${mine?.round}`}`} color={colorOf(id)} angle={s.a} delay={d} flip={s.x > 50} />;
+        })}
+      </div>
 
       {/* everyone's reaction under their hilt: mine at once, everyone's with the result */}
       {spots.map((s) => {

@@ -49,6 +49,14 @@ export const fruitSfx = {
     lastSwoosh = performance.now();
     noise(c, 0, 0.16, 0.22, 'bandpass', 900, 4200);
   },
+  /** steel meeting the fruit: a bright metallic ring */
+  shing() {
+    const c = audio();
+    if (!c) return;
+    noise(c, 0, 0.08, 0.25, 'highpass', 6000, 9000);
+    tone(c, 2400, 0, 0.35, 'sine', 0.05, 2200);
+    tone(c, 3600, 0.01, 0.25, 'sine', 0.025, 3400);
+  },
   /** a fruit cut: a wet squish and a little pop */
   slice(pitch = 1) {
     const c = audio();

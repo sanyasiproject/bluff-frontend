@@ -26,6 +26,9 @@ export const D: Dict = {
   'Slice!': 'काटो!',
   'Go!': 'चलो!',
   'Dodge the red lines!': 'लाल लाइनों से बचो!',
+  'Hide behind a crate!': 'किसी बक्से के पीछे छिपो!',
+  'A whole side fires at 0: the spikes stop at the crates, so stand behind one on the far side': '0 पर पूरी एक तरफ़ से काँटे निकलते हैं: वे बक्सों पर रुक जाते हैं, तो दूसरी तरफ़ किसी बक्से के पीछे खड़े हो जाओ',
+  'Crates are solid: run round them': 'बक्से ठोस हैं: उनके चारों ओर से दौड़ो',
   '👻 You are out · watching': '👻 आप बाहर हैं · देख रहे हैं',
   "👻 You're out!": '👻 आप बाहर!',
   'Watch the rest as a ghost': 'बाक़ी खेल भूत बनकर देखें',
@@ -88,6 +91,7 @@ export const D: Dict = {
   'Fair on any internet: your reaction is timed on your own phone, from the moment the item shows to your tap. Tapping before it shows does nothing.': 'हर इंटरनेट पर बराबर: आपका रिएक्शन आपके अपने फ़ोन पर गिना जाता है, चीज़ दिखने से आपके टैप तक। दिखने से पहले टैप करने से कुछ नहीं होता।',
   'The gap before each item changes, so you can’t guess it. Highest score after the last item wins; equal scores share the place.': 'हर चीज़ से पहले का इंतज़ार बदलता रहता है, तो अंदाज़ा नहीं लगा सकते। आख़िरी चीज़ के बाद सबसे ज़्यादा स्कोर जीतता है; बराबर स्कोर वाले जगह बाँटते हैं।',
   'Run freely, any direction: touch anywhere and drag, and a joystick appears under your thumb; drag further to run faster. On a keyboard, the arrow keys or WASD. Players can pass through each other.': 'किसी भी दिशा में खुलकर दौड़ो: कहीं भी छूकर खींचो, अंगूठे के नीचे जॉयस्टिक आ जाता है; ज़्यादा खींचो तो तेज़ दौड़ो। कीबोर्ड पर तीर या WASD। खिलाड़ी एक-दूसरे के आर-पार जा सकते हैं।',
+  'Run freely, any direction: touch anywhere and drag, and a joystick appears under your thumb; drag further to run faster. On a keyboard, the arrow keys or WASD. Players can pass through each other, not through crates.': 'किसी भी दिशा में खुलकर दौड़ो: कहीं भी छूकर खींचो, अंगूठे के नीचे जॉयस्टिक आ जाता है; ज़्यादा खींचो तो तेज़ दौड़ो। कीबोर्ड पर तीर या WASD। खिलाड़ी एक-दूसरे के आर-पार जा सकते हैं, बक्सों के नहीं।',
   'Get your whole body off the red band in time: even half a blob on it gets hit. A spike costs a ❤️; you have 3, and a second of safety after each hit.': 'समय पर पूरा शरीर लाल पट्टी से हटा लो: आधा भी उस पर रहा तो चोट लगेगी। हर काँटे पर एक ❤️ जाता है; आपके पास 3 हैं, और हर चोट के बाद एक सेकंड की सुरक्षा।',
   'At 0 hearts you are out and float round as a ghost 👻. Last one standing wins; players out on the same strike share the place. After 3 minutes, most hearts left wins.': '0 दिल होने पर आप बाहर और भूत 👻 बनकर घूमते हैं। आख़िर तक बचा खिलाड़ी जीतता है; एक ही वार में बाहर हुए खिलाड़ी जगह बाँटते हैं। 3 मिनट के बाद सबसे ज़्यादा दिल वाला जीतता है।',
 };
@@ -121,4 +125,7 @@ export const P: Pattern[] = [
   [/^Everyone plays at once for (.+), after a 3-2-1 countdown\.$/, (m) => `3-2-1 की गिनती के बाद सब एक साथ ${m[1].replace('45 or 60 seconds', '45 या 60 सेकंड').replace(' seconds', ' सेकंड')} खेलते हैं।`],
   [/^Everyone plays at once on a (.+) arena, starting in the corners, after a 3-2-1 countdown\.$/, (m) => `3-2-1 की गिनती के बाद सब एक साथ ${m[1].replace(' or ', ' या ')} मैदान पर खेलते हैं, कोनों से शुरू करके।`],
   [/^A row or column glows red with a countdown: when it hits 0, spikes shoot right across it\. Warnings start at (\d) seconds(?: \(Fast: 2\))? and get shorter, and more come at once\.$/, 'एक पंक्ति या कॉलम गिनती के साथ लाल चमकता है: 0 होते ही काँटे उसके आर-पार निकलते हैं। चेतावनी $1 सेकंड से शुरू होकर छोटी होती जाती है, और एक साथ ज़्यादा आती हैं।'],
+  [/^Wooden crates stand on a few squares for the whole game \((.+)\)\. They are solid: nobody walks through them\.$/, (m) => `कुछ खानों पर पूरे खेल लकड़ी के बक्से रहते हैं (${m[1].replace('on', 'पर')})। वे ठोस हैं: कोई उनके आर-पार नहीं जा सकता।`],
+  [/^A whole side lights up red with a big countdown: at 0 a wall of spikes shoots in from that side across every row \(or column\), stopping at the first crate in its way\. Warnings start at (\d) seconds(?: \(Fast: 2\))? and get shorter; later two sides can fire at once\.$/, 'एक पूरी तरफ़ बड़ी गिनती के साथ लाल चमकती है: 0 पर उस तरफ़ से काँटों की दीवार हर पंक्ति (या कॉलम) में निकलती है और रास्ते के पहले बक्से पर रुक जाती है। चेतावनी $1 सेकंड से शुरू होकर छोटी होती जाती है; बाद में दो तरफ़ से एक साथ भी आ सकती है।'],
+  [/^Hide behind a crate on the far side from the wall: the squares in its shadow stay clear \(green\)\. Even half a blob in the red gets hit\. A hit costs a ❤️; you have (\d+), and a second of safety after each hit\.$/, 'दीवार से दूसरी तरफ़ किसी बक्से के पीछे छिपो: उसकी छाया वाले खाने सुरक्षित (हरे) रहते हैं। आधा भी लाल में रहा तो चोट लगेगी। हर चोट पर एक ❤️ जाता है; आपके पास $1 हैं, और हर चोट के बाद एक सेकंड की सुरक्षा।'],
 ];

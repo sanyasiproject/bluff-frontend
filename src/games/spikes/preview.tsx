@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GameConfig, PluggedMove, PublicPlayer, RoomView, SpikesView } from '../../types';
 import type { Auth } from '../../useAuth';
 import type { Actions } from '../../useBluff';
-import { botGoal, moveIn, newSpikes, stepToward, tick } from './sim';
+import { botGoal, moveIn, newSpikes, stepToward, tick, wanderSpot } from './sim';
 import { SpikesTable } from './SpikesTable';
 
 const IDS = ['me', 'b1', 'b2', 'b3'];
@@ -42,7 +42,7 @@ export function SpikesPreview() {
       let s = tick(server.current, now, fast);
       if (s.phase === 'play')
         ids.slice(1).forEach((id, i) => {
-          if (!wander[id] || Math.random() < 0.02) wander[id] = [0.5 + Math.random() * (size - 1), 0.5 + Math.random() * (size - 1)];
+          if (!wander[id] || Math.random() < 0.02) wander[id] = wanderSpot(s);
           const goal = botGoal(s, id, i === 0 && Math.random() < 0.3, wander[id]);
           const p = stepToward(s.pos[id], goal, dt * 0.85);
           s = moveIn(s, id, p[0], p[1], now);

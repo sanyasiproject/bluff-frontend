@@ -3,6 +3,7 @@ import '../../styles/land-ludo-hud.css';
 import '../../styles/land-ludo-over.css';
 import '../../styles/land-arcade.css';
 import '../../styles/land-fruit.css';
+import '../../styles/land-fruit-slash.css';
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from 'react';
 import { LevelUp } from '../../components/LevelUp';
 import { LiveVoiceButtons, LiveVoiceNotice } from '../../components/LiveVoice';
@@ -103,6 +104,15 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
     el.classList.add('fr-shake');
   };
 
+  // a short jolt when my blade connects
+  const jolt = () => {
+    const el = stageRef.current;
+    if (!el || reducedMotion()) return;
+    el.classList.remove('fr-jolt');
+    void el.offsetWidth;
+    el.classList.add('fr-jolt');
+  };
+
   // the item up now: null while its result is on show
   const item = fv.item && fv.phase === 'play' && !(fv.result && fv.result.round === fv.item.round) ? fv.item : null;
   const itemRound = item?.round ?? null;
@@ -151,6 +161,11 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
     }
     setMine({ round: item.round, reaction });
     fruitSfx.swoosh();
+    // the blade meets the fruit about 110 ms into the swing: a shing and a jolt
+    window.setTimeout(() => {
+      fruitSfx.shing();
+      jolt();
+    }, 110);
     void actions.gameMoveQuiet({ kind: 'fruit', move: { type: 'strike', round: item.round, reaction } });
   };
   const strikeRef = useRef(strike);
@@ -257,7 +272,7 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
       <div className="fr-dojo" aria-hidden>
         <i className="fr-bokeh" />
       </div>
-      <div ref={stageRef} className="fd-stage" onAnimationEnd={(e) => e.target === e.currentTarget && e.currentTarget.classList.remove('fr-shake')}>
+      <div ref={stageRef} className="fd-stage" onAnimationEnd={(e) => e.target === e.currentTarget && e.currentTarget.classList.remove('fr-shake', 'fr-jolt')}>
         <Duel
           fv={fv}
           spots={spots}

@@ -141,9 +141,19 @@ export function startShell() {
   let since = 0;
   window.addEventListener('deviceorientation', (e) => {
     if (e.gamma === null || e.beta === null) return;
-    // held fairly upright and well over to one side; anything else keeps the current way round
-    const clear = Math.abs(e.gamma) > 68 && Math.abs(e.beta) < 50;
-    const next = !clear ? side : e.gamma > 0 ? -90 : 90;
+    // which way is down, on the screen as it is drawn now: the sensor reads the device's own axes, and many tablets
+    // are landscape-shaped devices, so an upright screen there is turned 90° from them (screen.orientation.angle)
+    const b = (e.beta * Math.PI) / 180;
+    const g = (e.gamma * Math.PI) / 180;
+    const dx = Math.cos(b) * Math.sin(g);
+    const dy = -Math.sin(b);
+    const turn = (((screen.orientation?.angle ?? Number((window as Window & { orientation?: number }).orientation ?? 0)) % 360) + 360) % 360;
+    const a = (turn * Math.PI) / 180;
+    const sx = dx * Math.cos(a) + dy * Math.sin(a);
+    const sy = -dx * Math.sin(a) + dy * Math.cos(a);
+    // held fairly upright and well over to one side (of the screen); anything else keeps the current way round
+    const clear = Math.abs(sx) > 0.6 && Math.abs(sy) < 0.7;
+    const next = !clear ? side : sx > 0 ? -90 : 90;
     const now = performance.now();
     if (next !== want) {
       want = next;

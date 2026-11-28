@@ -41,7 +41,8 @@ export function AimBoard({ live, onThrow, zone, onPhase, children }: Props) {
   const [phase, setPhase] = useState<AimPhase>('off');
   const [lock, setLock] = useState({ x: 0, y: 0 });
   const [fading, setFading] = useState(false);
-  const st = useRef({ phase: 'off' as AimPhase, at: 0, y: 0, tapAt: 0 });
+  // `shown` is where the moving line was last drawn: a tap locks exactly that, not a fresh time reading
+  const st = useRef({ phase: 'off' as AimPhase, at: 0, y: 0, tapAt: 0, shown: 0 });
   const raf = useRef(0);
   const timer = useRef(0);
   const cb = useRef({ onThrow, onPhase });
@@ -57,8 +58,14 @@ export function AimBoard({ live, onThrow, zone, onPhase, children }: Props) {
     const s = st.current;
     const w = box.current?.offsetWidth ?? 0;
     const now = performance.now();
-    if (s.phase === 'y' && hLine.current) hLine.current.style.transform = `translateY(${toPx(-sweepAt(now - s.at, 1), w)}px)`;
-    if (s.phase === 'x' && vLine.current) vLine.current.style.transform = `translateX(${toPx(sweepAt(now - s.at, -1), w)}px)`;
+    if (s.phase === 'y' && hLine.current) {
+      s.shown = sweepAt(now - s.at, 1);
+      hLine.current.style.transform = `translateY(${toPx(-s.shown, w)}px)`;
+    }
+    if (s.phase === 'x' && vLine.current) {
+      s.shown = sweepAt(now - s.at, -1);
+      vLine.current.style.transform = `translateX(${toPx(s.shown, w)}px)`;
+    }
     if (s.phase === 'y' || s.phase === 'x') raf.current = requestAnimationFrame(paint);
   };
 
@@ -69,6 +76,7 @@ export function AimBoard({ live, onThrow, zone, onPhase, children }: Props) {
       window.clearTimeout(timer.current);
       setFading(false);
       st.current.at = performance.now();
+      st.current.shown = SWEEP_REACH;
       go('y');
       raf.current = requestAnimationFrame(paint);
     } else if (st.current.phase === 'locked') setFading(true);
@@ -84,13 +92,14 @@ export function AimBoard({ live, onThrow, zone, onPhase, children }: Props) {
     if (now - s.tapAt < TAP_GAP_MS) return;
     s.tapAt = now;
     if (s.phase === 'y') {
-      s.y = sweepAt(now - s.at, 1);
+      s.y = s.shown;
       s.at = now;
+      s.shown = -SWEEP_REACH;
       setLock({ x: -SWEEP_REACH, y: s.y });
       go('x');
       navigator.vibrate?.(12);
     } else if (s.phase === 'x') {
-      const x = sweepAt(now - s.at, -1);
+      const x = s.shown;
       const y = s.y;
       cancelAnimationFrame(raf.current);
       setLock({ x, y });

@@ -1,8 +1,8 @@
-// The Spike Attack arena, redrawn every frame: faint box lanes, red warning bands with their 3-2-1, spikes shooting across, and the free-running players
-import { memo, useEffect, useRef, useState, type CSSProperties } from 'react';
+// The Spike Attack arena, redrawn every frame: crates, a glowing launcher on the warned side with its 3-2-1, the red danger area up to the crates, spike walls that stop at them, and the free-running players
+import { memo, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { cx } from '../../lib/cards';
-import { inBand } from './sim';
 import { SPIKES_LIVES, type SpikeDir, type SpikesView } from '../../types';
+import { cellSafe, freeCells, hitBy, reachesOf, reachRect, type Cell } from './rules';
 
 interface Props {
   sv: SpikesView;
@@ -16,7 +16,9 @@ interface Props {
   meId: string;
   /** where to draw each player (mine may be ahead of the server) */
   posOf: (id: string) => [number, number];
-  onStrike: (w: { id: number; dir: SpikeDir; line: number }) => void;
+  onStrike: (w: { id: number; dir: SpikeDir }) => void;
+  /** a wall reached its crates */
+  onThud: () => void;
   onHit: (ids: string[]) => void;
   onTick: (msLeft: number, onMe: boolean) => void;
 }
@@ -24,30 +26,44 @@ interface Props {
 interface Flying {
   id: number;
   dir: SpikeDir;
-  line: number;
   born: number;
+  thud: boolean;
 }
 
-const FLY_MS = 520;
-const horizontal = (d: SpikeDir) => d === 'left' || d === 'right';
+/** the wall shoots across, stays out a moment, then pulls back */
+const SHOOT_MS = 240;
+const HOLD_MS = 320;
+const BACK_MS = 260;
+const FLY_MS = SHOOT_MS + HOLD_MS + BACK_MS;
+const rect = (r: { x: number; y: number; w: number; h: number }) => ({ '--rx': r.x, '--ry': r.y, '--rw': r.w, '--rh': r.h }) as CSSProperties;
+/** where a wall on `line` meets its crate (arena units) */
+const dustAt = (n: number, dir: SpikeDir, line: number, r: number) =>
+  dir === 'left' ? { x: r, y: line + 0.5, w: 0, h: 0 } : dir === 'right' ? { x: n - r, y: line + 0.5, w: 0, h: 0 } : dir === 'top' ? { x: line + 0.5, y: r, w: 0, h: 0 } : { x: line + 0.5, y: n - r, w: 0, h: 0 };
+const easeOut = (k: number) => 1 - (1 - k) ** 3;
 
-export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf, onStrike, onHit, onTick }: Props) {
+export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf, onStrike, onThud, onHit, onTick }: Props) {
   const [, setFrame] = useState(0);
   const flown = useRef(new Set<number>());
   const seenStrikes = useRef(new Set<number>(sv.strikes.map((s) => s.id)));
   const flying = useRef<Flying[]>([]);
   const hitAt = useRef<Record<string, number>>({});
   const lastPos = useRef<Record<string, { p: [number, number]; lean: number }>>({});
-  const cbs = useRef({ onStrike, onHit, onTick, sv, posOf });
-  cbs.current = { onStrike, onHit, onTick, sv, posOf };
+  const n = sv.size;
+  const boxes = sv.boxes ?? [];
+  const boxKey = JSON.stringify(boxes);
+  const reaches = useMemo(() => reachesOf(n, boxes), [n, boxKey]);
+  const free = useMemo(() => freeCells(n, boxes), [n, boxKey]);
+  const cbs = useRef({ onStrike, onThud, onHit, onTick, sv, posOf, reaches });
+  cbs.current = { onStrike, onThud, onHit, onTick, sv, posOf, reaches };
 
-  // every frame: launch spikes whose time has come, then redraw
+  // every frame: launch walls whose time has come, thud them on the crates, tick the clock, redraw
   useEffect(() => {
     let raf = 0;
     const loop = () => {
       raf = requestAnimationFrame(loop);
-      const { sv: v, onStrike: strike, onTick: tick, posOf: at } = cbs.current;
+      const { sv: v, onStrike: strike, onThud: thud, onTick: tick, posOf: at, reaches: rs } = cbs.current;
       const t = now();
+      const pnow = performance.now();
       let soonest = Infinity;
       let soonestOnMe = false;
       const mine = v.lives[meId] ? at(meId) : null;
@@ -55,17 +71,22 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
         const left = w.strikeAt - t;
         if (left <= 0 && !flown.current.has(w.id)) {
           flown.current.add(w.id);
-          flying.current.push({ id: w.id, dir: w.dir, line: w.line, born: performance.now() });
+          flying.current.push({ id: w.id, dir: w.dir, born: pnow, thud: false });
           strike(w);
         }
         if (left > 0 && left < soonest) {
           soonest = left;
-          soonestOnMe = !!mine && inBand(mine, w);
+          soonestOnMe = !!mine && hitBy(v.size, rs[w.dir], w.dir, mine);
         }
       }
       if (soonest < Infinity) tick(soonest, soonestOnMe);
-      flying.current = flying.current.filter((f) => performance.now() - f.born < FLY_MS + 200);
-      setFrame((n) => (n + 1) % 1e6);
+      for (const f of flying.current)
+        if (!f.thud && pnow - f.born >= SHOOT_MS) {
+          f.thud = true;
+          if (rs[f.dir].some((r) => r < v.size)) thud();
+        }
+      flying.current = flying.current.filter((f) => pnow - f.born < FLY_MS + 80);
+      setFrame((k) => (k + 1) % 1e6);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
@@ -78,7 +99,7 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
       seenStrikes.current.add(s.id);
       if (!flown.current.has(s.id)) {
         flown.current.add(s.id);
-        flying.current.push({ id: s.id, dir: s.dir, line: s.line, born: performance.now() });
+        flying.current.push({ id: s.id, dir: s.dir, born: performance.now(), thud: false });
         onStrike(s);
       }
       if (s.hit.length) {
@@ -89,52 +110,78 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
   }, [sv.strikes]);
 
   const t = now();
-  const n = sv.size;
   const pnow = performance.now();
-  const lineStyle = (_dir: SpikeDir, line: number) => ({ '--line': line, '--n': n }) as CSSProperties;
   const was = lastPos.current;
-  // anyone hit just now: the arena flashes red
   const lastHit = Math.max(-1e9, ...Object.values(hitAt.current));
+  const live = sv.warnings.filter((w) => w.strikeAt > t - 40);
+  // squares shielded from every warned side: marked so the way out reads at a glance
+  const safe = live.length ? free.filter((c) => live.every((w) => cellSafe(n, reaches, w.dir, c))) : [];
+  // crates a wall just slammed into shake
+  const struck = new Set<string>();
+  for (const f of flying.current) {
+    const age = pnow - f.born;
+    if (age < SHOOT_MS || age > SHOOT_MS + 260) continue;
+    reaches[f.dir].forEach((r, line) => {
+      if (r >= n) return;
+      const c: Cell = f.dir === 'left' ? [r, line] : f.dir === 'right' ? [n - 1 - r, line] : f.dir === 'top' ? [line, r] : [line, n - 1 - r];
+      struck.add(`${c[0]},${c[1]}`);
+    });
+  }
+  const mine = sv.lives[meId] ? posOf(meId) : null;
+  const myDanger = mine ? live.filter((w) => w.strikeAt > t && hitBy(n, reaches[w.dir], w.dir, mine)) : [];
+  const myLeft = myDanger.length ? Math.min(...myDanger.map((w) => w.strikeAt - t)) : 0;
 
   return (
     <div className="sp-arena" style={{ '--n': n } as CSSProperties}>
       <Tiles n={n} />
       {pnow - lastHit < 400 && <i key={`h${Math.round(lastHit)}`} className="sp-flash" aria-hidden />}
-      {sv.warnings
-        .filter((w) => w.strikeAt > t - 40)
-        .map((w) => {
-          const total = Math.max(1, w.strikeAt - w.warnAt);
-          const left = Math.max(0, w.strikeAt - t);
-          const k = 1 - left / total;
-          const sec = Math.ceil(left / 1000);
-          return (
-            <div key={w.id} className={cx('sp-warn', horizontal(w.dir) ? 'row' : 'col', `from-${w.dir}`, left < 1000 && 'last')} style={{ ...lineStyle(w.dir, w.line), '--k': k } as CSSProperties}>
-              <i className="sp-warn-tint" style={{ opacity: 0.5 + k * 0.45 }} />
-              <i className="sp-warn-fill" style={{ transform: horizontal(w.dir) ? `scaleX(${k})` : `scaleY(${k})` }} />
-              <span className="sp-warn-edge" aria-hidden>
-                <i className="sp-launch" />
-                <SpikeIcon />
-                <i className="sp-arrow">▶</i>
-              </span>
-              <b key={sec} className="sp-warn-count">
-                {sec}
-              </b>
-            </div>
-          );
-        })}
-      {flying.current.map((f) => {
-        const k = Math.min(1, (pnow - f.born) / FLY_MS);
+      {safe.map(([c, r]) => (
+        <i key={`s${c},${r}`} className="sp-safe" style={rect({ x: c, y: r, w: 1, h: 1 })} aria-hidden />
+      ))}
+      {live.map((w) => {
+        const total = Math.max(1, w.strikeAt - w.warnAt);
+        const left = Math.max(0, w.strikeAt - t);
+        const k = 1 - left / total;
+        const sec = Math.max(1, Math.ceil(left / 1000));
         return (
-          <div key={`f${f.id}`} className={cx('sp-fly', horizontal(f.dir) ? 'row' : 'col', `from-${f.dir}`)} style={{ ...lineStyle(f.dir, f.line), '--p': k, opacity: k > 0.85 ? (1 - k) / 0.15 : 1 } as CSSProperties}>
-            <i className="sp-slash" />
-            <span className="sp-spikes">
-              <i className="sp-wall-base" />
-              <span className="sp-wall-tips">
-                {Array.from({ length: 3 }, (_, i) => (
-                  <i key={i} />
-                ))}
-              </span>
+          <div key={w.id} className={cx('sp-wall', `from-${w.dir}`, left < 1000 && 'last')} style={{ '--k': k } as CSSProperties} aria-hidden>
+            {reaches[w.dir].map((r, line) => r > 0 && <i key={line} className="sp-danger" style={rect(reachRect(n, w.dir, line, r))} />)}
+            <span className="sp-launcher">
+              {reaches[w.dir].map((_, line) => (
+                <i key={line} className="sp-peek">
+                  <SpikeIcon />
+                </i>
+              ))}
             </span>
+            <b key={sec} className="sp-wall-count">
+              {sec}
+            </b>
+          </div>
+        );
+      })}
+      {boxes.map(([c, r]) => (
+        <i key={`b${c},${r}`} className={cx('sp-box', struck.has(`${c},${r}`) && 'thud')} style={rect({ x: c, y: r, w: 1, h: 1 })} aria-hidden>
+          <i className="sp-box-face" />
+        </i>
+      ))}
+      {flying.current.map((f) => {
+        const age = pnow - f.born;
+        const p = age < SHOOT_MS ? easeOut(age / SHOOT_MS) : age < SHOOT_MS + HOLD_MS ? 1 : Math.max(0, 1 - (age - SHOOT_MS - HOLD_MS) / BACK_MS);
+        return (
+          <div key={`f${f.id}`} className={cx('sp-strike', `from-${f.dir}`)} style={{ '--sp-p': p } as CSSProperties} aria-hidden>
+            {reaches[f.dir].map(
+              (r, line) =>
+                r > 0 && (
+                  <span key={line} className="sp-shot" style={rect(reachRect(n, f.dir, line, r))}>
+                    <i className="sp-rod">
+                      <SpikeIcon />
+                    </i>
+                  </span>
+                ),
+            )}
+            {age >= SHOOT_MS &&
+              age < SHOOT_MS + 320 &&
+              reaches[f.dir].map((r, line) => r < n && <i key={`d${line}`} className="sp-dust" style={rect(dustAt(n, f.dir, line, r))} />)}
           </div>
         );
       })}
@@ -149,10 +196,11 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
         was[id] = { p: [x, y], lean };
         const hurt = (sv.safeUntil[id] ?? 0) > t || pnow - (hitAt.current[id] ?? -1e9) < 900;
         const popped = pnow - (hitAt.current[id] ?? -1e9) < 900;
+        const danger = id === meId && myDanger.length > 0 && lives > 0;
         return (
           <div
             key={id}
-            className={cx('sp-player', id === meId && 'me', lives <= 0 && 'ghost', hurt && lives > 0 && 'hurt', moved && 'run')}
+            className={cx('sp-player', id === meId && 'me', lives <= 0 && 'ghost', hurt && lives > 0 && 'hurt', moved && 'run', danger && 'danger')}
             style={{ '--c': colorOf(id), '--x': x, '--y': y, '--lean': `${(lean * 12).toFixed(1)}deg` } as CSSProperties}
           >
             {lives > 0 && (
@@ -169,6 +217,7 @@ export function Arena({ sv, now, order, colorOf, initialOf, nameOf, meId, posOf,
               <span className="sp-mouth" />
               <b data-no-translate>{initialOf(id)}</b>
             </span>
+            {danger && <em className="sp-me-count">{Math.max(1, Math.ceil(myLeft / 1000))}</em>}
             {popped && <em className="sp-minus">💔</em>}
             <small className="sp-tag" data-no-translate>
               {id === meId ? 'You' : nameOf(id)}

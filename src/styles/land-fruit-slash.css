@@ -1,0 +1,228 @@
+/* ---------- Fruit Slice Duel: a real slash (wind-up, fast arc, hit-stop, overshoot), slash trails, the split with gravity, juice splat, magnet yank ---------- */
+
+/* a short jolt when my blade connects */
+.fr-jolt {
+  animation: fr-jolt 0.2s ease-out;
+}
+
+@keyframes fr-jolt {
+  30% { transform: translate(4px, -3px); }
+  60% { transform: translate(-3px, 2px); }
+}
+
+/* my strike: wind back, whip through the item, freeze a moment on contact, overshoot, settle */
+.fd-sword.strike .fd-blade {
+  animation: fd-strike 0.4s linear both;
+}
+
+@keyframes fd-strike {
+  0% { transform: none; animation-timing-function: ease-out; }
+  15% { transform: rotate(-34deg); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.6); }
+  29% { transform: translateX(26%) rotate(18deg); }
+  /* hit-stop: about 50 ms frozen on the fruit */
+  42% { transform: translateX(27%) rotate(19deg); animation-timing-function: ease-out; }
+  55% { transform: translateX(31%) rotate(32deg); animation-timing-function: cubic-bezier(0.3, 0, 0.3, 1); }
+  100% { transform: none; }
+}
+
+/* the winner (as the result arrives): the same slash, a touch bigger */
+.fd-sword.slice .fd-blade {
+  animation: fd-slice2 0.5s linear both;
+}
+
+@keyframes fd-slice2 {
+  0% { transform: none; animation-timing-function: ease-out; }
+  14% { transform: rotate(-38deg); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.6); }
+  28% { transform: translateX(30%) rotate(20deg); }
+  38% { transform: translateX(31%) rotate(21deg); animation-timing-function: ease-out; }
+  52% { transform: translateX(36%) rotate(36deg); animation-timing-function: cubic-bezier(0.3, 0, 0.3, 1); }
+  100% { transform: none; }
+}
+
+/* too slow: the swing comes after the fruit is gone and cuts only air over the empty plate */
+.fd-sword.late .fd-blade {
+  animation: fd-late 0.46s calc(var(--d, 0ms) + 120ms) linear both;
+}
+
+@keyframes fd-late {
+  0% { transform: none; animation-timing-function: ease-out; }
+  16% { transform: rotate(-28deg); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.6); }
+  40% { transform: translateX(34%) rotate(40deg); animation-timing-function: cubic-bezier(0.3, 0, 0.3, 1); }
+  100% { transform: none; }
+}
+
+.fd-sword.slow.late .fd-blade {
+  animation-duration: 0.9s;
+}
+
+/* a magnet strike: the sword is yanked onto it, sticks there sparking, then drags back slowly */
+.fd-sword.yank .fd-blade {
+  animation: fd-yank 1.5s calc(var(--d, 0ms) * 0.5) linear both;
+}
+
+@keyframes fd-yank {
+  0% { transform: none; animation-timing-function: cubic-bezier(0.7, 0, 1, 0.5); }
+  12% { transform: translateX(42%) rotate(6deg); }
+  20% { transform: translateX(40%) rotate(3deg); }
+  28% { transform: translateX(42%) rotate(5deg); }
+  36% { transform: translateX(40%) rotate(3deg); }
+  52% { transform: translateX(41%) rotate(4deg); animation-timing-function: cubic-bezier(0.5, 0, 0.6, 1); }
+  100% { transform: none; }
+}
+
+/* sparks at the tip while it's stuck */
+.fd-sparks {
+  position: absolute;
+  right: -4%;
+  top: 0;
+  width: 26%;
+  aspect-ratio: 1;
+  translate: 0 -30%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #fff 0 12%, transparent 13%),
+    conic-gradient(from 0deg, transparent 0 8%, #ffd740 8% 11%, transparent 11% 25%, #fff59d 25% 28%, transparent 28% 42%, #ffd740 42% 45%, transparent 45% 60%, #fff 60% 63%, transparent 63% 78%, #ffd740 78% 81%, transparent 81%);
+  -webkit-mask: radial-gradient(circle, #000 55%, transparent 70%);
+  mask: radial-gradient(circle, #000 55%, transparent 70%);
+  animation: fd-sparks 0.12s steps(2) 0.18s 6 both, fd-sparks-out 1.5s linear both;
+}
+
+@keyframes fd-sparks {
+  to { transform: rotate(40deg) scale(1.2); }
+}
+
+@keyframes fd-sparks-out {
+  0%, 10% { opacity: 0; }
+  12%, 55% { opacity: 1; }
+  65%, 100% { opacity: 0; }
+}
+
+/* slash trails sit over the plate, where the item is */
+.fd-slashes {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: 5;
+  width: 38%;
+  height: 38%;
+  translate: -50% -50%;
+  pointer-events: none;
+}
+
+.fd-slash {
+  position: absolute;
+  left: -34%;
+  right: -34%;
+  top: 28%;
+  height: 44%;
+  rotate: var(--sa);
+  filter: drop-shadow(0 0 6px var(--c)) drop-shadow(0 0 14px var(--c));
+}
+
+.fd-slash.flip { scale: 1 -1; }
+
+.fd-slash svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 50%;
+  animation: fd-slash 0.42s var(--sd, 0ms) cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+@keyframes fd-slash {
+  0% { transform: scaleX(0.05); opacity: 0; }
+  12% { opacity: 1; }
+  38% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1.04); opacity: 0; }
+}
+
+/* the cut: a bright line along the slash, then the halves split on it, spin and drop with gravity */
+.fd-cutline {
+  position: absolute;
+  left: 49%;
+  top: -16%;
+  bottom: -16%;
+  width: 2.4%;
+  border-radius: 99px;
+  background: linear-gradient(180deg, transparent, #fff 20%, #fff 80%, transparent);
+  box-shadow: 0 0 10px #fff, 0 0 18px var(--juice);
+  animation: fd-cutline 0.5s ease-out both;
+}
+
+@keyframes fd-cutline {
+  0% { transform: scaleY(0); opacity: 1; }
+  30% { transform: scaleY(1); opacity: 1; }
+  100% { transform: scaleY(1.1); opacity: 0; }
+}
+
+.fd-cut .fd-halves {
+  animation: fd-fall 1.1s 0.1s cubic-bezier(0.45, 0, 0.9, 0.55) both;
+}
+
+@keyframes fd-fall {
+  0% { translate: 0 0; opacity: 1; }
+  80% { opacity: 1; }
+  100% { translate: 0 calc(var(--fs) * 0.26); opacity: 0; }
+}
+
+.fd-cut .fd-half.a { animation: fd-half-a2 1.1s 0.1s cubic-bezier(0.2, 0.7, 0.4, 1) both; }
+.fd-cut .fd-half.b { animation: fd-half-b2 1.1s 0.1s cubic-bezier(0.2, 0.7, 0.4, 1) both; }
+
+@keyframes fd-half-a2 {
+  to { transform: translate(-46%, -6%) rotate(-95deg); }
+}
+
+@keyframes fd-half-b2 {
+  to { transform: translate(46%, 4%) rotate(110deg); }
+}
+
+/* juice drops spray out in the fruit's colour and fall */
+.fd-cut .fd-drop {
+  rotate: calc(var(--i) * 30deg);
+  animation: fd-drop 0.75s 0.08s ease-out both, fd-drip 0.75s 0.08s cubic-bezier(0.5, 0, 1, 0.6) both;
+}
+
+@keyframes fd-drip {
+  to { translate: 0 calc(var(--fs) * 0.12); }
+}
+
+/* a juice splat left on the plate for a moment */
+.fd-splat {
+  position: absolute;
+  inset: 18% -4% -14%;
+  border-radius: 46% 54% 40% 60% / 55% 45% 60% 40%;
+  background:
+    radial-gradient(30% 26% at 30% 60%, var(--juice) 60%, transparent 62%),
+    radial-gradient(26% 22% at 70% 55%, var(--juice) 60%, transparent 62%),
+    radial-gradient(40% 30% at 50% 60%, var(--juice) 55%, transparent 58%),
+    radial-gradient(8% 8% at 14% 40%, var(--juice) 60%, transparent 64%),
+    radial-gradient(7% 7% at 88% 76%, var(--juice) 60%, transparent 64%);
+  animation: fd-splat 1.7s 0.12s ease-out both;
+}
+
+@keyframes fd-splat {
+  0% { transform: scale(0.3); opacity: 0; }
+  12% { transform: scale(1.06); opacity: 0.85; }
+  20% { transform: scale(1); }
+  70% { opacity: 0.7; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fr-jolt,
+  .fd-sword.strike .fd-blade,
+  .fd-sword.slice .fd-blade,
+  .fd-sword.late .fd-blade,
+  .fd-sword.yank .fd-blade,
+  .fd-sparks,
+  .fd-slash svg,
+  .fd-cutline,
+  .fd-cut .fd-halves,
+  .fd-cut .fd-half.a,
+  .fd-cut .fd-half.b,
+  .fd-cut .fd-drop,
+  .fd-splat { animation: none; }
+  .fd-slash,
+  .fd-cutline,
+  .fd-sparks { display: none; }
+}
