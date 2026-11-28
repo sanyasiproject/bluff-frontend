@@ -3,13 +3,14 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Avatar } from "../../components/Avatar";
 import { Backdrop } from "../../components/Overlays";
 import { cx } from "../../lib/cards";
+import { retryImport } from "../../lib/lazyRetry";
 import { confetti, reducedMotion } from "../../lib/motion";
 import type { RoomView } from "../../types";
 import type { ChessView, Color } from "./lib";
 import { reasonText, resultTitle, sideName } from "./texts";
 
-const ChessAnalysis = lazy(() =>
-  import("./ChessAnalysis").then((m) => ({ default: m.ChessAnalysis })),
+const ChessAnalysis = lazy(
+  retryImport(() => import("./ChessAnalysis").then((m) => ({ default: m.ChessAnalysis }))),
 );
 
 interface Props {

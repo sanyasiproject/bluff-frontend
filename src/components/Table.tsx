@@ -37,6 +37,7 @@ import { LiveMark, LiveVoiceButtons, LiveVoiceNotice } from './LiveVoice';
 import { SecretChip } from './SecretMissions';
 import { MuteButton, MuteMark } from './MuteButton';
 import { VoiceSettings } from './VoiceSettings';
+import { stopText } from '../lib/stopRule';
 
 interface SeatProps {
   player: PublicPlayer;
@@ -1262,9 +1263,9 @@ export function Table({ view, actions, bubbles, auth, notes = [] }: { view: Room
       )}
       {confirmStop && playing && (
         <ConfirmBox
-          title="Stop this game for everyone?"
-          body="Nobody wins or loses and no coins move. Everyone goes back to the lobby."
-          action="Stop game"
+          title={stopText(view).title}
+          body={stopText(view).body}
+          action={stopText(view).action}
           cancel="Keep playing"
           onCancel={() => setConfirmStop(false)}
           onConfirm={() => {

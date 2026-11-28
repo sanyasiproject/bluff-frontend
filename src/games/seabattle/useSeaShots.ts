@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { SeaShotView, SeaView } from '../../types';
 import type { Banner } from '../turnkit/base';
 import { seaSfx } from './sounds';
+import { useTimeouts } from '../../lib/useTimeouts';
 
 const POWER_NAME = { radar: '📡 Radar', salvo: '💥 Salvo', torpedo: '🚀 Torpedo' } as const;
 
@@ -10,6 +11,8 @@ const POWER_NAME = { radar: '📡 Radar', salvo: '💥 Salvo', torpedo: '🚀 To
 export function useSeaShots(bv: SeaView, meId: string, name: (id: string) => string, show: (b: Omit<Banner, 'key'>, delay?: number, ms?: number) => void, onShot: (s: SeaShotView) => void): SeaShotView | null {
   const [fresh, setFresh] = useState<SeaShotView | null>(null);
   const seen = useRef(bv.last?.seq ?? null);
+  // cleared on unmount, so no sound or effect fires after leaving
+  const tm = useTimeouts();
   const cb = useRef(onShot);
   cb.current = onShot;
   useEffect(() => {
@@ -34,7 +37,7 @@ export function useSeaShots(bv: SeaView, meId: string, name: (id: string) => str
     } else if (sunk) {
       seaSfx.sink();
       show({ text: 'Sunk! 🚢', sub: `${by} sank ${at} ship${s.earned ? ` · got ${POWER_NAME[s.earned]}` : ''}`, tone: s.by === meId ? 'gold' : 'info' }, 500, 1900);
-      if (s.earned && s.by === meId) window.setTimeout(seaSfx.power, 900);
+      if (s.earned && s.by === meId) tm.later(seaSfx.power, 900);
     } else if (s.kind === 'radar' && s.by === meId && s.count !== undefined) {
       show({ text: `📡 ${s.count} ship cell${s.count === 1 ? '' : 's'}`, sub: 'in that 3 × 3', tone: 'info' }, 200, 1600);
     }

@@ -21,6 +21,7 @@ import { Rails, RailSeat } from '../turnkit/RailSeat';
 import { GomokuBoard } from './GomokuBoard';
 import { longestOf, runAt } from './lib';
 import { gomokuSfx } from './sounds';
+import { useTimeouts } from '../../lib/useTimeouts';
 
 /** tap a point, then tap it again (or ✓) to place: on by default, a per-phone switch */
 export const gomokuConfirm = () => loadPref('gomoku.confirm') !== 'off';
@@ -39,6 +40,8 @@ export function GomokuTable(props: TableProps) {
 
 function GomokuInner({ view, actions, bubbles, auth, notes = [], gv }: TableProps & { gv: GomokuView }) {
   const order = useSeatOrder(view, gv.seats);
+  // cleared on unmount, so no sound or effect fires after leaving
+  const tm = useTimeouts();
   const base = usePartyBase(view, bubbles, order);
   const { me, playing, name, colorOf, cornerOf, bubbleOf, show } = base;
   const [busy, setBusy] = useState(false);
@@ -72,7 +75,7 @@ function GomokuInner({ view, actions, bubbles, auth, notes = [], gv }: TableProp
     if (gv.winner) {
       gomokuSfx.five();
       const el = boardRef.current?.querySelector('.gm-stone.fresh');
-      window.setTimeout(() => confettiAt(el, { count: 60, spread: 1 }), 500);
+      tm.later(() => confettiAt(el, { count: 60, spread: 1 }), 500);
       show({ text: gv.winner === view.meId ? 'Five in a row!' : `${name(gv.winner)}: five in a row!`, tone: gv.winner === view.meId ? 'gold' : 'info' }, 300);
       navigator.vibrate?.([30, 40, 30]);
       return;

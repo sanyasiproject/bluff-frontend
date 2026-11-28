@@ -19,7 +19,7 @@ export function EvalBar({ line, bottom, className }: { line: Pick<EngineLine, 'c
 }
 
 /** the top lines: score, depth and the first moves of each */
-export function EngineLines({ lines, busy, max = 3, onPick }: { lines: EngineLine[]; busy: boolean; max?: number; onPick?: (i: number) => void }) {
+export function EngineLines({ lines, busy, max = 3, onPick, error }: { lines: EngineLine[]; busy: boolean; max?: number; onPick?: (i: number) => void; error?: string | null }) {
   const depth = lines[0]?.depth;
   return (
     <div className="ch-lines">
@@ -33,7 +33,7 @@ export function EngineLines({ lines, busy, max = 3, onPick }: { lines: EngineLin
           <span data-no-translate>{l.sans.slice(0, 8).join(' ')}</span>
         </button>
       ))}
-      {!lines.length && <p className="muted small">{busy ? 'Thinking…' : 'No moves here'}</p>}
+      {!lines.length && <p className="muted small">{busy ? 'Thinking…' : error ? `⚠️ ${error}` : 'No moves here'}</p>}
     </div>
   );
 }

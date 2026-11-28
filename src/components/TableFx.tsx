@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { reducedMotion } from '../lib/motion';
+import { useTimeouts } from '../lib/useTimeouts';
 
 /** the big moments of colour-card games: skip, reverse, a pick penalty, a wild's colour, last card and a missed call */
 export type FxKind = 'skip' | 'reverse' | 'draw' | 'wild' | 'call' | 'missed';
@@ -22,12 +23,14 @@ const LIFE_MS = 1700;
 export function useTableFx() {
   const [items, setItems] = useState<FxItem[]>([]);
   const seq = useRef(0);
+  // cleared on unmount, so no sound or effect fires after leaving
+  const tm = useTimeouts();
   const fx = useCallback((kind: FxKind, at: Element | DOMRect | null | undefined, opts: { text?: string; color?: string; shake?: boolean } = {}) => {
     if (!at || reducedMotion()) return;
     const r = at instanceof Element ? at.getBoundingClientRect() : at;
     const key = ++seq.current;
     setItems((all) => [...all, { key, kind, x: r.left + r.width / 2, y: r.top + r.height / 2, text: opts.text, color: opts.color }]);
-    window.setTimeout(() => setItems((all) => all.filter((i) => i.key !== key)), LIFE_MS);
+    tm.later(() => setItems((all) => all.filter((i) => i.key !== key)), LIFE_MS);
     // a heavy hit (+4) shakes the whole table for a moment
     if (opts.shake) {
       document.querySelector('main.table')?.animate(

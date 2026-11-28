@@ -3,6 +3,7 @@ import type { ComponentType } from 'react';
 import { isPlugged, type GameKind, type PluggedKind } from '../types';
 import type { TableProps } from './registry';
 import { lastGame, mostPlayed } from './lastPlayed';
+import { retryImport } from '../lib/lazyRetry';
 
 type Load = () => Promise<ComponentType<TableProps>>;
 
@@ -30,7 +31,7 @@ export const LOADED: Partial<Record<PluggedKind, ComponentType<TableProps>>> = {
 
 /** download a game's table once; remembers it for LOADED */
 export function loadTable(kind: PluggedKind): Promise<ComponentType<TableProps>> {
-  return TABLE_LOADS[kind]().then((T) => (LOADED[kind] = T));
+  return retryImport(TABLE_LOADS[kind])().then((T) => (LOADED[kind] = T));
 }
 
 /** start downloading a game's table now (no-op for hand-wired games or one already fetched); errors are ignored */

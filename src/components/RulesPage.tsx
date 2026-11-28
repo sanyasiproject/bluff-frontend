@@ -721,7 +721,12 @@ export function RulesPage({ onClose }: { onClose: () => void }) {
               other team loses. It counts as a finished game.
             </li>
             <li>
-              <b>Stop game</b> (host, ⋯ menu): ends it with no winner. No coins, XP or stats move.
+              <b>Stop game</b> (host, ⋯ menu): ends it with no winner. No coins, XP or stats move. On staked and ranked tables, stopping
+              counts as the stopper's forfeit and the others play on.
+            </li>
+            <li>
+              <b>Dropped connection</b>: the seat is held (90 s, 60 s on staked and ranked tables) with a countdown on everyone's screen, then
+              it forfeits like leaving. Staked and ranked tables always run the turn timer. If the server restarts, the app rejoins on its own.
             </li>
             <li>
               <b>Play again</b> (host, end screen): deals the same table again with the same settings.

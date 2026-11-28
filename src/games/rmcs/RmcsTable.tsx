@@ -27,6 +27,8 @@ import { chorRuns, cuffs, flyPoints } from './fx';
 import { RmcsOver } from './RmcsOver';
 import { Rails, RailSeat } from '../turnkit/RailSeat';
 import { rmcsSfx } from './sounds';
+import { useTimeouts } from '../../lib/useTimeouts';
+import { serverNow } from '../../lib/serverClock';
 
 const BUBBLE_MS = 4000;
 /** me at the near side, then round the table */
@@ -49,10 +51,11 @@ export function RmcsTable(props: TableProps) {
 
 /** seconds left until a time, ticking */
 function useSecondsLeft(endsAt: number | null): number | null {
-  const [now, setNow] = useState(Date.now);
+  const [now, setNow] = useState(serverNow);
   useEffect(() => {
     if (!endsAt) return;
-    const t = window.setInterval(() => setNow(Date.now()), 250);
+    setNow(serverNow());
+    const t = window.setInterval(() => setNow(serverNow()), 250);
     return () => window.clearInterval(t);
   }, [endsAt]);
   return endsAt ? Math.max(0, Math.ceil((endsAt - now) / 1000)) : null;
@@ -71,6 +74,8 @@ function RmcsTableInner({ view, actions, bubbles, auth, notes = [], rv }: TableP
   const [panel, setPanel] = useState<LudoPanel>(null);
   const [target, setTarget] = useState<string | null>(null);
   const [overSeen, setOverSeen] = useState(false);
+  // cleared on unmount, so no sound or effect fires after leaving
+  const tm = useTimeouts();
   const [levelUp, setLevelUp] = useState<number | null>(null);
   const [announce, setAnnounce] = useState<Announce | null>(null);
   const [siren, setSiren] = useState(0);
@@ -163,7 +168,7 @@ function RmcsTableInner({ view, actions, bubbles, auth, notes = [], rv }: TableP
     rajaSeen.current = `${rv.round}`;
     rmcsSfx.raja();
     const el = chitEls.current.get(raja);
-    window.setTimeout(() => {
+    tm.later(() => {
       fx('call', el, { text: '👑 RAJA!', color: '#ffd54a' });
       confettiAt(el, { count: 24, spread: 0.6 });
     }, 250);
@@ -192,7 +197,7 @@ function RmcsTableInner({ view, actions, bubbles, auth, notes = [], rv }: TableP
     if (lastRound.correct) {
       rmcsSfx.siren();
       setSiren(Date.now());
-      window.setTimeout(() => setSiren(0), 2000);
+      tm.later(() => setSiren(0), 2000);
       cuffs(chorEl);
       say({ text: 'Pakda gaya! 🦹', sub: `${chor === view.meId ? 'You were' : `${name(chor)} was`} the Chor`, tone: 'red', mid: true }, 150, 2600);
       navigator.vibrate?.([50, 40, 50]);
@@ -206,7 +211,7 @@ function RmcsTableInner({ view, actions, bubbles, auth, notes = [], rv }: TableP
       const pts = lastRound.points[id] ?? 0;
       if (pts > 0) flyPoints(chitEls.current.get(id), scoreEls.current.get(id), `+${pts}`, 1100 + i * 150);
     });
-    window.setTimeout(() => rmcsSfx.points(), 2100);
+    tm.later(() => rmcsSfx.points(), 2100);
   }, [rv.phase, rv.round]);
 
   const send = async (move: { type: 'open' } | { type: 'guess'; target: string }) => {

@@ -1,9 +1,10 @@
 // Chess screens loaded on first use, so the chess library and engine stay out of the main download
 import { lazy, Suspense, type ComponentProps } from 'react';
+import { retryImport } from '../../lib/lazyRetry';
 
-const Rules = lazy(() => import('./ChessRules').then((m) => ({ default: m.ChessRules })));
-const Settings = lazy(() => import('./ChessSettings').then((m) => ({ default: m.ChessSettings })));
-const Profile = lazy(() => import('./ChessProfile').then((m) => ({ default: m.ChessProfile })));
+const Rules = lazy(retryImport(() => import('./ChessRules').then((m) => ({ default: m.ChessRules }))));
+const Settings = lazy(retryImport(() => import('./ChessSettings').then((m) => ({ default: m.ChessSettings }))));
+const Profile = lazy(retryImport(() => import('./ChessProfile').then((m) => ({ default: m.ChessProfile }))));
 
 export function ChessRulesLazy(props: ComponentProps<typeof Rules>) {
   return (

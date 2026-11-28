@@ -1,4 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { LostGameCard, ReconnectOverlay, SeatHeld } from './components/ConnOverlay';
 import { Flyers } from './components/Flyers';
 import { FriendOnline } from './components/FriendOnline';
 import { Home } from './components/Home';
@@ -12,6 +14,7 @@ import { JoinAsks } from './components/JoinAsks';
 import { Splash } from './components/Splash';
 import { Toasts } from './components/Toasts';
 import { clearInvite } from './lib/invite';
+import { retryImport } from './lib/lazyRetry';
 import { useLook } from './lib/look';
 import { autoPush } from './lib/push';
 import { loadName, loadTabSession } from './lib/storage';
@@ -24,10 +27,10 @@ import { useSendLudoLook } from './games/ludo/looks';
 import { isPlugged, levelOf } from './types';
 
 // screens Home doesn't need are downloaded when first opened (Home prefetches the likely ones when idle)
-const AdminPanel = lazy(() => import('./components/AdminPanel').then((m) => ({ default: m.AdminPanel })));
-const loadCrazy7 = () => import('./components/Crazy7Table');
-const loadRang = () => import('./components/RangTable');
-const loadBluff = () => import('./components/Table');
+const AdminPanel = lazy(retryImport(() => import('./components/AdminPanel').then((m) => ({ default: m.AdminPanel }))));
+const loadCrazy7 = retryImport(() => import('./components/Crazy7Table'));
+const loadRang = retryImport(() => import('./components/RangTable'));
+const loadBluff = retryImport(() => import('./components/Table'));
 const Crazy7Table = lazy(() => loadCrazy7().then((m) => ({ default: m.Crazy7Table })));
 const RangTable = lazy(() => loadRang().then((m) => ({ default: m.RangTable })));
 const Table = lazy(() => loadBluff().then((m) => ({ default: m.Table })));
@@ -36,7 +39,7 @@ const Table = lazy(() => loadBluff().then((m) => ({ default: m.Table })));
 const QUIET_IN_GAME = ['play', 'pass', 'round', 'room', 'chat', 'bluff'];
 
 export default function App() {
-  const { status, connectionId, roomKey, view, notes, reactions, bubbles, flyers, invites, replaced, pendingWatch, nudged, actions } = useBluff();
+  const { status, connectionId, roomKey, view, notes, reactions, bubbles, flyers, invites, replaced, pendingWatch, nudged, rejoining, lostGame, actions } = useBluff();
   const auth = useAuth();
   const land = useLandscape();
   // the table theme and card back this player picked
@@ -104,6 +107,8 @@ export default function App() {
   }, [settled, refresh]);
 
   let screen;
+  // a new screen gets a fresh error boundary
+  const screenKey = replaced ? 'replaced' : !view ? (adminOpen ? 'admin' : 'home') : view.phase === 'lobby' ? 'lobby' : `table:${view.config.game}`;
   if (!booted && !replaced) {
     screen = <Splash status={status} />;
   } else if (replaced) {
@@ -147,12 +152,17 @@ export default function App() {
 
   return (
     <>
-      <Suspense fallback={null}>{screen}</Suspense>
+      <ErrorBoundary key={screenKey} where={screenKey} onHome={view ? () => void actions.leaveAnyway() : () => setAdminOpen(false)}>
+        <Suspense fallback={null}>{screen}</Suspense>
+      </ErrorBoundary>
       {/* shop win bursts and entry flashes, for both games and the lobby */}
       <ShopFx view={replaced ? null : view} />
-      {view && !replaced && status !== 'online' && <div className="conn-pill">Reconnecting…</div>}
+      {/* offline or still getting my seat back: the table dims and takes no taps */}
+      <ReconnectOverlay show={!!view && !replaced && (status !== 'online' || rejoining)} seated={!!view?.players.some((p) => p.id === view.meId)} />
+      {lostGame && <LostGameCard onHome={actions.clearLostGame} />}
+      {view && !replaced && <SeatHeld view={view} />}
       {/* sideways at a table: only errors and big moments pop up; every move is in the table info panel */}
-      <Toasts notes={land && view?.phase === 'playing' ? notes.filter((n) => QUIET_IN_GAME.indexOf(n.kind) === -1) : notes} />
+      <Toasts notes={land && view?.phase === 'playing' ? notes.filter((n) => n.loud || QUIET_IN_GAME.indexOf(n.kind) === -1) : notes} />
       <Reactions items={reactions} />
       <LiveVoiceSync view={replaced ? null : view} />
       {/* people asking me to let them in, top right on any screen */}

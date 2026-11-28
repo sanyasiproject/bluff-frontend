@@ -2,6 +2,7 @@
 import { lazy, StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { unlockAudio } from './lib/sounds';
 import { unlockSpeech } from './lib/speech';
 import { startI18n } from './lib/i18n/dom';
@@ -66,12 +67,14 @@ const LudoPreview = !import.meta.env.DEV
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {LudoPreview ? (
-      <Suspense fallback={null}>
-        <LudoPreview />
-      </Suspense>
-    ) : (
-      <App />
-    )}
+    <ErrorBoundary where="app">
+      {LudoPreview ? (
+        <Suspense fallback={null}>
+          <LudoPreview />
+        </Suspense>
+      ) : (
+        <App />
+      )}
+    </ErrorBoundary>
   </StrictMode>,
 );

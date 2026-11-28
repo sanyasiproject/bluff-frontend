@@ -19,6 +19,7 @@ import { PartyOver } from '../turnkit/PartyOver';
 import { Rails, RailSeat } from '../turnkit/RailSeat';
 import { utttSfx } from './sounds';
 import { Mark, UtttBoard } from './UtttBoard';
+import { useTimeouts } from '../../lib/useTimeouts';
 
 const BOARD_NAMES = ['top-left', 'top', 'top-right', 'left', 'centre', 'right', 'bottom-left', 'bottom', 'bottom-right'];
 
@@ -36,6 +37,8 @@ export function UtttTable(props: TableProps) {
 
 function UtttInner({ view, actions, bubbles, auth, notes = [], uv }: TableProps & { uv: UtttView }) {
   const order = useSeatOrder(view, [uv.x, uv.o]);
+  // cleared on unmount, so no sound or effect fires after leaving
+  const tm = useTimeouts();
   const base = usePartyBase(view, bubbles, order);
   const { me, playing, name, colorOf, cornerOf, bubbleOf, show } = base;
   const [busy, setBusy] = useState(false);
@@ -57,15 +60,15 @@ function UtttInner({ view, actions, bubbles, auth, notes = [], uv }: TableProps 
     lastSeq.current = last.seq;
     utttSfx.mark();
     if (uv.winner) {
-      window.setTimeout(() => utttSfx.win(), 300);
-      window.setTimeout(() => confettiAt(boardRef.current, { count: 70, spread: 1.2 }), 700);
+      tm.later(() => utttSfx.win(), 300);
+      tm.later(() => confettiAt(boardRef.current, { count: 70, spread: 1.2 }), 700);
       show({ text: uv.winner === view.meId ? 'Three boards in a row!' : `${name(uv.winner)} wins the big board`, tone: uv.winner === view.meId ? 'gold' : 'info' }, 400);
       return;
     }
     if (uv.draw) return show({ text: 'No big line left: a draw', tone: 'info' }, 300);
     const mine = last.playerId === view.meId;
     if (last.won) {
-      window.setTimeout(() => utttSfx.stamp(mine), 200);
+      tm.later(() => utttSfx.stamp(mine), 200);
       show({ text: mine ? `You won the ${BOARD_NAMES[last.board]} board` : `${name(last.playerId)} won the ${BOARD_NAMES[last.board]} board`, tone: mine ? 'good' : 'info' }, 250);
     } else if (myTurn && freeMove) {
       utttSfx.free();

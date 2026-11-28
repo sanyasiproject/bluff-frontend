@@ -26,6 +26,7 @@ import { useServerClock } from './clock';
 import { CONTACT_MS, Duel, swordSize, swordSpots, type Shown, type SwordRoom } from './Duel';
 import { FruitOver, type DuelStats } from './FruitOver';
 import { fruitSfx } from './sounds';
+import { useTimeouts } from '../../lib/useTimeouts';
 
 const BUBBLE_MS = 4000;
 const RESULT_MS = 1300;
@@ -46,6 +47,8 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
   const [panel, setPanel] = useState<LudoPanel>(null);
   const [target, setTarget] = useState<string | null>(null);
   const [overSeen, setOverSeen] = useState(false);
+  // cleared on unmount, so no sound or effect fires after leaving
+  const tm = useTimeouts();
   const [podium, setPodium] = useState(false);
   const [levelUp, setLevelUp] = useState<number | null>(null);
   const [count, setCount] = useState<number | null>(null);
@@ -183,7 +186,7 @@ function FruitTableInner({ view, actions, bubbles, auth, notes = [], fv }: Table
     setMine({ round: item.round, reaction });
     fruitSfx.swoosh();
     // the blade meets the fruit at contact (later for a slowed sword): a shing and a jolt
-    window.setTimeout(() => {
+    tm.later(() => {
       fruitSfx.shing();
       jolt();
     }, (fv.slow[view.meId] ?? 0) > 0 ? CONTACT_MS * 2.2 : CONTACT_MS);

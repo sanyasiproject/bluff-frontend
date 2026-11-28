@@ -35,6 +35,8 @@ import { GameMenu, Seat, SeatSheet, useOnChange } from './Table';
 import { StreakMark, TurnCountdown, useTurnEndsAt } from './TurnTimer';
 import { Avatar } from './Avatar';
 import { SecretChip } from './SecretMissions';
+import { useTimeouts } from '../lib/useTimeouts';
+import { stopText } from '../lib/stopRule';
 
 const BUBBLE_MS = 4000;
 
@@ -135,6 +137,8 @@ function seatTag(c7: Crazy7View, id: string, cards: number) {
 export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view: RoomView; actions: Actions; bubbles: ChatBubble[]; auth: Auth; notes?: Note[] }) {
   const c7 = view.crazy7;
   const [busy, setBusy] = useState(false);
+  // cleared on unmount, so no sound or effect fires after leaving
+  const tm = useTimeouts();
   const land = useLandscape();
   const [sound, setSound] = useState(isSoundOn);
   const [panel, setPanel] = useState<'menu' | 'people' | 'requests' | null>(null);
@@ -284,7 +288,7 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
       if (by) next[by] = `played ${short(top)}`;
       // the card's big moment, once it has landed
       const card = top;
-      window.setTimeout(() => {
+      tm.later(() => {
         const pile = pileRef.current;
         if (card.rank === '7' || (power && card.rank === '2')) fx('draw', pile, { text: `+${c7.penalty > 0 ? c7.penalty : 2}` });
         else if (power && card.rank === '8') {
@@ -323,9 +327,9 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
       }
       next[p.id] = `+${gained}`;
       // a 7's (or 2's) penalty lands on its player
-      if (gained > 1 && to) window.setTimeout(() => fx('draw', to, { text: `+${gained}` }), delay + 300);
+      if (gained > 1 && to) tm.later(() => fx('draw', to, { text: `+${gained}` }), delay + 300);
     }
-    if (picked) window.setTimeout(() => sfx.draw(), delay);
+    if (picked) tm.later(() => sfx.draw(), delay);
     const last = c7.last;
     // a 7's pick with no cards left anywhere: nothing is picked, the turn is just missed
     if (last?.kind === 'penalty' && last.count === 0 && last.playerId) {
@@ -895,8 +899,8 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
       {confirmStop && playing && (
         <Backdrop center onClose={() => setConfirmStop(false)}>
           <div className="confirm-box">
-            <h3>Stop this game for everyone?</h3>
-            <p className="muted">Nobody wins or loses and no coins move. Everyone goes back to the lobby.</p>
+            <h3>{stopText(view).title}</h3>
+            <p className="muted">{stopText(view).body}</p>
             <div className="confirm-actions">
               <button className="btn ghost" onClick={() => setConfirmStop(false)}>
                 Keep playing
@@ -908,7 +912,7 @@ export function Crazy7Table({ view, actions, bubbles, auth, notes = [] }: { view
                   void actions.toLobby();
                 }}
               >
-                Stop game
+                {stopText(view).action}
               </button>
             </div>
           </div>

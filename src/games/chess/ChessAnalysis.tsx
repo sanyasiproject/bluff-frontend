@@ -145,7 +145,7 @@ export function ChessAnalysis({ gameId, variant, initialFen, moves, names, resul
             </p>
           )}
           <MoveList sans={sans} ply={ply} marks={marks} onPly={setPly} blackFirst={initialFen.split(' ')[1] === 'b'} className="ch-an-moves" />
-          {showLine && <EngineLines lines={live.lines} busy={live.busy} max={1} />}
+          {showLine && <EngineLines lines={live.lines} busy={live.busy} max={1} error={live.error} />}
           <div className="ch-an-nav">
             <button className="ch-btn" aria-label="First move" onClick={() => setPly(0)}>⏮</button>
             <button className="ch-btn" aria-label="Previous move" onClick={() => step(-1)}>◀</button>

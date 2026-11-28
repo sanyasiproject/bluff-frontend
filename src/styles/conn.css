@@ -1,0 +1,83 @@
+/* offline at a room: dim and block the table until the seat is back (components/ConnOverlay.tsx) */
+.conn-dim {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: grid;
+  place-items: center;
+  background: rgba(8, 5, 24, 0.55);
+  animation: conn-in 0.25s ease-out backwards;
+}
+
+.conn-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 22px;
+  border-radius: 16px;
+  background: rgba(24, 16, 58, 0.92);
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+.conn-spin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: var(--gold, #f5c84b);
+  animation: conn-spin 0.9s linear infinite;
+}
+
+/* other players' held seats, top centre over the table */
+.seat-held {
+  position: fixed;
+  /* under the top bar's turn label */
+  top: calc(46px + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 45;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 90vw;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.seat-held span {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(24, 16, 58, 0.88);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.crash-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+@keyframes conn-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes conn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .conn-dim,
+  .conn-spin {
+    animation: none;
+  }
+}

@@ -1,6 +1,7 @@
 // Small pieces over the Ludo table: the timed-mode clock and the big banners (bonus roll, three sixes)
 import { useEffect, useState } from 'react';
 import { cx } from '../../lib/cards';
+import { serverNow } from '../../lib/serverClock';
 
 export interface Banner {
   key: number;
@@ -24,9 +25,9 @@ export function LudoBanner({ banner }: { banner: Banner }) {
 
 /** Timed mode: game time left, ticking each second */
 export function LudoClock({ endsAt }: { endsAt: number }) {
-  const [now, setNow] = useState(Date.now);
+  const [now, setNow] = useState(serverNow);
   useEffect(() => {
-    const t = window.setInterval(() => setNow(Date.now()), 1000);
+    const t = window.setInterval(() => setNow(serverNow()), 1000);
     return () => window.clearInterval(t);
   }, []);
   const left = Math.max(0, Math.ceil((endsAt - now) / 1000));

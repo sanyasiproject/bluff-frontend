@@ -10,27 +10,52 @@ const spawn = () => new Worker(new URL('./engine.worker.ts', import.meta.url), {
 export function useLiveLines(on: boolean, variant: ChessVariant, initialFen: string, moves: string[], opts: { multiPv?: number; maxMs?: number } = {}) {
   const [lines, setLines] = useState<EngineLine[]>([]);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const hidden = usePageHidden();
   const key = moves.join(' ');
+  // one worker for every position; only a search still running is cut off (it can't be interrupted inside)
+  const worker = useRef<Worker | null>(null);
+  const running = useRef(false);
+  const kill = () => {
+    worker.current?.terminate();
+    worker.current = null;
+    running.current = false;
+  };
+  useEffect(() => kill, []);
   useEffect(() => {
     setLines([]);
-    if (!on || hidden) return;
-    const w = spawn();
+    if (running.current) kill();
+    if (!on || hidden) return setBusy(false);
+    let w: Worker;
+    try {
+      w = worker.current ??= spawn();
+    } catch {
+      setError('Engine unavailable');
+      return setBusy(false);
+    }
     const id = ++seq;
+    running.current = true;
     setBusy(true);
+    setError(null);
     w.onmessage = (e: MessageEvent<EngineReply>) => {
       const r = e.data;
       if (r.id !== id) return;
       if (r.type === 'lines') {
         if (r.lines.length) setLines(r.lines);
-        if (r.final) (setBusy(false), w.terminate());
-      } else if (r.type === 'error') (setBusy(false), w.terminate());
+        if (r.final) (running.current = false, setBusy(false));
+      } else if (r.type === 'error') (running.current = false, setBusy(false), setError(r.message));
+    };
+    // the worker failed to load or crashed: show it and start a fresh one next time
+    w.onerror = (e) => {
+      e.preventDefault();
+      kill();
+      setBusy(false);
+      setError('Engine stopped');
     };
     const req: EngineRequest = { id, type: 'search', variant, initialFen, moves, multiPv: opts.multiPv ?? 3, maxMs: opts.maxMs ?? 2500 };
     w.postMessage(req);
-    return () => w.terminate();
   }, [on, hidden, variant, initialFen, key]);
-  return { lines, busy };
+  return { lines, busy, error };
 }
 
 /** reviews a whole game once (cached per game id on this phone); stops if the screen closes */
@@ -54,6 +79,11 @@ export function useReview(gameId: string, variant: ChessVariant, initialFen: str
         saveReview(gameId, r.result);
         w.terminate();
       } else if (r.type === 'error') (setError(r.message), w.terminate());
+    };
+    w.onerror = (e) => {
+      e.preventDefault();
+      w.terminate();
+      setError('Engine stopped');
     };
     const req: EngineRequest = { id, type: 'review', variant, initialFen, moves, msPerMove };
     w.postMessage(req);

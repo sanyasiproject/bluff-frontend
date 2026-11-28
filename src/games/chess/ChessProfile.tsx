@@ -4,13 +4,14 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { Avatar } from '../../components/Avatar';
 import { errorText } from '../../lib/api';
 import { cx } from '../../lib/cards';
+import { retryImport } from '../../lib/lazyRetry';
 import type { Auth } from '../../useAuth';
 import { chessApi } from './api';
 import { CHESS_PERFS, CHESS_START_RATING, chessRatingText, type ChessGameRecord, type ChessGameSummary, type ChessLeaderboard, type ChessPerf, type ChessRating } from './lib';
 import { RatingGraph } from './RatingGraph';
 import { reasonText, timeText } from './texts';
 
-const ChessAnalysis = lazy(() => import('./ChessAnalysis').then((m) => ({ default: m.ChessAnalysis })));
+const ChessAnalysis = lazy(retryImport(() => import('./ChessAnalysis').then((m) => ({ default: m.ChessAnalysis }))));
 
 const fresh = (): ChessRating => ({ r: CHESS_START_RATING, rd: 500, vol: 0.09, games: 0, w: 0, l: 0, d: 0, peak: CHESS_START_RATING, streak: 0, bestStreak: 0, history: [], updatedAt: 0 });
 

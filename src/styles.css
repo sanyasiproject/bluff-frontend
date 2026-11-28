@@ -42,6 +42,13 @@ body,
 /* the night colour behind everything, so nothing light shows when the phone's bars come and go */
 html {
   background: #120b2e;
+  /* a quick double tap on a board never zooms the page */
+  touch-action: manipulation;
+}
+
+/* popups take focus when they open; no ring round the whole sheet */
+.backdrop > [role='dialog']:focus {
+  outline: none;
 }
 
 body {

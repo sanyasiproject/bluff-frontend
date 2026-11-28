@@ -21,6 +21,7 @@ import { Rails, RailSeat, ShareBar } from '../turnkit/RailSeat';
 import { ColorWarBoard } from './ColorWarBoard';
 import { replay, WAVE_MS } from './sim';
 import { colorwarSfx } from './sounds';
+import { useTimeouts } from '../../lib/useTimeouts';
 
 export function ColorWarTable(props: TableProps) {
   const cw = props.view.plugged?.kind === 'colorwar' ? props.view.plugged.colorwar : null;
@@ -47,6 +48,8 @@ const changed = (a: ColorWarCell[], b: ColorWarCell[]) => new Set(b.flatMap((c, 
 
 function ColorWarTableInner({ view, actions, bubbles, auth, notes = [], cw }: TableProps & { cw: ColorWarView }) {
   const order = useSeatOrder(view, null);
+  // cleared on unmount, so no sound or effect fires after leaving
+  const tm = useTimeouts();
   const base = usePartyBase(view, bubbles, order);
   const { me, playing, name, colorOf, cornerOf, bubbleOf, show } = base;
   const [busy, setBusy] = useState(false);
@@ -117,7 +120,7 @@ function ColorWarTableInner({ view, actions, bubbles, auth, notes = [], cw }: Ta
     aliveRef.current = cw.alive;
     if (!gone.length) return;
     const wait = Math.max(0, animEnd.current - Date.now()) + 150;
-    window.setTimeout(() => {
+    tm.later(() => {
       colorwarSfx.out();
       show({ text: gone.includes(view.meId) ? "💥 You're out!" : `💥 ${gone.map(name).join(' & ')} ${gone.length > 1 ? 'are' : 'is'} out!`, sub: playing ? `${cw.alive.length} left` : undefined, tone: 'red' }, 0, 2000);
       if (view.phase === 'over' && boardRef.current) confettiAt(boardRef.current, { count: 50, spread: 1 });

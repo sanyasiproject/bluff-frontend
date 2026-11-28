@@ -33,6 +33,7 @@ import { LudoOver } from './LudoOver';
 import { LudoSeatCorner } from './LudoSeat';
 import { lookOfPlayer, useLudoLooks } from './looks';
 import { ludoSfx } from './sounds';
+import { useTimeouts } from '../../lib/useTimeouts';
 
 const BUBBLE_MS = 4000;
 
@@ -51,6 +52,8 @@ export function LudoTable(props: TableProps) {
 function LudoTableInner({ view, actions, bubbles, auth, notes = [], lv }: TableProps & { lv: LudoView }) {
   const level = auth.user ? levelOf(auth.user.stats) : 1;
   const myLooks = useLudoLooks(level);
+  // cleared on unmount, so no sound or effect fires after leaving
+  const tm = useTimeouts();
   const [panel, setPanel] = useState<LudoPanel>(null);
   const [looksOpen, setLooksOpen] = useState(false);
   const [target, setTarget] = useState<string | null>(null);
@@ -138,7 +141,7 @@ function LudoTableInner({ view, actions, bubbles, auth, notes = [], lv }: TableP
     ludoSfx.roll();
     if (lv.dice === 6) ludoSfx.six();
     if (lv.dice === 6 && prev.sixes >= 2) {
-      window.setTimeout(() => ludoSfx.bust(), 700);
+      tm.later(() => ludoSfx.bust(), 700);
       show({ kind: 'bust', text: 'Three 6s!', sub: `${name(prev.turn)} ${prev.turn === view.meId ? 'lose' : 'loses'} the turn` }, 700);
     } else if (lv.rolled && lv.movable.length === 0 && lv.turnId) {
       show({ kind: 'info', text: 'No move', sub: lv.turnId === view.meId ? 'Your turn passes' : `${name(lv.turnId)} can't move` }, 750);

@@ -61,25 +61,20 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   });
 }
 
-// a page left open across a deploy asks for chunks that are gone: reload once to get the new build
+// a page left open across a deploy asks for chunks that are gone: reload to get the new build,
+// at most once a minute so a chunk that is really missing shows the error screen instead of a reload loop
+const CHUNK_RELOAD_GAP_MS = 60_000;
 window.addEventListener('vite:preloadError', (e) => {
   try {
-    if (sessionStorage.getItem('bluff.chunkReload')) return;
-    sessionStorage.setItem('bluff.chunkReload', '1');
+    const last = Number(sessionStorage.getItem('bluff.chunkReload') ?? 0);
+    if (Date.now() - last < CHUNK_RELOAD_GAP_MS) return;
+    sessionStorage.setItem('bluff.chunkReload', String(Date.now()));
   } catch {
     return;
   }
   e.preventDefault();
   location.reload();
 });
-// a page that stayed up a while may reload again for a later deploy
-setTimeout(() => {
-  try {
-    sessionStorage.removeItem('bluff.chunkReload');
-  } catch {
-    // storage blocked
-  }
-}, 15000);
 
 // touch phones and tablets: the app runs inside a frame that turns sideways when the phone is upright,
 // so the game opens in landscape even with the rotation lock on (lib/landscapeShell.ts)

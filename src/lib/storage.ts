@@ -60,3 +60,6 @@ export const loadName = () => read(() => localStorage, NAME_KEY) ?? '';
 export const saveName = (name: string) => write(() => localStorage, NAME_KEY, name);
 export const loadPref = (key: string) => read(() => localStorage, `bluff.${key}`);
 export const savePref = (key: string, value: string) => write(() => localStorage, `bluff.${key}`, value);
+
+/** this tab only stops coming back to its seat (the device's Rejoin button stays) */
+export const forgetTabSession = () => write(() => sessionStorage, SESSION_KEY, null);

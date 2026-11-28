@@ -27,14 +27,29 @@ export function reconnectSocket(): void {
 /** Error message coming from the server's game rules */
 export class ServerError extends Error {}
 
+/** the server didn't answer in time */
+export class TimeoutError extends Error {}
+
 type Ack<T> = ({ ok: true } & T) | { ok: false; error: string };
 
+/** room and game events wait until room:rejoin has finished after a reconnect */
+const WAITS_FOR_REJOIN = /^(game|c7|rang|room|chat|ludo):/;
+let rejoining = false;
+
+/** useBluff marks the rejoin in flight so moves are refused until the seat is back */
+export function setRejoining(on: boolean): void {
+  rejoining = on;
+}
+
 export async function request<T extends object = object>(event: string, payload: object = {}): Promise<T> {
+  // offline: fail at once instead of queueing a move that lands after the rejoin
+  if (!socket.connected) throw new Error('Reconnecting…');
+  if (rejoining && event !== 'room:rejoin' && WAITS_FOR_REJOIN.test(event)) throw new Error('Reconnecting…');
   let res: Ack<T>;
   try {
     res = await socket.timeout(10_000).emitWithAck(event, payload);
   } catch {
-    throw new Error('No connection to the server, try again');
+    throw new TimeoutError('No connection to the server, try again');
   }
   if (!res.ok) throw new ServerError(res.error);
   return res;

@@ -19,7 +19,9 @@ export function WordReveal({ wv, ids, meId, name, colorOf, onClose, onNext }: Pr
   const best = useRef<HTMLDivElement>(null);
   const r = wv.reveal;
   useEffect(() => {
-    if (r?.best) window.setTimeout(() => confettiAt(best.current, { count: 50, spread: 1.1 }), 350);
+    if (!r?.best) return;
+    const t = window.setTimeout(() => confettiAt(best.current, { count: 50, spread: 1.1 }), 350);
+    return () => window.clearTimeout(t);
   }, [r?.round]);
   if (!r) return null;
   const sum = (id: string) => r.points[id] ?? 0;

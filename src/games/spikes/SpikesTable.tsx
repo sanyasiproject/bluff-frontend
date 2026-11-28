@@ -31,6 +31,7 @@ import { Joystick, joyVector, type JoyState } from './Joystick';
 import { useMotion } from './motion';
 import { SpikesOver } from './SpikesOver';
 import { spikesSfx } from './sounds';
+import { useTimeouts } from '../../lib/useTimeouts';
 
 const BUBBLE_MS = 4000;
 const STEP_SOUND_MS = 260;
@@ -52,6 +53,8 @@ function SpikesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
   const [panel, setPanel] = useState<LudoPanel>(null);
   const [target, setTarget] = useState<string | null>(null);
   const [overSeen, setOverSeen] = useState(false);
+  // cleared on unmount, so no sound or effect fires after leaving
+  const tm = useTimeouts();
   const [podium, setPodium] = useState(false);
   const [levelUp, setLevelUp] = useState<number | null>(null);
   const [banner, setBanner] = useState<Banner | null>(null);
@@ -241,7 +244,7 @@ function SpikesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
     const out = order.filter((id) => (livesWas.current[id] ?? 1) > 0 && (sv.lives[id] ?? 0) <= 0);
     livesWas.current = sv.lives;
     if (!out.length || sv.phase === 'countdown') return;
-    window.setTimeout(() => spikesSfx.out(), 250);
+    tm.later(() => spikesSfx.out(), 250);
     if (out.includes(view.meId)) show({ kind: 'bust', text: "👻 You're out!", sub: 'Watch the rest as a ghost' });
     else show({ kind: 'info', text: `👻 ${out.map(name).join(', ')} out!`, sub: `${order.filter((id) => (sv.lives[id] ?? 0) > 0).length} left` });
   }, [sv.lives]);

@@ -29,6 +29,10 @@ import { LieRecapBox } from './LieRecap';
 import { SecretsReveal } from './SecretMissions';
 import { RankedLine } from './Ranked';
 
+/** open popups, newest last: Escape closes only the top one */
+const openPopups: HTMLElement[] = [];
+let popupSeq = 0;
+
 export function Backdrop({
   center,
   onClose,
@@ -43,9 +47,49 @@ export function Backdrop({
 }) {
   // the phone's back button closes it too; screens without onClose (game over) stay put
   useBack(onClose);
+  const box = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  const [labelId, setLabelId] = useState<string | undefined>(undefined);
+
+  // focus moves into the popup and back when it closes; its heading names it; Escape closes the top one
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const before = document.activeElement as HTMLElement | null;
+    openPopups.push(el);
+    const heading = el.querySelector('h1, h2, h3, h4');
+    if (heading) {
+      if (!heading.id) heading.id = `popup-title-${++popupSeq}`;
+      setLabelId(heading.id);
+    }
+    if (!el.contains(document.activeElement)) el.focus({ preventScroll: true });
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || openPopups[openPopups.length - 1] !== el || !closeRef.current) return;
+      e.preventDefault();
+      closeRef.current();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      const i = openPopups.indexOf(el);
+      if (i >= 0) openPopups.splice(i, 1);
+      const lost = !document.activeElement || document.activeElement === document.body || el.contains(document.activeElement);
+      if (before && document.contains(before) && lost) before.focus({ preventScroll: true });
+    };
+  }, []);
+
   return (
     <div className={cx('backdrop', center && 'center', panel && `${panel}-bd`)} onClick={onClose}>
-      <div className={cx(center ? 'modal' : 'sheet', panel)} role="dialog" aria-modal onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={box}
+        className={cx(center ? 'modal' : 'sheet', panel)}
+        role="dialog"
+        aria-modal
+        aria-labelledby={labelId}
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
+      >
         {children}
       </div>
     </div>

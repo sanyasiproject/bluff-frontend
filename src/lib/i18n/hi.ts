@@ -33,15 +33,17 @@ import * as newGames from './hi.newGames';
 import * as gridGames from './hi.gridGames';
 import * as chess from './hi.chess';
 import * as chessRules from './hi.chessRules';
+import * as fairplay from './hi.fairplay';
 import type { Dict, Pattern } from './types';
 
 // later files win on the same exact line
-const dicts: Dict[] = [gridGames.D, newGames.D, chess.D, chessRules.D, common.D, fruitSpikes.D, dartsDots.D, cards.D, titles.D, home.D, lobby1.D, lobby2.D, table.D, over.D, crazy7.D, rang.D, profile.D, social.D, missions.D, shop.D, league.D, extra.D, land.D, landHome.D, landLobby.D, landPages.D, landPages2.D, landOverlays.D, landTable.D, landC7.D, landRang.D, games2.D, ludo.D, errors.D];
+const dicts: Dict[] = [gridGames.D, newGames.D, chess.D, chessRules.D, common.D, fruitSpikes.D, dartsDots.D, cards.D, titles.D, home.D, lobby1.D, lobby2.D, table.D, over.D, crazy7.D, rang.D, profile.D, social.D, missions.D, shop.D, league.D, extra.D, land.D, landHome.D, landLobby.D, landPages.D, landPages2.D, landOverlays.D, landTable.D, landC7.D, landRang.D, games2.D, ludo.D, errors.D, fairplay.D];
 
 export const HI_DICT = new Map<string, string>(dicts.flatMap((d) => Object.entries(d)));
 
 // specific screens first, the server's broad lines last
 export const HI_PATTERNS: Pattern[] = [
+  ...fairplay.P,
   ...chess.P,
   ...chessRules.P,
   ...cards.P,

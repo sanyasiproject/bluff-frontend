@@ -8,6 +8,7 @@ import { formatCoins } from '../../lib/coins';
 import { isSoundOn, setSoundOn, unlockSpeech } from '../../lib/speech';
 import type { RoomView } from '../../types';
 import type { Actions } from '../../useBluff';
+import { stopText } from '../../lib/stopRule';
 
 export type LudoPanel = 'menu' | 'people' | 'requests' | null;
 
@@ -61,7 +62,7 @@ export function LudoMenus({ view, actions, panel, setPanel, leaveWhat = 'Your go
       )}
       {confirm === 'stop' &&
         playing &&
-        box('Stop this game for everyone?', 'Nobody wins or loses and no coins move. Everyone goes back to the lobby.', 'Keep playing', 'Stop game', () => void actions.toLobby(), () => setConfirm(null))}
+        box(stopText(view).title, stopText(view).body, 'Keep playing', stopText(view).action, () => void actions.toLobby(), () => setConfirm(null))}
       {confirm === 'leave' &&
         playing &&
         box(

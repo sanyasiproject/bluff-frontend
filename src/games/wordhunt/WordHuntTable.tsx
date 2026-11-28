@@ -19,6 +19,7 @@ import { LetterGrid, type Flash } from './LetterGrid';
 import { clockOffset } from './lib';
 import { wordSfx } from './sounds';
 import { WordReveal } from './WordReveal';
+import { useTimeouts } from '../../lib/useTimeouts';
 
 export function WordHuntTable(props: TableProps) {
   const wv = props.view.plugged?.kind === 'wordhunt' ? props.view.plugged.wordhunt : null;
@@ -36,6 +37,8 @@ type Said = { key: number; text: string; kind: 'ok' | 'dup' | 'bad'; points?: nu
 
 function WordHuntInner({ view, actions, bubbles, auth, notes = [], wv }: TableProps & { wv: WordHuntView }) {
   const order = useSeatOrder(view, Object.keys(wv.scores));
+  // cleared on unmount, so no sound or effect fires after leaving
+  const tm = useTimeouts();
   const base = usePartyBase(view, bubbles, order);
   const { me, name, colorOf, bubbleOf } = base;
   const offset = useMemo(() => clockOffset(wv.now), [wv.now]);
@@ -80,7 +83,7 @@ function WordHuntInner({ view, actions, bubbles, auth, notes = [], wv }: TablePr
     const k = Date.now();
     setSaid({ ...s, key: k });
     if (s.kind !== 'ok') setBad((b) => [{ ...s, key: k }, ...b].slice(0, 3));
-    window.setTimeout(() => setBad((b) => b.filter((x) => x.key !== k)), 1600);
+    tm.later(() => setBad((b) => b.filter((x) => x.key !== k)), 1600);
   };
 
   /** a word's result: green pop, grey "already", red shake */
@@ -127,7 +130,7 @@ function WordHuntInner({ view, actions, bubbles, auth, notes = [], wv }: TablePr
     const ok = await actions.gameMoveQuiet({ kind: 'wordhunt', move: { type: 'word', round: wv.round, path } });
     // refused without a verdict (too quick, round over): a red shake
     if (!ok)
-      window.setTimeout(() => {
+      tm.later(() => {
         if (pending.current !== word) return;
         pending.current = null;
         answer('unknown', word, path, 0);

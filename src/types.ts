@@ -1232,6 +1232,8 @@ export interface PublicPlayer {
   streak?: number;
   /** their Ludo looks: their gotis and dice show like this for everyone; the host's board is the table's (missing from older servers) */
   ludoLook?: LudoLookChoice;
+  /** offline mid-game: ms left before their held seat forfeits (as of this view); null when connected or not held (missing from older servers) */
+  seatMsLeft?: number | null;
 }
 
 /** how one player's coins changed when a game ended */
@@ -1306,6 +1308,10 @@ export interface RoomView {
   turnId: string | null;
   /** turn timer: ms left on this turn's clock when the view was made; null when the timer is off or nobody's clock runs (missing from older servers) */
   turnMsLeft?: number | null;
+  /** the server's Date.now() when this view was built, so apps can correct the phone's clock (missing from older servers) */
+  now?: number;
+  /** a staked or ranked table: dropping out or stopping a game counts as a forfeit and the turn timer is always on (missing from older servers) */
+  strict?: boolean;
   /** the rank the next play follows: the round's rank, or with Seedhi the last claim; null when a round is about to open */
   roundRank: Rank | null;
   /** Bluff with the Kismat card on: this game's wild rank, shown to everyone; null otherwise */
@@ -2008,7 +2014,56 @@ export interface Announcement {
   id: number;
   kind: AnnounceKind;
   text: string;
+  /** someone forfeited the game: who and why, so apps can say it in their own words (missing from older servers) */
+  forfeit?: ForfeitNote;
+  /** the server stopped this game after an unexpected error; no coins moved (missing from older servers) */
+  error?: boolean;
 }
+
+// ---------- fair play and server restarts ----------
+
+/** a seat whose phone dropped mid-game is held this long (ms), then it forfeits; staked and ranked tables use strictMs */
+export const SEAT_GRACE = { ms: 90_000, strictMs: 60_000 } as const;
+
+/** staked and ranked tables run a turn timer of this many seconds even when the host turned it off */
+export const STRICT_TURN_SEC = 30;
+
+/** why a player forfeited: left the table, stayed offline past the held seat, or stopped a staked or ranked game */
+export type ForfeitReason = 'left' | 'offline' | 'stopped';
+
+export interface ForfeitNote {
+  playerId: string;
+  name: string;
+  reason: ForfeitReason;
+}
+
+/** what the announcer says for each forfeit, in English and Hindi */
+export const FORFEIT_TEXT: Record<ForfeitReason, { en: (name: string) => string; hi: (name: string) => string }> = {
+  left: { en: (n) => `${n} left the game and forfeits it`, hi: (n) => `${n} game chhod gaye, unki haar` },
+  offline: { en: (n) => `${n} was offline too long and forfeits the game`, hi: (n) => `${n} bahut der offline rahe, unki haar` },
+  stopped: { en: (n) => `${n} stopped a staked game, which counts as a forfeit`, hi: (n) => `${n} ne staked game roka, isliye unki haar` },
+};
+
+/** said when the server stops a game after an unexpected error */
+export const GAME_ERROR_TEXT = {
+  en: 'Something went wrong with this game, so it was stopped. No coins moved',
+  hi: 'Is game mein kuch gadbad hui, isliye game roka gaya. Coins nahi kate',
+} as const;
+
+/** refused Stop on a staked or ranked table for someone not playing in it any more */
+export const STRICT_STOP_TEXT = 'On staked and ranked tables the game plays to the end';
+
+/** sent to every connection just before the server restarts (a deploy); apps rejoin their room once it's back */
+export interface ServerRestarting {
+  /** server time it was sent */
+  at: number;
+  text: string;
+}
+
+export const SERVER_RESTART_TEXT = {
+  en: 'Server is restarting, your game will continue in a moment',
+  hi: 'Server restart ho raha hai, aapka game thodi der mein chalu hoga',
+} as const;
 
 // ---------- coin shop: every item is rented for a day or a week, never owned ----------
 

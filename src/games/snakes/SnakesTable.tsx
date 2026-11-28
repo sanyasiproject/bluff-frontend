@@ -35,6 +35,7 @@ import { SnakesOver } from './SnakesOver';
 import { SnakesSeatCorner } from './SnakesSeat';
 import { moveMs, TokenLayer } from './Tokens';
 import { snakesSfx } from './sounds';
+import { useTimeouts } from '../../lib/useTimeouts';
 
 const BUBBLE_MS = 4000;
 
@@ -53,6 +54,8 @@ export function SnakesTable(props: TableProps) {
 function SnakesTableInner({ view, actions, bubbles, auth, notes = [], sv }: TableProps & { sv: SnakesView }) {
   const level = auth.user ? levelOf(auth.user.stats) : 1;
   const myLooks = useLudoLooks(level);
+  // cleared on unmount, so no sound or effect fires after leaving
+  const tm = useTimeouts();
   const [panel, setPanel] = useState<LudoPanel>(null);
   const [looksOpen, setLooksOpen] = useState(false);
   const [target, setTarget] = useState<string | null>(null);
@@ -149,7 +152,7 @@ function SnakesTableInner({ view, actions, bubbles, auth, notes = [], sv }: Tabl
       holdTimer.current = window.setTimeout(() => setDiceHold(null), moved && sv.last ? moveMs(sv.last, sv.rules.six) + 250 : 1100);
     }
     if (sv.dice === 6 && prev.sixes >= 2 && sv.rules.bonus) {
-      window.setTimeout(() => ludoSfx.bust(), 700);
+      tm.later(() => ludoSfx.bust(), 700);
       show({ kind: 'bust', text: '🎲🎲🎲 Three 6s!', sub: `${name(prev.turn)} ${prev.turn === view.meId ? 'lose' : 'loses'} the turn` }, 700);
     } else if (!moved) {
       show({ kind: 'info', text: 'No move', sub: sv.rules.six && sv.dice !== 6 ? 'Roll a 6 to start' : 'Wait for the next turn' }, 750);

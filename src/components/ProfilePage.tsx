@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState, type CSSProperties } from 'react';
 import { cx } from '../lib/cards';
+import { retryImport } from '../lib/lazyRetry';
 import { compactCoins, formatCoins, signedCoins } from '../lib/coins';
 import { monthYear } from '../lib/dates';
 import { achievementsOf, levelInfo, percent, winStreak } from '../lib/progress';
@@ -34,7 +35,7 @@ import { ChessLookRows } from '../games/chess/ChessLookRows';
 import { ChessProfileLazy } from '../games/chess/lazy';
 
 // admin-only and long: downloaded when opened
-const RulesPage = lazy(() => import('./RulesPage').then((m) => ({ default: m.RulesPage })));
+const RulesPage = lazy(retryImport(() => import('./RulesPage').then((m) => ({ default: m.RulesPage }))));
 import '../styles/land-chess-profile.css';
 import { ProfileTabs, useProfileTab } from './ProfileTabs';
 import { Rolling } from './Rolling';

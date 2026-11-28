@@ -230,7 +230,7 @@ function ChessTableInner({ view, actions, bubbles, auth, notes = [], cv }: Table
       <section className="ch-right">
         {status && <p className={cx('ch-status', live && myColor === cv.turn && 'mine')} role="status">{status}</p>}
         <MoveList sans={cv.sans} blackFirst={cv.initialFen.split(' ')[1] === 'b'} />
-        {watching && <EngineLines lines={hints.lines} busy={hints.busy} />}
+        {watching && <EngineLines lines={hints.lines} busy={hints.busy} error={hints.error} />}
         <ChessControls cv={cv} myColor={myColor} live={live} send={(m) => void sendInput(m)} onFlip={() => setFlip((f) => !f)} />
         <p className="ch-meta muted small">
           {variant?.name ?? 'Chess'}
