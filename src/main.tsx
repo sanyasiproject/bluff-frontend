@@ -1,4 +1,5 @@
 import { markFxLite } from './lib/fxLite';
+import { showDiag } from './lib/diag';
 import { insideShell, startShell, wantsShell } from './lib/landscapeShell';
 // styles load with the page so the intro screen is styled from the first paint
 import './styles.css';
@@ -83,5 +84,6 @@ setTimeout(() => {
 // touch phones and tablets: the app runs inside a frame that turns sideways when the phone is upright,
 // so the game opens in landscape even with the rotation lock on (lib/landscapeShell.ts)
 markFxLite();
+showDiag();
 if (wantsShell() && !insideShell()) startShell();
 else void import('./boot');

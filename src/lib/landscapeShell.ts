@@ -5,6 +5,8 @@
 import { startShellInstall } from './shellInstall';
 
 const SHORT_SIDE_MAX = 1100;
+/** screens this wide on their short side are tablets: no turned frame */
+const TABLET_SHORT_SIDE = 600;
 /** the night colour behind everything (manifest theme and background colour) */
 const NIGHT = '#120b2e';
 /** messages between the game (inside) and the shell */
@@ -28,12 +30,14 @@ export function insideShell() {
   }
 }
 
-/** touch phones and tablets use the shell; laptops and desktops run the app directly (?flat skips it, for testing) */
+/** touch phones use the shell; tablets, laptops and desktops run the app directly (?flat skips it, for testing) */
 export function wantsShell() {
   if (new URLSearchParams(location.search).has('flat')) return false;
   // any touch screen counts: an iPad with a keyboard and trackpad, or a tablet with a pen, reports a fine pointer
   const touch = navigator.maxTouchPoints > 0 || (window.matchMedia?.('(any-pointer: coarse)').matches ?? false);
-  return touch && Math.min(screen.width, screen.height) <= SHORT_SIDE_MAX;
+  const short = Math.min(screen.width, screen.height);
+  // big high-res tablets drop parts of a full-screen frame (unpainted bands); held upright they get the turn card
+  return touch && short < TABLET_SHORT_SIDE && short <= SHORT_SIDE_MAX;
 }
 
 /** builds the shell: a dark page with the game in a frame that turns with the phone */
